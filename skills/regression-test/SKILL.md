@@ -12,17 +12,23 @@ This skill requires the **Microsoft Playwright MCP server** (`@playwright/mcp`).
 **Install via Claude Code CLI:**
 
 ```bash
-claude mcp add playwright -- npx @playwright/mcp@latest
+claude mcp add playwright -- npx @playwright/mcp@latest --caps=testing
 ```
+
+The `--caps=testing` flag enables the `browser_verify_*` assertion tools and `browser_generate_locator` used in Phase 3b. Without this flag, those tools will not be available.
 
 **Or via Claude Code marketplace:**
 
-Search for `playwright` in the MCP marketplace and add it. The skill will automatically use any available Playwright MCP tools.
+Search for `playwright` in the MCP marketplace and add it. After adding, configure it with `--caps=testing` to enable assertion tools.
 
-**Optional flags for headed mode (see the browser):**
+**Optional flags:**
 
 ```bash
-claude mcp add playwright -- npx @playwright/mcp@latest --headless=false
+# Headed mode (see the browser window) + testing assertions
+claude mcp add playwright -- npx @playwright/mcp@latest --caps=testing --headless=false
+
+# All capabilities (testing + PDF export + vision-based coordinates)
+claude mcp add playwright -- npx @playwright/mcp@latest --caps=testing,pdf,vision
 ```
 
 For full configuration options (browser choice, viewport defaults, proxy, storage state), see: https://github.com/microsoft/playwright-mcp
