@@ -5,9 +5,31 @@ description: Use when performing regression testing on a web application, verify
 
 # Regression Test Skill
 
+## Prerequisites
+
+This skill requires the **Microsoft Playwright MCP server** (`@playwright/mcp`). Install it before first use.
+
+**Install via Claude Code CLI:**
+
+```bash
+claude mcp add playwright -- npx @playwright/mcp@latest
+```
+
+**Or via Claude Code marketplace:**
+
+Search for `playwright` in the MCP marketplace and add it. The skill will automatically use any available Playwright MCP tools.
+
+**Optional flags for headed mode (see the browser):**
+
+```bash
+claude mcp add playwright -- npx @playwright/mcp@latest --headless=false
+```
+
+For full configuration options (browser choice, viewport defaults, proxy, storage state), see: https://github.com/microsoft/playwright-mcp
+
 ## Overview
 
-This skill defines a structured, repeatable process for regression testing web applications using Playwright MCP browser tools. The core principle is simple and non-negotiable:
+This skill defines a structured, repeatable process for regression testing web applications using the [Microsoft Playwright MCP server](https://github.com/microsoft/playwright-mcp) (`@playwright/mcp`). The core principle is simple and non-negotiable:
 
 **"Never ship without seeing every page at every viewport."**
 
@@ -213,6 +235,14 @@ For each page in the route list:
 
 6. **Test interactive elements** where applicable. For forms, use `browser_fill_form` with test data to verify fields accept input. For buttons and links, use `browser_click` to verify they respond. For dropdowns and menus, verify they open and close properly.
 
+7. **Verify key assertions** using the Playwright MCP testing tools:
+   - `browser_verify_text_visible` -- Confirm expected text is displayed on the page
+   - `browser_verify_element_visible` -- Confirm key UI elements are present and visible
+   - `browser_verify_value` -- Confirm form fields and inputs contain expected values
+   - `browser_verify_list_visible` -- Confirm lists (navigation, menus, data lists) render correctly
+
+8. **Generate locators** for important elements using `browser_generate_locator` when you need stable selectors for test assertions or to reference elements across pages.
+
 Record all findings for each page: errors, warnings, structural issues, and functional problems.
 
 ## Phase 3c: Visual Evaluation
@@ -380,7 +410,7 @@ Use this table for a fast reminder of what each phase involves and which MCP too
 | Phase 1: Discovery | Detect frameworks, find tests, grep routes, determine URL | *(none -- uses file search and grep)* |
 | Phase 2: Existing Tests | Run test suites, capture output, record results | *(none -- uses shell commands)* |
 | Phase 3a: Setup & Auth | Navigate to URL, detect login, enter credentials | `browser_navigate`, `browser_snapshot`, `browser_fill_form`, `browser_click`, `browser_wait_for` |
-| Phase 3b: Functional Checks | Load pages, check structure, find errors | `browser_navigate`, `browser_wait_for`, `browser_snapshot`, `browser_console_messages`, `browser_network_requests`, `browser_fill_form`, `browser_click` |
+| Phase 3b: Functional Checks | Load pages, check structure, find errors, verify assertions | `browser_navigate`, `browser_wait_for`, `browser_snapshot`, `browser_console_messages`, `browser_network_requests`, `browser_fill_form`, `browser_click`, `browser_verify_text_visible`, `browser_verify_element_visible`, `browser_verify_value`, `browser_verify_list_visible`, `browser_generate_locator` |
 | Phase 3c: Visual Evaluation | Resize viewport, capture screenshots, evaluate visuals | `browser_resize`, `browser_take_screenshot` |
 | Phase 4: Reporting | Generate markdown report with findings and screenshots | *(none -- writes markdown file)* |
 
