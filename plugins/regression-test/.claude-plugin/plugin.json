@@ -1,0 +1,7 @@
+{
+  "name": "regression-test",
+  "description": "AI-powered regression testing for web applications using Microsoft Playwright MCP. Discovers existing test suites, runs them, then performs functional checks and visual evaluation via browser automation at desktop, tablet, and mobile viewports.",
+  "author": {
+    "name": "Marcel Roozekrans"
+  }
+}

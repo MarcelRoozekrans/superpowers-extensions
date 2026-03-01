@@ -1,6 +1,6 @@
 # Regression Test Skill for Claude Code
 
-A Claude Code skill that performs comprehensive regression testing on any web application using the [Microsoft Playwright MCP server](https://github.com/microsoft/playwright-mcp). It combines existing test suite execution with AI-powered visual and functional browser testing.
+A Claude Code plugin that performs comprehensive regression testing on any web application using the [Microsoft Playwright MCP server](https://github.com/microsoft/playwright-mcp). It combines existing test suite execution with AI-powered visual and functional browser testing.
 
 ## What It Does
 
@@ -22,7 +22,39 @@ When invoked, Claude follows a structured 4-phase process:
 
 ## Installation
 
-### 1. Install the Playwright MCP server
+### Option A: Install as Claude Code Plugin (Recommended)
+
+Install directly from GitHub as a marketplace:
+
+```bash
+claude install gh:MarcelRoozekrans/playwright-mcp-skill
+```
+
+Then install the plugin from the marketplace:
+
+```bash
+claude plugin install regression-test
+```
+
+This automatically:
+- Installs the `regression-test` skill
+- Configures the Playwright MCP server with `--caps=testing`
+
+### Option B: Install from Local Clone
+
+Clone the repository and install as a local marketplace:
+
+```bash
+git clone https://github.com/MarcelRoozekrans/playwright-mcp-skill.git
+claude install /path/to/playwright-mcp-skill
+claude plugin install regression-test
+```
+
+### Option C: Manual Installation
+
+If you prefer manual setup:
+
+**1. Add the Playwright MCP server:**
 
 ```bash
 claude mcp add playwright -- npx @playwright/mcp@latest --caps=testing
@@ -30,38 +62,27 @@ claude mcp add playwright -- npx @playwright/mcp@latest --caps=testing
 
 The `--caps=testing` flag enables assertion tools (`browser_verify_*`, `browser_generate_locator`) used during functional checks.
 
-**Optional: headed mode** (see the browser window):
-
-```bash
-claude mcp add playwright -- npx @playwright/mcp@latest --caps=testing --headless=false
-```
-
-**Optional: all capabilities** (testing + PDF export + vision-based coordinates):
-
-```bash
-claude mcp add playwright -- npx @playwright/mcp@latest --caps=testing,pdf,vision
-```
-
-### 2. Install the skill
-
-Copy the `skills/regression-test/` directory to your Claude Code skills directory:
+**2. Copy the skill files:**
 
 ```bash
 # Windows
-xcopy /E /I skills\regression-test %USERPROFILE%\.claude\skills\regression-test
+xcopy /E /I plugins\regression-test\skills\regression-test %USERPROFILE%\.claude\skills\regression-test
 
 # macOS / Linux
-cp -r skills/regression-test ~/.claude/skills/regression-test
+cp -r plugins/regression-test/skills/regression-test ~/.claude/skills/regression-test
 ```
 
-Or clone this repo and symlink:
+### Optional Playwright Flags
 
 ```bash
-# macOS / Linux
-ln -s "$(pwd)/skills/regression-test" ~/.claude/skills/regression-test
+# Headed mode (see the browser window)
+claude mcp add playwright -- npx @playwright/mcp@latest --caps=testing --headless=false
+
+# All capabilities (testing + PDF export + vision-based coordinates)
+claude mcp add playwright -- npx @playwright/mcp@latest --caps=testing,pdf,vision
 ```
 
-### 3. Verify installation
+### Verify Installation
 
 In Claude Code, the skill should appear when you type `/regression-test` or when you ask Claude to regression test a web application.
 
@@ -84,13 +105,24 @@ The skill produces:
 - **Markdown report** saved to `docs/regression-report-YYYY-MM-DD-HHmm.md` with summary table, existing test results, page-by-page findings, and recommendations
 - **Conversation summary** with overall status, issue counts, and top 3 findings
 
-## Skill Files
+## Project Structure
 
 ```
-skills/regression-test/
-  SKILL.md                      # Main skill -- 4-phase workflow
-  visual-criteria.md            # Visual evaluation rubric (7 criteria with severity levels)
-  test-framework-detection.md   # Framework detection patterns, route discovery, URL detection
+playwright-mcp-skill/
+├── .claude-plugin/
+│   └── marketplace.json                    # Marketplace catalog
+├── plugins/
+│   └── regression-test/
+│       ├── .claude-plugin/
+│       │   └── plugin.json                 # Plugin metadata
+│       ├── .mcp.json                       # Playwright MCP server config
+│       └── skills/
+│           └── regression-test/
+│               ├── SKILL.md                # Main skill -- 4-phase workflow
+│               ├── visual-criteria.md      # Visual evaluation rubric (7 criteria)
+│               └── test-framework-detection.md  # Framework & route detection
+└── docs/
+    └── plans/                              # Design documents
 ```
 
 ## Supported Frameworks

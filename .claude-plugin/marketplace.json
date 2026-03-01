@@ -1,0 +1,20 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "playwright-regression-testing",
+  "description": "AI-powered regression testing skills for web applications using Microsoft Playwright MCP server",
+  "owner": {
+    "name": "Marcel Roozekrans"
+  },
+  "plugins": [
+    {
+      "name": "regression-test",
+      "description": "AI-powered regression testing for web applications. Discovers existing test suites, runs them, then performs functional checks and visual evaluation via Playwright MCP browser automation at desktop, tablet, and mobile viewports. Generates detailed markdown reports with screenshots.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Marcel Roozekrans"
+      },
+      "source": "./plugins/regression-test",
+      "category": "testing"
+    }
+  ]
+}
