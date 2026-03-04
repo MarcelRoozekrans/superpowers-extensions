@@ -372,6 +372,24 @@ Use this table for a fast reminder of what each phase involves and which tools a
 | Phase 5: Regression Testing | Run test suites, optionally browser testing | `Bash` (test runners), optionally Playwright MCP |
 | Phase 6: Verdict & Report | Generate report, determine PASS/FAIL | `Write` (markdown report) |
 
+## Relationship to Superpowers Skills
+
+This skill is designed to complement — not replace — the superpowers workflow skills. Here is how they fit together:
+
+| Superpowers Skill | Relationship | Notes |
+|---|---|---|
+| `finishing-a-development-branch` | **Run pre-push-review first.** This skill gates whether the branch is ready; finishing-a-development-branch decides how to integrate it (merge, PR, cleanup). | Pre-push-review produces the evidence that finishing-a-development-branch needs. |
+| `verification-before-completion` | **This skill satisfies it.** Verification-before-completion requires evidence before success claims. A PASS verdict from this skill is that evidence. | No need to run both — a completed pre-push-review covers verification. |
+| `requesting-code-review` | **This skill supersedes it.** Pre-push-review includes code quality review (Phase 3) plus plan adherence, commit hygiene, and regression testing. | If pre-push-review has been run, skip requesting-code-review to avoid redundant work. |
+
+**Recommended workflow chain:**
+
+```
+Implementation complete
+  → pre-push-review (this skill: structured quality gate)
+  → finishing-a-development-branch (superpowers: merge/PR decision)
+```
+
 ## Supporting References
 
 The following companion documents provide detailed criteria referenced throughout this skill:
