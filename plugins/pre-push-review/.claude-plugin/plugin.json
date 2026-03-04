@@ -1,0 +1,7 @@
+{
+  "name": "pre-push-review",
+  "description": "Comprehensive branch review before push or PR. Diffs against the base branch and gates on plan adherence, code quality, commit hygiene, and regression testing. Produces a PASS/FAIL verdict with remediation plan on failure.",
+  "author": {
+    "name": "Marcel Roozekrans"
+  }
+}
