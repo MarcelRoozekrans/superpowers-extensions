@@ -1,6 +1,6 @@
-# Quality Gate Skills for Claude Code
+# Superpowers Extensions for Claude Code
 
-A Claude Code plugin suite that provides AI-powered quality gates and development workflow skills for web application development. It includes three skills:
+Extension skills for the [superpowers](https://github.com/anthropics/superpowers) suite, providing quality gates and development workflow skills for web application development. It includes three skills:
 
 - **regression-test** -- Comprehensive regression testing using the [Microsoft Playwright MCP server](https://github.com/microsoft/playwright-mcp), combining existing test suite execution with AI-powered visual and functional browser testing.
 - **pre-push-review** -- A structured branch review that diffs against the base branch and gates on plan adherence, code quality, commit hygiene, and regression testing, producing a PASS/FAIL verdict with a prioritized remediation plan on failure.
@@ -140,7 +140,7 @@ The skill produces:
 Install directly from GitHub as a marketplace:
 
 ```bash
-claude install gh:MarcelRoozekrans/playwright-mcp-skill
+claude install gh:MarcelRoozekrans/superpowers-extensions
 ```
 
 Then install the plugins from the marketplace:
@@ -163,8 +163,8 @@ The regression-test plugin automatically configures the Playwright MCP server wi
 Clone the repository and install as a local marketplace:
 
 ```bash
-git clone https://github.com/MarcelRoozekrans/playwright-mcp-skill.git
-claude install /path/to/playwright-mcp-skill
+git clone https://github.com/MarcelRoozekrans/superpowers-extensions.git
+claude install /path/to/superpowers-extensions
 
 # Install one or more plugins
 claude plugin install regression-test
@@ -219,9 +219,9 @@ In Claude Code, the skills should appear when you type `/regression-test`, `/pre
 ## Project Structure
 
 ```
-playwright-mcp-skill/
+superpowers-extensions/
 ├── .claude-plugin/
-│   └── marketplace.json                    # Marketplace catalog (both plugins)
+│   └── marketplace.json                    # Marketplace catalog (all plugins)
 ├── plugins/
 │   ├── regression-test/
 │   │   ├── .claude-plugin/

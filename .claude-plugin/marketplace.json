@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
-  "name": "quality-gate-skills",
-  "description": "AI-powered quality gate skills for web applications: regression testing with Playwright MCP, comprehensive pre-push branch review, and transitive refactor impact analysis",
+  "name": "superpowers-extensions",
+  "description": "Extension skills for the superpowers suite: regression testing with Playwright MCP, comprehensive pre-push branch review, and transitive refactor impact analysis",
   "version": "1.2.0",
   "owner": {
     "name": "Marcel Roozekrans"
