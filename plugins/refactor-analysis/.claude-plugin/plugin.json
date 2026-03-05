@@ -1,0 +1,7 @@
+{
+  "name": "refactor-analysis",
+  "description": "Transitive impact analysis for complex refactorings. Maps all affected files, classifies breaking vs cosmetic changes, identifies risks like dynamic references and cross-boundary impacts, and produces a safe execution order with checkpoint boundaries.",
+  "author": {
+    "name": "Marcel Roozekrans"
+  }
+}
