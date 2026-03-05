@@ -420,6 +420,16 @@ Use this table for a fast reminder of what each phase involves and which MCP too
 | Phase 3c: Visual Evaluation | Resize viewport, capture screenshots, evaluate visuals | `browser_resize`, `browser_take_screenshot` |
 | Phase 4: Reporting | Generate markdown report with findings and screenshots | *(none -- writes markdown file)* |
 
+## Relationship to Superpowers Skills
+
+This skill is designed to complement — not replace — the superpowers workflow skills. Here is how they fit together:
+
+| Superpowers Skill | Relationship | Notes |
+|---|---|---|
+| `verification-before-completion` | **This skill provides evidence.** Verification-before-completion requires running verification commands and confirming output before success claims. A completed regression test report with screenshots is strong verification evidence. | The regression report satisfies the evidence requirement for visual and functional verification. |
+| `finishing-a-development-branch` | **Run before finishing.** Regression testing is a quality gate that should complete before deciding how to integrate the branch. | Provides confidence that the branch hasn't introduced visual or functional regressions. |
+| `pre-push-review` | **Can be invoked by pre-push-review.** During Phase 5 of pre-push-review, this skill is optionally invoked for browser-based regression testing if a web UI is available. | This skill can also run standalone outside of pre-push-review. |
+
 ## Supporting References
 
 The following companion documents provide detailed criteria and detection logic referenced throughout this skill:
