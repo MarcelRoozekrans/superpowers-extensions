@@ -1,9 +1,10 @@
-# Quality Gate Skills for Claude Code
+# Superpowers Extensions for Claude Code
 
-A Claude Code plugin suite that provides AI-powered quality gates for web application development. It includes two skills:
+Extension skills for the [superpowers](https://github.com/anthropics/superpowers) suite, providing quality gates and development workflow skills for web application development. It includes three skills:
 
 - **regression-test** -- Comprehensive regression testing using the [Microsoft Playwright MCP server](https://github.com/microsoft/playwright-mcp), combining existing test suite execution with AI-powered visual and functional browser testing.
 - **pre-push-review** -- A structured branch review that diffs against the base branch and gates on plan adherence, code quality, commit hygiene, and regression testing, producing a PASS/FAIL verdict with a prioritized remediation plan on failure.
+- **refactor-analysis** -- Transitive impact analysis for complex refactorings. Maps all affected files, classifies breaking vs cosmetic changes, identifies risks, and produces a safe execution order with checkpoint boundaries before writing implementation plans.
 
 ---
 
@@ -96,6 +97,42 @@ The skill produces:
 
 ---
 
+## Refactor Analysis Skill
+
+When invoked, Claude follows a structured 7-phase process:
+
+1. **Scope Definition** -- Reads the design doc, identifies all refactor targets (classes, functions, modules, files), classifies the refactor type (rename, move, extract, inline, change interface, architectural), and confirms with the user.
+
+2. **Direct Dependency Mapping** -- Searches the codebase for all direct references to each target: imports, type annotations, function calls, configuration references, string-based references, and test file references.
+
+3. **Transitive Closure** -- Expands beyond direct dependencies by checking if each affected file's public interface changes. If so, treats those exports as new targets and repeats the search until no new files are discovered.
+
+4. **Impact Classification** -- Classifies each affected file as Breaking (will fail without changes), Update Required (functions but incorrect), Test Impact (tests need updating), or Cosmetic (optional cleanup).
+
+5. **Risk Identification** -- Flags dynamic references, cross-boundary impacts, circular dependencies, high fan-in nodes, implicit coupling, runtime registration, external consumers, and serialized state.
+
+6. **Safe Execution Order** -- Produces a topologically sorted sequence of change groups with checkpoint boundaries where tests can run and commits can be made.
+
+7. **Output** -- Generates a timestamped markdown impact analysis document with summary metrics, a Graphviz dependency graph, annotated file list, risk register, and execution order. Then transitions to writing-plans.
+
+### Usage
+
+Invoke the skill by asking Claude:
+
+- "Analyze the impact of this refactoring"
+- "What files will be affected if I rename this module?"
+- "Run a refactor impact analysis before we start"
+- `/refactor-analysis`
+
+### Output
+
+The skill produces:
+
+- **Impact analysis document** saved to `docs/plans/YYYY-MM-DD-<topic>-impact-analysis.md` with summary table, dependency graph, annotated file list, risk register, and execution order
+- **Conversation summary** with refactor type, affected file counts by classification, top risks, and document path
+
+---
+
 ## Installation
 
 ### Option A: Install as Claude Code Plugin (Recommended)
@@ -103,7 +140,7 @@ The skill produces:
 Install directly from GitHub as a marketplace:
 
 ```bash
-claude install gh:MarcelRoozekrans/playwright-mcp-skill
+claude install gh:MarcelRoozekrans/superpowers-extensions
 ```
 
 Then install the plugins from the marketplace:
@@ -114,6 +151,9 @@ claude plugin install regression-test
 
 # Install the pre-push review skill
 claude plugin install pre-push-review
+
+# Install the refactor analysis skill
+claude plugin install refactor-analysis
 ```
 
 The regression-test plugin automatically configures the Playwright MCP server with `--caps=testing`. The pre-push-review plugin requires only git and no additional MCP servers for its core review.
@@ -123,12 +163,15 @@ The regression-test plugin automatically configures the Playwright MCP server wi
 Clone the repository and install as a local marketplace:
 
 ```bash
-git clone https://github.com/MarcelRoozekrans/playwright-mcp-skill.git
-claude install /path/to/playwright-mcp-skill
+git clone https://github.com/MarcelRoozekrans/superpowers-extensions.git
+claude install /path/to/superpowers-extensions
 
-# Install one or both plugins
+# Install one or more plugins
 claude plugin install regression-test
 claude plugin install pre-push-review
+
+# Install the refactor analysis skill
+claude plugin install refactor-analysis
 ```
 
 ### Option C: Manual Installation
@@ -171,14 +214,14 @@ claude mcp add playwright -- npx @playwright/mcp@latest --caps=testing,pdf,visio
 
 ### Verify Installation
 
-In Claude Code, the skills should appear when you type `/regression-test` or `/pre-push-review`, or when you ask Claude to perform regression testing or a pre-push review.
+In Claude Code, the skills should appear when you type `/regression-test`, `/pre-push-review`, or `/refactor-analysis`, or when you ask Claude to perform regression testing, a pre-push review, or a refactor impact analysis.
 
 ## Project Structure
 
 ```
-playwright-mcp-skill/
+superpowers-extensions/
 ├── .claude-plugin/
-│   └── marketplace.json                    # Marketplace catalog (both plugins)
+│   └── marketplace.json                    # Marketplace catalog (all plugins)
 ├── plugins/
 │   ├── regression-test/
 │   │   ├── .claude-plugin/
@@ -189,14 +232,21 @@ playwright-mcp-skill/
 │   │           ├── SKILL.md                # Main skill -- 4-phase workflow
 │   │           ├── visual-criteria.md      # Visual evaluation rubric (7 criteria)
 │   │           └── test-framework-detection.md  # Framework & route detection
-│   └── pre-push-review/
+│   ├── pre-push-review/
+│   │   ├── .claude-plugin/
+│   │   │   └── plugin.json                 # Plugin metadata
+│   │   └── skills/
+│   │       └── pre-push-review/
+│   │           ├── SKILL.md                # Main skill -- 6-phase workflow
+│   │           ├── code-quality-rules.md   # 7 code quality review rules
+│   │           └── commit-hygiene-rules.md # Commit hygiene checks
+│   └── refactor-analysis/
 │       ├── .claude-plugin/
 │       │   └── plugin.json                 # Plugin metadata
 │       └── skills/
-│           └── pre-push-review/
-│               ├── SKILL.md                # Main skill -- 6-phase workflow
-│               ├── code-quality-rules.md   # 7 code quality review rules
-│               └── commit-hygiene-rules.md # Commit hygiene checks
+│           └── refactor-analysis/
+│               ├── SKILL.md                # Main skill -- 7-phase workflow
+│               └── reference-types.md      # Reference types catalog
 └── docs/
     └── plans/                              # Design documents
 ```
@@ -215,6 +265,7 @@ React Router, Next.js (App Router & Pages Router), Angular, Vue Router, SvelteKi
 - Node.js 18+
 - **For regression-test:** [Microsoft Playwright MCP server](https://github.com/microsoft/playwright-mcp) (`@playwright/mcp`) and a running web application to test
 - **For pre-push-review:** A git repository with a feature branch. Playwright MCP server is optional (enables browser-based regression testing as part of the review).
+- **For refactor-analysis:** A git repository with code to analyze. No additional tools required.
 
 ## License
 
