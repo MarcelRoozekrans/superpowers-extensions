@@ -1,7 +1,8 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "quality-gate-skills",
-  "description": "AI-powered quality gate skills for web applications: regression testing with Playwright MCP and comprehensive pre-push branch review",
+  "description": "AI-powered quality gate skills for web applications: regression testing with Playwright MCP, comprehensive pre-push branch review, and transitive refactor impact analysis",
+  "version": "1.2.0",
   "owner": {
     "name": "Marcel Roozekrans"
   },
@@ -24,6 +25,16 @@
         "name": "Marcel Roozekrans"
       },
       "source": "./plugins/pre-push-review",
+      "category": "code-quality"
+    },
+    {
+      "name": "refactor-analysis",
+      "description": "Transitive impact analysis for complex refactorings. Maps all affected files, classifies breaking vs cosmetic changes, identifies risks like dynamic references and cross-boundary impacts, and produces a safe execution order with checkpoint boundaries.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Marcel Roozekrans"
+      },
+      "source": "./plugins/refactor-analysis",
       "category": "code-quality"
     }
   ]
