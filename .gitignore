@@ -1,0 +1,19 @@
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Generated regression test outputs
+docs/regression-screenshots/
+docs/regression-report-*.md
+docs/pre-push-review-*.md
+
+# Node
+node_modules/

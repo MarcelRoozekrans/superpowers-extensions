@@ -200,6 +200,12 @@ cp -r plugins/regression-test/skills/regression-test ~/.claude/skills/regression
 
 # macOS / Linux -- pre-push-review
 cp -r plugins/pre-push-review/skills/pre-push-review ~/.claude/skills/pre-push-review
+
+# Windows -- refactor-analysis
+xcopy /E /I plugins\refactor-analysis\skills\refactor-analysis %USERPROFILE%\.claude\skills\refactor-analysis
+
+# macOS / Linux -- refactor-analysis
+cp -r plugins/refactor-analysis/skills/refactor-analysis ~/.claude/skills/refactor-analysis
 ```
 
 ### Optional Playwright Flags

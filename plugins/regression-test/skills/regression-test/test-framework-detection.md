@@ -16,6 +16,8 @@ Use the table below to identify which test framework is in use and how to invoke
 | Vitest      | `vitest.config.{ts,js,mjs}`, or `test` block in `vite.config.{ts,js}`   | `npm test`            | `npx vitest run`                  | `--reporter=verbose`  |
 | Mocha       | `.mocharc.{yml,yaml,json,js,cjs}`                                       | `npm test`            | `npx mocha`                       | `--reporter spec`     |
 | Karma       | `karma.conf.{js,ts}`                                                     | `npm test`            | `npx karma start --single-run`    | _(use config file)_   |
+| Nightwatch  | `nightwatch.conf.{js,ts}`, `nightwatch.json`                             | `npm run e2e`         | `npx nightwatch`                  | `--reporter=junit`    |
+| WebdriverIO | `wdio.conf.{js,ts}`                                                      | `npm run wdio`        | `npx wdio run`                    | `--reporter spec`     |
 
 ### How to use this table
 
