@@ -2,7 +2,6 @@
 
 ## 1.0.0 (2026-03-06)
 
-
 ### Features
 
 * add conventional commits enforcement and semantic versioning ([a75ad50](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/a75ad5045406b903d98dcfde8ad7d7d6696446e3))
@@ -22,7 +21,6 @@
 * **regression-test:** add superpowers skill relationship section ([e02a757](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/e02a757472a1b87dfc7b0dea99d6261b42a825ec))
 * restructure as Claude Code plugin with marketplace support ([db77a7d](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/db77a7d5cdeffeec1bb53044cbe1639530cccb33))
 * target Microsoft Playwright MCP server (@playwright/mcp) ([cb477d8](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/cb477d8c24f4b03da13eebd19d5024d4aa5a9c8f))
-
 
 ### Bug Fixes
 

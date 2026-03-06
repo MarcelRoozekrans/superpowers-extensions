@@ -1,11 +1,15 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "superpowers-extensions",
-  "description": "Extension skills for the superpowers suite: regression testing with Playwright MCP, comprehensive pre-push branch review, and transitive refactor impact analysis",
-  "version": "1.2.0",
+  "description": "Extension skills for the superpowers suite: regression testing, pre-push review, refactor analysis, decision tracking, and companion ecosystem plugins",
+  "version": "2.0.0",
   "owner": {
     "name": "Marcel Roozekrans"
   },
+  "dependencies": [
+    "gh:MarcelRoozekrans/LongtermMemory-MCP",
+    "gh:MarcelRoozekrans/roslyn-codegraph-mcp"
+  ],
   "plugins": [
     {
       "name": "regression-test",
@@ -36,6 +40,16 @@
       },
       "source": "./plugins/refactor-analysis",
       "category": "code-quality"
+    },
+    {
+      "name": "decision-tracker",
+      "description": "Persistent cross-cutting decision tracking using long-term memory. Automatically extracts decisions during brainstorming and planning, recalls them at session start and subagent dispatch.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Marcel Roozekrans"
+      },
+      "source": "./plugins/decision-tracker",
+      "category": "workflow"
     }
   ]
 }
