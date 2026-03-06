@@ -4,8 +4,9 @@ module.exports = {
     'scope-enum': [
       2,
       'always',
-      ['regression-test', 'pre-push-review', 'refactor-analysis'],
+      ['regression-test', 'pre-push-review', 'refactor-analysis', 'deps'],
     ],
     'scope-empty': [1, 'never'],
+    'body-max-line-length': [0, 'always', Infinity],
   },
 };
