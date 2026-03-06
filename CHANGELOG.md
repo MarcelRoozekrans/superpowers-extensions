@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/v1.1.0...v1.1.1) (2026-03-06)
+
+
+### Bug Fixes
+
+* exclude CHANGELOG.md from markdownlint CI ([5794fbe](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/5794fbecf4b3d68f5ae665fda4cc52f1650e8250))
+
 ## [1.1.0](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/v1.0.0...v1.1.0) (2026-03-06)
 
 
