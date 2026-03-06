@@ -122,6 +122,8 @@ Derive the project name from (in priority order):
 3. **package.json name field** — read the `name` field from `package.json`
 4. **Working directory name** — use the directory name as a fallback
 
+**Worktree note:** When running in a git worktree, `git remote get-url origin` still returns the correct remote. However, the working directory name may reflect the worktree path rather than the project name. Prefer git remote or file-based detection over the directory name fallback.
+
 ## Decision Recall (Session Start)
 
 When any superpowers skill activates, recall existing decisions:
@@ -161,9 +163,9 @@ Decision extraction is automatic — no explicit "save this" step is needed.
 
 ### When to Extract
 
-- **During brainstorming:** When the user approves a design section, scan for cross-cutting statements. Save each as a decision.
+- **During brainstorming:** When the user selects from proposed approaches, save the chosen approach as an architectural decision. When the user approves a design section, scan for additional cross-cutting statements (placement rules, constraints, naming conventions) and save each as a decision.
 - **During writing-plans:** When conventions apply across all tasks, save as convention decisions.
-- **During refactor-analysis:** Phase 1 approach and Phase 4 constraints — save as task-specific decisions.
+- **During refactor-analysis:** Phase 1 refactor approach, Phase 4 impact constraints, and Phase 5 risks flagged as high severity — save as task-specific decisions.
 
 ### Deduplication
 
@@ -183,7 +185,7 @@ If `save_memory` is not available, embed decisions in the plan document under a 
 
 ## Subagent Injection
 
-When subagent-driven-development dispatches an agent:
+When subagent-driven-development dispatches an agent, the controller (not the subagent) performs the following before filling in the implementer prompt template:
 
 1. **Derive a natural language query** from the task description.
 2. **Call `search_memory`** with that query.
@@ -192,6 +194,8 @@ When subagent-driven-development dispatches an agent:
 5. **Format as:**
 
    > "Cross-cutting decisions relevant to this task: [list]"
+
+6. **Inject into the `## Context` section** of the implementer prompt template, alongside other scene-setting context.
 
 ## Graceful Degradation
 
@@ -245,16 +249,17 @@ This skill is designed to complement — not replace — the superpowers workflo
 | Superpowers Skill | Relationship | Notes |
 |---|---|---|
 | `superpowers:brainstorming` | **Always-on when available.** Recalls existing decisions at brainstorming start to inform design. Extracts and saves new decisions when design choices are approved. | Decisions from prior sessions prevent contradictory designs. |
-| `superpowers:writing-plans` | **Embeds decisions in plan header.** Recalls all project decisions and adds a "Cross-Cutting Decisions" section to the plan so every task references them. Saves new convention decisions. | Subagents executing the plan inherit these decisions. |
+| `superpowers:writing-plans` | **Adds decisions after plan header.** Recalls all project decisions and adds a `## Cross-Cutting Decisions` section after the plan header so every task can reference them. Saves new convention decisions. | Subagents executing the plan inherit these decisions. |
 | `superpowers:subagent-driven-development` | **Injects targeted decisions per agent.** Uses semantic search to find the 2-3 decisions most relevant to each subagent's task and includes them in the prompt. | Keeps subagent context focused rather than flooding with all decisions. |
 | `refactor-analysis` | **Saves constraints, recalls architecture.** Refactor approach (Phase 1) and constraints (Phase 4) are saved as task-specific decisions. Architectural decisions are recalled to inform impact classification. | Ensures refactor respects established patterns. |
+| `pre-push-review` | **Decisions available for reference.** Architectural and convention decisions are available during Phase 3 (Code Quality) to verify implementation respects established patterns. No active extraction or saving. | Read-only — decisions inform the review but pre-push-review does not modify them. |
 
 **Recommended workflow chain:**
 
 ```text
-session start (decisions recalled from long-term memory)
-  → brainstorming (new decisions extracted and saved)
-  → refactor-analysis (constraints saved, architectural decisions recalled)
-  → writing-plans (all decisions embedded in plan header)
-  → subagent-driven-development (targeted decisions injected per agent)
+brainstorming (decision-tracker: recall prior decisions, extract new ones)
+  → refactor-analysis (decision-tracker: recall architecture, save constraints)
+  → writing-plans (decision-tracker: embed all decisions in plan header)
+  → subagent-driven-development (decision-tracker: inject targeted decisions per agent)
+  → pre-push-review (decision-tracker: decisions available for reference)
 ```
