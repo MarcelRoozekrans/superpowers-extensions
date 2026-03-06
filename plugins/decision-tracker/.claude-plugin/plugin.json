@@ -1,0 +1,7 @@
+{
+  "name": "decision-tracker",
+  "description": "Persistent cross-cutting decision tracking using long-term memory. Automatically extracts decisions during brainstorming and planning, recalls them at session start and subagent dispatch.",
+  "author": {
+    "name": "Marcel Roozekrans"
+  }
+}
