@@ -272,7 +272,24 @@ xcopy /E /I plugins\refactor-analysis\skills\refactor-analysis %USERPROFILE%\.cl
 
 # macOS / Linux -- refactor-analysis
 cp -r plugins/refactor-analysis/skills/refactor-analysis ~/.claude/skills/refactor-analysis
+
+# Windows -- decision-tracker
+xcopy /E /I plugins\decision-tracker\skills\decision-tracker %USERPROFILE%\.claude\skills\decision-tracker
+
+# macOS / Linux -- decision-tracker
+cp -r plugins/decision-tracker/skills/decision-tracker ~/.claude/skills/decision-tracker
+
+# Windows -- roslyn-codegraph-integration
+xcopy /E /I plugins\roslyn-codegraph-integration\skills\roslyn-codegraph-integration %USERPROFILE%\.claude\skills\roslyn-codegraph-integration
+
+# macOS / Linux -- roslyn-codegraph-integration
+cp -r plugins/roslyn-codegraph-integration/skills/roslyn-codegraph-integration ~/.claude/skills/roslyn-codegraph-integration
 ```
+
+**Note:** decision-tracker and roslyn-codegraph-integration require their companion MCP servers. Install them separately:
+
+- **decision-tracker:** `claude mcp add longterm-memory -- npx -y longterm-memory-mcp`
+- **roslyn-codegraph-integration:** `dotnet tool install -g roslyn-codegraph-mcp && claude mcp add roslyn-codegraph -- roslyn-codegraph-mcp`
 
 ### Optional Playwright Flags
 

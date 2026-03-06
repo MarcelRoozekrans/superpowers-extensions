@@ -2,7 +2,7 @@
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "superpowers-extensions",
   "description": "Extension skills for the superpowers suite: regression testing, pre-push review, refactor analysis, decision tracking, Roslyn code graph integration, and companion ecosystem plugins",
-  "version": "2.0.0",
+  "version": "1.2.0",
   "owner": {
     "name": "Marcel Roozekrans"
   },
