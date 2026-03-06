@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/v1.1.1...v1.2.0) (2026-03-06)
+
+
+### Features
+
+* add .mcp.json files for decision-tracker and roslyn-codegraph-integration ([a413413](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/a41341326cedb7d36cf9b58bfa1c94c24e147dc0))
+
 ## [1.1.1](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/v1.1.0...v1.1.1) (2026-03-06)
 
 
