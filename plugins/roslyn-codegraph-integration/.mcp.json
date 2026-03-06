@@ -1,6 +1,7 @@
 {
   "roslyn-codegraph": {
-    "command": "roslyn-codegraph-mcp",
-    "args": []
+    "command": "bootstrap",
+    "args": [],
+    "transport": "stdio"
   }
 }
