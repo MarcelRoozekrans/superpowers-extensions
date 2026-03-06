@@ -75,6 +75,7 @@ Search the diff for these patterns (in added lines only — lines starting with 
 ### Exceptions
 
 These are acceptable and should NOT be flagged:
+
 - `console.error` — legitimate error logging
 - `console.log` inside a dedicated logger/debug utility
 - `TODO` in a comment that references a tracked issue (e.g., `TODO(#123)`)
@@ -169,6 +170,7 @@ Evaluate whether new or changed code is covered by tests.
 ### Detection
 
 For each new or modified source file in the diff:
+
 1. Check if a corresponding test file exists (e.g., `foo.ts` → `foo.test.ts`, `foo.spec.ts`, `__tests__/foo.ts`)
 2. If the file is new and has no test file, flag it
 3. If the file is modified and its test file was not modified, flag it as a potential gap

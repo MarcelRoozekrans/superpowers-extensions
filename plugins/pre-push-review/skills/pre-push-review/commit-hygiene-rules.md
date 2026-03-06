@@ -21,6 +21,7 @@ Evaluate whether commit messages are clear, conventional, and informative.
 ### Detection
 
 Check for commit conventions in this order:
+
 1. `.commitlintrc.*`, `commitlint.config.*` — Commitlint configuration
 2. `.czrc`, `.cz.json`, `cz-customizable` in package.json — Commitizen
 3. `CONTRIBUTING.md` or `CLAUDE.md` — documented conventions

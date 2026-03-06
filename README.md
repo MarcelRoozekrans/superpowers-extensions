@@ -30,7 +30,7 @@ When invoked, Claude follows a structured 4-phase process:
 
 Invoke the skill by asking Claude:
 
-- "Regression test my web app at http://localhost:3000"
+- "Regression test my web app at `http://localhost:3000`"
 - "Run a visual regression check on this application"
 - "Smoke test the UI before we deploy"
 - `/regression-test`
@@ -224,7 +224,7 @@ In Claude Code, the skills should appear when you type `/regression-test`, `/pre
 
 ## Project Structure
 
-```
+```text
 superpowers-extensions/
 ├── .claude-plugin/
 │   └── marketplace.json                    # Marketplace catalog (all plugins)
@@ -260,9 +260,11 @@ superpowers-extensions/
 ## Supported Frameworks
 
 ### Test Runners
+
 Playwright, Cypress, Jest, Vitest, Mocha, Karma, Nightwatch, WebdriverIO
 
 ### Route Detection
+
 React Router, Next.js (App Router & Pages Router), Angular, Vue Router, SvelteKit
 
 ## Requirements

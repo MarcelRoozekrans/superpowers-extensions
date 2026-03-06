@@ -4,7 +4,7 @@
   "private": true,
   "description": "Extension skills for the superpowers suite — quality gates and development workflow skills for Claude Code",
   "scripts": {
-    "lint:md": "markdownlint-cli2 '**/*.md' '#node_modules'"
+    "lint:md": "markdownlint-cli2 '**/*.md' '#node_modules' '#docs/plans'"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.0.0",
