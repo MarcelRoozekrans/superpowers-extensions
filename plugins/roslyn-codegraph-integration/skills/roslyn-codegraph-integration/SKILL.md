@@ -9,13 +9,10 @@ description: Use when brainstorming or refactor-analysis is active on a .NET cod
 
 This skill requires the roslyn-codegraph MCP server tools (`find_implementations`, `find_callers`, `get_type_hierarchy`, `get_di_registrations`, `get_project_dependencies`, `get_symbol_context`, `find_reflection_usage`).
 
-**Auto-configured:** When installed via `claude plugin install roslyn-codegraph-integration`, the `.mcp.json` configures the `roslyn-codegraph` MCP server with a bootstrap script that auto-installs the `roslyn-codegraph-mcp` dotnet global tool on first run. No manual setup needed.
-
-**Manual install (if not using the plugin):**
+**MCP server setup:** The `roslyn-codegraph` MCP server is configured by the [roslyn-codegraph-mcp](https://github.com/MarcelRoozekrans/roslyn-codegraph-mcp) companion plugin, which is pulled in automatically as a marketplace dependency. Install it with:
 
 ```bash
-dotnet tool install -g roslyn-codegraph-mcp
-claude mcp add roslyn-codegraph -- roslyn-codegraph-mcp
+claude plugin install roslyn-codegraph
 ```
 
 ## Detection

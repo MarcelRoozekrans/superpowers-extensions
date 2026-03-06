@@ -9,12 +9,10 @@ description: Use at session start and during brainstorming, writing-plans, refac
 
 This skill requires LongtermMemory-MCP tools (`save_memory`, `search_memory`, `search_by_tags`, `update_memory`, `delete_memory`) for full functionality.
 
-**Auto-configured:** When installed via `claude plugin install decision-tracker`, the `.mcp.json` automatically configures the `longterm-memory` MCP server (`npx -y longterm-memory-mcp`). No manual setup needed.
-
-**Manual install (if not using the plugin):**
+**MCP server setup:** The `longterm-memory` MCP server is configured by the [LongtermMemory-MCP](https://github.com/MarcelRoozekrans/LongtermMemory-MCP) companion plugin, which is pulled in automatically as a marketplace dependency. Install it with:
 
 ```bash
-claude mcp add longterm-memory -- npx -y longterm-memory-mcp
+claude plugin install longterm-memory
 ```
 
 The skill degrades gracefully when these tools are not available — see the [Graceful Degradation](#graceful-degradation) section.
