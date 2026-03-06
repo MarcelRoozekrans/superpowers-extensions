@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.3.0](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/v1.2.0...v1.3.0) (2026-03-06)
+
+
+### Features
+
+* **roslyn-codegraph-integration:** add bootstrap scripts for auto-install ([b422125](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/b42212556fa146d5202795f237f7d55a67f29d26))
+* **roslyn-codegraph-integration:** add bootstrap scripts for auto-install ([ac0f93e](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/ac0f93e2c0b08ac54f5ec113fe74265cf364905d))
+
+
+### Bug Fixes
+
+* remove duplicate .mcp.json files from decision-tracker and roslyn-codegraph-integration ([5510d77](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/5510d77cb548304882ce22fb7d677f0236045f0f))
+* remove duplicate .mcp.json files from decision-tracker and roslyn-codegraph-integration ([ff06ea7](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/ff06ea77e0a70e69be2366be6d898337c3e5e114))
+* remove duplicate MCP configs, delegate to companion plugins ([602f830](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/602f830b23680c78febee2f8f1b119fd49388ad9))
+
 ## [1.2.0](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/v1.1.1...v1.2.0) (2026-03-06)
 
 
