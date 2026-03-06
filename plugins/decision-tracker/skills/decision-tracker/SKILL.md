@@ -7,7 +7,7 @@ description: Use at session start and during brainstorming, writing-plans, refac
 
 ## Prerequisites
 
-This skill requires LongtermMemory-MCP tools (`save_memory`, `search_memory`, `search_by_tags`, `update_memory`) for full functionality. Install with:
+This skill requires LongtermMemory-MCP tools (`save_memory`, `search_memory`, `search_by_tags`, `update_memory`, `delete_memory`) for full functionality. Install with:
 
 ```bash
 claude install gh:MarcelRoozekrans/LongtermMemory-MCP
@@ -45,6 +45,64 @@ Do NOT use this skill when:
 - Working on a one-off task with no cross-cutting impact
 - LongtermMemory-MCP is not installed AND no plan documents exist
 
+## Checklist
+
+Use this checklist to track progress:
+
+- [ ] **Detect project name** — Determine project scope for tagging
+- [ ] **Recall existing decisions** — Search long-term memory for prior decisions
+- [ ] **Present recalled decisions** — Group and display to establish context
+- [ ] **Track new decisions during session** — Extract from brainstorming, writing-plans, refactor-analysis
+- [ ] **Inject decisions into subagents** — Targeted recall at dispatch time
+
+## Process Flow
+
+```dot
+digraph decision_tracker {
+    rankdir=TB;
+    node [shape=box, style=rounded, fontname="Helvetica"];
+    edge [fontname="Helvetica", fontsize=10];
+
+    // Session start flow
+    start [label="Session Start"];
+    detect [label="Detect\nProject Name"];
+    check_mcp1 [label="LongtermMemory-MCP\navailable?", shape=diamond];
+    search_tags [label="search_by_tags\n[decision, project:<name>]"];
+    group [label="Group by\ncategory"];
+    present [label="Present recalled\ndecisions"];
+    nudge1 [label="Nudge to install\nLongtermMemory-MCP"];
+
+    start -> detect;
+    detect -> check_mcp1;
+    check_mcp1 -> search_tags [label="Yes"];
+    check_mcp1 -> nudge1 [label="No"];
+    search_tags -> group;
+    group -> present;
+
+    // During workflow flow
+    workflow [label="During Workflow:\nDetect Decision"];
+    check_mcp2 [label="LongtermMemory-MCP\navailable?", shape=diamond];
+    dedup [label="Dedup check\nsearch_memory"];
+    save [label="save_memory\nwith tags"];
+    embed [label="Embed in\nplan doc"];
+
+    workflow -> check_mcp2;
+    check_mcp2 -> dedup [label="Yes"];
+    check_mcp2 -> embed [label="No"];
+    dedup -> save;
+
+    // Subagent dispatch flow
+    dispatch [label="Subagent\nDispatch"];
+    search_mem [label="search_memory\nwith task query"];
+    filter [label="Filter by\ndecision + project tags"];
+    inject [label="Inject top 2-3\ninto agent prompt"];
+
+    dispatch -> search_mem;
+    search_mem -> filter;
+    filter -> inject;
+}
+```
+
 ## Decision Categories
 
 | Category | Memory Type | Importance | Tags | Example |
@@ -52,6 +110,8 @@ Do NOT use this skill when:
 | **Architectural** | `fact` | 9 | `decision`, `project:<name>`, `architectural`, domain tags | "We use the repository pattern with unit of work" |
 | **Convention** | `fact` | 7 | `decision`, `project:<name>`, `convention`, domain tags | "All DTOs go in the Contracts project" |
 | **Task-specific** | `task` | 5 | `decision`, `project:<name>`, `task-specific`, domain tags | "UserService refactor must preserve backward compat with v2 API" |
+
+Domain tags are free-form labels describing the technical area (e.g., `auth`, `api`, `database`, `di`, `testing`). Use consistent tags within a project.
 
 ## Project Name Detection
 
@@ -78,6 +138,8 @@ When any superpowers skill activates, recall existing decisions:
 5. **Validate stale decisions** — for decisions older than 90 days, ask:
 
    > "This decision was made N months ago: [decision]. Still valid?"
+
+   If the user says the decision is no longer valid, call `delete_memory` to remove it. If the decision has been replaced by a newer one, call `update_memory` to record what superseded it.
 
 6. **Once per session** — this recall happens once at the start. Do NOT re-recall on every skill invocation.
 
@@ -125,7 +187,7 @@ When subagent-driven-development dispatches an agent:
 
 1. **Derive a natural language query** from the task description.
 2. **Call `search_memory`** with that query.
-3. **Filter results** to those tagged with `decision` and `project:<name>`.
+3. **Filter the semantic search results** to only include those that have both `decision` and `project:<name>` in their tags. This is a post-processing step on the results from step 2.
 4. **Include only the top 2-3 most relevant decisions** in the agent's prompt.
 5. **Format as:**
 
@@ -140,6 +202,41 @@ When subagent-driven-development dispatches an agent:
 | Save during writing-plans | `save_memory` with tags | Embed in plan doc |
 | Save during refactor-analysis | `save_memory` with tags | Embed in plan doc |
 | Subagent injection | `search_memory` → targeted | Include plan doc decisions section in prompt |
+
+## Red Flags
+
+These are mistakes that compromise the quality of decision tracking. If you notice yourself doing any of these, stop and correct course:
+
+1. **Saving every statement as a "decision"** — Decisions must be cross-cutting, not local to one file. A choice about how to format a single function is not a decision worth persisting.
+
+2. **Skipping deduplication** — Always search before saving to avoid duplicate memories. Redundant decisions dilute search relevance.
+
+3. **Not recalling at session start** — Even for "quick tasks", prior decisions matter. A quick fix that contradicts an architectural decision creates technical debt.
+
+4. **Flooding subagents with all decisions** — Use targeted semantic search, not a full dump. Subagents work best with 2-3 relevant decisions, not 20.
+
+5. **Saving implementation details as decisions** — Decisions are about "what" and "why", not "how". "We use the repository pattern" is a decision; "the repository class has a GetById method" is an implementation detail.
+
+## Common Rationalizations
+
+| Rationalization | Why It's Wrong | Correct Action |
+|---|---|---|
+| "This is a quick task, no need to recall" | Quick tasks can still contradict prior decisions | Always recall at session start |
+| "I'll remember this decision" | Memory doesn't persist across sessions | Save it to long-term memory |
+| "This is just for this file" | If it affects how other code interacts, it's cross-cutting | Save only truly cross-cutting decisions |
+| "The plan doc has all the decisions" | Plan docs aren't searched semantically by subagents | Persist to long-term memory for targeted retrieval |
+| "I'll save everything to be safe" | Over-saving dilutes relevance of search results | Only save cross-cutting decisions, not implementation details |
+
+## Quick Reference
+
+| Action | Key Steps | Tools Used |
+|---|---|---|
+| Project detection | Git remote → .sln → package.json → directory name | `Bash` (git remote) |
+| Session recall | search_by_tags → group → present → validate stale | `search_by_tags` |
+| Decision extraction | Identify cross-cutting statement → dedup → save | `search_memory`, `save_memory` |
+| Stale validation | Check age > 90 days → ask user → delete or update | `delete_memory`, `update_memory` |
+| Subagent injection | Derive query → search → filter → inject top 2-3 | `search_memory` |
+| Graceful degradation | Check tool availability → embed in plan doc if missing | `Write` (plan doc) |
 
 ## Relationship to Superpowers Skills
 
@@ -160,5 +257,4 @@ session start (decisions recalled from long-term memory)
   → refactor-analysis (constraints saved, architectural decisions recalled)
   → writing-plans (all decisions embedded in plan header)
   → subagent-driven-development (targeted decisions injected per agent)
-  → pre-push-review (no integration — reviews code, not decisions)
 ```
