@@ -1,0 +1,16 @@
+{
+  "name": "superpowers-extensions",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Extension skills for the superpowers suite — quality gates and development workflow skills for Claude Code",
+  "scripts": {
+    "lint:md": "markdownlint-cli2 '**/*.md' '#node_modules'"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^19.0.0",
+    "@commitlint/config-conventional": "^19.0.0",
+    "husky": "^9.0.0",
+    "markdownlint-cli2": "^0.17.0"
+  },
+  "license": "MIT"
+}
