@@ -10,3 +10,6 @@ MD020: false
 # Allow duplicate headings in different sections
 MD024:
   siblings_only: true
+
+# Disable table column style — all tables in this repo use compact pipe style
+MD060: false
