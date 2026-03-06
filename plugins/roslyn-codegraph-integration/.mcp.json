@@ -1,7 +1,0 @@
-{
-  "roslyn-codegraph": {
-    "command": "bootstrap",
-    "args": [],
-    "transport": "stdio"
-  }
-}

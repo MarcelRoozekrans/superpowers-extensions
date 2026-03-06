@@ -1,6 +1,0 @@
-{
-  "longterm-memory": {
-    "command": "npx",
-    "args": ["-y", "longterm-memory-mcp"]
-  }
-}
