@@ -1,11 +1,12 @@
 # Superpowers Extensions for Claude Code
 
-Extension skills for the [superpowers](https://github.com/anthropics/superpowers) suite, providing quality gates and development workflow skills for web application development. It includes four skills:
+Extension skills for the [superpowers](https://github.com/anthropics/superpowers) suite, providing quality gates and development workflow skills for web application development. It includes five skills:
 
 - **regression-test** -- Comprehensive regression testing using the [Microsoft Playwright MCP server](https://github.com/microsoft/playwright-mcp), combining existing test suite execution with AI-powered visual and functional browser testing.
 - **pre-push-review** -- A structured branch review that diffs against the base branch and gates on plan adherence, code quality, commit hygiene, and regression testing, producing a PASS/FAIL verdict with a prioritized remediation plan on failure.
 - **refactor-analysis** -- Transitive impact analysis for complex refactorings. Maps all affected files, classifies breaking vs cosmetic changes, identifies risks, and produces a safe execution order with checkpoint boundaries before writing implementation plans.
 - **decision-tracker** -- Persistent cross-cutting decision tracking using [LongtermMemory-MCP](https://github.com/MarcelRoozekrans/LongtermMemory-MCP). Automatically extracts architectural decisions, conventions, and constraints during brainstorming and planning, persists them to semantic long-term memory, and recalls them at session start and subagent dispatch to prevent decision amnesia.
+- **roslyn-codegraph-integration** -- Superpowers integration for [Roslyn Code Graph](https://github.com/MarcelRoozekrans/roslyn-codegraph-mcp) intelligence. Enhances brainstorming with semantic .NET code context and upgrades refactor-analysis with Roslyn-powered dependency mapping, transitive closure, and reflection-aware risk detection.
 
 ---
 
@@ -170,6 +171,24 @@ The skill activates automatically during superpowers workflows. No explicit invo
 
 ---
 
+## Roslyn Code Graph Integration Skill
+
+The roslyn-codegraph-integration skill enhances brainstorming and refactor-analysis with semantic .NET code intelligence when [roslyn-codegraph](https://github.com/MarcelRoozekrans/roslyn-codegraph-mcp) MCP tools are available. It activates automatically -- no explicit invocation needed.
+
+### What It Does
+
+The skill upgrades text-based code search with semantic Roslyn queries:
+
+- **During brainstorming:** Calls `get_project_dependencies` for solution architecture, `get_symbol_context` for types mentioned in the request, `find_implementations` and `find_callers` to ground clarifying questions in actual code, and `get_di_registrations` / `find_reflection_usage` when proposing approaches.
+
+- **During refactor-analysis:** Replaces Grep with `find_callers` and `find_implementations` in Phase 2 (dependency mapping), uses `get_type_hierarchy` and `get_project_dependencies` for Phase 3 (transitive closure), and adds `find_reflection_usage` for Phase 5 (risk identification) to catch hidden dynamic coupling.
+
+### Graceful Degradation
+
+If roslyn-codegraph MCP tools are not available, the skill is completely inert. Brainstorming and refactor-analysis fall back to their standard Grep/Glob-based approach with no errors or warnings.
+
+---
+
 ## Ecosystem
 
 Superpowers Extensions serves as the single entrypoint for the entire superpowers extension ecosystem. One install pulls in the core superpowers skills and all companion plugins:
@@ -195,11 +214,12 @@ claude install gh:MarcelRoozekrans/superpowers-extensions
 Then install the plugins you need from the marketplace:
 
 ```bash
-# Install all four extension skills
+# Install all five extension skills
 claude plugin install regression-test
 claude plugin install pre-push-review
 claude plugin install refactor-analysis
 claude plugin install decision-tracker
+claude plugin install roslyn-codegraph-integration
 ```
 
 The regression-test plugin automatically configures the Playwright MCP server with `--caps=testing`. The pre-push-review plugin requires only git and no additional MCP servers for its core review.
@@ -266,7 +286,7 @@ claude mcp add playwright -- npx @playwright/mcp@latest --caps=testing,pdf,visio
 
 ### Verify Installation
 
-In Claude Code, the skills should appear when you type `/regression-test`, `/pre-push-review`, `/refactor-analysis`, or `/decision-tracker`, or when you ask Claude to perform regression testing, a pre-push review, a refactor impact analysis, or decision tracking.
+In Claude Code, the skills should appear when you type `/regression-test`, `/pre-push-review`, `/refactor-analysis`, `/decision-tracker`, or `/roslyn-codegraph-integration`, or when you ask Claude to perform regression testing, a pre-push review, a refactor impact analysis, decision tracking, or .NET code graph analysis.
 
 ## Project Structure
 
@@ -299,11 +319,17 @@ superpowers-extensions/
 │   │       └── refactor-analysis/
 │   │           ├── SKILL.md                # Main skill -- 7-phase workflow
 │   │           └── reference-types.md      # Reference types catalog
-│   └── decision-tracker/
+│   ├── decision-tracker/
+│   │   ├── .claude-plugin/
+│   │   │   └── plugin.json
+│   │   └── skills/
+│   │       └── decision-tracker/
+│   │           └── SKILL.md
+│   └── roslyn-codegraph-integration/
 │       ├── .claude-plugin/
 │       │   └── plugin.json
 │       └── skills/
-│           └── decision-tracker/
+│           └── roslyn-codegraph-integration/
 │               └── SKILL.md
 └── docs/
     └── plans/                              # Design documents
@@ -327,6 +353,7 @@ React Router, Next.js (App Router & Pages Router), Angular, Vue Router, SvelteKi
 - **For pre-push-review:** A git repository with a feature branch. Playwright MCP server is optional (enables browser-based regression testing as part of the review).
 - **For refactor-analysis:** A git repository with code to analyze. No additional tools required.
 - **For decision-tracker:** [LongtermMemory-MCP](https://github.com/MarcelRoozekrans/LongtermMemory-MCP) for cross-session persistence (installed automatically via marketplace dependencies). Works without it in degraded mode.
+- **For roslyn-codegraph-integration:** [roslyn-codegraph-mcp](https://github.com/MarcelRoozekrans/roslyn-codegraph-mcp) MCP server (installed automatically via marketplace dependencies). Skill is inert without it.
 
 ## License
 
