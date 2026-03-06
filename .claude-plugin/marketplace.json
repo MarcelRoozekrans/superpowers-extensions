@@ -7,6 +7,7 @@
     "name": "Marcel Roozekrans"
   },
   "dependencies": [
+    "gh:obra/superpowers-marketplace",
     "gh:MarcelRoozekrans/LongtermMemory-MCP",
     "gh:MarcelRoozekrans/roslyn-codegraph-mcp"
   ],
