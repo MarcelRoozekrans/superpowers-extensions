@@ -31,7 +31,7 @@ claude mcp add playwright -- npx @playwright/mcp@latest --caps=testing --headles
 claude mcp add playwright -- npx @playwright/mcp@latest --caps=testing,pdf,vision
 ```
 
-For full configuration options (browser choice, viewport defaults, proxy, storage state), see: https://github.com/microsoft/playwright-mcp
+For full configuration options (browser choice, viewport defaults, proxy, storage state), see: <https://github.com/microsoft/playwright-mcp>
 
 ## Overview
 
@@ -289,22 +289,25 @@ For the complete rubric and scoring criteria, see [visual-criteria.md](visual-cr
 
 All screenshots must be saved to a timestamped directory using the following convention:
 
-```
+```text
 docs/regression-screenshots/YYYY-MM-DD-HHmm/{page}-{viewport}.png
 ```
 
 Where:
+
 - `YYYY-MM-DD-HHmm` is the current date and time (e.g., `2026-03-01-1430`)
 - `{page}` is a slugified version of the page name or route (e.g., `home`, `dashboard`, `settings-profile`)
 - `{viewport}` is the viewport name in lowercase (e.g., `desktop`, `tablet`, `mobile`)
 
 Examples:
+
 - `docs/regression-screenshots/2026-03-01-1430/home-desktop.png`
 - `docs/regression-screenshots/2026-03-01-1430/home-tablet.png`
 - `docs/regression-screenshots/2026-03-01-1430/home-mobile.png`
 - `docs/regression-screenshots/2026-03-01-1430/dashboard-desktop.png`
 
 Full-page screenshots append `-full` to the viewport name:
+
 - `docs/regression-screenshots/2026-03-01-1430/home-desktop-full.png`
 
 ## Phase 4: Reporting
@@ -315,7 +318,7 @@ After all pages have been tested at all viewports, generate a comprehensive mark
 
 Save the report to:
 
-```
+```text
 docs/regression-report-YYYY-MM-DD-HHmm.md
 ```
 
@@ -343,6 +346,7 @@ The report must include the following sections:
 #### Existing Test Results
 
 If existing tests were run in Phase 2, include:
+
 - Framework name and version
 - Command used to run tests
 - Pass/fail/skip counts
@@ -352,6 +356,7 @@ If existing tests were run in Phase 2, include:
 #### Page-by-Page Results
 
 For each page tested, include:
+
 - Page name and URL
 - Functional check results (console errors, network errors, structural issues)
 - Screenshots at each viewport (embedded as markdown images)
@@ -361,6 +366,7 @@ For each page tested, include:
 #### Recommendations
 
 A prioritized list of issues found during testing, ordered by severity:
+
 1. **Critical** -- Broken functionality, missing content, JavaScript errors blocking interaction
 2. **Major** -- Layout breakage at specific viewports, failed network requests, accessibility issues
 3. **Minor** -- Spacing inconsistencies, minor visual imperfections, non-blocking warnings

@@ -264,7 +264,7 @@ Collect all findings from Phases 2-5, determine the verdict, and generate the re
 
 Save the report to:
 
-```
+```text
 docs/pre-push-review-YYYY-MM-DD-HHmm.md
 ```
 
@@ -384,7 +384,7 @@ This skill is designed to complement — not replace — the superpowers workflo
 
 **Recommended workflow chain:**
 
-```
+```text
 Implementation complete
   → pre-push-review (this skill: structured quality gate)
   → finishing-a-development-branch (superpowers: merge/PR decision)

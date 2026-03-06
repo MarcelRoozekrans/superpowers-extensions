@@ -33,6 +33,7 @@ Invoke this skill when:
 - **When a refactor scope feels uncertain** — You're not sure how deep the changes will ripple.
 
 Do NOT use this skill when:
+
 - The task is purely greenfield (no existing code to analyze)
 - The change is isolated to a single file with no dependents
 - An impact analysis already exists and is current
@@ -262,7 +263,7 @@ Generate the impact analysis document and transition to the implementation plann
 
 1. **Save the impact analysis document** to:
 
-   ```
+   ```text
    docs/plans/YYYY-MM-DD-<topic>-impact-analysis.md
    ```
 
@@ -389,7 +390,7 @@ This skill is designed to complement — not replace — the superpowers workflo
 
 **Recommended workflow chain:**
 
-```
+```text
 brainstorming (what and why)
   → refactor-analysis (this skill: blast radius and safe ordering)
   → writing-plans (implementation steps)

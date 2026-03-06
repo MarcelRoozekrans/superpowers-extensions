@@ -47,6 +47,7 @@ This document catalogs the types of references to search for during Phase 2 (Dir
 ## Framework-Specific References
 
 ### React / Next.js
+
 | Reference Type | Search Pattern |
 |---|---|
 | **JSX usage** | `<Target`, `<Target>`, `<Target />` |
@@ -56,6 +57,7 @@ This document catalogs the types of references to search for during Phase 2 (Dir
 | **Next.js routes** | File path in `app/` or `pages/` directory |
 
 ### Angular
+
 | Reference Type | Search Pattern |
 |---|---|
 | **Module imports** | `imports: [...Target]` in `@NgModule` |
@@ -64,6 +66,7 @@ This document catalogs the types of references to search for during Phase 2 (Dir
 | **Template reference** | `#target`, `[target]`, `(target)` |
 
 ### Vue
+
 | Reference Type | Search Pattern |
 |---|---|
 | **Component registration** | `components: { Target }` |
@@ -71,6 +74,7 @@ This document catalogs the types of references to search for during Phase 2 (Dir
 | **Composable usage** | `useTarget(` |
 
 ### Python
+
 | Reference Type | Search Pattern |
 |---|---|
 | **from import** | `from <module> import <target>` |
@@ -79,6 +83,7 @@ This document catalogs the types of references to search for during Phase 2 (Dir
 | **SQLAlchemy** | `ForeignKey('<target>')`, `relationship('<target>')` |
 
 ### .NET / C#
+
 | Reference Type | Search Pattern |
 |---|---|
 | **Using directive** | `using <namespace>` |
