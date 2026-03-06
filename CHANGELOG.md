@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.1.0](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/v1.0.0...v1.1.0) (2026-03-06)
+
+
+### Features
+
+* add decision-tracker plugin and upgrade to ecosystem hub ([7f913b4](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/7f913b44ac3793538985f1ae3ba8561c30dfece5))
+* add superpowers-marketplace as dependency for one-stop install ([6c642a2](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/6c642a25e939d935ba9ac91b7763acc544a62ba8))
+* **decision-tracker:** add plugin manifest ([c4b598f](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/c4b598f0b11f7885bf2b8e7e1b6d5cadfe67c278))
+* **decision-tracker:** add skill for persistent decision tracking ([331d5ab](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/331d5abc053e8059c9df4b7a29796ef96212fecc))
+* **roslyn-codegraph-integration:** add superpowers integration skill ([6ba059e](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/6ba059e604972e41fb5cdbd976316691865c29ea))
+* **roslyn-codegraph-integration:** add superpowers integration skill for Roslyn code graph ([d43c90a](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/d43c90a0c97f3d9def3b848d9a6f92cac59dd6d5))
+* **roslyn-codegraph-integration:** add superpowers integration skill for Roslyn code graph ([1178759](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/11787599ce47e4a368d0892d6d208ef6db17d325))
+* upgrade marketplace to v2.0.0 hub with ecosystem dependencies ([bea9b54](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/bea9b541a0cee927e29ceb29334201c1b039c7ee))
+
+
+### Bug Fixes
+
+* **decision-tracker:** address code review findings ([8059f14](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/8059f14685ed546477971d8a5208409bfb355ec6))
+* **decision-tracker:** tighten superpowers integration claims ([6cb746a](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/6cb746a9d06abef1113e41cc7f9a72791b33a693))
+* remove double blank lines in CHANGELOG.md ([203cce4](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/203cce46091ad9f438ba34aa3b32de318a719a65))
+
 ## 1.0.0 (2026-03-06)
 
 ### Features
