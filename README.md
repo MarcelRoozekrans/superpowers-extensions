@@ -1,10 +1,11 @@
 # Superpowers Extensions for Claude Code
 
-Extension skills for the [superpowers](https://github.com/anthropics/superpowers) suite, providing quality gates and development workflow skills for web application development. It includes three skills:
+Extension skills for the [superpowers](https://github.com/anthropics/superpowers) suite, providing quality gates and development workflow skills for web application development. It includes four skills:
 
 - **regression-test** -- Comprehensive regression testing using the [Microsoft Playwright MCP server](https://github.com/microsoft/playwright-mcp), combining existing test suite execution with AI-powered visual and functional browser testing.
 - **pre-push-review** -- A structured branch review that diffs against the base branch and gates on plan adherence, code quality, commit hygiene, and regression testing, producing a PASS/FAIL verdict with a prioritized remediation plan on failure.
 - **refactor-analysis** -- Transitive impact analysis for complex refactorings. Maps all affected files, classifies breaking vs cosmetic changes, identifies risks, and produces a safe execution order with checkpoint boundaries before writing implementation plans.
+- **decision-tracker** -- Persistent cross-cutting decision tracking using [LongtermMemory-MCP](https://github.com/MarcelRoozekrans/LongtermMemory-MCP). Automatically extracts architectural decisions, conventions, and constraints during brainstorming and planning, persists them to semantic long-term memory, and recalls them at session start and subagent dispatch to prevent decision amnesia.
 
 ---
 
@@ -133,6 +134,53 @@ The skill produces:
 
 ---
 
+## Decision Tracker Skill
+
+The decision tracker skill provides persistent cross-cutting decision tracking that integrates with the superpowers brainstorming and planning workflow. It uses [LongtermMemory-MCP](https://github.com/MarcelRoozekrans/LongtermMemory-MCP) as its persistence layer.
+
+### What It Does
+
+The skill operates in two modes:
+
+1. **Recall** -- At session start, searches long-term memory for decisions tagged with the current project and presents them grouped by category (architectural, convention, task-specific).
+
+2. **Extract** -- During brainstorming, writing-plans, and refactor-analysis, automatically identifies cross-cutting decisions and saves them to long-term memory with appropriate tags, types, and importance levels.
+
+### Decision Categories
+
+| Category | Importance | Decay | Example |
+|---|---|---|---|
+| Architectural | 9 | 120 days | "We use the repository pattern with unit of work" |
+| Convention | 7 | 120 days | "All DTOs go in the Contracts project" |
+| Task-specific | 5 | 30 days | "UserService refactor must preserve v2 API compat" |
+
+### Subagent Integration
+
+When subagent-driven-development dispatches parallel agents, the skill injects only the 2-3 most relevant decisions into each agent's prompt using semantic search -- keeping context focused rather than flooding agents with every decision.
+
+### Graceful Degradation
+
+Without LongtermMemory-MCP installed, the skill still identifies decisions and embeds them in plan documents. It nudges the user to install LongtermMemory-MCP for cross-session persistence.
+
+### Usage
+
+The skill activates automatically during superpowers workflows. No explicit invocation needed. You can also invoke it directly:
+
+- `/decision-tracker`
+
+---
+
+## Ecosystem
+
+Superpowers Extensions serves as the hub for the superpowers extension ecosystem. Installing this marketplace also pulls in companion plugins:
+
+| Plugin | Repository | Purpose |
+|---|---|---|
+| **LongtermMemory-MCP** | [MarcelRoozekrans/LongtermMemory-MCP](https://github.com/MarcelRoozekrans/LongtermMemory-MCP) | Semantic long-term memory for AI agents -- persistence layer for decision-tracker |
+| **roslyn-codegraph-mcp** | [MarcelRoozekrans/roslyn-codegraph-mcp](https://github.com/MarcelRoozekrans/roslyn-codegraph-mcp) | Roslyn-based .NET code graph intelligence -- enhances brainstorming and refactor-analysis with semantic code understanding |
+
+---
+
 ## Installation
 
 ### Option A: Install as Claude Code Plugin (Recommended)
@@ -154,6 +202,9 @@ claude plugin install pre-push-review
 
 # Install the refactor analysis skill
 claude plugin install refactor-analysis
+
+# Install the decision tracker skill
+claude plugin install decision-tracker
 ```
 
 The regression-test plugin automatically configures the Playwright MCP server with `--caps=testing`. The pre-push-review plugin requires only git and no additional MCP servers for its core review.
@@ -220,7 +271,7 @@ claude mcp add playwright -- npx @playwright/mcp@latest --caps=testing,pdf,visio
 
 ### Verify Installation
 
-In Claude Code, the skills should appear when you type `/regression-test`, `/pre-push-review`, or `/refactor-analysis`, or when you ask Claude to perform regression testing, a pre-push review, or a refactor impact analysis.
+In Claude Code, the skills should appear when you type `/regression-test`, `/pre-push-review`, `/refactor-analysis`, or `/decision-tracker`, or when you ask Claude to perform regression testing, a pre-push review, a refactor impact analysis, or decision tracking.
 
 ## Project Structure
 
@@ -246,13 +297,19 @@ superpowers-extensions/
 │   │           ├── SKILL.md                # Main skill -- 6-phase workflow
 │   │           ├── code-quality-rules.md   # 7 code quality review rules
 │   │           └── commit-hygiene-rules.md # Commit hygiene checks
-│   └── refactor-analysis/
+│   ├── refactor-analysis/
+│   │   ├── .claude-plugin/
+│   │   │   └── plugin.json                 # Plugin metadata
+│   │   └── skills/
+│   │       └── refactor-analysis/
+│   │           ├── SKILL.md                # Main skill -- 7-phase workflow
+│   │           └── reference-types.md      # Reference types catalog
+│   └── decision-tracker/
 │       ├── .claude-plugin/
-│       │   └── plugin.json                 # Plugin metadata
+│       │   └── plugin.json
 │       └── skills/
-│           └── refactor-analysis/
-│               ├── SKILL.md                # Main skill -- 7-phase workflow
-│               └── reference-types.md      # Reference types catalog
+│           └── decision-tracker/
+│               └── SKILL.md
 └── docs/
     └── plans/                              # Design documents
 ```
