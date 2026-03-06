@@ -172,10 +172,11 @@ The skill activates automatically during superpowers workflows. No explicit invo
 
 ## Ecosystem
 
-Superpowers Extensions serves as the hub for the superpowers extension ecosystem. Installing this marketplace also pulls in companion plugins:
+Superpowers Extensions serves as the single entrypoint for the entire superpowers extension ecosystem. One install pulls in the core superpowers skills and all companion plugins:
 
-| Plugin | Repository | Purpose |
+| Dependency | Repository | Purpose |
 |---|---|---|
+| **superpowers** | [obra/superpowers-marketplace](https://github.com/obra/superpowers-marketplace) | Core superpowers skills -- brainstorming, writing-plans, subagent-driven-development, TDD, debugging, and more |
 | **LongtermMemory-MCP** | [MarcelRoozekrans/LongtermMemory-MCP](https://github.com/MarcelRoozekrans/LongtermMemory-MCP) | Semantic long-term memory for AI agents -- persistence layer for decision-tracker |
 | **roslyn-codegraph-mcp** | [MarcelRoozekrans/roslyn-codegraph-mcp](https://github.com/MarcelRoozekrans/roslyn-codegraph-mcp) | Roslyn-based .NET code graph intelligence -- enhances brainstorming and refactor-analysis with semantic code understanding |
 
@@ -185,25 +186,19 @@ Superpowers Extensions serves as the hub for the superpowers extension ecosystem
 
 ### Option A: Install as Claude Code Plugin (Recommended)
 
-Install directly from GitHub as a marketplace:
+Install directly from GitHub -- this single command pulls in superpowers core skills, LongtermMemory-MCP, and roslyn-codegraph-mcp as transitive dependencies:
 
 ```bash
 claude install gh:MarcelRoozekrans/superpowers-extensions
 ```
 
-Then install the plugins from the marketplace:
+Then install the plugins you need from the marketplace:
 
 ```bash
-# Install the regression test skill
+# Install all four extension skills
 claude plugin install regression-test
-
-# Install the pre-push review skill
 claude plugin install pre-push-review
-
-# Install the refactor analysis skill
 claude plugin install refactor-analysis
-
-# Install the decision tracker skill
 claude plugin install decision-tracker
 ```
 
@@ -331,6 +326,7 @@ React Router, Next.js (App Router & Pages Router), Angular, Vue Router, SvelteKi
 - **For regression-test:** [Microsoft Playwright MCP server](https://github.com/microsoft/playwright-mcp) (`@playwright/mcp`) and a running web application to test
 - **For pre-push-review:** A git repository with a feature branch. Playwright MCP server is optional (enables browser-based regression testing as part of the review).
 - **For refactor-analysis:** A git repository with code to analyze. No additional tools required.
+- **For decision-tracker:** [LongtermMemory-MCP](https://github.com/MarcelRoozekrans/LongtermMemory-MCP) for cross-session persistence (installed automatically via marketplace dependencies). Works without it in degraded mode.
 
 ## License
 
