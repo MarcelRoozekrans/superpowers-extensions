@@ -125,3 +125,4 @@ When refactor-analysis is active on a .NET codebase and roslyn tools are availab
 | `superpowers:writing-plans` | **Indirect benefit.** Plans produced after roslyn-enhanced brainstorming or refactor-analysis contain more accurate dependency information. | No direct tool usage during plan writing. |
 | `superpowers:subagent-driven-development` | **Indirect benefit.** Subagents implementing plans get better context when plans were informed by semantic analysis. | Subagents can use roslyn tools directly if available in their session. |
 | `decision-tracker` | **No interaction.** Decision tracking operates on cross-cutting decisions, not code structure. | Independent — both can be active simultaneously. |
+| `roslyn-codegraph:roslyn-codegraph` | **Required dependency.** Provides the MCP tools (`find_implementations`, `find_callers`, `get_type_hierarchy`, etc.) that this skill uses to enhance brainstorming and refactor-analysis. | Skill is inert without it. |
