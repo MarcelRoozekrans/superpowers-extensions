@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.3.1](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.3.0...superpowers-extensions-v1.3.1) (2026-03-07)
+
+
+### Bug Fixes
+
+* sync plugin versions to repo version and auto-bump on release ([6ea058d](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/6ea058d4134e586a1d9308c894e34e94875d72c3))
+* sync plugin versions to repo version and auto-bump on release ([520bf3d](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/520bf3d67f8afe469fdfe8d97d3ec2559a7613b8))
+* sync plugin versions to repo version on release ([eea504f](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/eea504fdf3c835802e4cd7bc386eaa99f73f49c0))
+
 ## [1.3.0](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.2.0...superpowers-extensions-v1.3.0) (2026-03-06)
 
 
