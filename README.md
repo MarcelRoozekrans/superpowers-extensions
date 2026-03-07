@@ -195,7 +195,7 @@ Superpowers Extensions serves as the single entrypoint for the entire superpower
 
 | Dependency | Repository | Purpose |
 |---|---|---|
-| **superpowers** | [obra/superpowers-marketplace](https://github.com/obra/superpowers-marketplace) | Core superpowers skills -- brainstorming, writing-plans, subagent-driven-development, TDD, debugging, and more |
+| **superpowers** | [obra/superpowers](https://github.com/obra/superpowers) | Core superpowers skills framework -- brainstorming, writing-plans, subagent-driven-development, TDD, debugging, and more |
 | **LongtermMemory-MCP** | [MarcelRoozekrans/LongtermMemory-MCP](https://github.com/MarcelRoozekrans/LongtermMemory-MCP) | Semantic long-term memory for AI agents -- persistence layer for decision-tracker |
 | **roslyn-codegraph-mcp** | [MarcelRoozekrans/roslyn-codegraph-mcp](https://github.com/MarcelRoozekrans/roslyn-codegraph-mcp) | Roslyn-based .NET code graph intelligence -- enhances brainstorming and refactor-analysis with semantic code understanding |
 
