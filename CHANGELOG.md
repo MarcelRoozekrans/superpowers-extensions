@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.2](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.3.1...superpowers-extensions-v1.3.2) (2026-03-07)
+
+
+### Bug Fixes
+
+* **deps:** depend on obra/superpowers instead of superpowers-marketplace ([4b42ec4](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/4b42ec491c9525678d377e23f1f7f177889b9de7))
+
 ## [1.3.1](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.3.0...superpowers-extensions-v1.3.1) (2026-03-07)
 
 
