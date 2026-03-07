@@ -255,6 +255,7 @@ This skill is designed to complement — not replace — the superpowers workflo
 | `superpowers:subagent-driven-development` | **Injects targeted decisions per agent.** Uses semantic search to find the 2-3 decisions most relevant to each subagent's task and includes them in the prompt. | Keeps subagent context focused rather than flooding with all decisions. |
 | `refactor-analysis` | **Saves constraints, recalls architecture.** Refactor approach (Phase 1) and constraints (Phase 4) are saved as task-specific decisions. Architectural decisions are recalled to inform impact classification. | Ensures refactor respects established patterns. |
 | `pre-push-review` | **Decisions available for reference.** Architectural and convention decisions are available during Phase 3 (Code Quality) to verify implementation respects established patterns. No active extraction or saving. | Read-only — decisions inform the review but pre-push-review does not modify them. |
+| `longterm-memory:long-term-memory` | **Required dependency.** Provides the persistence layer (`save_memory`, `search_memory`, `search_by_tags`, `update_memory`, `delete_memory`) that this skill uses to store and recall decisions. | Skill degrades gracefully without it — see Graceful Degradation section. |
 
 **Recommended workflow chain:**
 
