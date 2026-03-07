@@ -199,6 +199,10 @@ Superpowers Extensions serves as the single entrypoint for the entire superpower
 | **LongtermMemory-MCP** | [MarcelRoozekrans/LongtermMemory-MCP](https://github.com/MarcelRoozekrans/LongtermMemory-MCP) | Semantic long-term memory for AI agents -- persistence layer for decision-tracker |
 | **roslyn-codegraph-mcp** | [MarcelRoozekrans/roslyn-codegraph-mcp](https://github.com/MarcelRoozekrans/roslyn-codegraph-mcp) | Roslyn-based .NET code graph intelligence -- enhances brainstorming and refactor-analysis with semantic code understanding |
 
+### GitHub Copilot Support
+
+These skills can also be used with GitHub Copilot via [Copilot Skill Bridge](https://github.com/MarcelRoozekrans/Copilot-Skill-Bridge) -- a VS Code extension that discovers Claude marketplace skills, converts them to Copilot-compatible prompt/instruction files, and imports MCP server configurations. Add this repo as a marketplace source and the bridge will resolve all dependencies transitively.
+
 ---
 
 ## Installation
