@@ -54,7 +54,7 @@
     },
     {
       "name": "roslyn-codelens-integration",
-      "description": "Superpowers integration for Roslyn CodeLens intelligence. Enhances brainstorming and refactor-analysis with semantic .NET code understanding when roslyn-codelens MCP tools are available.",
+      "description": "Superpowers integration for Roslyn CodeLens intelligence. Maps 21 semantic .NET code analysis tools into brainstorming and refactor-analysis phases for architectural context, dependency mapping, risk detection, and code quality analysis.",
       "version": "1.3.2",
       "author": {
         "name": "Marcel Roozekrans"
