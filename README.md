@@ -6,7 +6,7 @@ Extension skills for the [superpowers](https://github.com/anthropics/superpowers
 - **pre-push-review** -- A structured branch review that diffs against the base branch and gates on plan adherence, code quality, commit hygiene, and regression testing, producing a PASS/FAIL verdict with a prioritized remediation plan on failure.
 - **refactor-analysis** -- Transitive impact analysis for complex refactorings. Maps all affected files, classifies breaking vs cosmetic changes, identifies risks, and produces a safe execution order with checkpoint boundaries before writing implementation plans.
 - **decision-tracker** -- Persistent cross-cutting decision tracking using [LongtermMemory-MCP](https://github.com/MarcelRoozekrans/LongtermMemory-MCP). Automatically extracts architectural decisions, conventions, and constraints during brainstorming and planning, persists them to semantic long-term memory, and recalls them at session start and subagent dispatch to prevent decision amnesia.
-- **roslyn-codegraph-integration** -- Superpowers integration for [Roslyn Code Graph](https://github.com/MarcelRoozekrans/roslyn-codegraph-mcp) intelligence. Enhances brainstorming with semantic .NET code context and upgrades refactor-analysis with Roslyn-powered dependency mapping, transitive closure, and reflection-aware risk detection.
+- **roslyn-codelens-integration** -- Superpowers integration for [Roslyn CodeLens](https://github.com/MarcelRoozekrans/roslyn-codelens-mcp) intelligence. Enhances brainstorming with semantic .NET code context and upgrades refactor-analysis with Roslyn-powered dependency mapping, transitive closure, and reflection-aware risk detection.
 
 ---
 
@@ -171,9 +171,9 @@ The skill activates automatically during superpowers workflows. No explicit invo
 
 ---
 
-## Roslyn Code Graph Integration Skill
+## Roslyn CodeLens Integration Skill
 
-The roslyn-codegraph-integration skill enhances brainstorming and refactor-analysis with semantic .NET code intelligence when [roslyn-codegraph](https://github.com/MarcelRoozekrans/roslyn-codegraph-mcp) MCP tools are available. It activates automatically -- no explicit invocation needed.
+The roslyn-codelens-integration skill enhances brainstorming and refactor-analysis with semantic .NET code intelligence when [roslyn-codelens](https://github.com/MarcelRoozekrans/roslyn-codelens-mcp) MCP tools are available. It activates automatically -- no explicit invocation needed.
 
 ### What It Does
 
@@ -185,7 +185,7 @@ The skill upgrades text-based code search with semantic Roslyn queries:
 
 ### Graceful Degradation
 
-If roslyn-codegraph MCP tools are not available, the skill is completely inert. Brainstorming and refactor-analysis fall back to their standard Grep/Glob-based approach with no errors or warnings.
+If roslyn-codelens MCP tools are not available, the skill is completely inert. Brainstorming and refactor-analysis fall back to their standard Grep/Glob-based approach with no errors or warnings.
 
 ---
 
@@ -197,7 +197,7 @@ Superpowers Extensions serves as the single entrypoint for the entire superpower
 |---|---|---|
 | **superpowers** | [obra/superpowers](https://github.com/obra/superpowers) | Core superpowers skills framework -- brainstorming, writing-plans, subagent-driven-development, TDD, debugging, and more |
 | **LongtermMemory-MCP** | [MarcelRoozekrans/LongtermMemory-MCP](https://github.com/MarcelRoozekrans/LongtermMemory-MCP) | Semantic long-term memory for AI agents -- persistence layer for decision-tracker |
-| **roslyn-codegraph-mcp** | [MarcelRoozekrans/roslyn-codegraph-mcp](https://github.com/MarcelRoozekrans/roslyn-codegraph-mcp) | Roslyn-based .NET code graph intelligence -- enhances brainstorming and refactor-analysis with semantic code understanding |
+| **roslyn-codelens-mcp** | [MarcelRoozekrans/roslyn-codelens-mcp](https://github.com/MarcelRoozekrans/roslyn-codelens-mcp) | Roslyn-based .NET code graph intelligence -- enhances brainstorming and refactor-analysis with semantic code understanding |
 
 ### GitHub Copilot Support
 
@@ -209,7 +209,7 @@ These skills can also be used with GitHub Copilot via [Copilot Skill Bridge](htt
 
 ### Option A: Install as Claude Code Plugin (Recommended)
 
-Install directly from GitHub -- this single command pulls in superpowers core skills, LongtermMemory-MCP, and roslyn-codegraph-mcp as transitive dependencies:
+Install directly from GitHub -- this single command pulls in superpowers core skills, LongtermMemory-MCP, and roslyn-codelens-mcp as transitive dependencies:
 
 ```bash
 claude install gh:MarcelRoozekrans/superpowers-extensions
@@ -223,7 +223,7 @@ claude plugin install regression-test
 claude plugin install pre-push-review
 claude plugin install refactor-analysis
 claude plugin install decision-tracker
-claude plugin install roslyn-codegraph-integration
+claude plugin install roslyn-codelens-integration
 ```
 
 The regression-test plugin automatically configures the Playwright MCP server with `--caps=testing`. The pre-push-review plugin requires only git and no additional MCP servers for its core review.
@@ -283,17 +283,17 @@ xcopy /E /I plugins\decision-tracker\skills\decision-tracker %USERPROFILE%\.clau
 # macOS / Linux -- decision-tracker
 cp -r plugins/decision-tracker/skills/decision-tracker ~/.claude/skills/decision-tracker
 
-# Windows -- roslyn-codegraph-integration
-xcopy /E /I plugins\roslyn-codegraph-integration\skills\roslyn-codegraph-integration %USERPROFILE%\.claude\skills\roslyn-codegraph-integration
+# Windows -- roslyn-codelens-integration
+xcopy /E /I plugins\roslyn-codelens-integration\skills\roslyn-codelens-integration %USERPROFILE%\.claude\skills\roslyn-codelens-integration
 
-# macOS / Linux -- roslyn-codegraph-integration
-cp -r plugins/roslyn-codegraph-integration/skills/roslyn-codegraph-integration ~/.claude/skills/roslyn-codegraph-integration
+# macOS / Linux -- roslyn-codelens-integration
+cp -r plugins/roslyn-codelens-integration/skills/roslyn-codelens-integration ~/.claude/skills/roslyn-codelens-integration
 ```
 
-**Note:** decision-tracker and roslyn-codegraph-integration require their companion MCP servers. Install them separately:
+**Note:** decision-tracker and roslyn-codelens-integration require their companion MCP servers. Install them separately:
 
 - **decision-tracker:** `claude mcp add longterm-memory -- npx -y longterm-memory-mcp`
-- **roslyn-codegraph-integration:** `dotnet tool install -g roslyn-codegraph-mcp && claude mcp add roslyn-codegraph -- roslyn-codegraph-mcp`
+- **roslyn-codelens-integration:** `dotnet tool install -g roslyn-codelens-mcp && claude mcp add roslyn-codelens -- roslyn-codelens-mcp`
 
 ### Optional Playwright Flags
 
@@ -307,7 +307,7 @@ claude mcp add playwright -- npx @playwright/mcp@latest --caps=testing,pdf,visio
 
 ### Verify Installation
 
-In Claude Code, the skills should appear when you type `/regression-test`, `/pre-push-review`, `/refactor-analysis`, `/decision-tracker`, or `/roslyn-codegraph-integration`, or when you ask Claude to perform regression testing, a pre-push review, a refactor impact analysis, decision tracking, or .NET code graph analysis.
+In Claude Code, the skills should appear when you type `/regression-test`, `/pre-push-review`, `/refactor-analysis`, `/decision-tracker`, or `/roslyn-codelens-integration`, or when you ask Claude to perform regression testing, a pre-push review, a refactor impact analysis, decision tracking, or .NET code graph analysis.
 
 ## Project Structure
 
@@ -346,11 +346,11 @@ superpowers-extensions/
 │   │   └── skills/
 │   │       └── decision-tracker/
 │   │           └── SKILL.md
-│   └── roslyn-codegraph-integration/
+│   └── roslyn-codelens-integration/
 │       ├── .claude-plugin/
 │       │   └── plugin.json
 │       └── skills/
-│           └── roslyn-codegraph-integration/
+│           └── roslyn-codelens-integration/
 │               └── SKILL.md
 └── docs/
     └── plans/                              # Design documents
@@ -374,7 +374,7 @@ React Router, Next.js (App Router & Pages Router), Angular, Vue Router, SvelteKi
 - **For pre-push-review:** A git repository with a feature branch. Playwright MCP server is optional (enables browser-based regression testing as part of the review).
 - **For refactor-analysis:** A git repository with code to analyze. No additional tools required.
 - **For decision-tracker:** [LongtermMemory-MCP](https://github.com/MarcelRoozekrans/LongtermMemory-MCP) for cross-session persistence (installed automatically via marketplace dependencies). Works without it in degraded mode.
-- **For roslyn-codegraph-integration:** [roslyn-codegraph-mcp](https://github.com/MarcelRoozekrans/roslyn-codegraph-mcp) MCP server (installed automatically via marketplace dependencies). Skill is inert without it.
+- **For roslyn-codelens-integration:** [roslyn-codelens-mcp](https://github.com/MarcelRoozekrans/roslyn-codelens-mcp) MCP server (installed automatically via marketplace dependencies). Skill is inert without it.
 
 ## License
 

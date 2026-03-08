@@ -1,18 +1,18 @@
 ---
-name: roslyn-codegraph-integration
-description: Use when brainstorming or refactor-analysis is active on a .NET codebase and roslyn-codegraph MCP tools are available (find_implementations, find_callers, etc.)
+name: roslyn-codelens-integration
+description: Use when brainstorming or refactor-analysis is active on a .NET codebase and roslyn-codelens MCP tools are available (find_implementations, find_callers, etc.)
 ---
 
-# Roslyn Code Graph — Superpowers Integration
+# Roslyn CodeLens — Superpowers Integration
 
 ## Prerequisites
 
-This skill requires the roslyn-codegraph MCP server tools (`find_implementations`, `find_callers`, `get_type_hierarchy`, `get_di_registrations`, `get_project_dependencies`, `get_symbol_context`, `find_reflection_usage`).
+This skill requires the roslyn-codelens MCP server tools (`find_implementations`, `find_callers`, `get_type_hierarchy`, `get_di_registrations`, `get_project_dependencies`, `get_symbol_context`, `find_reflection_usage`).
 
-**MCP server setup:** The `roslyn-codegraph` MCP server is configured by the [roslyn-codegraph-mcp](https://github.com/MarcelRoozekrans/roslyn-codegraph-mcp) companion plugin, which is pulled in automatically as a marketplace dependency. Install it with:
+**MCP server setup:** The `roslyn-codelens` MCP server is configured by the [roslyn-codelens-mcp](https://github.com/MarcelRoozekrans/roslyn-codelens-mcp) companion plugin, which is pulled in automatically as a marketplace dependency. Install it with:
 
 ```bash
-claude plugin install roslyn-codegraph
+claude plugin install roslyn-codelens
 ```
 
 ## Detection
@@ -21,7 +21,7 @@ Check if `find_implementations` is available as an MCP tool. If not, this skill 
 
 ## Overview
 
-This skill enhances two superpowers skills with semantic .NET code intelligence. When roslyn-codegraph tools are detected, use them **instead of Grep/Glob** for structural code queries — they provide semantic accuracy that text search cannot match.
+This skill enhances two superpowers skills with semantic .NET code intelligence. When roslyn-codelens tools are detected, use them **instead of Grep/Glob** for structural code queries — they provide semantic accuracy that text search cannot match.
 
 **Core principle:** Grep finds text. Roslyn understands code. Use Roslyn for structure, Grep for content.
 
@@ -29,7 +29,7 @@ This skill enhances two superpowers skills with semantic .NET code intelligence.
 
 When this skill activates alongside brainstorming or refactor-analysis:
 
-> "Roslyn code graph tools detected. I'll use semantic code intelligence for architectural context."
+> "Roslyn CodeLens tools detected. I'll use semantic code intelligence for architectural context."
 
 ## Brainstorming Integration
 
@@ -125,4 +125,4 @@ When refactor-analysis is active on a .NET codebase and roslyn tools are availab
 | `superpowers:writing-plans` | **Indirect benefit.** Plans produced after roslyn-enhanced brainstorming or refactor-analysis contain more accurate dependency information. | No direct tool usage during plan writing. |
 | `superpowers:subagent-driven-development` | **Indirect benefit.** Subagents implementing plans get better context when plans were informed by semantic analysis. | Subagents can use roslyn tools directly if available in their session. |
 | `decision-tracker` | **No interaction.** Decision tracking operates on cross-cutting decisions, not code structure. | Independent — both can be active simultaneously. |
-| `roslyn-codegraph:roslyn-codegraph` | **Required dependency.** Provides the MCP tools (`find_implementations`, `find_callers`, `get_type_hierarchy`, etc.) that this skill uses to enhance brainstorming and refactor-analysis. | Skill is inert without it. |
+| `roslyn-codelens:roslyn-codelens` | **Required dependency.** Provides the MCP tools (`find_implementations`, `find_callers`, `get_type_hierarchy`, etc.) that this skill uses to enhance brainstorming and refactor-analysis. | Skill is inert without it. |
