@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.4.0](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.3.2...superpowers-extensions-v1.4.0) (2026-03-08)
+
+
+### Features
+
+* **roslyn-codelens-integration:** add MCP server and map all 21 tools ([d07b1fa](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/d07b1fa93d96b07df6e21d4e4b61f0626d3e0908))
+* **roslyn-codelens-integration:** add MCP server config and update skill for all 21 tools ([1d506aa](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/1d506aa0f650fb2d46155a10fbe1087aaf98a301))
+
 ## [1.3.2](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.3.1...superpowers-extensions-v1.3.2) (2026-03-07)
 
 
