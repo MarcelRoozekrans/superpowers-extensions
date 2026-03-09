@@ -63,6 +63,7 @@ Call **`analyze`** to run the 10-rule engine (ML001-ML010) against the snapshot.
 Present findings **ordered by severity** alongside other Phase 1 evidence. Format:
 
 > **Memory Analysis Findings:**
+>
 > - **CRITICAL** ML001: Event handler leak — `UserService.OnDataChanged` (47 retained instances)
 > - **HIGH** ML003: Disposable not disposed — `DbConnection` in `OrderRepository.GetOrders`
 > - *(clean)* No fragmentation, retention, or allocation issues detected.
@@ -82,10 +83,12 @@ Ensure the proposed fix is compiled and the target process is running with the f
 ### Step 2: Compare Snapshots
 
 Call **`compare_snapshots`** with:
+
 - The target process PID
 - A configurable delay (default: 10 seconds) between the two snapshots
 
 This captures two snapshots and diffs them, showing:
+
 - Objects that grew between snapshots
 - New object types that appeared
 - Retained bytes changes
@@ -103,6 +106,7 @@ This captures two snapshots and diffs them, showing:
 Present the comparison results alongside the hypothesis verdict:
 
 > **Memory Comparison (10s interval):**
+>
 > - `UserService` retained instances: 47 → 2 (95% reduction) ✓
 > - `DbConnection` surviving objects: 12 → 0 (resolved) ✓
 > - **Verdict:** Fix validated. Proceeding to implementation.
