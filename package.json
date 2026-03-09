@@ -1,6 +1,6 @@
 {
   "name": "superpowers-extensions",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "private": true,
   "description": "Extension skills for the superpowers suite — quality gates and development workflow skills for Claude Code",
   "scripts": {

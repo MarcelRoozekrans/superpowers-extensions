@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.5.0](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.4.0...superpowers-extensions-v1.5.0) (2026-03-09)
+
+
+### Features
+
+* add memorylens-integration plugin ([0fab7d1](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/0fab7d1dd2563140a8fe9c0d2df30f7f7bd41068))
+* **memorylens-integration:** add main skill for debugging phase integration ([9469f0a](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/9469f0a3276cccb3a0dac4478c6c22a7d7b36cbd))
+* **memorylens-integration:** add plugin manifest and MCP auto-config ([31d8e7e](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/31d8e7ec856bfd109b5cbf69b44a0ff6189a471e))
+* **memorylens-integration:** register plugin in hub marketplace and commitlint ([ac71809](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/ac718090fc65037470a0ed4bcc30c886568aea3d))
+
+
+### Bug Fixes
+
+* **memorylens-integration:** add blank lines around lists for MD032 compliance ([934da8a](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/934da8ab588fa253dd03de12a878523964a4c773))
+
 ## [1.4.0](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.3.2...superpowers-extensions-v1.4.0) (2026-03-08)
 
 
