@@ -1,0 +1,14 @@
+{
+  "name": "memorylens-integration",
+  "description": "Superpowers integration for MemoryLens memory profiling. Enhances systematic-debugging with .NET memory snapshot analysis and leak detection when MemoryLens MCP tools are available.",
+  "author": {
+    "name": "Marcel Roozekrans"
+  },
+  "mcpServers": {
+    "memorylens": {
+      "command": "memorylens-mcp",
+      "args": [],
+      "transport": "stdio"
+    }
+  }
+}

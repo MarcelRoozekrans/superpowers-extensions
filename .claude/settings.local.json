@@ -1,7 +1,15 @@
 {
   "permissions": {
     "allow": [
-      "Read(//c/Users/MarcelRoozekrans/.claude/plugins/cache/superpowers-marketplace/superpowers/4.3.1/skills/subagent-driven-development/**)"
+      "Read(//c/Users/MarcelRoozekrans/.claude/plugins/cache/superpowers-marketplace/superpowers/4.3.1/skills/subagent-driven-development/**)",
+      "Bash(mkdir -p plugins/roslyn-codelens-integration/.claude-plugin)",
+      "Bash(mkdir -p plugins/roslyn-codelens-integration/skills/roslyn-codelens-integration)",
+      "Bash(gh api repos/MarcelRoozekrans/roslyn-codelens-mcp/contents/README.md --jq '.content')",
+      "Bash(gh api repos/MarcelRoozekrans/roslyn-codelens-mcp --jq '.description')",
+      "Read(//c/Users/MarcelRoozekrans/.claude/**)",
+      "Bash(gh api repos/MarcelRoozekrans/memorylens-mcp/readme --jq '.content')",
+      "Bash(gh api repos/MarcelRoozekrans/memorylens-mcp/readme -q '.content')",
+      "Bash(python -m base64 -d)"
     ]
   }
 }
