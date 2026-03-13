@@ -113,6 +113,33 @@ Present the comparison results alongside the hypothesis verdict:
 
 ---
 
+## Brainstorming Integration
+
+When brainstorming is active on a .NET project and `ensure_dotmemory` is available, apply ML rule knowledge to inform design questions and approach proposals. **No profiling happens during brainstorming** — no `snapshot` or `compare_snapshots` calls. This is knowledge application only.
+
+### Trigger
+
+Check if `ensure_dotmemory` is available as an MCP tool. If it is and brainstorming is active on a .NET codebase, apply the guidance below.
+
+### What to Do
+
+When the design involves any of the following patterns, proactively raise the corresponding memory risk as part of the design discussion:
+
+| Design Pattern | ML Rule | Risk |
+|---|---|---|
+| Event subscriptions (event handlers, delegates, callbacks) | ML001 | Event handler leak — subscribers keep publishers alive. Ask: how are subscriptions cleaned up when the subscriber is disposed? |
+| Caching / static collections | ML002, ML005 | Static collection growth / gen2 retention. Ask: is there a bounded eviction policy? |
+| `IDisposable` implementations or resource ownership | ML003, ML009 | Undisposed disposables / finalizer without Dispose. Ask: who owns disposal and what is the lifetime? |
+| Large buffers, arrays, or streaming data (> 85 KB) | ML004, ML008 | LOH fragmentation / collection resizing. Ask: is the buffer reused or allocated per request? Can `ArrayPool<T>` help? |
+
+Raise these as design questions, not as blocking warnings. The goal is to surface memory constraints early — before the design is locked in — so they can inform the proposed approaches.
+
+### Announce Line
+
+> "MemoryLens rule knowledge active. I'll flag memory risk patterns as they appear in the design."
+
+---
+
 ## Tool Quick Reference
 
 | Tool | Phase | Purpose |
@@ -149,7 +176,7 @@ Rules can be customized per-project via `.memorylens.json` in the project root. 
 | `superpowers:systematic-debugging` | **Always-on when detected.** Augments Phase 1 (snapshot + analyze for evidence) and Phase 3 (compare_snapshots for fix validation). | Falls back to standard debugging when MemoryLens tools are not available. |
 | `superpowers:verification-before-completion` | **Complementary.** Final snapshot comparison proves the fix resolved the memory issue before claiming completion. | Use `compare_snapshots` as verification evidence. |
 | `superpowers:test-driven-development` | **Complementary.** Memory findings can inform test assertions (e.g., assert no retained instances after disposal). | No direct tool usage — findings inform test design. |
-| `superpowers:brainstorming` | **Read-only context.** Memory constraints (known leaks, fragmentation thresholds) inform architectural decisions. | No direct tool usage during brainstorming. |
+| `superpowers:brainstorming` | **Active when detected.** Applies ML rule knowledge to flag memory risks during design (event leaks, static growth, LOH fragmentation, IDisposable ownership). No profiling — knowledge only. | Falls back to standard brainstorming when MemoryLens tools are not available. |
 | `roslyn-codelens-integration` | **Complementary.** Roslyn tools can locate the code causing memory issues found by MemoryLens (e.g., `find_callers` on a leaking event handler). | Both can be active simultaneously — Roslyn for structure, MemoryLens for runtime memory. |
 | `decision-tracker` | **No interaction.** Decision tracking operates on cross-cutting decisions, not memory profiling. | Independent — both can be active simultaneously. |
 
