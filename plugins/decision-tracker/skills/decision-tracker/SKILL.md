@@ -7,7 +7,7 @@ description: Use at session start and during brainstorming, writing-plans, refac
 
 ## Prerequisites
 
-This skill requires LongtermMemory-MCP tools (`save_memory`, `search_memory`, `search_by_tags`, `update_memory`, `delete_memory`) for full functionality.
+This skill requires LongtermMemory-MCP tools (`save_memory`, `search_memory`, `search_by_tags`, `search_by_date_range`, `update_memory`, `delete_memory`) for full functionality.
 
 **MCP server setup:** The `longterm-memory` MCP server is configured by the [LongtermMemory-MCP](https://github.com/MarcelRoozekrans/LongtermMemory-MCP) companion plugin, which is pulled in automatically as a marketplace dependency. Install it with:
 
@@ -139,11 +139,20 @@ When any superpowers skill activates, recall existing decisions:
 
    Followed by the grouped list of decisions.
 
-5. **Validate stale decisions** — for decisions older than 90 days, ask:
+5. **Validate stale decisions** — after the main recall, call `search_by_date_range` with:
+   - `start`: any early date (e.g., `2000-01-01`)
+   - `end`: today's date minus 90 days
 
-   > "This decision was made N months ago: [decision]. Still valid?"
+   Then filter the results to only those that have both `decision` and `project:<name>` in their tags.
 
-   If the user says the decision is no longer valid, call `delete_memory` to remove it. If the decision has been replaced by a newer one, call `update_memory` to record what superseded it.
+   - If no stale decisions are found, skip this step entirely — do not prompt the user.
+   - If stale decisions are found, present them grouped under a **"Decisions to validate (90+ days old)"** heading and for each ask:
+
+     > "This decision is N months old: [decision]. Still valid?"
+
+     - User confirms → no action
+     - User says no longer valid → call `delete_memory`
+     - User says superseded → call `update_memory` to record what replaced it
 
 6. **Once per session** — this recall happens once at the start. Do NOT re-recall on every skill invocation.
 
@@ -240,7 +249,7 @@ These are mistakes that compromise the quality of decision tracking. If you noti
 | Project detection | Git remote → .sln → package.json → directory name | `Bash` (git remote) |
 | Session recall | search_by_tags → group → present → validate stale | `search_by_tags` |
 | Decision extraction | Identify cross-cutting statement → dedup → save | `search_memory`, `save_memory` |
-| Stale validation | Check age > 90 days → ask user → delete or update | `delete_memory`, `update_memory` |
+| Stale validation | `search_by_date_range` (end = today − 90d) → filter by tags → ask user → delete or update | `search_by_date_range`, `delete_memory`, `update_memory` |
 | Subagent injection | Derive query → search → filter → inject top 2-3 | `search_memory` |
 | Graceful degradation | Check tool availability → embed in plan doc if missing | `Write` (plan doc) |
 
