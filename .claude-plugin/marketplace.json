@@ -55,7 +55,7 @@
     },
     {
       "name": "roslyn-codelens-integration",
-      "description": "Superpowers integration for Roslyn CodeLens intelligence. Maps 21 semantic .NET code analysis tools into brainstorming and refactor-analysis phases for architectural context, dependency mapping, risk detection, and code quality analysis.",
+      "description": "Superpowers integration for Roslyn CodeLens intelligence. Maps 24 semantic .NET code analysis tools into brainstorming and refactor-analysis phases for architectural context, dependency mapping, risk detection, and code quality analysis.",
       "version": "1.5.0",
       "author": {
         "name": "Marcel Roozekrans"

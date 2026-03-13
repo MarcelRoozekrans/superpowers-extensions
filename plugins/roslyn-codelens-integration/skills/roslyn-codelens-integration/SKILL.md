@@ -7,7 +7,7 @@ description: Use when brainstorming or refactor-analysis is active on a .NET cod
 
 ## Prerequisites
 
-This skill requires the roslyn-codelens MCP server (21 tools). Install via:
+This skill requires the roslyn-codelens MCP server (24 tools). Install via:
 
 ```bash
 claude install gh:MarcelRoozekrans/roslyn-codelens-mcp
@@ -131,6 +131,27 @@ Use **`get_project_dependencies`** and **`find_circular_dependencies`** to infor
 
 ---
 
+## Solution Management
+
+These tools apply across all skill integrations whenever multiple solutions are involved:
+
+### At Session Start
+
+Call **`list_solutions`** at the start of any session to see all loaded solutions, which one is active, how many projects each has, and their status. If more than one solution is loaded and the user's request targets a specific one, call **`set_active_solution`** with a partial name (e.g., `set_active_solution("ProjectB")`).
+
+### After Structural Changes
+
+Call **`rebuild_solution`** after any of these events:
+
+- Adding or removing NuGet packages
+- Modifying `Directory.Build.props` or global analyzer configuration
+- Adding or removing projects from the solution
+- When `get_diagnostics` returns stale or unexpected results
+
+This forces a full reload — re-opens the `.sln`, recompiles all projects, and rebuilds all indexes. Do not call it speculatively; only call it when there is a reason to believe the analysis is out of date.
+
+---
+
 ## Tool Quick Reference
 
 | Tool | Brainstorming Phase | Refactor Analysis Phase |
@@ -156,7 +177,9 @@ Use **`get_project_dependencies`** and **`find_circular_dependencies`** to infor
 | `find_circular_dependencies` | P3: cycle detection | P3/P5/P6: dependency cycles |
 | `get_source_generators` | P1: generator awareness | P5: generated code coupling |
 | `get_generated_code` | — | P5: inspect generator output |
-| `rebuild_solution` | (after structural changes) | (after structural changes) |
+| `list_solutions` | Session start (multi-solution) | Session start (multi-solution) |
+| `set_active_solution` | When user targets specific project | When user targets specific project |
+| `rebuild_solution` | After structural changes | After structural changes |
 
 ---
 
