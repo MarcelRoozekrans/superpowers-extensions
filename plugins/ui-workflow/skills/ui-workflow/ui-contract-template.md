@@ -67,6 +67,8 @@ Base unit: 4px or 8px. Scale: 4, 8, 12, 16, 24, 32, 48, 64.
 
 **Visual notes:** Any specific visual requirements (border radius, shadow, animation).
 
+<!-- Repeat the Component block above for each component in scope. Most phases have 3–8 components. -->
+
 ---
 
 ## Layout Specification
