@@ -1,0 +1,7 @@
+{
+  "name": "ui-workflow",
+  "description": "Frontend design contracts and visual auditing. Generates structured UI design contracts before implementing frontend phases (ui-phase) and performs retroactive visual audits against those contracts using regression-test (ui-review).",
+  "author": {
+    "name": "Marcel Roozekrans"
+  }
+}
