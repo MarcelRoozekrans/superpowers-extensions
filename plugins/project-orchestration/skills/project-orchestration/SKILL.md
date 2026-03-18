@@ -189,7 +189,7 @@ After `audit-milestone` identifies gaps — the milestone definition of done is 
 
 ### Process
 
-1. Read the audit report (from `docs/plans/YYYY-MM-DD-<milestone>-audit.md`).
+1. Read the audit report (from `docs/plans/YYYY-MM-DD-milestone-N-audit.md`).
 2. For each gap identified, propose a new phase to close it.
 3. Present the proposed phases to the user for approval.
 4. On approval, invoke `add-phase` for each approved phase.
@@ -243,7 +243,8 @@ At the start of a session on a project with existing `.planning/` state. Trigger
    >
    > Ready to continue?
 
-4. On confirmation, invoke the appropriate next skill (executing-plans, brainstorming, etc.).
+4. If `decision-tracker` is active for this project, trigger decision recall now to restore cross-cutting decisions alongside session state.
+5. On confirmation, invoke the appropriate next skill (executing-plans, brainstorming, etc.).
 
 ---
 
@@ -288,8 +289,9 @@ After `audit-milestone` returns PASS.
 1. Confirm with user: "Mark Milestone N — <name> as complete and tag release?"
 2. Update `.planning/ROADMAP.md`: set milestone status to `complete`, record completion date.
 3. Update `.planning/MILESTONE.md`: set status to `complete`.
-4. Tag the release: `git tag -a vN.0 -m "Milestone N: <name> complete"`
-5. Announce: "Milestone N complete. Tagged as vN.0. Ready to start Milestone N+1 with `new-milestone`."
+4. Commit the state file changes: `git commit -am "chore(milestone): complete milestone N — <name>"`
+5. Tag the release: `git tag -a vN.0 -m "Milestone N: <name> complete"`
+6. Announce: "Milestone N complete. Tagged as vN.0. Ready to start Milestone N+1 with `new-milestone`."
 
 ---
 
