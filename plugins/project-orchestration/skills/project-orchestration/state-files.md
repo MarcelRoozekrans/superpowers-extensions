@@ -15,8 +15,10 @@ Tracks all milestones, their phases, and completion status.
 ```markdown
 # Project Roadmap
 
-## Milestone 1: <Name> [status: active|complete]
+## Milestone 1: <Name> [status: active|complete|pending]
 **Goal:** One sentence
+**Started:** YYYY-MM-DD (when status: active or complete)
+**Completed:** YYYY-MM-DD (when status: complete)
 **Definition of Done:**
 - [ ] Criterion 1
 - [ ] Criterion 2
@@ -24,6 +26,7 @@ Tracks all milestones, their phases, and completion status.
 ### Phase 1.1: <Name> [status: complete|active|pending]
 **Goal:** One sentence
 **Plan:** `docs/plans/YYYY-MM-DD-<phase>.md`
+**Completed:** YYYY-MM-DD (when status: complete)
 
 ### Phase 1.2: <Name> [status: pending]
 ...
@@ -38,6 +41,8 @@ Session handoff document. Written by `pause-work`, read by `resume-work`.
 
 ```markdown
 # Session State — <Date>
+
+**Date:** YYYY-MM-DD
 
 ## Current Position
 - **Milestone:** <N> — <Name>
@@ -63,9 +68,10 @@ Current active milestone definition.
 ```markdown
 # Milestone <N>: <Name>
 
-**Status:** active
+**Status:** active|complete
 **Started:** YYYY-MM-DD
 **Target:** YYYY-MM-DD (optional)
+**Completed:** YYYY-MM-DD (when status: complete)
 
 ## Goal
 One paragraph.
