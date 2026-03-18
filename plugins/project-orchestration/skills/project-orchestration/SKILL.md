@@ -128,7 +128,7 @@ When urgent work needs to be inserted between two existing phases.
 2. Ask: "Insert after which phase?" and "New phase name and goal?"
 3. Insert the new phase, renumber all subsequent phases.
 4. Update `docs/planning/MILESTONE.md`.
-5. Announce: "Inserted Phase N.M — <name> between N.M-1 and old N.M (now N.M+1)."
+5. Announce: "Inserted Phase N.M — {name} between N.M-1 and old N.M (now N.M+1)."
 6. Commit: `git commit -m "chore(roadmap): insert phase N.M — <name>"`
 
 ---
@@ -148,7 +148,7 @@ When a future (pending) phase should be removed from the roadmap.
 
 1. Read `docs/planning/ROADMAP.md`, present pending phases.
 2. Ask: "Which phase to remove?"
-3. Confirm: "Remove Phase N.M — <name>? This cannot be undone."
+3. Confirm: "Remove Phase N.M — {name}? This cannot be undone."
 4. Remove the phase, renumber subsequent phases.
 5. Commit: `git commit -m "chore(roadmap): remove phase N.M — <name>"`
 
@@ -256,7 +256,7 @@ When the user believes a milestone is complete and wants to verify it against it
 
 ### Announce Line
 
-> "Auditing milestone N — <name>. I'll verify each definition-of-done criterion against git history, test results, and documentation."
+> "Auditing milestone N — {name}. I'll verify each definition-of-done criterion against git history, test results, and documentation."
 
 ### Process
 
@@ -282,11 +282,11 @@ After `audit-milestone` returns PASS.
 
 ### Announce Line
 
-> "Completing milestone N — <name>. I'll archive the milestone doc, tag the release, and update the roadmap."
+> "Completing milestone N — {name}. I'll archive the milestone doc, tag the release, and update the roadmap."
 
 ### Process
 
-1. Confirm with user: "Mark Milestone N — <name> as complete and tag release?"
+1. Confirm with user: "Mark Milestone N — {name} as complete and tag release?"
 2. Update `docs/planning/ROADMAP.md`: set milestone status to `complete`, record completion date.
 3. Update `docs/planning/MILESTONE.md`: set status to `complete`.
 4. Commit the state file changes: `git add docs/planning/ROADMAP.md docs/planning/MILESTONE.md && git commit -m "chore(milestone): complete milestone N — <name>"`
@@ -308,7 +308,7 @@ After `complete-milestone`, or when the user wants to start a new version cycle.
 3. Determine milestone number (current + 1).
 4. Create/overwrite `docs/planning/MILESTONE.md` with the new milestone definition.
 5. Add the new milestone to `docs/planning/ROADMAP.md` with status `active`.
-6. Announce: "Milestone N+1 — <name> started. Use `add-phase` to add the first phase, or `brainstorming` to design it."
+6. Announce: "Milestone N+1 — {name} started. Use `add-phase` to add the first phase, or `brainstorming` to design it."
 7. Commit: `git commit -m "chore(milestone): start milestone N+1 — <name>"`
 
 ---

@@ -1,10 +1,10 @@
-# UI Design Contract: <Phase Name>
+# UI Design Contract: {Phase Name}
 
-> **Purpose:** This contract defines the visual and interaction specification for the `<phase name>` frontend phase.
+> **Purpose:** This contract defines the visual and interaction specification for the `{phase name}` frontend phase.
 > It is produced by `ui-phase` before implementation and used by `ui-review` to audit the result.
 
 **Date:** YYYY-MM-DD
-**Phase:** N.M — <Phase Name>
+**Phase:** N.M — {Phase Name}
 **Plan:** `docs/plans/YYYY-MM-DD-<phase>.md`
 
 ---
@@ -12,6 +12,7 @@
 ## Design System
 
 ### Colors
+
 | Token | Value | Usage |
 |---|---|---|
 | `primary` | #XXXXXX | Primary actions, CTAs |
@@ -23,6 +24,7 @@
 | `success` | #XXXXXX | Confirmations |
 
 ### Typography
+
 | Role | Font | Size | Weight | Line Height |
 |---|---|---|---|---|
 | H1 | System/Brand | 32px | 700 | 1.2 |
@@ -32,9 +34,11 @@
 | Caption | System | 12px | 400 | 1.4 |
 
 ### Spacing
+
 Base unit: 4px or 8px. Scale: 4, 8, 12, 16, 24, 32, 48, 64.
 
 ### Component Library
+
 - [ ] None (custom)
 - [ ] Tailwind CSS
 - [ ] shadcn/ui
@@ -46,20 +50,23 @@ Base unit: 4px or 8px. Scale: 4, 8, 12, 16, 24, 32, 48, 64.
 
 ## Components
 
-### Component: `<ComponentName>`
+### Component: `{ComponentName}`
 
 **Purpose:** One sentence describing what this component does.
 
 **Props API:**
+
 | Prop | Type | Required | Default | Description |
 |---|---|---|---|---|
 | `propName` | `string` | Yes | — | Description |
 
 **Variants:**
+
 - `default` — Description
 - `compact` — Description
 
 **States:**
+
 - `loading` — Show skeleton or spinner
 - `empty` — "No items yet" message with CTA
 - `error` — Inline error message, retry option
@@ -74,7 +81,8 @@ Base unit: 4px or 8px. Scale: 4, 8, 12, 16, 24, 32, 48, 64.
 ## Layout Specification
 
 ### Desktop (≥1280px)
-```
+
+```text
 ┌─────────────────────────────────────┐
 │ Header / Navigation                 │
 ├──────────┬──────────────────────────┤
@@ -84,16 +92,19 @@ Base unit: 4px or 8px. Scale: 4, 8, 12, 16, 24, 32, 48, 64.
 │          │  [Component B]           │
 └──────────┴──────────────────────────┘
 ```
+
 - Sidebar: fixed or sticky
 - Main: scrollable
 - Max content width: 1200px
 
 ### Tablet (768px–1279px)
+
 - Sidebar collapses to hamburger menu
 - Content takes full width
 - Grid: 2 columns → 1 column
 
 ### Mobile (<768px)
+
 - Single column layout
 - Navigation moves to bottom tab bar
 - Cards stack vertically
@@ -104,6 +115,7 @@ Base unit: 4px or 8px. Scale: 4, 8, 12, 16, 24, 32, 48, 64.
 ## Interaction States
 
 ### Page-level states
+
 | State | Trigger | UI |
 |---|---|---|
 | Loading | Initial data fetch | Full-page skeleton |
@@ -112,6 +124,7 @@ Base unit: 4px or 8px. Scale: 4, 8, 12, 16, 24, 32, 48, 64.
 | Success | Action completed | Toast notification (3s auto-dismiss) |
 
 ### Form behavior
+
 - Validation: on blur (not on keystroke)
 - Error messages: below the field in `danger` color
 - Submit: disable button during submission, show loading spinner

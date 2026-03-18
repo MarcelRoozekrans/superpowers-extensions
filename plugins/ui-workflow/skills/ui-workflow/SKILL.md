@@ -36,6 +36,7 @@ Invoke after `brainstorming` approves a frontend design and before writing the i
 - Before implementing any phase with significant visual surface area
 
 Do NOT invoke for:
+
 - Backend-only phases (API, database, services)
 - Configuration or infrastructure phases
 - Phases where UI is trivially simple (a single button with no layout)
@@ -86,11 +87,13 @@ Do NOT invoke for:
 8. **Present each section to the user** — ask "does this look right?" after each major section. Be ready to revise.
 
 9. **Save the contract** using [ui-contract-template.md](ui-contract-template.md) as the structure:
-   ```
+
+   ```text
    docs/plans/YYYY-MM-DD-<phase-name>-ui-contract.md
    ```
 
 10. **Commit:**
+
     ```bash
     git add docs/plans/YYYY-MM-DD-<phase>-ui-contract.md
     git commit -m "docs(ui): add ui contract for phase N.M — <name>"
@@ -112,6 +115,7 @@ Invoke after implementing a frontend phase to audit the result against the ui-co
 - As part of `audit-milestone` when the milestone includes frontend phases
 
 Do NOT invoke when:
+
 - No ui-contract exists for the phase (no spec to audit against)
 - The phase has no frontend output
 
@@ -163,11 +167,12 @@ Do NOT invoke when:
 
 6. **Produce audit report:**
 
-   ```
+   ```text
    docs/plans/YYYY-MM-DD-ui-review-<phase>.md
    ```
 
    Report structure:
+
    ```markdown
    # UI Review: Phase N.M — <Name>
 
@@ -209,6 +214,7 @@ Do NOT invoke when:
    - **FAIL** — one or more ❌ Missing criteria
 
 8. **Commit the report:**
+
    ```bash
    git add docs/plans/YYYY-MM-DD-ui-review-<phase>.md
    git commit -m "docs(ui-review): add ui-review report for phase N.M — <name>"
