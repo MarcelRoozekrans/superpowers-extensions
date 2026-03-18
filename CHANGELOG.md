@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.6.0](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.5.0...superpowers-extensions-v1.6.0) (2026-03-13)
+
+
+### Features
+
+* **decision-tracker:** automate stale validation with search_by_date_range ([44b87eb](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/44b87ebcbfd558356005dcabfa7d875b8edc9859))
+* **memorylens-integration:** add brainstorming integration section and update relationship table ([815ad52](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/815ad526f8cc5a952b9e715229c777aaafa383a9))
+* **roslyn-codelens-integration:** add list_solutions, set_active_solution, promote rebuild_solution ([0bd4313](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/0bd431378a1bb0830fa472fea5e2a6bcee141108))
+* sync integration skills with dependent repos (roslyn +3 tools, memorylens brainstorming, decision-tracker stale validation) ([c79abcf](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/c79abcfd9500f5b77781a9e24c548731e9060395))
+
+
+### Bug Fixes
+
+* **decision-tracker:** clarify search_by_date_range usage and add graceful degradation ([99f4823](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/99f4823229ec8967588c08ef0250d15812d27731))
+
 ## [1.5.0](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.4.0...superpowers-extensions-v1.5.0) (2026-03-09)
 
 
