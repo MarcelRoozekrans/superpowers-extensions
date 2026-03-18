@@ -1,15 +1,7 @@
 {
-  "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
   "name": "project-orchestration",
-  "version": "1.6.0",
   "description": "GSD-inspired project lifecycle management for larger multi-session projects. Brownfield codebase mapping, milestone tracking, phase management, session pause/resume, progress overview, and release cycle management.",
   "author": {
     "name": "Marcel Roozekrans"
-  },
-  "skills": [
-    {
-      "name": "project-orchestration",
-      "path": "./skills/project-orchestration/SKILL.md"
-    }
-  ]
+  }
 }
