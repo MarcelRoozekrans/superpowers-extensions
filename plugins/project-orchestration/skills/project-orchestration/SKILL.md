@@ -79,7 +79,7 @@ Invoke when the user asks "where are we?", "what's next?", "show me progress", o
 
 2. **Read `.planning/ROADMAP.md`** — parse milestones and phases, identify which are complete, active, and pending.
 
-3. **Read `.planning/STATE.md`** — get last session handoff (current phase, last task, next step).
+3. **Read `.planning/STATE.md`** — get last session handoff (current phase, last task, next step). If `STATE.md` does not exist (fresh project with no prior pause), skip steps 3 and omit "Last completed" and "Next step" from the output.
 
 4. **Read `.planning/MILESTONE.md`** — get current milestone goal and definition of done.
 
@@ -289,7 +289,7 @@ After `audit-milestone` returns PASS.
 1. Confirm with user: "Mark Milestone N — <name> as complete and tag release?"
 2. Update `.planning/ROADMAP.md`: set milestone status to `complete`, record completion date.
 3. Update `.planning/MILESTONE.md`: set status to `complete`.
-4. Commit the state file changes: `git commit -am "chore(milestone): complete milestone N — <name>"`
+4. Commit the state file changes: `git add .planning/ROADMAP.md .planning/MILESTONE.md && git commit -m "chore(milestone): complete milestone N — <name>"`
 5. Tag the release: `git tag -a vN.0 -m "Milestone N: <name> complete"`
 6. Announce: "Milestone N complete. Tagged as vN.0. Ready to start Milestone N+1 with `new-milestone`."
 
