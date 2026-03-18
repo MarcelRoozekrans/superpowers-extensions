@@ -1,12 +1,14 @@
 # Superpowers Extensions for Claude Code
 
-Extension skills for the [superpowers](https://github.com/anthropics/superpowers) suite, providing quality gates and development workflow skills for web application development. It includes five skills:
+Extension skills for the [superpowers](https://github.com/anthropics/superpowers) suite, providing quality gates, development workflow skills, and project lifecycle management for web application development. It includes seven skills:
 
 - **regression-test** -- Comprehensive regression testing using the [Microsoft Playwright MCP server](https://github.com/microsoft/playwright-mcp), combining existing test suite execution with AI-powered visual and functional browser testing.
 - **pre-push-review** -- A structured branch review that diffs against the base branch and gates on plan adherence, code quality, commit hygiene, and regression testing, producing a PASS/FAIL verdict with a prioritized remediation plan on failure.
 - **refactor-analysis** -- Transitive impact analysis for complex refactorings. Maps all affected files, classifies breaking vs cosmetic changes, identifies risks, and produces a safe execution order with checkpoint boundaries before writing implementation plans.
 - **decision-tracker** -- Persistent cross-cutting decision tracking using [LongtermMemory-MCP](https://github.com/MarcelRoozekrans/LongtermMemory-MCP). Automatically extracts architectural decisions, conventions, and constraints during brainstorming and planning, persists them to semantic long-term memory, and recalls them at session start and subagent dispatch to prevent decision amnesia.
 - **roslyn-codelens-integration** -- Superpowers integration for [Roslyn CodeLens](https://github.com/MarcelRoozekrans/roslyn-codelens-mcp) intelligence. Enhances brainstorming with semantic .NET code context and upgrades refactor-analysis with Roslyn-powered dependency mapping, transitive closure, and reflection-aware risk detection.
+- **project-orchestration** -- GSD-inspired project lifecycle management for larger multi-session projects. Covers brownfield codebase mapping, milestone tracking, phase management, session pause/resume, progress overview, milestone audit, and release cycle management.
+- **ui-workflow** -- Frontend design contracts and visual auditing. Generates structured UI design contracts before implementing frontend phases (`ui-phase`) and performs retroactive visual audits against those contracts using regression-test (`ui-review`).
 
 ---
 
@@ -189,6 +191,85 @@ If roslyn-codelens MCP tools are not available, the skill is completely inert. B
 
 ---
 
+## Project Orchestration Skill
+
+The project-orchestration skill provides GSD-inspired project lifecycle management for larger, multi-session projects. It wraps around the superpowers workflow without replacing it — adding navigation and state persistence on top of brainstorming, planning, and execution.
+
+### Sub-Skills
+
+| Sub-skill | Trigger | What It Does |
+|---|---|---|
+| `map-codebase` | Before brainstorming on an existing project | Analyzes structure, entry points, dependencies, and patterns; saves a codebase map to `docs/plans/` |
+| `progress` | "where are we?" / session start | Reads `docs/planning/` state files and presents milestone/phase status |
+| `add-phase` | "add a phase" | Appends a new pending phase to the current milestone |
+| `insert-phase` | "insert urgent work" | Inserts a phase between two existing phases, renumbers subsequent phases |
+| `remove-phase` | "remove phase N.M" | Removes a future (pending) phase after user confirmation |
+| `list-phase-assumptions` | Before executing a phase | Surfaces the intended implementation approach for user review before work begins |
+| `plan-milestone-gaps` | After a failed milestone audit | Proposes new phases to close each identified gap |
+| `pause-work` | "done for today" / stopping | Writes `docs/planning/STATE.md` with current position, open decisions, and recommended next step |
+| `resume-work` | "resume" / session start | Reads `STATE.md` and presents a session handoff summary before continuing |
+| `audit-milestone` | "verify milestone is done" | Verifies each definition-of-done criterion: phases, tests, regression test, docs, git tag |
+| `complete-milestone` | After audit PASS | Archives the milestone, tags the release in git, updates the roadmap |
+| `new-milestone` | After complete-milestone | Starts the next milestone with a new goal and definition of done |
+
+### State Files
+
+All state is stored in `docs/planning/` at the project root (commit or gitignore — your choice):
+
+- `docs/planning/ROADMAP.md` — All milestones and phases with completion status
+- `docs/planning/MILESTONE.md` — Current active milestone definition and definition of done
+- `docs/planning/STATE.md` — Session handoff document written by `pause-work`, read by `resume-work`
+
+### Usage
+
+The skill activates automatically in session context. You can also invoke it directly:
+
+- "Where are we in the project?" → `progress`
+- "I'm done for today" → `pause-work`
+- "Resume from last session" → `resume-work`
+- "Add a phase for authentication" → `add-phase`
+- "Verify milestone 1 is complete" → `audit-milestone`
+- `/project-orchestration`
+
+---
+
+## UI Workflow Skill
+
+The ui-workflow skill provides two complementary capabilities that close the design-implementation gap in frontend work.
+
+### Sub-Skills
+
+**`ui-phase`** — Run before implementing a frontend phase. Produces a structured UI design contract covering:
+
+- Design system tokens (colors, typography, spacing, component library)
+- Component inventory with props API, variants, and interaction states
+- Layout specification at desktop (≥1280px), tablet (768–1279px), and mobile (<768px)
+- Interaction states: loading, empty, error, success
+- Accessibility requirements (ARIA roles, keyboard nav, contrast targets)
+
+The contract is saved to `docs/plans/YYYY-MM-DD-<phase>-ui-contract.md` and becomes the implementation spec.
+
+**`ui-review`** — Run after implementing a frontend phase. Audits the result against the ui-contract using regression-test screenshots. Rates each criterion as ✅ Pass / ⚠️ Partial / ❌ Missing and produces a verdict:
+
+- **PASS** — no missing criteria
+- **PARTIAL** — only partial deviations
+- **FAIL** — one or more missing criteria
+
+The audit report is saved to `docs/plans/YYYY-MM-DD-ui-review-<phase>.md`.
+
+### Usage
+
+- "Let's design the UI for this phase" → `ui-phase`
+- "Review the UI against the design spec" → `ui-review`
+- `/ui-workflow`
+
+### Prerequisites
+
+- **`ui-phase`**: No additional tools required.
+- **`ui-review`**: Requires the `regression-test` skill and its Playwright MCP prerequisite.
+
+---
+
 ## Ecosystem
 
 Superpowers Extensions serves as the single entrypoint for the entire superpowers extension ecosystem. One install pulls in the core superpowers skills and all companion plugins:
@@ -218,12 +299,14 @@ claude install gh:MarcelRoozekrans/superpowers-extensions
 Then install the plugins you need from the marketplace:
 
 ```bash
-# Install all five extension skills
+# Install all seven extension skills
 claude plugin install regression-test
 claude plugin install pre-push-review
 claude plugin install refactor-analysis
 claude plugin install decision-tracker
 claude plugin install roslyn-codelens-integration
+claude plugin install project-orchestration
+claude plugin install ui-workflow
 ```
 
 The regression-test plugin automatically configures the Playwright MCP server with `--caps=testing`. The pre-push-review plugin requires only git and no additional MCP servers for its core review.
@@ -307,7 +390,7 @@ claude mcp add playwright -- npx @playwright/mcp@latest --caps=testing,pdf,visio
 
 ### Verify Installation
 
-In Claude Code, the skills should appear when you type `/regression-test`, `/pre-push-review`, `/refactor-analysis`, `/decision-tracker`, or `/roslyn-codelens-integration`, or when you ask Claude to perform regression testing, a pre-push review, a refactor impact analysis, decision tracking, or .NET code graph analysis.
+In Claude Code, the skills should appear when you type `/regression-test`, `/pre-push-review`, `/refactor-analysis`, `/decision-tracker`, `/roslyn-codelens-integration`, `/project-orchestration`, or `/ui-workflow`, or when you ask Claude to perform regression testing, a pre-push review, a refactor impact analysis, decision tracking, .NET code graph analysis, project lifecycle management, or UI design contract work.
 
 ## Project Structure
 
@@ -346,14 +429,29 @@ superpowers-extensions/
 │   │   └── skills/
 │   │       └── decision-tracker/
 │   │           └── SKILL.md
-│   └── roslyn-codelens-integration/
+│   ├── roslyn-codelens-integration/
+│   │   ├── .claude-plugin/
+│   │   │   └── plugin.json
+│   │   └── skills/
+│   │       └── roslyn-codelens-integration/
+│   │           └── SKILL.md
+│   ├── project-orchestration/
+│   │   ├── .claude-plugin/
+│   │   │   └── plugin.json
+│   │   └── skills/
+│   │       └── project-orchestration/
+│   │           ├── SKILL.md                # 12 sub-skills for project lifecycle
+│   │           └── state-files.md          # docs/planning/ file format reference
+│   └── ui-workflow/
 │       ├── .claude-plugin/
 │       │   └── plugin.json
 │       └── skills/
-│           └── roslyn-codelens-integration/
-│               └── SKILL.md
+│           └── ui-workflow/
+│               ├── SKILL.md                # ui-phase and ui-review sub-skills
+│               └── ui-contract-template.md # UI design contract template
 └── docs/
-    └── plans/                              # Design documents
+    ├── planning/                           # Project lifecycle state (ROADMAP, MILESTONE, STATE)
+    └── plans/                              # Design documents and phase plans
 ```
 
 ## Supported Frameworks
@@ -375,6 +473,8 @@ React Router, Next.js (App Router & Pages Router), Angular, Vue Router, SvelteKi
 - **For refactor-analysis:** A git repository with code to analyze. No additional tools required.
 - **For decision-tracker:** [LongtermMemory-MCP](https://github.com/MarcelRoozekrans/LongtermMemory-MCP) for cross-session persistence (installed automatically via marketplace dependencies). Works without it in degraded mode.
 - **For roslyn-codelens-integration:** [roslyn-codelens-mcp](https://github.com/MarcelRoozekrans/roslyn-codelens-mcp) MCP server (installed automatically via marketplace dependencies). Skill is inert without it.
+- **For project-orchestration:** No additional tools required. Uses only built-in tools (Read, Write, Glob, Bash for git commands). State files stored in `docs/planning/`.
+- **For ui-workflow:** `ui-phase` requires no additional tools. `ui-review` requires the `regression-test` skill and its Playwright MCP prerequisite.
 
 ## License
 
