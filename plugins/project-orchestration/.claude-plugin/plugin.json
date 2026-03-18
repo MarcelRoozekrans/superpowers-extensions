@@ -1,0 +1,7 @@
+{
+  "name": "project-orchestration",
+  "description": "GSD-inspired project lifecycle management for larger multi-session projects. Brownfield codebase mapping, milestone tracking, phase management, session pause/resume, progress overview, and release cycle management.",
+  "author": {
+    "name": "Marcel Roozekrans"
+  }
+}
