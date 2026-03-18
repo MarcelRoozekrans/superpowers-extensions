@@ -1,11 +1,11 @@
-# .planning/ State Files Reference
+# docs/planning/ State Files Reference
 
-This document defines the format for the `.planning/` directory files used by
+This document defines the format for the `docs/planning/` directory files used by
 the `project-orchestration` skill to persist project lifecycle state across sessions.
 
 ## Directory
 
-`.planning/` in the project root. Add to `.gitignore` or commit — user's choice.
+`docs/planning/` in the project root. Add to `.gitignore` or commit — user's choice.
 Recommended: commit so state survives machine changes.
 
 ## ROADMAP.md

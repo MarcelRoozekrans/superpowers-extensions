@@ -19,7 +19,7 @@ A single brainstorming + writing-plans + executing-plans cycle works well for sm
 
 ## Sub-Skills
 
-This skill contains multiple sub-skills, each invoked by a specific trigger phrase or context. They share the `.planning/` state directory (see [state-files.md](state-files.md) for file formats).
+This skill contains multiple sub-skills, each invoked by a specific trigger phrase or context. They share the `docs/planning/` state directory (see [state-files.md](state-files.md) for file formats).
 
 ---
 
@@ -67,7 +67,7 @@ Invoke before `brainstorming` when starting work on an existing codebase the age
 
 ### When to Use
 
-Invoke when the user asks "where are we?", "what's next?", "show me progress", or at the start of a session on a project with `.planning/` state files.
+Invoke when the user asks "where are we?", "what's next?", "show me progress", or at the start of a session on a project with `docs/planning/` state files.
 
 ### Announce Line
 
@@ -75,13 +75,13 @@ Invoke when the user asks "where are we?", "what's next?", "show me progress", o
 
 ### Process
 
-1. **Check for `.planning/ROADMAP.md`** — if not found, announce: "No .planning/ directory found. This project hasn't been initialized with project-orchestration yet. Start with `map-codebase` or create a milestone with `new-milestone`."
+1. **Check for `docs/planning/ROADMAP.md`** — if not found, announce: "No docs/planning/ directory found. This project hasn't been initialized with project-orchestration yet. Start with `map-codebase` or create a milestone with `new-milestone`."
 
-2. **Read `.planning/ROADMAP.md`** — parse milestones and phases, identify which are complete, active, and pending.
+2. **Read `docs/planning/ROADMAP.md`** — parse milestones and phases, identify which are complete, active, and pending.
 
-3. **Read `.planning/STATE.md`** — get last session handoff (current phase, last task, next step). If `STATE.md` does not exist (fresh project with no prior pause), skip steps 3 and omit "Last completed" and "Next step" from the output.
+3. **Read `docs/planning/STATE.md`** — get last session handoff (current phase, last task, next step). If `STATE.md` does not exist (fresh project with no prior pause), skip steps 3 and omit "Last completed" and "Next step" from the output.
 
-4. **Read `.planning/MILESTONE.md`** — get current milestone goal and definition of done.
+4. **Read `docs/planning/MILESTONE.md`** — get current milestone goal and definition of done.
 
 5. **Present status:**
 
@@ -107,10 +107,10 @@ When the user wants to append a new phase to the current milestone's roadmap.
 
 ### Process
 
-1. Read `.planning/ROADMAP.md` and `.planning/MILESTONE.md` to find the current milestone and its last phase number.
+1. Read `docs/planning/ROADMAP.md` and `docs/planning/MILESTONE.md` to find the current milestone and its last phase number.
 2. Ask the user: "Phase name and goal?"
-3. Append the new phase to `.planning/ROADMAP.md` under the current milestone with status `pending`.
-4. Update `.planning/MILESTONE.md` phases list.
+3. Append the new phase to `docs/planning/ROADMAP.md` under the current milestone with status `pending`.
+4. Update `docs/planning/MILESTONE.md` phases list.
 5. Announce the new phase number and name.
 6. Commit: `git commit -m "chore(roadmap): add phase N.M — <name>"`
 
@@ -124,10 +124,10 @@ When urgent work needs to be inserted between two existing phases.
 
 ### Process
 
-1. Read `.planning/ROADMAP.md`, present current phase list.
+1. Read `docs/planning/ROADMAP.md`, present current phase list.
 2. Ask: "Insert after which phase?" and "New phase name and goal?"
 3. Insert the new phase, renumber all subsequent phases.
-4. Update `.planning/MILESTONE.md`.
+4. Update `docs/planning/MILESTONE.md`.
 5. Announce: "Inserted Phase N.M — <name> between N.M-1 and old N.M (now N.M+1)."
 6. Commit: `git commit -m "chore(roadmap): insert phase N.M — <name>"`
 
@@ -146,7 +146,7 @@ When a future (pending) phase should be removed from the roadmap.
 
 ### Process
 
-1. Read `.planning/ROADMAP.md`, present pending phases.
+1. Read `docs/planning/ROADMAP.md`, present pending phases.
 2. Ask: "Which phase to remove?"
 3. Confirm: "Remove Phase N.M — <name>? This cannot be undone."
 4. Remove the phase, renumber subsequent phases.
@@ -211,10 +211,10 @@ When the user is stopping work and wants to preserve context for next session. T
 1. Identify current position: which milestone, which phase, which task was last completed.
 2. Identify open decisions or blockers (from the conversation context).
 3. Determine recommended next step.
-4. Write `.planning/STATE.md` with the handoff note (see [state-files.md](state-files.md) for format).
+4. Write `docs/planning/STATE.md` with the handoff note (see [state-files.md](state-files.md) for format).
 5. Announce:
 
-   > "Session state saved to `.planning/STATE.md`. Next session, start with `resume-work` or say 'resume' and I'll restore context."
+   > "Session state saved to `docs/planning/STATE.md`. Next session, start with `resume-work` or say 'resume' and I'll restore context."
 
 6. Commit: `git commit -m "chore(state): pause-work — phase N.M, last task: <description>"`
 
@@ -224,12 +224,12 @@ When the user is stopping work and wants to preserve context for next session. T
 
 ### When to Use
 
-At the start of a session on a project with existing `.planning/` state. Triggers on: "resume", "where were we?", "continue from last time".
+At the start of a session on a project with existing `docs/planning/` state. Triggers on: "resume", "where were we?", "continue from last time".
 
 ### Process
 
-1. Read `.planning/STATE.md`.
-2. Read `.planning/ROADMAP.md` and `.planning/MILESTONE.md` for full context.
+1. Read `docs/planning/STATE.md`.
+2. Read `docs/planning/ROADMAP.md` and `docs/planning/MILESTONE.md` for full context.
 3. Present:
 
    > **Resuming session**
@@ -260,7 +260,7 @@ When the user believes a milestone is complete and wants to verify it against it
 
 ### Process
 
-1. Read `.planning/MILESTONE.md` to get the definition of done.
+1. Read `docs/planning/MILESTONE.md` to get the definition of done.
 2. For each criterion:
    - **All phases complete** — check ROADMAP.md, verify each phase has status `complete`.
    - **All tests passing** — run `npm test` / `dotnet test` / `pytest` (detect from project). Record pass/fail.
@@ -287,9 +287,9 @@ After `audit-milestone` returns PASS.
 ### Process
 
 1. Confirm with user: "Mark Milestone N — <name> as complete and tag release?"
-2. Update `.planning/ROADMAP.md`: set milestone status to `complete`, record completion date.
-3. Update `.planning/MILESTONE.md`: set status to `complete`.
-4. Commit the state file changes: `git add .planning/ROADMAP.md .planning/MILESTONE.md && git commit -m "chore(milestone): complete milestone N — <name>"`
+2. Update `docs/planning/ROADMAP.md`: set milestone status to `complete`, record completion date.
+3. Update `docs/planning/MILESTONE.md`: set status to `complete`.
+4. Commit the state file changes: `git add docs/planning/ROADMAP.md docs/planning/MILESTONE.md && git commit -m "chore(milestone): complete milestone N — <name>"`
 5. Tag the release: `git tag -a vN.0 -m "Milestone N: <name> complete"`
 6. Announce: "Milestone N complete. Tagged as vN.0. Ready to start Milestone N+1 with `new-milestone`."
 
@@ -306,8 +306,8 @@ After `complete-milestone`, or when the user wants to start a new version cycle.
 1. Ask: "What is the goal of the next milestone?" (one sentence)
 2. Ask: "What are the criteria for 'done'?" (list, one per line)
 3. Determine milestone number (current + 1).
-4. Create/overwrite `.planning/MILESTONE.md` with the new milestone definition.
-5. Add the new milestone to `.planning/ROADMAP.md` with status `active`.
+4. Create/overwrite `docs/planning/MILESTONE.md` with the new milestone definition.
+5. Add the new milestone to `docs/planning/ROADMAP.md` with status `active`.
 6. Announce: "Milestone N+1 — <name> started. Use `add-phase` to add the first phase, or `brainstorming` to design it."
 7. Commit: `git commit -m "chore(milestone): start milestone N+1 — <name>"`
 
@@ -340,16 +340,16 @@ After `complete-milestone`, or when the user wants to start a new version cycle.
 |---|---|---|
 | `map-codebase` | Before brainstorming on existing project | `docs/plans/YYYY-MM-DD-codebase-map.md` |
 | `progress` | "where are we?" / session start | None (read-only) |
-| `add-phase` | "add a phase" | `.planning/ROADMAP.md`, `.planning/MILESTONE.md` |
-| `insert-phase` | "insert urgent work" | `.planning/ROADMAP.md`, `.planning/MILESTONE.md` |
-| `remove-phase` | "remove phase N.M" | `.planning/ROADMAP.md`, `.planning/MILESTONE.md` |
+| `add-phase` | "add a phase" | `docs/planning/ROADMAP.md`, `docs/planning/MILESTONE.md` |
+| `insert-phase` | "insert urgent work" | `docs/planning/ROADMAP.md`, `docs/planning/MILESTONE.md` |
+| `remove-phase` | "remove phase N.M" | `docs/planning/ROADMAP.md`, `docs/planning/MILESTONE.md` |
 | `list-phase-assumptions` | Before executing a phase | None (read-only) |
-| `plan-milestone-gaps` | After failed audit | `.planning/ROADMAP.md` (via add-phase) |
-| `pause-work` | "done for today" / stopping | `.planning/STATE.md` |
+| `plan-milestone-gaps` | After failed audit | `docs/planning/ROADMAP.md` (via add-phase) |
+| `pause-work` | "done for today" / stopping | `docs/planning/STATE.md` |
 | `resume-work` | "resume" / session start | None (read-only) |
 | `audit-milestone` | "verify milestone is done" | `docs/plans/YYYY-MM-DD-milestone-N-audit.md` |
-| `complete-milestone` | After audit PASS | `.planning/ROADMAP.md`, `.planning/MILESTONE.md`, git tag |
-| `new-milestone` | After complete-milestone | `.planning/MILESTONE.md`, `.planning/ROADMAP.md` |
+| `complete-milestone` | After audit PASS | `docs/planning/ROADMAP.md`, `docs/planning/MILESTONE.md`, git tag |
+| `new-milestone` | After complete-milestone | `docs/planning/MILESTONE.md`, `docs/planning/ROADMAP.md` |
 
 ## Relationship to Superpowers Skills
 
