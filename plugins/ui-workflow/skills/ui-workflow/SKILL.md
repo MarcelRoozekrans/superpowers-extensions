@@ -20,6 +20,8 @@ This skill provides two complementary capabilities for frontend work:
 
 ## Sub-Skills
 
+Use `ui-phase` when starting a frontend phase — it produces the design contract. Use `ui-review` when verifying a completed frontend phase — it audits the result against the contract. Both sub-skills are independent; either can run without the other, but they work best as a pair.
+
 ---
 
 ## ui-phase
@@ -55,7 +57,7 @@ Do NOT invoke for:
 
 ### Process
 
-1. **Read the design doc** — read the relevant `docs/plans/YYYY-MM-DD-*-design.md` to understand the approved design.
+1. **Read the design doc** — read the relevant `docs/plans/YYYY-MM-DD-*-design.md` to understand the approved design. If no design doc exists yet, proceed from the brainstorming conversation context or ask the user to summarize the approved design intent before continuing.
 
 2. **Identify UI surface area** — list all pages, routes, and components the phase will produce.
 
@@ -206,7 +208,13 @@ Do NOT invoke when:
    - **PARTIAL** — only ⚠️ Partial deviations, no ❌ Missing
    - **FAIL** — one or more ❌ Missing criteria
 
-8. **Announce verdict** in conversation with issue count and top issues.
+8. **Commit the report:**
+   ```bash
+   git add docs/plans/YYYY-MM-DD-ui-review-<phase>.md
+   git commit -m "docs(ui-review): add ui-review report for phase N.M — <name>"
+   ```
+
+9. **Announce verdict** in conversation with issue count and top issues.
 
 ---
 
