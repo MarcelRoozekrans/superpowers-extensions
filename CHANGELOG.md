@@ -1,5 +1,33 @@
 # Changelog
 
+## [1.7.0](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.6.0...superpowers-extensions-v1.7.0) (2026-03-18)
+
+
+### Features
+
+* add project-orchestration and ui-workflow plugins (GSD integration) ([e9dd78c](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/e9dd78c6536bb2e22ebe9c4c5dcbcc2d610340d8))
+* **marketplace:** add project-orchestration and ui-workflow plugins v1.6.0 ([ba294e8](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/ba294e816a9f1623fae6cf62553f680453b4dd0d))
+* **project-orchestration:** add SKILL.md with all sub-skills ([acebe89](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/acebe899979e3f3df95d8b898cfb4cd3350d0cb0))
+* **project-orchestration:** add state-files reference doc ([563a791](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/563a7916c109af5a1560c8727b83caeab3965f9c))
+* **project-orchestration:** scaffold plugin structure ([c7ca1ce](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/c7ca1cecf3c9560822282a9a6eaa345b69afefa5))
+* **ui-workflow:** add SKILL.md with ui-phase and ui-review ([c81452a](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/c81452a7cb5cd701e2ba7eacc4edb84c20c6fdb7))
+* **ui-workflow:** add ui-contract template ([6994a5a](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/6994a5a65b78b4a2cf5c03eb31d83cf0d49fedc8))
+* **ui-workflow:** scaffold plugin structure ([ee7b702](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/ee7b7022466a172e64a51eb48fb920b118d5181b))
+
+
+### Bug Fixes
+
+* **deps:** add plan and design to commitlint scope-enum ([297b805](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/297b805b6b6e0e707c2079bddf43234b4b053342))
+* **deps:** fix commitlint scopes and markdownlint errors for new plugins ([198dd64](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/198dd64c058ee480673c3e13c6bf12d5ac18ae4f))
+* **marketplace:** update top-level description to include new plugins ([63ffd31](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/63ffd311cf3b7b67f6ce671c818170a3e83b0cd5))
+* **project-orchestration:** align plugin.json to existing schema (name/description/author only) ([3230e28](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/3230e285ce6f5a86340e5cbf58b396a235ae226c))
+* **project-orchestration:** fix SKILL.md — commit before tag, consistent filename, decision-tracker in resume-work ([d4156fc](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/d4156fc5b1036fc29cea6ee8536b9c0bc6ab35d4))
+* **project-orchestration:** fix state-files — add pending status, completion dates ([5f14053](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/5f140538ace92480678e44e661ce0cdb96edac29))
+* **project-orchestration:** move state files from .planning/ to docs/planning/ to align with superpowers docs/ convention ([0d65c04](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/0d65c0493aad17700912e92544681669af43c460))
+* **project-orchestration:** use explicit git add in complete-milestone, handle missing STATE.md in progress ([d78a934](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/d78a9341cc5ea831a9ebbca280b71f0d234387f7))
+* **ui-workflow:** add multi-component repetition cue to ui-contract template ([276fb95](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/276fb95d362aa64e3e74198abd85d80f430ca4c6))
+* **ui-workflow:** fix SKILL.md — sub-skills bridging, design-doc fallback, ui-review commit step ([78ff86f](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/78ff86fc0706a7c366f02567eac448ef43b4078c))
+
 ## [1.6.0](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.5.0...superpowers-extensions-v1.6.0) (2026-03-13)
 
 
