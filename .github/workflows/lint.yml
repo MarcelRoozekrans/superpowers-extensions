@@ -22,7 +22,7 @@ jobs:
 
   commitlint:
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' && github.actor != 'renovate[bot]' && github.actor != 'dependabot[bot]'
     steps:
       - uses: actions/checkout@v4
         with:
