@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.10.0](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.9.0...superpowers-extensions-v1.10.0) (2026-03-20)
+
+
+### Features
+
+* **marketplace:** add install-plugins npm script ([925b982](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/925b9828919088292da3057d4d958e660ba8b7df))
+
+
+### Bug Fixes
+
+* **deps:** add Renovate config and skip commitlint for bot PRs ([8cefe11](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/8cefe11e59171be177afcf5321f2aba583b6d156))
+* **deps:** add Renovate config with semantic commits ([353edda](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/353edda1a5e0b3c17cbbd156667c8590f43642d6))
+* **deps:** skip commitlint for bot PRs ([bc7aba4](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/bc7aba43672e3c9d80d18f203d2032c330d5b460))
+* **deps:** skip commitlint for github-actions[bot] PRs ([15282c8](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/15282c80db519968c7ec2cee7f4671e7efe945ce))
+* **deps:** skip commitlint for release-please branches ([5421ebb](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/5421ebbb52b57ce94891dc221d2107099a50d6ba))
+* **deps:** skip commitlint for release-please branches ([b39d357](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/b39d357d1aed3c5d3516378d9fdbabd216741599))
+
 ## [1.9.0](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.8.0...superpowers-extensions-v1.9.0) (2026-03-20)
 
 
