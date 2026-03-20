@@ -62,11 +62,10 @@ Do NOT invoke for:
 
 2. **Identify UI surface area** — list all pages, routes, and components the phase will produce.
 
-3. **Establish design system** — ask the user (or infer from existing code):
-   - What color palette to use?
-   - What typography scale?
-   - What component library (if any)?
-   If an existing frontend codebase is present, read relevant config files (Tailwind config, theme files, CSS variables) to extract the existing system rather than inventing new values.
+3. **Establish design system** — check in this order:
+   1. **`docs/design/MASTER.md` exists** → read it and use it as the design system. Do NOT ask the user for colors/typography — it's already defined. Note in the contract: "Design system sourced from `docs/design/MASTER.md`."
+   2. **Existing frontend codebase** → read relevant config files (Tailwind config, theme files, CSS variables, `MudThemeProvider`) to extract the active design system.
+   3. **Neither exists** → suggest running `ui-design-system` first: "No design system found. Run `ui-design-system` to generate one, or I'll ask you for the values now." Then ask: color palette, typography scale, component library.
 
 4. **Define components** — for each identified component:
    - Name and purpose

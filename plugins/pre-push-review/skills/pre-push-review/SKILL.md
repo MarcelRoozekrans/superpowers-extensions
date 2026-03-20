@@ -241,9 +241,11 @@ Run existing test suites to verify the branch hasn't broken anything.
    - Names and error messages of failing tests
    - Full output for the report
 
-4. **Optional: Browser-based regression testing** — If the project has a web UI and the user confirms a URL is available, offer to invoke the regression-test skill for visual and functional browser testing. This is optional and requires user confirmation.
+4. **Optional: UI contract audit** — If `docs/plans/*-ui-contract.md` exists for the current branch/phase, invoke the `ui-review` sub-skill from `ui-workflow` to audit the implementation against the contract. This supersedes bare regression-test for frontend branches with a contract.
 
-5. **Record findings**:
+5. **Optional: Browser-based regression testing** — If the project has a web UI, no ui-contract exists, and the user confirms a URL is available, offer to invoke the regression-test skill for visual and functional browser testing. This is optional and requires user confirmation.
+
+6. **Record findings**:
    - **Blocker**: Any test failure
    - **Warning**: Tests skipped with `.skip` or `@Ignore` (may indicate incomplete work)
    - **Info**: All tests passing; no test suites found (noted for awareness)

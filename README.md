@@ -1,6 +1,6 @@
 # Superpowers Extensions for Claude Code
 
-Extension skills for the [superpowers](https://github.com/anthropics/superpowers) suite, providing quality gates, development workflow skills, and project lifecycle management for web application development. It includes seven skills:
+Extension skills for the [superpowers](https://github.com/anthropics/superpowers) suite, providing quality gates, development workflow skills, and project lifecycle management for web application development. It includes eight skills:
 
 - **regression-test** -- Comprehensive regression testing using the [Microsoft Playwright MCP server](https://github.com/microsoft/playwright-mcp), combining existing test suite execution with AI-powered visual and functional browser testing.
 - **pre-push-review** -- A structured branch review that diffs against the base branch and gates on plan adherence, code quality, commit hygiene, and regression testing, producing a PASS/FAIL verdict with a prioritized remediation plan on failure.
@@ -9,6 +9,7 @@ Extension skills for the [superpowers](https://github.com/anthropics/superpowers
 - **roslyn-codelens-integration** -- Superpowers integration for [Roslyn CodeLens](https://github.com/MarcelRoozekrans/roslyn-codelens-mcp) intelligence. Enhances brainstorming with semantic .NET code context and upgrades refactor-analysis with Roslyn-powered dependency mapping, transitive closure, and reflection-aware risk detection.
 - **project-orchestration** -- GSD-inspired project lifecycle management for larger multi-session projects. Covers brownfield codebase mapping, milestone tracking, phase management, session pause/resume, progress overview, milestone audit, and release cycle management.
 - **ui-workflow** -- Frontend design contracts and visual auditing. Generates structured UI design contracts before implementing frontend phases (`ui-phase`) and performs retroactive visual audits against those contracts using regression-test (`ui-review`).
+- **ui-design-system** -- Generates complete design systems (colors, typography, spacing, patterns) before frontend implementation. Quick mode (one-liner) and guided mode (4 questions). Auto-detects Blazor, React, Vue, Astro stacks. Outputs `docs/design/MASTER.md`.
 
 ---
 
@@ -270,6 +271,47 @@ The audit report is saved to `docs/plans/YYYY-MM-DD-ui-review-<phase>.md`.
 
 ---
 
+## UI Design System Skill
+
+The ui-design-system skill generates a complete design system before frontend implementation begins, ensuring consistent tokens, patterns, and visual language across the entire application.
+
+### Modes
+
+**Quick mode** — Invoke with a single description and the skill infers all design decisions:
+
+- "Generate a design system for a SaaS dashboard"
+- `/ui-design-system dark modern fintech`
+
+**Guided mode** — The skill asks 4 targeted questions (product type, brand feel, primary audience, existing brand constraints) before generating the system.
+
+### What It Generates
+
+- **Color system** — Primary, secondary, accent, semantic (success/warning/error/info), neutral scales, and dark-mode variants
+- **Typography** — Font families, type scale (xs through 4xl), line heights, letter spacing, and heading/body/mono stacks
+- **Spacing & layout** — Base unit, spacing scale, breakpoints, container widths, and grid system
+- **Component patterns** — Button variants, form elements, card styles, navigation patterns, and feedback components
+- **Stack-specific tokens** — CSS custom properties, Tailwind config, or framework-specific variables depending on detected stack
+
+### Stack Detection
+
+Auto-detects Blazor, React, Vue, and Astro projects and tailors output format (CSS variables, Tailwind config, MudBlazor theme, etc.) accordingly.
+
+### Usage
+
+- "Generate a design system for this project" → quick mode
+- "Create a design system" → guided mode (4 questions)
+- `/ui-design-system`
+
+### Output
+
+The skill produces `docs/design/MASTER.md` — a single source-of-truth design system document with all tokens, patterns, and stack-specific implementation snippets.
+
+### Prerequisites
+
+No additional tools required.
+
+---
+
 ## Ecosystem
 
 Superpowers Extensions serves as the single entrypoint for the entire superpowers extension ecosystem. One install pulls in the core superpowers skills and all companion plugins:
@@ -279,6 +321,7 @@ Superpowers Extensions serves as the single entrypoint for the entire superpower
 | **superpowers** | [obra/superpowers](https://github.com/obra/superpowers) | Core superpowers skills framework -- brainstorming, writing-plans, subagent-driven-development, TDD, debugging, and more |
 | **LongtermMemory-MCP** | [MarcelRoozekrans/LongtermMemory-MCP](https://github.com/MarcelRoozekrans/LongtermMemory-MCP) | Semantic long-term memory for AI agents -- persistence layer for decision-tracker |
 | **roslyn-codelens-mcp** | [MarcelRoozekrans/roslyn-codelens-mcp](https://github.com/MarcelRoozekrans/roslyn-codelens-mcp) | Roslyn-based .NET code graph intelligence -- enhances brainstorming and refactor-analysis with semantic code understanding |
+| **memorylens-mcp** | [MarcelRoozekrans/memorylens-mcp](https://github.com/MarcelRoozekrans/memorylens-mcp) | .NET memory profiling MCP server -- required by memorylens-integration for memory snapshot analysis and leak detection. Skill is inert without it. |
 
 ### GitHub Copilot Support
 
@@ -299,7 +342,7 @@ claude install gh:MarcelRoozekrans/superpowers-extensions
 Then install the plugins you need from the marketplace:
 
 ```bash
-# Install all seven extension skills
+# Install all eight extension skills
 claude plugin install regression-test
 claude plugin install pre-push-review
 claude plugin install refactor-analysis
@@ -307,6 +350,7 @@ claude plugin install decision-tracker
 claude plugin install roslyn-codelens-integration
 claude plugin install project-orchestration
 claude plugin install ui-workflow
+claude plugin install ui-design-system
 ```
 
 The regression-test plugin automatically configures the Playwright MCP server with `--caps=testing`. The pre-push-review plugin requires only git and no additional MCP servers for its core review.
@@ -371,12 +415,37 @@ xcopy /E /I plugins\roslyn-codelens-integration\skills\roslyn-codelens-integrati
 
 # macOS / Linux -- roslyn-codelens-integration
 cp -r plugins/roslyn-codelens-integration/skills/roslyn-codelens-integration ~/.claude/skills/roslyn-codelens-integration
+
+# Windows -- memorylens-integration
+xcopy /E /I plugins\memorylens-integration\skills\memorylens-integration %USERPROFILE%\.claude\skills\memorylens-integration
+
+# macOS / Linux -- memorylens-integration
+cp -r plugins/memorylens-integration/skills/memorylens-integration ~/.claude/skills/memorylens-integration
+
+# Windows -- project-orchestration
+xcopy /E /I plugins\project-orchestration\skills\project-orchestration %USERPROFILE%\.claude\skills\project-orchestration
+
+# macOS / Linux -- project-orchestration
+cp -r plugins/project-orchestration/skills/project-orchestration ~/.claude/skills/project-orchestration
+
+# Windows -- ui-workflow
+xcopy /E /I plugins\ui-workflow\skills\ui-workflow %USERPROFILE%\.claude\skills\ui-workflow
+
+# macOS / Linux -- ui-workflow
+cp -r plugins/ui-workflow/skills/ui-workflow ~/.claude/skills/ui-workflow
+
+# Windows -- ui-design-system
+xcopy /E /I plugins\ui-design-system\skills\ui-design-system %USERPROFILE%\.claude\skills\ui-design-system
+
+# macOS / Linux -- ui-design-system
+cp -r plugins/ui-design-system/skills/ui-design-system ~/.claude/skills/ui-design-system
 ```
 
-**Note:** decision-tracker and roslyn-codelens-integration require their companion MCP servers. Install them separately:
+**Note:** Some plugins require companion MCP servers. Install them separately:
 
 - **decision-tracker:** `claude mcp add longterm-memory -- npx -y longterm-memory-mcp`
 - **roslyn-codelens-integration:** `dotnet tool install -g roslyn-codelens-mcp && claude mcp add roslyn-codelens -- roslyn-codelens-mcp`
+- **memorylens-integration:** `dotnet tool install -g memorylens-mcp && claude mcp add memorylens -- memorylens-mcp`
 
 ### Optional Playwright Flags
 
@@ -390,7 +459,7 @@ claude mcp add playwright -- npx @playwright/mcp@latest --caps=testing,pdf,visio
 
 ### Verify Installation
 
-In Claude Code, the skills should appear when you type `/regression-test`, `/pre-push-review`, `/refactor-analysis`, `/decision-tracker`, `/roslyn-codelens-integration`, `/project-orchestration`, or `/ui-workflow`, or when you ask Claude to perform regression testing, a pre-push review, a refactor impact analysis, decision tracking, .NET code graph analysis, project lifecycle management, or UI design contract work.
+In Claude Code, the skills should appear when you type `/regression-test`, `/pre-push-review`, `/refactor-analysis`, `/decision-tracker`, `/roslyn-codelens-integration`, `/project-orchestration`, `/ui-workflow`, or `/ui-design-system`, or when you ask Claude to perform regression testing, a pre-push review, a refactor impact analysis, decision tracking, .NET code graph analysis, project lifecycle management, UI design contract work, or design system generation.
 
 ## Project Structure
 
@@ -442,13 +511,19 @@ superpowers-extensions/
 │   │       └── project-orchestration/
 │   │           ├── SKILL.md                # 12 sub-skills for project lifecycle
 │   │           └── state-files.md          # docs/planning/ file format reference
-│   └── ui-workflow/
+│   ├── ui-workflow/
+│   │   ├── .claude-plugin/
+│   │   │   └── plugin.json
+│   │   └── skills/
+│   │       └── ui-workflow/
+│   │           ├── SKILL.md                # ui-phase and ui-review sub-skills
+│   │           └── ui-contract-template.md # UI design contract template
+│   └── ui-design-system/
 │       ├── .claude-plugin/
 │       │   └── plugin.json
 │       └── skills/
-│           └── ui-workflow/
-│               ├── SKILL.md                # ui-phase and ui-review sub-skills
-│               └── ui-contract-template.md # UI design contract template
+│           └── ui-design-system/
+│               └── SKILL.md                # quick mode and guided mode workflow
 └── docs/
     ├── planning/                           # Project lifecycle state (ROADMAP, MILESTONE, STATE)
     └── plans/                              # Design documents and phase plans
@@ -475,6 +550,8 @@ React Router, Next.js (App Router & Pages Router), Angular, Vue Router, SvelteKi
 - **For roslyn-codelens-integration:** [roslyn-codelens-mcp](https://github.com/MarcelRoozekrans/roslyn-codelens-mcp) MCP server (installed automatically via marketplace dependencies). Skill is inert without it.
 - **For project-orchestration:** No additional tools required. Uses only built-in tools (Read, Write, Glob, Bash for git commands). State files stored in `docs/planning/`.
 - **For ui-workflow:** `ui-phase` requires no additional tools. `ui-review` requires the `regression-test` skill and its Playwright MCP prerequisite.
+- **For memorylens-integration:** [memorylens-mcp](https://github.com/MarcelRoozekrans/memorylens-mcp) MCP server (installed automatically via marketplace dependencies). Skill is inert without it — safe to ignore on non-.NET projects.
+- **For ui-design-system:** No additional tools required.
 
 ## License
 
