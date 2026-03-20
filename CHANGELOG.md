@@ -1,5 +1,31 @@
 # Changelog
 
+## [1.8.0](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.7.0...superpowers-extensions-v1.8.0) (2026-03-20)
+
+
+### Features
+
+* **ui-design-system:** add admin domain rules ([f066b3a](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/f066b3a98d8c52650ca4ca6a0fd873374cfa5bac))
+* **ui-design-system:** add blazor stack rules ([a5cc859](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/a5cc8597e58fd8a278b97a65e6579d555945d30d))
+* **ui-design-system:** add design system generation plugin + suite quality fixes ([0c94bbd](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/0c94bbd57b69406380cc23ca7537c2a973aded84))
+* **ui-design-system:** add generic-web fallback stack rules ([c55434a](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/c55434a6fd43cda45991ecb201ef7b054aacd489))
+* **ui-design-system:** add main skill file ([911a66e](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/911a66e9f264aa70996ca11e4d9f9f0266b9d19e))
+* **ui-design-system:** add marketing domain rules ([612ec13](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/612ec13def2aec0bff627bedc442ab7e2fa72cd4))
+* **ui-design-system:** add react stack rules ([081b0b8](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/081b0b8dca30b8d7457870e755dd6b231cbf8546))
+* **ui-design-system:** add saas domain rules ([4ddf5b8](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/4ddf5b899e0a26edcb707157000107b65ade1a66))
+* **ui-design-system:** add vue and astro stack rules ([d548f31](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/d548f316b0c8541f11ea630f5197417c9eef6f88))
+* **ui-design-system:** scaffold plugin ([cd3d0fb](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/cd3d0fb1338a6231ba71336aa0395b98239c2d0b))
+* **ui-workflow:** auto-detect MASTER.md from ui-design-system in ui-phase ([3467fbe](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/3467fbe5b8828e838de6c984c1b64f356a284663))
+
+
+### Bug Fixes
+
+* **deps:** add suite and readme scopes, fix markdownlint errors in ui-design-system files ([fda04c4](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/fda04c421edfae08a2045246fa69ed05ff938492))
+* **deps:** extend release-please config to bump all 9 plugin versions ([96d957c](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/96d957c94f6983efe60c218c3fe36c00c18f32b5))
+* **deps:** extend release-please config to bump all 9 plugin versions ([3738bb9](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/3738bb92a6a82b81e53c502fae6b4e7cc95a6525))
+* **suite:** address full suite review findings ([c39e54a](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/c39e54a81c31bf4f7438e030082871cbe08ddf5c))
+* **ui-design-system:** register in marketplace, commitlint, fix README guided mode description ([db558b7](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/db558b742c56b88db24381278ab4ac848a712a4d))
+
 ## [1.7.0](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.6.0...superpowers-extensions-v1.7.0) (2026-03-18)
 
 
