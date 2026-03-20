@@ -282,7 +282,7 @@ The ui-design-system skill generates a complete design system before frontend im
 - "Generate a design system for a SaaS dashboard"
 - `/ui-design-system dark modern fintech`
 
-**Guided mode** — The skill asks 4 targeted questions (brand tone, color preference, component density, target stack) before generating the system.
+**Guided mode** — The skill asks 4 targeted questions (product type, brand feel, primary audience, existing brand constraints) before generating the system.
 
 ### What It Generates
 

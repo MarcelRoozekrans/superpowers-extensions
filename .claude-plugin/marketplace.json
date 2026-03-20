@@ -92,6 +92,16 @@
       },
       "source": "./plugins/ui-workflow",
       "category": "testing"
+    },
+    {
+      "name": "ui-design-system",
+      "description": "Generates complete design systems before frontend implementation. Quick mode (one-liner) and guided mode (4 questions). Auto-detects Blazor, React, Vue, Astro stacks. Outputs docs/design/MASTER.md for consumption by ui-workflow ui-phase.",
+      "version": "1.7.0",
+      "author": {
+        "name": "Marcel Roozekrans"
+      },
+      "source": "./plugins/ui-design-system",
+      "category": "workflow"
     }
   ]
 }
