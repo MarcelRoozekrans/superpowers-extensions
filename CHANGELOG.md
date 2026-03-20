@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.9.0](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.8.0...superpowers-extensions-v1.9.0) (2026-03-20)
+
+
+### Features
+
+* **marketplace:** add install-plugins npm script ([de6ef5f](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/de6ef5fbb07fa495a5adbce01a52bd1077b8e468))
+* **marketplace:** add install-plugins npm script to install all plugins at once ([e922e80](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/e922e809d9ddccaddf05dc8d319827d435687232))
+
 ## [1.8.0](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.7.0...superpowers-extensions-v1.8.0) (2026-03-20)
 
 
