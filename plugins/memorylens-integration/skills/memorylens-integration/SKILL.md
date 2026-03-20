@@ -179,4 +179,3 @@ Rules can be customized per-project via `.memorylens.json` in the project root. 
 | `superpowers:brainstorming` | **Active when detected.** Applies ML rule knowledge to flag memory risks during design (event leaks, static growth, LOH fragmentation, IDisposable ownership). No profiling — knowledge only. | Falls back to standard brainstorming when MemoryLens tools are not available. |
 | `roslyn-codelens-integration` | **Complementary.** Roslyn tools can locate the code causing memory issues found by MemoryLens (e.g., `find_callers` on a leaking event handler). | Both can be active simultaneously — Roslyn for structure, MemoryLens for runtime memory. |
 | `decision-tracker` | **No interaction.** Decision tracking operates on cross-cutting decisions, not memory profiling. | Independent — both can be active simultaneously. |
-

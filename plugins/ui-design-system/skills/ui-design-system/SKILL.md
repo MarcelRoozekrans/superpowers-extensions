@@ -8,11 +8,13 @@ description: Use before starting frontend implementation when no design system e
 ## When to Use
 
 Invoke `ui-design-system` when:
+
 - Starting a new frontend project with no design system defined
 - `ui-workflow ui-phase` needs a design system but `docs/design/MASTER.md` doesn't exist yet
 - The user says "what should the design look like?", "generate a design system", or "help me choose colors/fonts"
 
 Do NOT invoke when:
+
 - `docs/design/MASTER.md` already exists → **extend it instead**: read the file, identify which section needs updating (e.g. new color token, new component pattern), make the targeted edit, and commit with `git commit -m "feat(design): extend design system — [what changed]"`
 - The user has an existing design system or brand guidelines (use `ui-workflow ui-phase` directly)
 - The phase has no UI surface area (backend-only work)
@@ -34,6 +36,7 @@ Ask ONE question at a time. Wait for the answer before proceeding.
 
 **Question 1: Product type**
 > "What type of product is this?"
+>
 > - A) SaaS application (user-facing, subscription)
 > - B) Admin / back-office / internal tool
 > - C) Marketing site / landing page
@@ -41,6 +44,7 @@ Ask ONE question at a time. Wait for the answer before proceeding.
 
 **Question 2: Brand feel**
 > "How would you describe the desired brand feel?"
+>
 > - A) Clean & minimal (whitespace, subtle, professional)
 > - B) Bold & expressive (strong typography, vivid colors, personality)
 > - C) Corporate & trustworthy (traditional, conservative, reliable)
@@ -49,6 +53,7 @@ Ask ONE question at a time. Wait for the answer before proceeding.
 
 **Question 3: Primary audience**
 > "Who is the primary user?"
+>
 > - A) Internal staff / back-office operators
 > - B) Business customers (B2B)
 > - C) Consumers (B2C)
@@ -198,7 +203,7 @@ git add docs/design/MASTER.md
 git commit -m "feat(design): add design system for [product type] on [stack]"
 ```
 
-4. Announce completion:
+1. Announce completion:
 
 > "Design system saved to `docs/design/MASTER.md`. Run `ui-workflow ui-phase` to formalize it as a UI contract before implementation."
 

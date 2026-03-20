@@ -95,6 +95,7 @@ This file applies when no specific framework is detected. Use CSS custom propert
 ```
 
 ## Layout — CSS Grid Approach
+
 ```css
 .page-layout {
   display: grid;
@@ -109,6 +110,7 @@ This file applies when no specific framework is detected. Use CSS custom propert
 ```
 
 ## Anti-Patterns to Avoid
+
 - Pixel values outside the spacing scale
 - Colors not from the token system
 - `z-index` values above 100 without a documented stacking context
