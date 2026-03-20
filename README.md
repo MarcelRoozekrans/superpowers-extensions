@@ -321,6 +321,7 @@ Superpowers Extensions serves as the single entrypoint for the entire superpower
 | **superpowers** | [obra/superpowers](https://github.com/obra/superpowers) | Core superpowers skills framework -- brainstorming, writing-plans, subagent-driven-development, TDD, debugging, and more |
 | **LongtermMemory-MCP** | [MarcelRoozekrans/LongtermMemory-MCP](https://github.com/MarcelRoozekrans/LongtermMemory-MCP) | Semantic long-term memory for AI agents -- persistence layer for decision-tracker |
 | **roslyn-codelens-mcp** | [MarcelRoozekrans/roslyn-codelens-mcp](https://github.com/MarcelRoozekrans/roslyn-codelens-mcp) | Roslyn-based .NET code graph intelligence -- enhances brainstorming and refactor-analysis with semantic code understanding |
+| **memorylens-mcp** | [MarcelRoozekrans/memorylens-mcp](https://github.com/MarcelRoozekrans/memorylens-mcp) | .NET memory profiling MCP server -- required by memorylens-integration for memory snapshot analysis and leak detection. Skill is inert without it. |
 
 ### GitHub Copilot Support
 
@@ -414,12 +415,37 @@ xcopy /E /I plugins\roslyn-codelens-integration\skills\roslyn-codelens-integrati
 
 # macOS / Linux -- roslyn-codelens-integration
 cp -r plugins/roslyn-codelens-integration/skills/roslyn-codelens-integration ~/.claude/skills/roslyn-codelens-integration
+
+# Windows -- memorylens-integration
+xcopy /E /I plugins\memorylens-integration\skills\memorylens-integration %USERPROFILE%\.claude\skills\memorylens-integration
+
+# macOS / Linux -- memorylens-integration
+cp -r plugins/memorylens-integration/skills/memorylens-integration ~/.claude/skills/memorylens-integration
+
+# Windows -- project-orchestration
+xcopy /E /I plugins\project-orchestration\skills\project-orchestration %USERPROFILE%\.claude\skills\project-orchestration
+
+# macOS / Linux -- project-orchestration
+cp -r plugins/project-orchestration/skills/project-orchestration ~/.claude/skills/project-orchestration
+
+# Windows -- ui-workflow
+xcopy /E /I plugins\ui-workflow\skills\ui-workflow %USERPROFILE%\.claude\skills\ui-workflow
+
+# macOS / Linux -- ui-workflow
+cp -r plugins/ui-workflow/skills/ui-workflow ~/.claude/skills/ui-workflow
+
+# Windows -- ui-design-system
+xcopy /E /I plugins\ui-design-system\skills\ui-design-system %USERPROFILE%\.claude\skills\ui-design-system
+
+# macOS / Linux -- ui-design-system
+cp -r plugins/ui-design-system/skills/ui-design-system ~/.claude/skills/ui-design-system
 ```
 
-**Note:** decision-tracker and roslyn-codelens-integration require their companion MCP servers. Install them separately:
+**Note:** Some plugins require companion MCP servers. Install them separately:
 
 - **decision-tracker:** `claude mcp add longterm-memory -- npx -y longterm-memory-mcp`
 - **roslyn-codelens-integration:** `dotnet tool install -g roslyn-codelens-mcp && claude mcp add roslyn-codelens -- roslyn-codelens-mcp`
+- **memorylens-integration:** `dotnet tool install -g memorylens-mcp && claude mcp add memorylens -- memorylens-mcp`
 
 ### Optional Playwright Flags
 
@@ -524,6 +550,7 @@ React Router, Next.js (App Router & Pages Router), Angular, Vue Router, SvelteKi
 - **For roslyn-codelens-integration:** [roslyn-codelens-mcp](https://github.com/MarcelRoozekrans/roslyn-codelens-mcp) MCP server (installed automatically via marketplace dependencies). Skill is inert without it.
 - **For project-orchestration:** No additional tools required. Uses only built-in tools (Read, Write, Glob, Bash for git commands). State files stored in `docs/planning/`.
 - **For ui-workflow:** `ui-phase` requires no additional tools. `ui-review` requires the `regression-test` skill and its Playwright MCP prerequisite.
+- **For memorylens-integration:** [memorylens-mcp](https://github.com/MarcelRoozekrans/memorylens-mcp) MCP server (installed automatically via marketplace dependencies). Skill is inert without it — safe to ignore on non-.NET projects.
 - **For ui-design-system:** No additional tools required.
 
 ## License

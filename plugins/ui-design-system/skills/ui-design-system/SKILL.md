@@ -13,7 +13,7 @@ Invoke `ui-design-system` when:
 - The user says "what should the design look like?", "generate a design system", or "help me choose colors/fonts"
 
 Do NOT invoke when:
-- `docs/design/MASTER.md` already exists (extend it instead)
+- `docs/design/MASTER.md` already exists → **extend it instead**: read the file, identify which section needs updating (e.g. new color token, new component pattern), make the targeted edit, and commit with `git commit -m "feat(design): extend design system — [what changed]"`
 - The user has an existing design system or brand guidelines (use `ui-workflow ui-phase` directly)
 - The phase has no UI surface area (backend-only work)
 
@@ -67,7 +67,7 @@ After collecting answers (or in quick mode, immediately), detect the tech stack 
 4. Check `package.json` for `"react"` or `"next"` → **React**
 5. No match → **generic-web**
 
-Read the matching stack file from [stacks/](stacks/) directory.
+Use the Read tool to load the matching stack file. The files are located alongside this SKILL.md — use Glob to find the skill's directory (e.g. `**/.claude/skills/ui-design-system/stacks/blazor.md` or the marketplace cache path), then read the file at that path.
 
 ## Domain File Selection
 
@@ -75,12 +75,12 @@ Map the product type answer to the domain file:
 
 | Answer | Domain File |
 |---|---|
-| SaaS application | [domains/saas.md](domains/saas.md) |
-| Admin / back-office | [domains/admin.md](domains/admin.md) |
-| Marketing site | [domains/marketing.md](domains/marketing.md) |
+| SaaS application | `domains/saas.md` |
+| Admin / back-office | `domains/admin.md` |
+| Marketing site | `domains/marketing.md` |
 | Other | Use closest match + note deviation |
 
-Read the matching domain file.
+Use the Read tool to load the matching domain file from the same directory as the stack files above.
 
 ## Design System Generation
 
