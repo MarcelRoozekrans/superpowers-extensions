@@ -187,7 +187,7 @@ When `pause-work` fires, squad auto-triggers `squad-sync` as a post-hook. No sep
 2. For each active agent, check if `history.md` exists and count its entries (lines starting with `-`).
 3. Report:
 
-   ```
+   ```text
    Squad Status
    ────────────
    🎯 Lead          — 12 entries  (last: 2026-03-20)
