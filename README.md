@@ -461,6 +461,144 @@ claude mcp add playwright -- npx @playwright/mcp@latest --caps=testing,pdf,visio
 
 In Claude Code, the skills should appear when you type `/regression-test`, `/pre-push-review`, `/refactor-analysis`, `/decision-tracker`, `/roslyn-codelens-integration`, `/project-orchestration`, `/ui-workflow`, or `/ui-design-system`, or when you ask Claude to perform regression testing, a pre-push review, a refactor impact analysis, decision tracking, .NET code graph analysis, project lifecycle management, UI design contract work, or design system generation.
 
+---
+
+## Development Workflows
+
+These skills are designed to compose. Below are the standard workflows for different development scenarios, showing which skills to invoke and in what order.
+
+### Starting a New Project
+
+Run once when you begin working on a project with Claude:
+
+```
+1. squad-init          — set up your persistent agent team
+2. project-orchestration map-codebase  — brownfield analysis (existing projects only)
+3. decision-tracker    — runs automatically once brainstorming starts
+```
+
+After that, each session begins by Claude recalling prior decisions and squad loading agent histories. You don't need to re-explain your architecture, conventions, or prior choices.
+
+---
+
+### Standard Feature Development
+
+The core loop for building new features:
+
+```
+brainstorming          → explore the idea, squad answers domain questions
+writing-plans          → detailed task plan with file paths and TDD steps
+subagent-driven-development  → parallel execution with review between tasks
+pre-push-review        → PASS/FAIL gate before push or PR
+```
+
+**In practice:**
+
+```
+"Let's build [feature]"        → triggers brainstorming (squad participates)
+"Write a plan for this"        → triggers writing-plans (Tester + Scribe review it)
+"Execute the plan"             → triggers subagent-driven-development
+"Review before I push"         → triggers pre-push-review
+```
+
+---
+
+### Refactoring Existing Code
+
+When a change touches many files or crosses architectural boundaries:
+
+```
+refactor-analysis      → transitive impact analysis, safe execution order
+writing-plans          → implementation plan scoped to the impact analysis
+subagent-driven-development  → parallel execution per change group
+pre-push-review        → PASS/FAIL gate
+```
+
+For .NET codebases with `roslyn-codelens-integration` installed, refactor-analysis automatically uses Roslyn semantic queries instead of grep — catching dynamic references and reflection-based coupling that text search misses.
+
+**In practice:**
+
+```
+"Analyze the impact of renaming X"  → triggers refactor-analysis
+"Write a plan based on this"        → triggers writing-plans
+"Execute it"                        → triggers subagent-driven-development
+```
+
+---
+
+### Frontend Development
+
+When building or redesigning UI:
+
+```
+ui-design-system       → generate design tokens and component patterns (once per project)
+ui-workflow ui-phase   → generate UI contract before implementing each frontend phase
+[implement the phase]  → subagent-driven-development executes the contract
+ui-workflow ui-review  → audit implementation against contract via regression-test
+```
+
+**In practice:**
+
+```
+"Generate a design system for this project"  → ui-design-system (once)
+"Design the UI for this phase"               → ui-workflow ui-phase
+"Execute"                                    → subagent-driven-development
+"Review the UI"                              → ui-workflow ui-review
+```
+
+---
+
+### Multi-Session Projects
+
+For larger efforts that span multiple work sessions and milestones:
+
+```
+project-orchestration map-codebase   → understand the existing codebase
+project-orchestration progress       → "where are we?" at each session start
+[standard feature/refactor workflows per phase]
+project-orchestration pause-work     → checkpoint state + auto squad-sync
+project-orchestration resume-work    → restore context at next session
+project-orchestration audit-milestone → verify definition of done
+project-orchestration complete-milestone → tag release, archive milestone
+```
+
+**Squad + project-orchestration:** `pause-work` automatically triggers `squad-sync`, so agent histories stay current without any extra steps.
+
+---
+
+### Bug Fixing
+
+For diagnosing and fixing unexpected behavior:
+
+```
+systematic-debugging   → structured root cause analysis before touching code
+[fix + TDD]            → write failing test, fix, verify green
+pre-push-review        → gate before push
+```
+
+For .NET memory leaks specifically:
+
+```
+systematic-debugging   → identifies memory as the concern
+memorylens-integration → snapshot before and after, compare, confirm fix
+```
+
+---
+
+### Skill Composition at a Glance
+
+| Scenario | Primary skills | Enrichment (auto) |
+|---|---|---|
+| New feature | brainstorming → writing-plans → subagent → pre-push-review | squad, decision-tracker |
+| Refactor | refactor-analysis → writing-plans → subagent → pre-push-review | squad, roslyn-codelens-integration, decision-tracker |
+| Frontend | ui-design-system → ui-workflow → subagent → ui-review | squad, regression-test |
+| Bug fix | systematic-debugging → TDD → pre-push-review | squad, memorylens-integration (.NET) |
+| Large project | project-orchestration wrapping any of the above | squad (histories auto-sync on pause) |
+
+The enrichment skills (squad, decision-tracker, roslyn-codelens-integration) activate automatically when present — no explicit invocation needed.
+
+---
+
 ## Project Structure
 
 ```text
