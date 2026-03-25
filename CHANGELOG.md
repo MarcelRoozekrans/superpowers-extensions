@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.11.0](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.10.0...superpowers-extensions-v1.11.0) (2026-03-25)
+
+
+### Features
+
+* **squad:** add default agent charter files (lead, backend, frontend, tester, scribe) ([2491687](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/249168782ee857df74beb8551416c433cf760ccd))
+* **squad:** add main SKILL.md with routing, tiered lookup, sub-skills, and integrations ([3d7f4b4](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/3d7f4b4d5718cae9e47ec4fe48e0f5db38d3daf9))
+* **squad:** add routing-rules and history-format reference files ([f374da1](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/f374da12769b999eb6e170d9bb41d889c851b46a))
+* **squad:** add squad plugin with persistent AI agent teams ([7d5cf81](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/7d5cf81f085864dfd41af7689e85582659a82047))
+* **squad:** register squad plugin in marketplace (v1.10.0) ([b81012f](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/b81012fef2a6cdb31b044e2347406f5acf4db85a))
+* **squad:** scaffold plugin directory and plugin.json ([5b65079](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/5b65079b3e30f02ea49f4e062be5690c8ef09f79))
+
+
+### Bug Fixes
+
+* **squad:** add blank lines around headings and lists to pass markdownlint ([d2e7f06](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/d2e7f06fe738551586b4aed51a603f401e67aff2))
+* **squad:** add language specifier to squad-status code block ([cb7bb44](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/cb7bb44bf4a6149210929cf0db48caa2a22b7319))
+* **squad:** add language specifiers to code blocks and blank lines around lists ([56b93f5](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/56b93f54f4a33f1dabc05d3c459dc1f8463afc65))
+
 ## [1.10.0](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.9.0...superpowers-extensions-v1.10.0) (2026-03-20)
 
 
