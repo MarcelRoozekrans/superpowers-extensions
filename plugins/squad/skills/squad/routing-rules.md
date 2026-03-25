@@ -3,7 +3,9 @@
 Rules evaluated top-to-bottom; first match wins. The SKILL.md references this file during agent dispatch.
 
 ## Backend Engineer
+
 Route when the question involves any of:
+
 - API endpoints, HTTP methods, request/response shapes, REST/GraphQL
 - Database schemas, migrations, queries, ORMs, data models
 - Authentication, authorization, sessions, tokens, OAuth
@@ -14,7 +16,9 @@ Route when the question involves any of:
 - Security (OWASP Top 10, injection, XSS on server)
 
 ## Frontend Engineer
+
 Route when the question involves any of:
+
 - UI components, layouts, pages, visual structure
 - CSS, styling systems, design tokens, Tailwind, CSS modules
 - Responsive design, breakpoints, mobile layout
@@ -25,7 +29,9 @@ Route when the question involves any of:
 - Frontend testing (component tests, visual regression)
 
 ## Tester
+
 Route when the question involves any of:
+
 - "What should we test?" / "What could go wrong?"
 - Test strategy, coverage decisions, what to skip
 - Edge cases, boundary conditions, error paths
@@ -35,7 +41,9 @@ Route when the question involves any of:
 - Missing test coverage in a plan
 
 ## Scribe
+
 Route when the question involves any of:
+
 - Prior decisions ("what did we decide about X?")
 - Naming conventions ("how do we call X in this project?")
 - Documentation of established patterns
@@ -43,7 +51,9 @@ Route when the question involves any of:
 - decisions.md recall or maintenance
 
 ## Lead (catch-all)
+
 Route when:
+
 - The question spans multiple domains
 - There is a conflict between two domain concerns
 - The question is about approach or trade-offs at a system level
