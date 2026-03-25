@@ -10,6 +10,7 @@ Extension skills for the [superpowers](https://github.com/anthropics/superpowers
 - **project-orchestration** -- GSD-inspired project lifecycle management for larger multi-session projects. Covers brownfield codebase mapping, milestone tracking, phase management, session pause/resume, progress overview, milestone audit, and release cycle management.
 - **ui-workflow** -- Frontend design contracts and visual auditing. Generates structured UI design contracts before implementing frontend phases (`ui-phase`) and performs retroactive visual audits against those contracts using regression-test (`ui-review`).
 - **ui-design-system** -- Generates complete design systems (colors, typography, spacing, patterns) before frontend implementation. Quick mode (one-liner) and guided mode (4 questions). Auto-detects Blazor, React, Vue, Astro stacks. Outputs `docs/design/MASTER.md`.
+- **squad** -- Persistent AI agent teams (Lead, Backend Engineer, Frontend Engineer, Tester, Scribe) that participate in brainstorming and planning workflows, answer domain questions from project-specific knowledge that grows across sessions, and use tiered context lookup (semantic search → grep → recent history) to stay lean.
 
 ---
 
@@ -312,6 +313,71 @@ No additional tools required.
 
 ---
 
+## Squad Skill
+
+Squad creates persistent AI agent teams within your Claude Code session. Rather than treating Claude as a single assistant, squad instantiates five specialists — Lead, Backend Engineer, Frontend Engineer, Tester, and Scribe — that participate actively in superpowers workflows and grow smarter about your project across sessions.
+
+### How It Works
+
+Agents are not separate processes. When a question is routed to a specialist, Claude loads that agent's persona (charter) and project knowledge (history) and responds in that agent's voice. Tiered lookup keeps context lean:
+
+1. **Semantic search** (LongtermMemory-MCP) — fastest, cross-session
+2. **Grep history** — keyword match against history file
+3. **Recent history** — last 50 lines only
+4. **Full history load** — last resort
+5. **Charter only** — no history yet
+
+### Agents
+
+| Agent | Expertise | Decision authority |
+|---|---|---|
+| **Lead** | Architecture, coordination, trade-offs | Full |
+| **Backend Engineer** | APIs, data models, services, infra | Domain |
+| **Frontend Engineer** | UI, components, styling, UX | Domain |
+| **Tester** | Test strategy, coverage, edge cases | Advisory |
+| **Scribe** | Decisions, conventions, institutional memory | None |
+
+### Workflow Integration
+
+- **brainstorming** — agents answer clarifying questions autonomously from project history
+- **writing-plans** — Tester reviews plan coverage; Scribe flags undocumented decisions
+- **subagent-driven-development** — specialist history injected into each agent's context
+- **pre-push-review** — Tester contributes risk knowledge; Scribe checks decisions.md
+- **project-orchestration** — `squad-sync` auto-fires on `pause-work`
+
+### Automatic Learning
+
+At session end, a background agent distills learnings and appends dated entries to each agent's `history.md` — no prompting needed. After a few sessions, agents know your auth pattern, naming conventions, risky areas, and more.
+
+### Usage
+
+- "Initialize my squad" → `squad-init`
+- "Who's on my team?" → `squad-status`
+- `@backend how does our auth work?` → `squad-ask`
+- "Squad sync" → `squad-sync` (manual checkpoint)
+- `/squad`
+
+### Output
+
+Squad produces and maintains:
+- `~/.claude/squad/agents/{name}/history.md` — global agent wisdom
+- `.squad/agents/{name}/history.md` — project-specific knowledge
+- `.squad/decisions.md` — shared team decision log
+
+### Installation
+
+```bash
+claude plugin install squad
+```
+
+No MCP servers required. Optionally install `longterm-memory` for semantic search in tier 1:
+
+```bash
+claude plugin install longterm-memory
+```
+
+---
+
 ## Ecosystem
 
 Superpowers Extensions serves as the single entrypoint for the entire superpowers extension ecosystem. One install pulls in the core superpowers skills and all companion plugins:
@@ -342,7 +408,7 @@ claude install gh:MarcelRoozekrans/superpowers-extensions
 Then install the plugins you need from the marketplace:
 
 ```bash
-# Install all eight extension skills
+# Install all extension skills
 claude plugin install regression-test
 claude plugin install pre-push-review
 claude plugin install refactor-analysis
@@ -351,6 +417,7 @@ claude plugin install roslyn-codelens-integration
 claude plugin install project-orchestration
 claude plugin install ui-workflow
 claude plugin install ui-design-system
+claude plugin install squad
 ```
 
 The regression-test plugin automatically configures the Playwright MCP server with `--caps=testing`. The pre-push-review plugin requires only git and no additional MCP servers for its core review.
@@ -656,12 +723,26 @@ superpowers-extensions/
 │   │       └── ui-workflow/
 │   │           ├── SKILL.md                # ui-phase and ui-review sub-skills
 │   │           └── ui-contract-template.md # UI design contract template
-│   └── ui-design-system/
+│   ├── ui-design-system/
+│   │   ├── .claude-plugin/
+│   │   │   └── plugin.json
+│   │   └── skills/
+│   │       └── ui-design-system/
+│   │           └── SKILL.md                # quick mode and guided mode workflow
+│   └── squad/
 │       ├── .claude-plugin/
 │       │   └── plugin.json
 │       └── skills/
-│           └── ui-design-system/
-│               └── SKILL.md                # quick mode and guided mode workflow
+│           └── squad/
+│               ├── SKILL.md                # routing, persona switching, sub-skills
+│               ├── routing-rules.md        # default routing rules reference
+│               ├── history-format.md       # history.md format spec
+│               └── default-team/           # default agent charters
+│                   ├── lead.md
+│                   ├── backend.md
+│                   ├── frontend.md
+│                   ├── tester.md
+│                   └── scribe.md
 └── docs/
     ├── planning/                           # Project lifecycle state (ROADMAP, MILESTONE, STATE)
     └── plans/                              # Design documents and phase plans
