@@ -102,6 +102,16 @@
       },
       "source": "./plugins/ui-design-system",
       "category": "workflow"
+    },
+    {
+      "name": "squad",
+      "description": "Persistent AI agent teams for Claude Code. Lead, Backend Engineer, Frontend Engineer, Tester, and Scribe agents participate actively in brainstorming and planning, answer domain questions from project-specific knowledge, and grow smarter across sessions via automatic history write-back.",
+      "version": "1.10.0",
+      "author": {
+        "name": "Marcel Roozekrans"
+      },
+      "source": "./plugins/squad",
+      "category": "workflow"
     }
   ]
 }

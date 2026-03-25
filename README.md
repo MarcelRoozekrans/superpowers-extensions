@@ -10,6 +10,7 @@ Extension skills for the [superpowers](https://github.com/anthropics/superpowers
 - **project-orchestration** -- GSD-inspired project lifecycle management for larger multi-session projects. Covers brownfield codebase mapping, milestone tracking, phase management, session pause/resume, progress overview, milestone audit, and release cycle management.
 - **ui-workflow** -- Frontend design contracts and visual auditing. Generates structured UI design contracts before implementing frontend phases (`ui-phase`) and performs retroactive visual audits against those contracts using regression-test (`ui-review`).
 - **ui-design-system** -- Generates complete design systems (colors, typography, spacing, patterns) before frontend implementation. Quick mode (one-liner) and guided mode (4 questions). Auto-detects Blazor, React, Vue, Astro stacks. Outputs `docs/design/MASTER.md`.
+- **squad** -- Persistent AI agent teams (Lead, Backend Engineer, Frontend Engineer, Tester, Scribe) that participate in brainstorming and planning workflows, answer domain questions from project-specific knowledge that grows across sessions, and use tiered context lookup (semantic search → grep → recent history) to stay lean.
 
 ---
 
@@ -312,6 +313,72 @@ No additional tools required.
 
 ---
 
+## Squad Skill
+
+Squad creates persistent AI agent teams within your Claude Code session. Rather than treating Claude as a single assistant, squad instantiates five specialists — Lead, Backend Engineer, Frontend Engineer, Tester, and Scribe — that participate actively in superpowers workflows and grow smarter about your project across sessions.
+
+### How It Works
+
+Agents are not separate processes. When a question is routed to a specialist, Claude loads that agent's persona (charter) and project knowledge (history) and responds in that agent's voice. Tiered lookup keeps context lean:
+
+1. **Semantic search** (LongtermMemory-MCP) — fastest, cross-session
+2. **Grep history** — keyword match against history file
+3. **Recent history** — last 50 lines only
+4. **Full history load** — last resort
+5. **Charter only** — no history yet
+
+### Agents
+
+| Agent | Expertise | Decision authority |
+|---|---|---|
+| **Lead** | Architecture, coordination, trade-offs | Full |
+| **Backend Engineer** | APIs, data models, services, infra | Domain |
+| **Frontend Engineer** | UI, components, styling, UX | Domain |
+| **Tester** | Test strategy, coverage, edge cases | Advisory |
+| **Scribe** | Decisions, conventions, institutional memory | None |
+
+### Workflow Integration
+
+- **brainstorming** — agents answer clarifying questions autonomously from project history
+- **writing-plans** — Tester reviews plan coverage; Scribe flags undocumented decisions
+- **subagent-driven-development** — specialist history injected into each agent's context
+- **pre-push-review** — Tester contributes risk knowledge; Scribe checks decisions.md
+- **project-orchestration** — `squad-sync` auto-fires on `pause-work`
+
+### Automatic Learning
+
+At session end, a background agent distills learnings and appends dated entries to each agent's `history.md` — no prompting needed. After a few sessions, agents know your auth pattern, naming conventions, risky areas, and more.
+
+### Usage
+
+- "Initialize my squad" → `squad-init`
+- "Who's on my team?" → `squad-status`
+- `@backend how does our auth work?` → `squad-ask`
+- "Squad sync" → `squad-sync` (manual checkpoint)
+- `/squad`
+
+### Output
+
+Squad produces and maintains:
+
+- `~/.claude/squad/agents/{name}/history.md` — global agent wisdom
+- `.squad/agents/{name}/history.md` — project-specific knowledge
+- `.squad/decisions.md` — shared team decision log
+
+### Installation
+
+```bash
+claude plugin install squad
+```
+
+No MCP servers required. Optionally install `longterm-memory` for semantic search in tier 1:
+
+```bash
+claude plugin install longterm-memory
+```
+
+---
+
 ## Ecosystem
 
 Superpowers Extensions serves as the single entrypoint for the entire superpowers extension ecosystem. One install pulls in the core superpowers skills and all companion plugins:
@@ -342,7 +409,7 @@ claude install gh:MarcelRoozekrans/superpowers-extensions
 Then install the plugins you need from the marketplace:
 
 ```bash
-# Install all eight extension skills
+# Install all extension skills
 claude plugin install regression-test
 claude plugin install pre-push-review
 claude plugin install refactor-analysis
@@ -351,6 +418,7 @@ claude plugin install roslyn-codelens-integration
 claude plugin install project-orchestration
 claude plugin install ui-workflow
 claude plugin install ui-design-system
+claude plugin install squad
 ```
 
 The regression-test plugin automatically configures the Playwright MCP server with `--caps=testing`. The pre-push-review plugin requires only git and no additional MCP servers for its core review.
@@ -461,6 +529,144 @@ claude mcp add playwright -- npx @playwright/mcp@latest --caps=testing,pdf,visio
 
 In Claude Code, the skills should appear when you type `/regression-test`, `/pre-push-review`, `/refactor-analysis`, `/decision-tracker`, `/roslyn-codelens-integration`, `/project-orchestration`, `/ui-workflow`, or `/ui-design-system`, or when you ask Claude to perform regression testing, a pre-push review, a refactor impact analysis, decision tracking, .NET code graph analysis, project lifecycle management, UI design contract work, or design system generation.
 
+---
+
+## Development Workflows
+
+These skills are designed to compose. Below are the standard workflows for different development scenarios, showing which skills to invoke and in what order.
+
+### Starting a New Project
+
+Run once when you begin working on a project with Claude:
+
+```text
+1. squad-init          — set up your persistent agent team
+2. project-orchestration map-codebase  — brownfield analysis (existing projects only)
+3. decision-tracker    — runs automatically once brainstorming starts
+```
+
+After that, each session begins by Claude recalling prior decisions and squad loading agent histories. You don't need to re-explain your architecture, conventions, or prior choices.
+
+---
+
+### Standard Feature Development
+
+The core loop for building new features:
+
+```text
+brainstorming          → explore the idea, squad answers domain questions
+writing-plans          → detailed task plan with file paths and TDD steps
+subagent-driven-development  → parallel execution with review between tasks
+pre-push-review        → PASS/FAIL gate before push or PR
+```
+
+**In practice:**
+
+```text
+"Let's build [feature]"        → triggers brainstorming (squad participates)
+"Write a plan for this"        → triggers writing-plans (Tester + Scribe review it)
+"Execute the plan"             → triggers subagent-driven-development
+"Review before I push"         → triggers pre-push-review
+```
+
+---
+
+### Refactoring Existing Code
+
+When a change touches many files or crosses architectural boundaries:
+
+```text
+refactor-analysis      → transitive impact analysis, safe execution order
+writing-plans          → implementation plan scoped to the impact analysis
+subagent-driven-development  → parallel execution per change group
+pre-push-review        → PASS/FAIL gate
+```
+
+For .NET codebases with `roslyn-codelens-integration` installed, refactor-analysis automatically uses Roslyn semantic queries instead of grep — catching dynamic references and reflection-based coupling that text search misses.
+
+**In practice:**
+
+```text
+"Analyze the impact of renaming X"  → triggers refactor-analysis
+"Write a plan based on this"        → triggers writing-plans
+"Execute it"                        → triggers subagent-driven-development
+```
+
+---
+
+### Frontend Development
+
+When building or redesigning UI:
+
+```text
+ui-design-system       → generate design tokens and component patterns (once per project)
+ui-workflow ui-phase   → generate UI contract before implementing each frontend phase
+[implement the phase]  → subagent-driven-development executes the contract
+ui-workflow ui-review  → audit implementation against contract via regression-test
+```
+
+**In practice:**
+
+```text
+"Generate a design system for this project"  → ui-design-system (once)
+"Design the UI for this phase"               → ui-workflow ui-phase
+"Execute"                                    → subagent-driven-development
+"Review the UI"                              → ui-workflow ui-review
+```
+
+---
+
+### Multi-Session Projects
+
+For larger efforts that span multiple work sessions and milestones:
+
+```text
+project-orchestration map-codebase   → understand the existing codebase
+project-orchestration progress       → "where are we?" at each session start
+[standard feature/refactor workflows per phase]
+project-orchestration pause-work     → checkpoint state + auto squad-sync
+project-orchestration resume-work    → restore context at next session
+project-orchestration audit-milestone → verify definition of done
+project-orchestration complete-milestone → tag release, archive milestone
+```
+
+**Squad + project-orchestration:** `pause-work` automatically triggers `squad-sync`, so agent histories stay current without any extra steps.
+
+---
+
+### Bug Fixing
+
+For diagnosing and fixing unexpected behavior:
+
+```text
+systematic-debugging   → structured root cause analysis before touching code
+[fix + TDD]            → write failing test, fix, verify green
+pre-push-review        → gate before push
+```
+
+For .NET memory leaks specifically:
+
+```text
+systematic-debugging   → identifies memory as the concern
+memorylens-integration → snapshot before and after, compare, confirm fix
+```
+
+---
+
+### Skill Composition at a Glance
+
+| Scenario | Primary skills | Enrichment (auto) |
+|---|---|---|
+| New feature | brainstorming → writing-plans → subagent → pre-push-review | squad, decision-tracker |
+| Refactor | refactor-analysis → writing-plans → subagent → pre-push-review | squad, roslyn-codelens-integration, decision-tracker |
+| Frontend | ui-design-system → ui-workflow → subagent → ui-review | squad, regression-test |
+| Bug fix | systematic-debugging → TDD → pre-push-review | squad, memorylens-integration (.NET) |
+| Large project | project-orchestration wrapping any of the above | squad (histories auto-sync on pause) |
+
+The enrichment skills (squad, decision-tracker, roslyn-codelens-integration) activate automatically when present — no explicit invocation needed.
+
+---
+
 ## Project Structure
 
 ```text
@@ -518,12 +724,26 @@ superpowers-extensions/
 │   │       └── ui-workflow/
 │   │           ├── SKILL.md                # ui-phase and ui-review sub-skills
 │   │           └── ui-contract-template.md # UI design contract template
-│   └── ui-design-system/
+│   ├── ui-design-system/
+│   │   ├── .claude-plugin/
+│   │   │   └── plugin.json
+│   │   └── skills/
+│   │       └── ui-design-system/
+│   │           └── SKILL.md                # quick mode and guided mode workflow
+│   └── squad/
 │       ├── .claude-plugin/
 │       │   └── plugin.json
 │       └── skills/
-│           └── ui-design-system/
-│               └── SKILL.md                # quick mode and guided mode workflow
+│           └── squad/
+│               ├── SKILL.md                # routing, persona switching, sub-skills
+│               ├── routing-rules.md        # default routing rules reference
+│               ├── history-format.md       # history.md format spec
+│               └── default-team/           # default agent charters
+│                   ├── lead.md
+│                   ├── backend.md
+│                   ├── frontend.md
+│                   ├── tester.md
+│                   └── scribe.md
 └── docs/
     ├── planning/                           # Project lifecycle state (ROADMAP, MILESTONE, STATE)
     └── plans/                              # Design documents and phase plans
