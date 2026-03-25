@@ -360,6 +360,7 @@ At session end, a background agent distills learnings and appends dated entries 
 ### Output
 
 Squad produces and maintains:
+
 - `~/.claude/squad/agents/{name}/history.md` — global agent wisdom
 - `.squad/agents/{name}/history.md` — project-specific knowledge
 - `.squad/decisions.md` — shared team decision log
@@ -538,7 +539,7 @@ These skills are designed to compose. Below are the standard workflows for diffe
 
 Run once when you begin working on a project with Claude:
 
-```
+```text
 1. squad-init          — set up your persistent agent team
 2. project-orchestration map-codebase  — brownfield analysis (existing projects only)
 3. decision-tracker    — runs automatically once brainstorming starts
@@ -552,7 +553,7 @@ After that, each session begins by Claude recalling prior decisions and squad lo
 
 The core loop for building new features:
 
-```
+```text
 brainstorming          → explore the idea, squad answers domain questions
 writing-plans          → detailed task plan with file paths and TDD steps
 subagent-driven-development  → parallel execution with review between tasks
@@ -561,7 +562,7 @@ pre-push-review        → PASS/FAIL gate before push or PR
 
 **In practice:**
 
-```
+```text
 "Let's build [feature]"        → triggers brainstorming (squad participates)
 "Write a plan for this"        → triggers writing-plans (Tester + Scribe review it)
 "Execute the plan"             → triggers subagent-driven-development
@@ -574,7 +575,7 @@ pre-push-review        → PASS/FAIL gate before push or PR
 
 When a change touches many files or crosses architectural boundaries:
 
-```
+```text
 refactor-analysis      → transitive impact analysis, safe execution order
 writing-plans          → implementation plan scoped to the impact analysis
 subagent-driven-development  → parallel execution per change group
@@ -585,7 +586,7 @@ For .NET codebases with `roslyn-codelens-integration` installed, refactor-analys
 
 **In practice:**
 
-```
+```text
 "Analyze the impact of renaming X"  → triggers refactor-analysis
 "Write a plan based on this"        → triggers writing-plans
 "Execute it"                        → triggers subagent-driven-development
@@ -597,7 +598,7 @@ For .NET codebases with `roslyn-codelens-integration` installed, refactor-analys
 
 When building or redesigning UI:
 
-```
+```text
 ui-design-system       → generate design tokens and component patterns (once per project)
 ui-workflow ui-phase   → generate UI contract before implementing each frontend phase
 [implement the phase]  → subagent-driven-development executes the contract
@@ -606,7 +607,7 @@ ui-workflow ui-review  → audit implementation against contract via regression-
 
 **In practice:**
 
-```
+```text
 "Generate a design system for this project"  → ui-design-system (once)
 "Design the UI for this phase"               → ui-workflow ui-phase
 "Execute"                                    → subagent-driven-development
@@ -619,7 +620,7 @@ ui-workflow ui-review  → audit implementation against contract via regression-
 
 For larger efforts that span multiple work sessions and milestones:
 
-```
+```text
 project-orchestration map-codebase   → understand the existing codebase
 project-orchestration progress       → "where are we?" at each session start
 [standard feature/refactor workflows per phase]
@@ -637,7 +638,7 @@ project-orchestration complete-milestone → tag release, archive milestone
 
 For diagnosing and fixing unexpected behavior:
 
-```
+```text
 systematic-debugging   → structured root cause analysis before touching code
 [fix + TDD]            → write failing test, fix, verify green
 pre-push-review        → gate before push
@@ -645,7 +646,7 @@ pre-push-review        → gate before push
 
 For .NET memory leaks specifically:
 
-```
+```text
 systematic-debugging   → identifies memory as the concern
 memorylens-integration → snapshot before and after, compare, confirm fix
 ```

@@ -13,7 +13,7 @@ During lookup, project entries are shown first; global entries follow.
 
 Each session's learnings are written as a dated section:
 
-```
+```markdown
 ## YYYY-MM-DD
 
 - One concrete fact per bullet
@@ -25,7 +25,7 @@ Each session's learnings are written as a dated section:
 
 **Good entries:**
 
-```
+```markdown
 ## 2026-03-25
 
 - JWT with 1h expiry, refresh tokens in httpOnly cookie
@@ -36,7 +36,7 @@ Each session's learnings are written as a dated section:
 
 **Bad entries:**
 
-```
+```text
 - The authentication system uses JSON Web Tokens which provide stateless auth...  ← too long, use bullet facts
 - Added GetById to UserRepository  ← implementation detail, not a decision
 - We use JWT  ← too vague, no context

@@ -10,6 +10,7 @@ description: Use when working on any project to activate persistent AI agent tea
 No hard requirements. The skill works standalone.
 
 **Soft dependencies (enhance but are not required):**
+
 - `LongtermMemory-MCP` — enables tier-1 semantic search in the tiered lookup. Without it, squad falls through to grep.
 - `decision-tracker` skill — syncs `decisions.md` to long-term memory automatically.
 - `project-orchestration` skill — auto-triggers `squad-sync` on `pause-work`.
@@ -30,6 +31,7 @@ Squad reads from two layers, merging them at runtime:
 | Project override | `.squad/` (repo root) | Project-specific routing, decisions, history |
 
 **Merge rules:**
+
 - `charter.md` always comes from `~/.claude/squad/agents/{name}/` — agent persona is stable
 - `history.md`: project entries first, global entries appended below
 - `routing.md`: project rules take precedence, global rules fill gaps
@@ -45,7 +47,7 @@ If `~/.claude/squad/` does not exist, prompt the user to run `squad-init` before
 
 When an agent is invoked, use this lookup chain — stop at the first tier that returns sufficient context:
 
-```
+```text
 Tier 1 — Semantic search (LongtermMemory-MCP)
   search_memory(query=<question>, tags=[<agent-name>, project:<project-name>])
   → If 2+ results with relevance > 0.7: use these, skip lower tiers
@@ -85,7 +87,7 @@ When a question arises during any superpowers workflow:
 
 When responding as an agent, prefix the response with a visual label:
 
-```
+```text
 🎯 Lead: [response]
 🔧 Backend Engineer: [response]
 🎨 Frontend Engineer: [response]
@@ -113,7 +115,7 @@ The Lead agent coordinates multi-part questions. If a question spans Frontend an
 
 **Example:**
 
-```
+```text
 > [Brainstorming] How should authentication work?
 
 🔧 Backend Engineer: We're using JWT with 1h expiry and httpOnly refresh tokens — see AuthService. I'd extend that rather than introduce a new mechanism.
@@ -124,6 +126,7 @@ The Lead agent coordinates multi-part questions. If a question spans Frontend an
 ### writing-plans
 
 After the plan is drafted:
+
 1. Invoke Tester to review the plan for missing test coverage — respond as Tester with a brief coverage assessment.
 2. Invoke Scribe to check for undocumented decisions — respond as Scribe flagging any new conventions the plan introduces.
 3. Both findings are appended to the plan as a `## Squad Review` section before saving.
@@ -131,6 +134,7 @@ After the plan is drafted:
 ### subagent-driven-development
 
 When a task is dispatched to a parallel subagent:
+
 1. Derive the relevant specialist from the task description.
 2. Run **tier 1 only** (semantic search) for that specialist.
 3. Inject the top 2-3 results into the subagent prompt under `## Squad Context`.
@@ -139,9 +143,11 @@ When a task is dispatched to a parallel subagent:
 ### pre-push-review
 
 During Phase 3 (Code Quality):
+
 - Invoke Tester to contribute project-specific risk knowledge ("we've had regressions in X area before").
 
 During Phase 2 (Plan Adherence):
+
 - Invoke Scribe to check `decisions.md` — flag if any change contradicts a recorded decision.
 
 ### project-orchestration
@@ -208,6 +214,7 @@ Launches a background agent (`run_in_background: true`) with the following task:
 > "Review the conversation history from this session. For each squad agent (Lead, Backend Engineer, Frontend Engineer, Tester, Scribe), identify any new conventions, patterns, architectural decisions, or project-specific knowledge that was established or confirmed. Write new entries to each agent's history.md using the format in history-format.md. Append only — do not overwrite existing entries. Skip entries that duplicate what's already in the file. Also update .squad/decisions.md with any decisions that qualify as cross-cutting."
 
 The background agent:
+
 1. Reads all relevant `history.md` files (to avoid duplicates).
 2. Distills session learnings per agent.
 3. Appends dated entries to each `history.md`.
@@ -232,7 +239,7 @@ Routes a direct question to a named agent, bypassing the automatic routing algor
 
 **Example:**
 
-```
+```text
 User: @tester what areas of this codebase are most likely to regress?
 
 🧪 Tester: Based on history — the payment flow and the auth token refresh logic have had regressions before. I'd prioritize integration tests there before any refactor touches those paths.
