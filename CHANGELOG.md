@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.11.1](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.11.0...superpowers-extensions-v1.11.1) (2026-03-26)
+
+
+### Bug Fixes
+
+* **squad:** address post-merge review findings ([b608f39](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/b608f39bb6bd29c036bea08f60fc06ce6054d28a))
+* **squad:** address post-merge review findings ([ae908de](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/ae908de10143ee3ccdd678d1a9cc3ae82955b3b3))
+
 ## [1.11.0](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.10.0...superpowers-extensions-v1.11.0) (2026-03-25)
 
 
