@@ -166,16 +166,16 @@ When `pause-work` fires, squad auto-triggers `squad-sync` as a post-hook. No sep
 
 1. Ask the user: "Initialize squad globally (`~/.claude/squad/`) or for this project only (`.squad/`)?" — default is global.
 2. Create the chosen directory structure.
-3. Copy the five default charter files from the plugin's `default-team/` folder.
+3. Copy the five default charter files from the `default-team/` folder located in the same directory as this SKILL.md file. Resolve the path relative to the skill file, not the project root — after `claude plugin install`, the plugin is installed under `~/.claude/plugins/` and the `default-team/` folder is a sibling of `SKILL.md`.
 4. Create empty `history.md` files for each agent.
 5. Create `team.md` listing all five agents as active.
-6. Create `routing.md` as a copy of the default routing rules.
-7. If project init: also create `decisions.md` (empty).
+6. Create `routing.md` as a copy of the default routing rules (from `routing-rules.md` in the same directory as this SKILL.md).
+7. If project init: also create `.squad/decisions.md` (empty) and `.squad/routing.md` as a copy of the default routing rules — users who want project-specific routing overrides edit this file.
 8. Announce completion:
 
    > "Squad initialized with 5 agents: Lead, Backend Engineer, Frontend Engineer, Tester, Scribe. Charters in `~/.claude/squad/agents/`. Run `@squad status` to verify."
 
-**Charter source:** `plugins/squad/skills/squad/default-team/` — these files are bundled in the plugin.
+**Charter source:** The `default-team/` folder is in the same directory as this SKILL.md. Always resolve it as a sibling path, never as a repo-relative path.
 
 ### squad-status
 
