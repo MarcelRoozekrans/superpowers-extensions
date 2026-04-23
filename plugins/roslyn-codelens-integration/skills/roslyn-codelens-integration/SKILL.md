@@ -1,6 +1,6 @@
 ---
 name: roslyn-codelens-integration
-description: Use when any superpowers skill (brainstorming, refactor-analysis, writing-plans, executing-plans, subagent-driven-development, systematic-debugging, test-driven-development, receiving-code-review, requesting-code-review, verification-before-completion, pre-push-review) is active on a .NET / C# codebase (.cs/.csproj/.sln) and roslyn-codelens MCP tools are available (find_implementations, find_callers, get_diagnostics, etc.) — applies whenever Claude would otherwise Grep/Glob for C# symbols or run dotnet build for diagnostics.
+description: Use when any superpowers skill (brainstorming, refactor-analysis, writing-plans, executing-plans, subagent-driven-development, systematic-debugging, test-driven-development, receiving-code-review, requesting-code-review, verification-before-completion, pre-push-review) is active on a .NET / C# codebase (.cs/.csproj/.sln/.slnx) and roslyn-codelens MCP tools are available (find_implementations, find_callers, get_diagnostics, etc.) — applies whenever Claude would otherwise Grep/Glob for C# symbols or run dotnet build for diagnostics.
 ---
 
 # Roslyn CodeLens — Superpowers Integration
@@ -232,7 +232,7 @@ Call **`rebuild_solution`** after any of these events:
 - Adding or removing projects from the solution
 - When `get_diagnostics` returns stale or unexpected results
 
-This forces a full reload — re-opens the `.sln`, recompiles all projects, and rebuilds all indexes. Do not call it speculatively; only call it when there is a reason to believe the analysis is out of date.
+This forces a full reload — re-opens the `.sln` / `.slnx`, recompiles all projects, and rebuilds all indexes. Do not call it speculatively; only call it when there is a reason to believe the analysis is out of date.
 
 ---
 
