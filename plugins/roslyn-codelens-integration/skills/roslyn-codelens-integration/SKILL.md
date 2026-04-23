@@ -1,6 +1,6 @@
 ---
 name: roslyn-codelens-integration
-description: Use when brainstorming or refactor-analysis is active on a .NET codebase and roslyn-codelens MCP tools are available (find_implementations, find_callers, get_diagnostics, etc.)
+description: Use when any superpowers skill (brainstorming, refactor-analysis, writing-plans, executing-plans, subagent-driven-development, systematic-debugging, test-driven-development, receiving-code-review, requesting-code-review, verification-before-completion, pre-push-review) is active on a .NET / C# codebase (.cs/.csproj/.sln) and roslyn-codelens MCP tools are available (find_implementations, find_callers, get_diagnostics, etc.) — applies whenever Claude would otherwise Grep/Glob for C# symbols or run dotnet build for diagnostics.
 ---
 
 # Roslyn CodeLens — Superpowers Integration
@@ -19,15 +19,49 @@ Check if `find_implementations` is available as an MCP tool. If not, this skill 
 
 ## Overview
 
-This skill enhances superpowers skills with semantic .NET code intelligence. When roslyn-codelens tools are detected, use them **instead of Grep/Glob** for structural code queries and **instead of `dotnet build`** for diagnostics.
+This skill enhances **every** superpowers skill with semantic .NET code intelligence. When roslyn-codelens tools are detected on a .NET codebase, use them **instead of Grep/Glob** for structural code queries and **instead of `dotnet build`** for diagnostics — regardless of which superpowers skill is driving the session.
 
 **Core principle:** Grep finds text. Roslyn understands code. Use Roslyn for structure, Grep for content.
 
+For the full rule set, red-flag table, rationalization counters, and pre-action checklist, the **`roslyn-codelens` skill is authoritative** — this integration skill points at the specific superpowers phases where those rules bite hardest.
+
+## The Iron Law (summary)
+
+On a .NET codebase where roslyn-codelens tools are available:
+
+1. **No `Grep`/`Glob`/`rg`** for C# symbols (types, members, interfaces, references, callers, implementations, attributes, reflection patterns).
+2. **No `dotnet build`/`msbuild`** for compiler errors, warnings, or analyzer diagnostics — use `get_diagnostics`.
+3. **No manual "read-and-scan"** of `.cs` files to answer structural questions — use `get_file_overview` / `get_type_overview` / `analyze_method`.
+
+**Violating the letter of these rules violates the spirit.** If the Bash/Grep/Glob/Read you're about to run substitutes for a semantic tool, stop and use the tool.
+
+## Red Flags — STOP and Use the MCP Tool
+
+| Thought | STOP — Use instead |
+|---|---|
+| "Let me `Grep` for the type / method / interface name" | `search_symbols` / `find_references` / `find_callers` / `find_implementations` |
+| "Let me `Grep` for `[Attribute]`" | `find_attribute_usages` |
+| "Let me `Grep` for `Activator.CreateInstance` / `MethodInfo.Invoke`" | `find_reflection_usage` |
+| "I'll run `dotnet build` to see errors" | `get_diagnostics` |
+| "Let me `Read` the .cs file to see what's in it" | `get_file_overview` / `get_type_overview` |
+| "Let me `Glob` for `**/*Service.cs`" | `search_symbols` with a partial name |
+
+## Rationalizations — and why they're wrong
+
+| Excuse | Reality |
+|---|---|
+| "Just a quick Grep — it's faster." | It isn't. One `find_references` beats iterating Grep + deduping false positives. |
+| "Grep as a sanity check on the MCP result." | Redundant and misleading — Grep catches comments, strings, partial matches. |
+| "`dotnet build` is how we check errors." | Not here. `get_diagnostics` is milliseconds and includes analyzer results. |
+| "The MCP server might be slow or fail." | If it fails, report it. Do not silently fall back to Grep — wrong answers that look right. |
+| "This is just a string search anyway." | A C# symbol is not "just a string" — it binds. Use `find_references`. Comments/literals are the only free Grep pass. |
+| "The user said to Grep." | If they meant "find all usages," use the semantic tool and say why. If they literally want a textual grep, ask. |
+
 ## Announce Line
 
-When this skill activates alongside brainstorming or refactor-analysis:
+When this skill activates alongside any superpowers skill:
 
-> "Roslyn CodeLens tools detected. I'll use semantic code intelligence for architectural context."
+> "Roslyn CodeLens tools detected. I'll use semantic code intelligence for all structural queries and diagnostics."
 
 ---
 
@@ -131,6 +165,56 @@ Use **`get_project_dependencies`** and **`find_circular_dependencies`** to infor
 
 ---
 
+## Systematic Debugging Integration
+
+When `systematic-debugging` is active on a .NET codebase:
+
+- **Reproduce / isolate:** use **`get_diagnostics`** first — any compiler or analyzer finding in the suspect file narrows the search instantly.
+- **Trace symbol usage:** use **`find_callers`** and **`find_references`** instead of Grep — false-positive-free call paths.
+- **Check hidden wiring:** use **`get_di_registrations`** (wrong lifetime / duplicate registration), **`find_reflection_usage`** (invisible dependencies), **`find_attribute_usages`** (authorization / serialization / filter pipelines).
+- **Trace data flow:** use **`analyze_data_flow`** on the suspect statement range — shows what's declared / read / written / captured.
+- **Trace control flow:** use **`analyze_control_flow`** to detect unreachable code or missing returns.
+- **Inspect generator output:** use **`get_generated_code`** when the bug may live in source-generated code (records, DI, Mediator, etc.).
+
+## Test-Driven Development Integration
+
+When `test-driven-development` is active on a .NET codebase:
+
+- **Before writing the test:** use **`get_symbol_context`** and **`analyze_method`** on the target — verify the contract you're about to test.
+- **After GREEN:** use **`get_diagnostics`** to catch analyzer warnings introduced by new code. Do not run `dotnet build` for this.
+- **During REFACTOR:** use **`get_code_actions`** + **`apply_code_action`** (preview mode) for standard refactorings (extract method, inline variable, generate constructor). Safer than hand-editing.
+- **Verify no regressions in callers:** use **`find_callers`** on the refactored method to confirm the call sites still compile (then `get_diagnostics` to prove it).
+
+## Executing Plans / Subagent-Driven Development Integration
+
+When `executing-plans` or `subagent-driven-development` is active on a .NET codebase:
+
+- **Before starting a task:** use **`get_type_overview`** and **`analyze_change_impact`** on the target symbol to scope the task precisely.
+- **Between tasks:** use **`get_diagnostics`** to verify the checkpoint compiles clean — replaces running `dotnet build` between subagent handoffs.
+- **For subagent prompts:** cite concrete symbol names, file paths, and reference counts obtained from the MCP tools. Subagents should not have to re-discover the graph.
+- **After each subagent completes:** use **`get_diagnostics`** to confirm no new warnings/errors before moving to the next task.
+
+## Verification / Code Review / Pre-Push Integration
+
+When `verification-before-completion`, `requesting-code-review`, `receiving-code-review`, or `pre-push-review` is active on a .NET codebase:
+
+- **Check the build without running it:** **`get_diagnostics`** is the verification command. `dotnet build` is not required and should not be used for this purpose.
+- **Dead code scan:** **`find_unused_symbols`** catches symbols the PR left orphaned.
+- **Complexity regression:** **`get_complexity_metrics`** flags methods whose complexity grew during the change.
+- **Naming drift:** **`find_naming_violations`** on touched files.
+- **Circular dependency guard:** **`find_circular_dependencies`** after refactors that moved code across projects.
+- **Change impact confirmation:** **`analyze_change_impact`** on the main changed symbols — does the blast radius match the PR description?
+
+## Writing Plans Integration
+
+When `writing-plans` is active on a .NET codebase:
+
+- Cite concrete types, interface names, and call-site counts from **`find_callers`** / **`find_references`** / **`find_implementations`** in the plan — never vague phrasing like "the services that use this."
+- Use **`analyze_change_impact`** to enumerate the affected files per task and set a realistic task count.
+- Use **`get_project_dependencies`** to order tasks so each checkpoint compiles.
+
+---
+
 ## Solution Management
 
 These tools apply across all skill integrations whenever multiple solutions are involved:
@@ -183,7 +267,9 @@ This forces a full reload — re-opens the `.sln`, recompiles all projects, and 
 
 ---
 
-## Red Flags
+## Workflow Red Flags
+
+(The tool-level STOP table is near the top of this skill. These are higher-level workflow traps.)
 
 1. **Using Grep for structural queries when Roslyn is available** — Grep finds text, not semantics. `find_callers` is always more accurate than grepping for a method name.
 
@@ -202,7 +288,13 @@ This forces a full reload — re-opens the `.sln`, recompiles all projects, and 
 | Superpowers Skill | Relationship | Notes |
 |---|---|---|
 | `superpowers:brainstorming` | **Always-on when detected.** Enhances all 4 phases with semantic code intelligence. Grounds clarifying questions and approach proposals in actual architecture. | Falls back to Grep/Glob when roslyn tools are not available. |
-| `refactor-analysis` | **Always-on when detected.** Replaces text search in Phase 2 (dependency mapping), Phase 3 (transitive closure), Phase 5 (risk identification), and informs Phase 6 (execution order). | Falls back to the standard text-based approach when roslyn tools are not available. |
-| `superpowers:writing-plans` | **Indirect benefit.** Plans produced after roslyn-enhanced brainstorming or refactor-analysis contain more accurate dependency information. | No direct tool usage during plan writing. |
-| `superpowers:subagent-driven-development` | **Indirect benefit.** Subagents implementing plans get better context when plans were informed by semantic analysis. | Subagents can use roslyn tools directly if available in their session. |
-| `decision-tracker` | **No interaction.** Decision tracking operates on cross-cutting decisions, not code structure. | Independent — both can be active simultaneously. |
+| `refactor-analysis` | **Always-on when detected.** Replaces text search in Phase 2 (dependency mapping), Phase 3 (transitive closure), Phase 5 (risk identification), and informs Phase 6 (execution order). | Falls back to text-based approach when roslyn tools are not available. |
+| `superpowers:writing-plans` | **Always-on when detected.** Plans cite concrete symbols and reference counts obtained from the MCP tools; task ordering uses `get_project_dependencies`. | — |
+| `superpowers:executing-plans` | **Always-on when detected.** `get_diagnostics` replaces `dotnet build` at checkpoints; `analyze_change_impact` scopes each task. | — |
+| `superpowers:subagent-driven-development` | **Always-on when detected.** Subagent prompts carry concrete symbol data from the MCP tools; `get_diagnostics` verifies each handoff. | Subagents should also use roslyn tools directly if available. |
+| `superpowers:systematic-debugging` | **Always-on when detected.** `get_diagnostics`, `find_callers`, `find_reflection_usage`, `get_di_registrations`, `analyze_data_flow`, `analyze_control_flow`, `get_generated_code` replace Grep/Read-based investigation. | — |
+| `superpowers:test-driven-development` | **Always-on when detected.** `get_diagnostics` replaces `dotnet build` after GREEN; `get_code_actions` / `apply_code_action` for REFACTOR. | — |
+| `superpowers:verification-before-completion` | **Always-on when detected.** `get_diagnostics`, `find_unused_symbols`, `get_complexity_metrics`, `analyze_change_impact` are the verification commands. | `dotnet build` is not required for verification. |
+| `superpowers:requesting-code-review` / `receiving-code-review` | **Always-on when detected.** Reviewers and review responses reference concrete MCP findings rather than text-search approximations. | — |
+| `pre-push-review` | **Always-on when detected.** Dead code, complexity regression, naming drift, and dependency cycles are checked via the MCP tools before push. | — |
+| `decision-tracker` | **No interaction.** Operates on cross-cutting decisions, not code structure. | Independent — both can be active simultaneously. |
