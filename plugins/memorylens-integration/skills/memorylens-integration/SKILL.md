@@ -165,6 +165,18 @@ Raise these as design questions, not as blocking warnings. The goal is to surfac
 
 5. **Not re-running analysis after a fix** — If Phase 3 shows improvement but not full resolution, re-run full `analyze` to check if the fix introduced new issues.
 
+## Common Rationalizations
+
+| Rationalization | Why It's Wrong | Correct Action |
+|---|---|---|
+| "It's just a small leak, the GC will eventually clean it up" | Gen2 retention compounds across requests; "small" leaks become OOMs at scale | Capture a snapshot — let the data decide |
+| "I can see the leak in the code, no need to profile" | Visual code review misses retention paths through events, statics, and closures | Run `analyze` — confirm the path empirically before fixing |
+| "The fix looks right, skipping the comparison" | Memory fixes routinely look right and miss a retention edge — events un-subscribed in one path but not another | Always run `compare_snapshots` to validate Phase 3 |
+| "ML008-ML010 are low severity, ignore them" | Low-severity findings often surface real allocation patterns worth fixing in the same pass | Triage them — fix what's cheap, document what's deferred |
+| "MemoryLens isn't available, I'll guess from a heap dump" | Guessing without rule analysis produces plausible-but-wrong hypotheses | If MCP tools are unavailable, fall back to standard systematic-debugging — do NOT pretend to do memory analysis |
+| "Snapshot the staging environment, prod is too risky" | Memory issues are workload-dependent; staging snapshots may not reproduce | Snapshot the actual problematic process, with user approval — `snapshot` does not stop the process |
+| "The hot-path allocation is fine, it's been there for years" | Pre-existing does not mean acceptable; ML006 findings often correlate with latency regressions | Flag and discuss — do not silently dismiss |
+
 ## Per-Project Configuration
 
 Rules can be customized per-project via `.memorylens.json` in the project root. Each rule can be enabled/disabled and its severity overridden. Call **`get_rules`** to see all available rules and their current configuration.
