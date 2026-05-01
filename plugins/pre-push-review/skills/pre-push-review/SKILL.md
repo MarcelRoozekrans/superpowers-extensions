@@ -241,7 +241,7 @@ Run existing test suites to verify the branch hasn't broken anything.
    - Names and error messages of failing tests
    - Full output for the report
 
-4. **Optional: UI contract audit** — If `docs/plans/*-ui-contract.md` exists for the current branch/phase, invoke the `ui-review` sub-skill from `ui-workflow` to audit the implementation against the contract. This supersedes bare regression-test for frontend branches with a contract.
+4. **Optional: UI contract audit** — If `docs/plans/*-ui-contract.md` exists for the current branch/phase AND the `ui-workflow` skill is available, invoke its `ui-review` sub-skill to audit the implementation against the contract. This supersedes bare regression-test for frontend branches with a contract. If the contract exists but `ui-workflow` is not installed, record a Warning ("ui-contract present but ui-workflow skill unavailable — install superpowers-extensions ui-workflow plugin to enable contract audit") and fall through to step 5. Do not silently skip the audit.
 
 5. **Optional: Browser-based regression testing** — If the project has a web UI, no ui-contract exists, and the user confirms a URL is available, offer to invoke the regression-test skill for visual and functional browser testing. This is optional and requires user confirmation.
 

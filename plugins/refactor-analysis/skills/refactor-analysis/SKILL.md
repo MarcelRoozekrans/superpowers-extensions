@@ -337,7 +337,7 @@ Generate the impact analysis document and transition to the implementation plann
    - Number of execution groups
    - Document path
 
-5. **Transition to writing-plans** — Invoke the writing-plans skill to create the implementation plan from this impact analysis document.
+5. **Transition to writing-plans** — **VERIFY** the impact analysis document was actually written to disk (`Glob` for the expected path) before chaining onward. If the file is missing, the previous step did not complete — return to it. Do not invoke writing-plans on faith. Once verified, **read** the `superpowers:writing-plans` skill and follow it end-to-end to create the implementation plan from this impact analysis document.
 
 ## Red Flags
 
