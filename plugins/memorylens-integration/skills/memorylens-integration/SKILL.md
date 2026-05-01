@@ -1,6 +1,6 @@
 ---
 name: memorylens-integration
-description: Use when systematic-debugging is active on a .NET codebase and MemoryLens MCP tools are available (ensure_dotmemory, snapshot, analyze, compare_snapshots)
+description: Use on .NET codebases when MemoryLens MCP tools are available, in either of two paths — (1) the user directly reports a memory issue ("memory leak", "OOM", "out of memory", "high GC pressure", "process memory keeps growing", "profile memory", "investigate retained objects"), or (2) systematic-debugging is active and the symptom is memory-related. Provides snapshot/analyze/compare_snapshots over dotMemory for leak detection and before/after fix validation. Skip for non-.NET memory issues, non-memory bugs, or when MemoryLens MCP tools are unavailable.
 ---
 
 # MemoryLens — Superpowers Debugging Integration

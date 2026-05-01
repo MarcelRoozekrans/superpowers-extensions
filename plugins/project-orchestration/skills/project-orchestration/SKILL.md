@@ -1,6 +1,6 @@
 ---
 name: project-orchestration
-description: Use when starting work on a larger multi-session project, managing milestones or phases, checking project status, or pausing/resuming work across sessions. Covers brownfield mapping, phase management, milestone lifecycle, and session handoff.
+description: Use for multi-session project lifecycle management. Triggers on phrases like "resume", "continue", "where are we", "what's next", "pause", "I'm done for today", "next phase", "add a phase", "new milestone", "audit the milestone", "complete the milestone", or session start on any project that contains a docs/planning/ directory. Covers brownfield codebase mapping, phase management (add/insert/remove), session pause/resume via STATE.md, milestone audit and completion, and routing into brainstorming/writing-plans/executing-plans via the start-next-phase sub-skill. Skip for one-off features that fit a single brainstorming → writing-plans → executing-plans cycle without milestones.
 ---
 
 # Project Orchestration Skill

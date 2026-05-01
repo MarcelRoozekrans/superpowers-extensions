@@ -1,6 +1,6 @@
 ---
 name: ui-design-system
-description: Use before starting frontend implementation when no design system exists yet. Generates a complete design system (colors, typography, spacing, component patterns) tailored to the product type and tech stack. Outputs docs/design/MASTER.md for consumption by ui-workflow ui-phase. Supports quick mode (inline description) and guided mode (4 questions).
+description: Use before starting frontend implementation when no design system exists yet — first check for docs/design/MASTER.md, run this only if missing. Triggers on phrases like "set up the design system", "no design system yet", "establish UI conventions", "define our colors and typography", or implicitly when ui-workflow ui-phase needs a contract but docs/design/MASTER.md is absent. Generates a complete design system (colors, typography, spacing, component patterns) tailored to product type and stack — auto-detects Blazor, React, Vue, Astro. Quick mode (inline one-liner description) or guided mode (4 questions). Skip if docs/design/MASTER.md already exists; the user should update it manually.
 ---
 
 # UI Design System Skill

@@ -1,6 +1,6 @@
 ---
 name: ui-workflow
-description: Use before implementing a frontend phase (ui-phase) to produce a UI design contract, or after implementing a frontend phase (ui-review) to audit the result against the contract. Works with any frontend tech stack.
+description: Use for frontend phase work in two modes — (1) ui-phase before implementing, on triggers like "design the UI", "spec the page", "frontend design contract", "what should this screen look like"; produces a structured UI design contract for implementation to follow. (2) ui-review after implementing, on triggers like "review the UI", "audit the implementation", "did it match the design", "compare to spec"; uses regression-test to compare the result against the contract. Works with any frontend tech stack (React, Vue, Blazor, Astro, etc.). Skip for pure backend or non-visual changes.
 ---
 
 # UI Workflow Skill

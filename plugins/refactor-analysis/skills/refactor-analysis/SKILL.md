@@ -1,6 +1,6 @@
 ---
 name: refactor-analysis
-description: Use when planning a refactoring that touches multiple files, before writing an implementation plan - performs full transitive impact analysis to map every affected file, classify changes, identify risks, and determine safe execution order
+description: Use before writing an implementation plan for a refactor that spans 3+ files or crosses module/project boundaries — codebase-wide renames, extract/move/inline operations, API surface changes, directory restructures, or interface modifications. Triggers on phrases like "refactor X across", "rename everywhere", "extract this into", "move this to", "restructure the layout", "change the public API". Maps every transitively affected file, classifies breaking vs cosmetic changes, identifies risks (dynamic references, reflection, cross-boundary impacts), and produces a safe execution order with checkpoints. Skip for single-file changes, two-file edits with no transitive impact, or pure additions.
 ---
 
 # Refactor Analysis Skill

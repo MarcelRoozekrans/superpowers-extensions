@@ -1,6 +1,6 @@
 ---
 name: roslyn-codelens-integration
-description: Use when brainstorming or refactor-analysis is active on a .NET codebase and roslyn-codelens MCP tools are available (find_implementations, find_callers, get_diagnostics, etc.)
+description: Use on .NET codebases (.cs/.csproj/.sln present) when roslyn-codelens MCP tools are available, in either of two paths — (1) the user directly asks for semantic .NET intelligence ("find callers of", "find implementations of", "who uses this", "show type hierarchy", "find unused symbols", "find circular dependencies", "what does this method do"), or (2) brainstorming/refactor-analysis is active and would benefit from grounded code-graph evidence rather than guesses. Provides 24 Roslyn-powered tools (find_callers, find_implementations, get_diagnostics, get_type_hierarchy, analyze_data_flow, etc.). Skip for non-.NET projects or when roslyn-codelens MCP tools are unavailable.
 ---
 
 # Roslyn CodeLens — Superpowers Integration
