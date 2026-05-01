@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.11.2](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.11.1...superpowers-extensions-v1.11.2) (2026-05-01)
+
+
+### Bug Fixes
+
+* **project-orchestration:** chain resume-work to start-next-phase routing hub ([acf9c92](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/acf9c923745872c6a6626becdfae3237b0cc0edd))
+* **project-orchestration:** chain resume-work to start-next-phase routing hub ([a917b74](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/a917b74bcecc35bdd1e746d14a148e5d59895455)), closes [#58](https://github.com/MarcelRoozekrans/superpowers-extensions/issues/58)
+
 ## [1.11.1](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.11.0...superpowers-extensions-v1.11.1) (2026-03-26)
 
 
