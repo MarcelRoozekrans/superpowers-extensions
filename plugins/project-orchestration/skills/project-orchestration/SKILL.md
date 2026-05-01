@@ -302,7 +302,7 @@ After `resume-work` confirmation, or any time the user says "continue", "next", 
 
 ### Decision Flow
 
-```
+```text
 resume-work / "continue" / "next"
         │
         ▼
