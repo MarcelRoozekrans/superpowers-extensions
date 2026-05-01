@@ -136,11 +136,11 @@ Do NOT invoke when:
 
 ### Process
 
-1. **Find the ui-contract** — glob for `docs/plans/*-ui-contract.md`, match to the current phase by date or name. If multiple exist, present the list and ask the user which applies.
+1. **Find the ui-contract** — glob for `docs/plans/*-ui-contract.md`, match to the current phase by date or name. **HARD GATE:** if no contract is found, STOP. Do not proceed to regression-test — there is nothing to compare screenshots against. Announce: "No ui-contract found for this phase. Run `ui-phase` first to produce a contract, or fall back to bare `regression-test` if no design audit is needed." If multiple contracts exist, present the list and ask the user which applies.
 
-2. **Read the ui-contract** — extract: components list, layout spec, design system tokens, interaction states, accessibility requirements.
+2. **Read the ui-contract** — extract: components list, layout spec, design system tokens, interaction states, accessibility requirements. **VERIFY:** the file was readable and contains the expected sections — an empty or malformed contract is equivalent to no contract.
 
-3. **Invoke regression-test** — use the `regression-test` skill to capture screenshots at all three viewports (desktop: 1920×1080, tablet: 768×1024, mobile: 375×812) for all pages in the phase scope. Let regression-test handle authentication and browser automation.
+3. **Invoke regression-test** — only after the contract is confirmed loaded. Use the `regression-test` skill to capture screenshots at all three viewports (desktop: 1920×1080, tablet: 768×1024, mobile: 375×812) for all pages in the phase scope. Let regression-test handle authentication and browser automation.
 
 4. **Evaluate against contract** — for each contracted criterion:
 
