@@ -5,6 +5,22 @@ description: Use for multi-session project lifecycle management. Triggers on phr
 
 # Project Orchestration Skill
 
+<HARD-GATE>
+When this skill chains to a sub-skill (`brainstorming`, `writing-plans`, `executing-plans`, etc.), you MUST:
+
+1. **Read the actual skill file** — do not act from memory of what the skill name implies. Loose "invocation" routinely drifts into ad-hoc behavior.
+2. **Follow the skill end-to-end** — including its own checklists, gates, and required outputs. Brainstorming can be brief, but it must happen.
+3. **Verify the required output artifact exists** before continuing the chain:
+
+   | Sub-skill | Required output artifact |
+   |---|---|
+   | `superpowers:brainstorming` | `docs/superpowers/specs/YYYY-MM-DD-*-design.md` (or equivalent design spec) |
+   | `superpowers:writing-plans` | `docs/superpowers/plans/YYYY-MM-DD-*.md` (or equivalent plan file) |
+   | `superpowers:executing-plans` | All plan tasks checked off, tests passing |
+
+If the artifact is missing, the previous step did not complete — return to it. Do not proceed with the next link in the chain on faith.
+</HARD-GATE>
+
 ## Prerequisites
 
 No MCP servers or external tools required. Uses only built-in tools (Read, Write, Glob, Bash for git commands).
@@ -244,7 +260,77 @@ At the start of a session on a project with existing `docs/planning/` state. Tri
    > Ready to continue?
 
 4. If `decision-tracker` is active for this project, trigger decision recall now to restore cross-cutting decisions alongside session state.
-5. On confirmation, invoke the appropriate next skill (executing-plans, brainstorming, etc.).
+5. On confirmation, invoke `start-next-phase` to determine and execute the next action.
+
+> **CRITICAL:** Do NOT ask the user "what would you like to do?" after presenting the resume summary. The `start-next-phase` sub-skill determines the correct next action automatically. The user said "resume" — that means "continue working", not "present me a menu".
+
+---
+
+## start-next-phase
+
+### When to Use
+
+After `resume-work` confirmation, or any time the user says "continue", "next", "let's go", or otherwise signals "move the project forward". Acts as the **routing hub** between project state and the correct downstream skill — replaces the agent's ad-hoc judgment about which skill to enter next.
+
+### Announce Line
+
+> "Determining the next action from project state."
+
+### Process
+
+1. Read `docs/planning/ROADMAP.md` and `docs/planning/MILESTONE.md`. Identify the **next non-complete phase** (first phase with status `active`, falling back to first `pending` phase).
+
+2. Check artifacts for that phase:
+   - **Design spec** — does `docs/superpowers/specs/*-<phase>-*.md` (or the phase's referenced design doc) exist?
+   - **Plan file** — does the phase's `Plan:` link in ROADMAP.md (`docs/superpowers/plans/*-<phase>-*.md` or similar) exist on disk?
+
+3. Route based on the table below. **Read** the target skill file and follow it end-to-end — do not loosely "invoke" it.
+
+   | Phase status | Design spec | Plan file | Action |
+   |---|---|---|---|
+   | `active` | — | exists | **Read** `list-phase-assumptions` (this skill) → on user confirmation, **read** the `superpowers:executing-plans` skill and follow it end-to-end |
+   | `active` | exists | missing | **Read** the `superpowers:writing-plans` skill and follow it end-to-end. **VERIFY:** plan file exists. Then run `list-phase-assumptions` → `superpowers:executing-plans` |
+   | `pending` | exists | missing | **Read** the `superpowers:writing-plans` skill and follow it end-to-end. **VERIFY:** plan file exists. Then run `list-phase-assumptions` → `superpowers:executing-plans` |
+   | `pending` | missing | missing | **Read** the `superpowers:brainstorming` skill and follow it end-to-end. **VERIFY:** design spec exists. Then chain to `superpowers:writing-plans` (verify plan file) → `list-phase-assumptions` → `superpowers:executing-plans` |
+
+4. After each step, **VERIFY the required artifact exists** (see HARD-GATE table at the top of this skill) before chaining to the next link. If a required artifact is missing, return to the prior step — do not proceed.
+
+5. Do not stop and ask "what next?" between links. The chain is mechanical. Only stop for:
+   - `list-phase-assumptions` user confirmation (this is an explicit gate, not a menu)
+   - Failures (missing artifact, failing tests, blockers surfaced by a sub-skill)
+   - The user interrupting
+
+### Decision Flow
+
+```text
+resume-work / "continue" / "next"
+        │
+        ▼
+  ┌──────────────────┐
+  │ Find next phase   │
+  │ (first non-       │
+  │  complete phase)  │
+  └────────┬──────────┘
+           │
+     ┌─────▼──────┐    No     ┌──────────────────┐
+     │ Design spec├──────────►│ brainstorming    │──┐
+     │ exists?    │           │ (verify spec)    │  │
+     └─────┬──────┘           └──────────────────┘  │
+           │ Yes                       (chains to)  │
+     ┌─────▼──────┐    No     ┌──────────────────┐  │
+     │ Plan file  ├──────────►│ writing-plans    │◄─┘
+     │ exists?    │           │ (verify plan)    │
+     └─────┬──────┘           └────────┬─────────┘
+           │ Yes                       │
+     ┌─────▼──────────────┐            │
+     │ list-phase-         │◄──────────┘
+     │ assumptions         │
+     └─────┬──────────────┘
+           │ User confirms
+     ┌─────▼──────────────┐
+     │ executing-plans     │
+     └────────────────────┘
+```
 
 ---
 
@@ -325,6 +411,8 @@ After `complete-milestone`, or when the user wants to start a new version cycle.
 
 5. **Running `new-milestone` before `complete-milestone`** — Milestones must be formally closed before opening new ones. Overlapping milestones create ambiguous state.
 
+6. **Skipping `start-next-phase` after `resume-work`** — `resume-work` does not decide what comes next; it restores context. The routing decision (brainstorming / writing-plans / executing-plans) belongs to `start-next-phase`. Skipping it leads to the agent presenting a menu or jumping straight to coding without a plan.
+
 ## Common Rationalizations
 
 | Rationalization | Why It's Wrong | Correct Action |
@@ -333,6 +421,9 @@ After `complete-milestone`, or when the user wants to start a new version cycle.
 | "Skip the audit, I know all tests pass" | DoD has multiple criteria, not just tests | Run audit-milestone mechanically |
 | "The phase is basically done, mark it complete" | "Basically done" is not done | Complete all tasks, then mark complete |
 | "I'll add phases later, start executing now" | Unplanned phases cause scope creep | Define roadmap before executing |
+| "I'll just start coding, the plan is obvious" | No plan file means no execution. Period. | Run `start-next-phase` — it will route to brainstorming/writing-plans first |
+| "The user said continue, let me ask what they want" | "Continue" means continue the workflow, not present a menu | Run `start-next-phase` to auto-determine the next action |
+| "This is just a quick fix / continuation" | The sub-skill chain applies to EVERY phase, including small ones. Brainstorming can be short, but it must happen. | Run `start-next-phase` — it enforces the chain mechanically |
 
 ## Quick Reference
 
@@ -346,7 +437,8 @@ After `complete-milestone`, or when the user wants to start a new version cycle.
 | `list-phase-assumptions` | Before executing a phase | None (read-only) |
 | `plan-milestone-gaps` | After failed audit | `docs/planning/ROADMAP.md` (via add-phase) |
 | `pause-work` | "done for today" / stopping | `docs/planning/STATE.md` |
-| `resume-work` | "resume" / session start | None (read-only) |
+| `resume-work` | "resume" / session start — chains to `start-next-phase` | None (read-only) |
+| `start-next-phase` | After `resume-work`, or on "continue" / "next" | None (read-only — routes to brainstorming/writing-plans/executing-plans) |
 | `audit-milestone` | "verify milestone is done" | `docs/plans/YYYY-MM-DD-milestone-N-audit.md` |
 | `complete-milestone` | After audit PASS | `docs/planning/ROADMAP.md`, `docs/planning/MILESTONE.md`, git tag |
 | `new-milestone` | After complete-milestone | `docs/planning/MILESTONE.md`, `docs/planning/ROADMAP.md` |
@@ -355,9 +447,9 @@ After `complete-milestone`, or when the user wants to start a new version cycle.
 
 | Superpowers Skill | Relationship | Notes |
 |---|---|---|
-| `superpowers:brainstorming` | `map-codebase` runs before brainstorming on existing projects. `resume-work` restores context before brainstorming a new phase. | Provides codebase context that makes brainstorming questions more grounded. |
-| `superpowers:writing-plans` | `add-phase` / `insert-phase` maintain the ROADMAP.md that writing-plans references for context. `list-phase-assumptions` reviews the plan before executing-plans begins. | Phase management and plan writing are complementary — ROADMAP.md is the source of truth for what gets planned. |
-| `superpowers:executing-plans` | `list-phase-assumptions` runs before executing-plans to surface and confirm the intended approach. `pause-work` can interrupt executing-plans cleanly. | list-phase-assumptions is a pre-execution gate; pause-work is a clean exit. |
+| `superpowers:brainstorming` | `start-next-phase` routes to brainstorming when a phase has no design spec. `map-codebase` runs before brainstorming on existing projects. `resume-work` → `start-next-phase` restores context before brainstorming a new phase. | Provides codebase context that makes brainstorming questions more grounded. Routing is mechanical via `start-next-phase`, not ad-hoc. |
+| `superpowers:writing-plans` | `start-next-phase` routes to writing-plans when a design spec exists but no plan file does. `add-phase` / `insert-phase` maintain the ROADMAP.md that writing-plans references for context. `list-phase-assumptions` reviews the plan before executing-plans begins. | Phase management and plan writing are complementary — ROADMAP.md is the source of truth for what gets planned. |
+| `superpowers:executing-plans` | `start-next-phase` routes to executing-plans (via `list-phase-assumptions`) when a plan file exists for an active phase. `pause-work` can interrupt executing-plans cleanly. | list-phase-assumptions is a pre-execution gate; pause-work is a clean exit. |
 | `superpowers:subagent-driven-development` | `list-phase-assumptions` applies equally before subagent dispatch. `pause-work` captures state when stopping mid-subagent execution. | Both sub-skills work regardless of whether execution uses executing-plans or subagent-driven-development. |
 | `superpowers:finishing-a-development-branch` | `audit-milestone` + `complete-milestone` extend the finishing workflow to full milestone release management. | finishing-a-development-branch handles branch integration; complete-milestone handles milestone closure and release tagging. |
 | `regression-test` | `audit-milestone` optionally invokes regression-test as part of definition-of-done verification for projects with a web UI. | Regression-test provides the visual and functional evidence for milestone audit. |
