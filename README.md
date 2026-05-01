@@ -1,5 +1,7 @@
 # Superpowers Extensions for Claude Code
 
+[![GitHub Sponsors](https://img.shields.io/github/sponsors/MarcelRoozekrans?style=flat&logo=githubsponsors&color=ea4aaa&label=Sponsor)](https://github.com/sponsors/MarcelRoozekrans)
+
 Extension skills for the [superpowers](https://github.com/anthropics/superpowers) suite, providing quality gates, development workflow skills, and project lifecycle management for web application development. It includes eight skills:
 
 - **regression-test** -- Comprehensive regression testing using the [Microsoft Playwright MCP server](https://github.com/microsoft/playwright-mcp), combining existing test suite execution with AI-powered visual and functional browser testing.
@@ -527,7 +529,7 @@ claude mcp add playwright -- npx @playwright/mcp@latest --caps=testing,pdf,visio
 
 ### Verify Installation
 
-In Claude Code, the skills should appear when you type `/regression-test`, `/pre-push-review`, `/refactor-analysis`, `/decision-tracker`, `/roslyn-codelens-integration`, `/project-orchestration`, `/ui-workflow`, or `/ui-design-system`, or when you ask Claude to perform regression testing, a pre-push review, a refactor impact analysis, decision tracking, .NET code graph analysis, project lifecycle management, UI design contract work, or design system generation.
+In Claude Code, the skills should appear when you type `/regression-test`, `/pre-push-review`, `/refactor-analysis`, `/decision-tracker`, `/roslyn-codelens-integration`, `/project-orchestration`, `/ui-workflow`, `/ui-design-system`, or `/squad`, or when you ask Claude to perform regression testing, a pre-push review, a refactor impact analysis, decision tracking, .NET code graph analysis, project lifecycle management, UI design contract work, design system generation, or to activate your agent team.
 
 ---
 
@@ -772,6 +774,7 @@ React Router, Next.js (App Router & Pages Router), Angular, Vue Router, SvelteKi
 - **For ui-workflow:** `ui-phase` requires no additional tools. `ui-review` requires the `regression-test` skill and its Playwright MCP prerequisite.
 - **For memorylens-integration:** [memorylens-mcp](https://github.com/MarcelRoozekrans/memorylens-mcp) MCP server (installed automatically via marketplace dependencies). Skill is inert without it — safe to ignore on non-.NET projects.
 - **For ui-design-system:** No additional tools required.
+- **For squad:** No hard requirements — works standalone. [LongtermMemory-MCP](https://github.com/MarcelRoozekrans/LongtermMemory-MCP) enables tier-1 semantic search for agent history (installed automatically via marketplace dependencies). Works without it, falling back to grep-based lookup.
 
 ## License
 

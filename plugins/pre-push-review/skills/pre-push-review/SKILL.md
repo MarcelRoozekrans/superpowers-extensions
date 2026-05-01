@@ -1,6 +1,6 @@
 ---
 name: pre-push-review
-description: Use when about to push a branch or create a PR - reviews the diff against the base branch for plan adherence, code quality, commit hygiene, and regression testing, producing a PASS/FAIL verdict with remediation plan
+description: Use before pushing a branch or creating a PR. Triggers on phrases like "ready to push", "review my changes", "pre-flight check", "is this ready to merge", "about to push", "review the branch", or after the user wraps up a feature branch and signals completion. Diffs against the base branch and reviews plan adherence, code quality, commit hygiene, and regression testing, producing a PASS/FAIL verdict with a prioritized remediation plan on FAIL. Skip for in-progress work or single-commit fixes the user explicitly wants pushed without review.
 ---
 
 # Pre-Push Review Skill
