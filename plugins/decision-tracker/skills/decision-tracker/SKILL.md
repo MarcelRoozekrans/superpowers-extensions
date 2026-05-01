@@ -1,6 +1,6 @@
 ---
 name: decision-tracker
-description: Use at session start and during brainstorming, writing-plans, refactor-analysis, and subagent dispatch to persist and recall cross-cutting project decisions via long-term memory
+description: Use to capture or recall cross-cutting project decisions (architecture choices, naming conventions, library selections, "going forward we'll..." commitments). Trigger on phrases like "we decided", "let's standardize on", "going forward", "this affects multiple modules", or whenever brainstorming, writing-plans, or refactor-analysis surface a decision that will outlive the current task. Also recall stored decisions at the start of brainstorming or subagent dispatch so prior choices are honored. Skip for one-off implementation choices that only apply to a single file.
 ---
 
 # Decision Tracker Skill

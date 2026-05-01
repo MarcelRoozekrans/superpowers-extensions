@@ -1,6 +1,6 @@
 ---
 name: regression-test
-description: Use when performing regression testing on a web application, verifying visual aesthetics via screenshots, or validating functionality before deployment - works with any web-accessible URL and integrates with existing test suites
+description: Use when the user asks to "test the UI", "screenshot the page", "verify the site still works", "check the deployment", "run regression tests", or "audit the look and feel" against a web-accessible URL. Discovers and runs existing test suites (npm test, dotnet test, pytest), then performs functional checks and visual screenshots at desktop/tablet/mobile viewports via Playwright MCP, and produces a markdown report. Skip for unit/integration tests with no UI, pure backend changes, or when no URL is reachable.
 ---
 
 # Regression Test Skill

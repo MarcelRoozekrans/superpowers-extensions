@@ -1,6 +1,6 @@
 ---
 name: squad
-description: Use when working on any project to activate persistent AI agent teams. Lead, Backend Engineer, Frontend Engineer, Tester, and Scribe agents participate in brainstorming, answer domain questions autonomously, and grow smarter across sessions. Integrates with brainstorming, writing-plans, subagent-driven-development, pre-push-review, and project-orchestration.
+description: Use when the user runs squad commands (/squad-init, /squad-status, /squad-add), asks to "activate the team" / "set up agents" / "who is on the squad", or begins brainstorming/planning on a project that already contains a docs/squad/ directory. Activates persistent Lead/Backend/Frontend/Tester/Scribe agents that participate in brainstorming, answer domain questions from project history, and accumulate knowledge across sessions. Skip for one-off questions, single-file edits, or projects without an existing squad — do not auto-activate just because work is happening.
 ---
 
 # Squad Skill
