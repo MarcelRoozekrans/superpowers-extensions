@@ -19,6 +19,16 @@ When this skill chains to a sub-skill (`brainstorming`, `writing-plans`, `execut
    | `superpowers:executing-plans` | All plan tasks checked off, tests passing |
 
 If the artifact is missing, the previous step did not complete — return to it. Do not proceed with the next link in the chain on faith.
+
+**State file writes (separate gate, applies to every sub-skill below that touches `docs/planning/`):**
+
+When a sub-skill says it creates, appends to, or updates `docs/planning/ROADMAP.md`, `docs/planning/MILESTONE.md`, or `docs/planning/STATE.md`, you MUST:
+
+1. **Use the `Write` or `Edit` tool** for every change. Narrating the change in conversation ("I've added Milestone 3 to the roadmap") does NOT create or modify the file — only a tool call does. The conversation evaporates between sessions; the file does not.
+2. **VERIFY each write by re-reading the file** with the `Read` tool and confirming the expected content is on disk. If the expected content is missing, the write did not happen — retry with the tool.
+3. **Then** stage and commit. A `git commit` issued before the verify step will either fail (no diff) or commit the wrong state. Run `git status` after the commit and confirm a clean tree.
+
+If you find yourself thinking "I'll write the file in a moment" or "the description captured it" — STOP. Make the tool call now. Files do not appear by intention.
 </HARD-GATE>
 
 ## Prerequisites
@@ -123,12 +133,14 @@ When the user wants to append a new phase to the current milestone's roadmap.
 
 ### Process
 
-1. Read `docs/planning/ROADMAP.md` and `docs/planning/MILESTONE.md` to find the current milestone and its last phase number.
+1. **Read** `docs/planning/ROADMAP.md` and `docs/planning/MILESTONE.md` (use the `Read` tool) to find the current milestone and its last phase number.
 2. Ask the user: "Phase name and goal?"
-3. Append the new phase to `docs/planning/ROADMAP.md` under the current milestone with status `pending`.
-4. Update `docs/planning/MILESTONE.md` phases list.
-5. Announce the new phase number and name.
-6. Commit: `git commit -m "chore(roadmap): add phase N.M — <name>"`
+3. **Use the `Edit` tool** to append the new phase block to `docs/planning/ROADMAP.md` under the current milestone with status `pending`. Format per [state-files.md](state-files.md).
+4. **VERIFY:** re-read `docs/planning/ROADMAP.md` and confirm the new phase block is present with the correct number, name, and `status: pending`. If missing, the Edit did not apply — retry.
+5. **Use the `Edit` tool** to add the new phase to the `## Phases` list in `docs/planning/MILESTONE.md`.
+6. **VERIFY:** re-read `docs/planning/MILESTONE.md` and confirm the phase appears in the list.
+7. Stage and commit: `git add docs/planning/ROADMAP.md docs/planning/MILESTONE.md && git commit -m "chore(roadmap): add phase N.M — <name>"`. Run `git status` and confirm a clean tree.
+8. Announce the new phase number and name only after the commit succeeds.
 
 ---
 
@@ -140,12 +152,14 @@ When urgent work needs to be inserted between two existing phases.
 
 ### Process
 
-1. Read `docs/planning/ROADMAP.md`, present current phase list.
+1. **Read** `docs/planning/ROADMAP.md` (use the `Read` tool), present the current phase list to the user.
 2. Ask: "Insert after which phase?" and "New phase name and goal?"
-3. Insert the new phase, renumber all subsequent phases.
-4. Update `docs/planning/MILESTONE.md`.
-5. Announce: "Inserted Phase N.M — {name} between N.M-1 and old N.M (now N.M+1)."
-6. Commit: `git commit -m "chore(roadmap): insert phase N.M — <name>"`
+3. **Use the `Edit` tool** to insert the new phase block into `docs/planning/ROADMAP.md` and renumber every subsequent phase (N.M+1 → N.M+2, etc.). Both inserts and renumbers are tool calls — narrating "I've shifted the numbers" does not change the file.
+4. **VERIFY:** re-read `docs/planning/ROADMAP.md` and confirm: (a) the new phase block is present with correct number/name/status, (b) every later phase is renumbered consecutively with no gaps or duplicates.
+5. **Use the `Edit` tool** to update the `## Phases` list in `docs/planning/MILESTONE.md` to reflect the inserted phase and renumbered siblings.
+6. **VERIFY:** re-read `docs/planning/MILESTONE.md` and confirm the list matches ROADMAP.md.
+7. Stage and commit: `git add docs/planning/ROADMAP.md docs/planning/MILESTONE.md && git commit -m "chore(roadmap): insert phase N.M — <name>"`. Run `git status` and confirm a clean tree.
+8. Announce: "Inserted Phase N.M — {name} between N.M-1 and old N.M (now N.M+1)." only after the commit succeeds.
 
 ---
 
@@ -162,11 +176,14 @@ When a future (pending) phase should be removed from the roadmap.
 
 ### Process
 
-1. Read `docs/planning/ROADMAP.md`, present pending phases.
+1. **Read** `docs/planning/ROADMAP.md` (use the `Read` tool), present pending phases to the user.
 2. Ask: "Which phase to remove?"
 3. Confirm: "Remove Phase N.M — {name}? This cannot be undone."
-4. Remove the phase, renumber subsequent phases.
-5. Commit: `git commit -m "chore(roadmap): remove phase N.M — <name>"`
+4. **Use the `Edit` tool** to remove the phase block from `docs/planning/ROADMAP.md` and renumber all subsequent phases (N.M+1 → N.M, etc.).
+5. **VERIFY:** re-read `docs/planning/ROADMAP.md` and confirm: (a) the removed phase block is absent, (b) every later phase is renumbered consecutively with no gaps or duplicates.
+6. **Use the `Edit` tool** to remove the phase from the `## Phases` list in `docs/planning/MILESTONE.md`.
+7. **VERIFY:** re-read `docs/planning/MILESTONE.md`.
+8. Stage and commit: `git add docs/planning/ROADMAP.md docs/planning/MILESTONE.md && git commit -m "chore(roadmap): remove phase N.M — <name>"`. Run `git status` and confirm a clean tree.
 
 ---
 
@@ -227,12 +244,12 @@ When the user is stopping work and wants to preserve context for next session. T
 1. Identify current position: which milestone, which phase, which task was last completed.
 2. Identify open decisions or blockers (from the conversation context).
 3. Determine recommended next step.
-4. Write `docs/planning/STATE.md` with the handoff note (see [state-files.md](state-files.md) for format).
-5. Announce:
+4. **Use the `Write` tool** to create or overwrite `docs/planning/STATE.md` with the handoff note (see [state-files.md](state-files.md) for format). Do not narrate the content — write the file.
+5. **VERIFY:** re-read `docs/planning/STATE.md` and confirm the handoff note is present with all required sections (Current Position, Open Decisions, Blockers, Recommended Next Step). If any section is missing, the write did not capture it — re-write.
+6. Stage and commit: `git add docs/planning/STATE.md && git commit -m "chore(state): pause-work — phase N.M, last task: <description>"`. Run `git status` and confirm a clean tree.
+7. Announce only after the commit succeeds:
 
    > "Session state saved to `docs/planning/STATE.md`. Next session, start with `resume-work` or say 'resume' and I'll restore context."
-
-6. Commit: `git commit -m "chore(state): pause-work — phase N.M, last task: <description>"`
 
 ---
 
@@ -373,11 +390,56 @@ After `audit-milestone` returns PASS.
 ### Process
 
 1. Confirm with user: "Mark Milestone N — {name} as complete and tag release?"
-2. Update `docs/planning/ROADMAP.md`: set milestone status to `complete`, record completion date.
-3. Update `docs/planning/MILESTONE.md`: set status to `complete`.
-4. Commit the state file changes: `git add docs/planning/ROADMAP.md docs/planning/MILESTONE.md && git commit -m "chore(milestone): complete milestone N — <name>"`
-5. Tag the release: `git tag -a vN.0 -m "Milestone N: <name> complete"`
-6. Announce: "Milestone N complete. Tagged as vN.0. Ready to start Milestone N+1 with `new-milestone`."
+2. **Use the `Edit` tool** on `docs/planning/ROADMAP.md`: set milestone status to `complete` and add `**Completed:** YYYY-MM-DD` line.
+3. **VERIFY:** re-read `docs/planning/ROADMAP.md` and confirm the milestone block now shows `[status: complete]` and a Completed date.
+4. **Use the `Edit` tool** on `docs/planning/MILESTONE.md`: set `**Status:** complete` and add `**Completed:** YYYY-MM-DD`.
+5. **VERIFY:** re-read `docs/planning/MILESTONE.md` and confirm the status and completion date.
+6. Stage and commit: `git add docs/planning/ROADMAP.md docs/planning/MILESTONE.md && git commit -m "chore(milestone): complete milestone N — <name>"`. Run `git status` and confirm a clean tree.
+7. Tag the release: `git tag -a vN.0 -m "Milestone N: <name> complete"`. Verify with `git tag -l vN.0`.
+8. Announce only after tag verification: "Milestone N complete. Tagged as vN.0. Ready to start Milestone N+1 with `new-milestone`."
+
+---
+
+## plan-roadmap
+
+### When to Use
+
+At the start of a multi-milestone project, or when the existing `docs/planning/ROADMAP.md` needs reshaping at the milestone level (not just phase additions). Triggers on phrases like: "plan the roadmap", "what milestones do we need", "high-level project plan", "design the roadmap", or first-time use of project-orchestration on a project that has no `docs/planning/ROADMAP.md` yet.
+
+This is the **roadmap-level brainstorming entry point** — it brainstorms the project as a whole (3-7 milestones with rough scope), not a single milestone.
+
+### Announce Line
+
+> "Planning the project roadmap. I'll brainstorm milestone-level scope before writing any state files."
+
+### Process
+
+1. **Optional: invoke `map-codebase` first** if the project is brownfield and the codebase has not been analyzed yet. Codebase context grounds milestone proposals.
+
+2. **Read** the `superpowers:brainstorming` skill file and follow it end-to-end at **roadmap scope**. The brainstorming should produce:
+   - Project goal (one paragraph)
+   - Target users / stakeholders
+   - Top-level success criteria for the project as a whole
+   - A proposed sequence of 3-7 milestones, each with a one-line goal and a rough phase outline
+   - Dependencies and ordering rationale between milestones
+
+3. **VERIFY:** the brainstorming design spec exists at `docs/superpowers/specs/YYYY-MM-DD-roadmap-design.md`. If missing, the brainstorm did not complete — return to step 2. Do NOT skip to writing files because "I have the milestones in my head".
+
+4. **Use the `Write` tool** to create `docs/planning/ROADMAP.md` from the design spec — first milestone with `status: active`, all others with `status: pending`. Format per [state-files.md](state-files.md).
+
+5. **VERIFY:** re-read `docs/planning/ROADMAP.md` and confirm: (a) every brainstormed milestone is present, (b) exactly one is `active`, (c) milestone numbering is consecutive starting at 1.
+
+6. **Use the `Write` tool** to create `docs/planning/MILESTONE.md` for milestone 1 only (subsequent milestones get their own MILESTONE.md when activated via `new-milestone`). Include goal, definition of done, and the proposed phase outline from the design.
+
+7. **VERIFY:** re-read `docs/planning/MILESTONE.md` and confirm goal, DoD, and phase list are present.
+
+8. Stage and commit: `git add docs/planning/ROADMAP.md docs/planning/MILESTONE.md && git commit -m "chore(roadmap): plan project roadmap (M1-M<N>)"`. Run `git status` and confirm a clean tree.
+
+9. Announce only after the commit succeeds: "Roadmap drafted with N milestones. Milestone 1 is active. Use `add-phase` to define phase 1.1, or invoke `brainstorming` to refine milestone 1's scope further."
+
+### Skip Brainstorming?
+
+No. This sub-skill exists specifically to force a brainstorm at the roadmap level. If the user pushes back ("just write the file, I know what I want"), capture their stated milestones in a brief brainstorm anyway — the brainstorming skill itself is short by default. The output spec is what `audit-milestone` and downstream skills will reference; skipping it leaves no shared source of truth.
 
 ---
 
@@ -385,17 +447,42 @@ After `audit-milestone` returns PASS.
 
 ### When to Use
 
-After `complete-milestone`, or when the user wants to start a new version cycle.
+After `complete-milestone`, or when the user wants to start a new version cycle on top of an existing roadmap.
+
+**Pre-condition:** the previous milestone (N) must have status `complete` in `docs/planning/ROADMAP.md`. If it does not, refuse and recommend `audit-milestone` → `complete-milestone` first.
+
+### Announce Line
+
+> "Starting milestone N+1. I'll brainstorm the milestone scope before writing any state files."
 
 ### Process
 
-1. Ask: "What is the goal of the next milestone?" (one sentence)
-2. Ask: "What are the criteria for 'done'?" (list, one per line)
-3. Determine milestone number (current + 1).
-4. Create/overwrite `docs/planning/MILESTONE.md` with the new milestone definition.
-5. Add the new milestone to `docs/planning/ROADMAP.md` with status `active`.
-6. Announce: "Milestone N+1 — {name} started. Use `add-phase` to add the first phase, or `brainstorming` to design it."
-7. Commit: `git commit -m "chore(milestone): start milestone N+1 — <name>"`
+1. **Read** `docs/planning/ROADMAP.md` and confirm the previous milestone has status `complete`. If not, STOP. Announce: "Milestone N is not complete. Run `audit-milestone` then `complete-milestone` before starting milestone N+1." and exit this sub-skill.
+
+2. **Read** the `superpowers:brainstorming` skill file and follow it end-to-end at **milestone scope**. The brainstorming should produce:
+   - Milestone goal (one paragraph)
+   - Definition of done (concrete, verifiable criteria — not aspirational)
+   - Proposed phase outline (rough — 3-8 phases, one-line goals)
+   - Dependencies on prior milestones and any external constraints
+   - Risk areas worth flagging up front
+
+   The design from `plan-roadmap` (if it exists) covers this milestone at low fidelity — use it as input, but do NOT skip the brainstorm because "the roadmap already says what this milestone is". Roadmap-level scope is intentionally lossy; per-milestone brainstorming is where the detail lives.
+
+3. **VERIFY:** the brainstorming design spec exists at `docs/superpowers/specs/YYYY-MM-DD-milestone-N-design.md` (or equivalent). If missing, the brainstorm did not complete — return to step 2.
+
+4. Determine milestone number (current + 1).
+
+5. **Use the `Write` tool** to create or overwrite `docs/planning/MILESTONE.md` with the new milestone definition from the design spec. Format per [state-files.md](state-files.md).
+
+6. **VERIFY:** re-read `docs/planning/MILESTONE.md` and confirm: (a) milestone number is N+1, (b) goal paragraph is present, (c) DoD list has at least 2 criteria, (d) Phases section is present (may be a stub if phases haven't been added yet).
+
+7. **Use the `Edit` tool** to add the new milestone block to `docs/planning/ROADMAP.md` with status `active` and `**Started:** YYYY-MM-DD`. Use today's actual date.
+
+8. **VERIFY:** re-read `docs/planning/ROADMAP.md` and confirm the new milestone block is present with the correct number, name, status, and started date.
+
+9. Stage and commit: `git add docs/planning/MILESTONE.md docs/planning/ROADMAP.md && git commit -m "chore(milestone): start milestone N+1 — <name>"`. Run `git status` and confirm a clean tree.
+
+10. Announce only after the commit succeeds: "Milestone N+1 — {name} started. Use `add-phase` to add the first phase, or `start-next-phase` to chain into brainstorming/writing-plans/executing-plans for phase 1."
 
 ---
 
@@ -413,6 +500,10 @@ After `complete-milestone`, or when the user wants to start a new version cycle.
 
 6. **Skipping `start-next-phase` after `resume-work`** — `resume-work` does not decide what comes next; it restores context. The routing decision (brainstorming / writing-plans / executing-plans) belongs to `start-next-phase`. Skipping it leads to the agent presenting a menu or jumping straight to coding without a plan.
 
+7. **Narrating state changes instead of writing files** — Saying "I've added Milestone 3" without a `Write` or `Edit` tool call leaves `docs/planning/` untouched. Every state-mutating sub-skill MUST end with the file changed on disk and verified by re-reading. The conversation does not persist; the file does.
+
+8. **Skipping the brainstorm in `new-milestone` / `plan-roadmap`** — Asking two questions ("goal?", "DoD?") and writing the file is not a brainstorm. The design spec at `docs/superpowers/specs/` is what `audit-milestone` and downstream skills reference. Skipping it leaves the milestone with no shared source of truth.
+
 ## Common Rationalizations
 
 | Rationalization | Why It's Wrong | Correct Action |
@@ -424,6 +515,10 @@ After `complete-milestone`, or when the user wants to start a new version cycle.
 | "I'll just start coding, the plan is obvious" | No plan file means no execution. Period. | Run `start-next-phase` — it will route to brainstorming/writing-plans first |
 | "The user said continue, let me ask what they want" | "Continue" means continue the workflow, not present a menu | Run `start-next-phase` to auto-determine the next action |
 | "This is just a quick fix / continuation" | The sub-skill chain applies to EVERY phase, including small ones. Brainstorming can be short, but it must happen. | Run `start-next-phase` — it enforces the chain mechanically |
+| "I described the milestone, the file is implicitly created" | Files are NOT created by description. Only `Write`/`Edit` tool calls create or modify files. | Use the `Write` tool, then re-read the file with `Read` to verify, then commit |
+| "I'll write the file in a moment, let me announce first" | Announcements before writes leave the user thinking the state changed when it didn't | Write → verify → commit → announce. In that order. No exceptions. |
+| "The conversation captured the new milestone, no need to write the file" | The conversation evaporates between sessions. STATE.md / ROADMAP.md / MILESTONE.md are the persistent record. | Always Write to disk before claiming the milestone exists |
+| "Just write the milestone file, I know what I want" (user push-back during new-milestone) | Skipping the brainstorm leaves the design spec absent — `audit-milestone` later has nothing to reference | Run a short brainstorm anyway. The brainstorming skill scales to small scope. |
 
 ## Quick Reference
 
@@ -441,13 +536,14 @@ After `complete-milestone`, or when the user wants to start a new version cycle.
 | `start-next-phase` | After `resume-work`, or on "continue" / "next" | None (read-only — routes to brainstorming/writing-plans/executing-plans) |
 | `audit-milestone` | "verify milestone is done" | `docs/plans/YYYY-MM-DD-milestone-N-audit.md` |
 | `complete-milestone` | After audit PASS | `docs/planning/ROADMAP.md`, `docs/planning/MILESTONE.md`, git tag |
-| `new-milestone` | After complete-milestone | `docs/planning/MILESTONE.md`, `docs/planning/ROADMAP.md` |
+| `plan-roadmap` | "plan the roadmap" / first project setup, no ROADMAP.md yet | `docs/superpowers/specs/YYYY-MM-DD-roadmap-design.md`, `docs/planning/ROADMAP.md`, `docs/planning/MILESTONE.md` |
+| `new-milestone` | After `complete-milestone` — chains through `superpowers:brainstorming` | `docs/superpowers/specs/YYYY-MM-DD-milestone-N-design.md`, `docs/planning/MILESTONE.md`, `docs/planning/ROADMAP.md` |
 
 ## Relationship to Superpowers Skills
 
 | Superpowers Skill | Relationship | Notes |
 |---|---|---|
-| `superpowers:brainstorming` | `start-next-phase` routes to brainstorming when a phase has no design spec. `map-codebase` runs before brainstorming on existing projects. `resume-work` → `start-next-phase` restores context before brainstorming a new phase. | Provides codebase context that makes brainstorming questions more grounded. Routing is mechanical via `start-next-phase`, not ad-hoc. |
+| `superpowers:brainstorming` | Three entry points: (1) `plan-roadmap` invokes brainstorming at **roadmap scope** (3-7 milestones) at project start. (2) `new-milestone` invokes brainstorming at **milestone scope** before writing MILESTONE.md. (3) `start-next-phase` invokes brainstorming at **phase scope** when a phase has no design spec. `map-codebase` runs before brainstorming on existing projects. | Provides codebase context that makes brainstorming questions more grounded. The skill is reused at three levels of abstraction; the brainstorming process is the same, only the scope changes. |
 | `superpowers:writing-plans` | `start-next-phase` routes to writing-plans when a design spec exists but no plan file does. `add-phase` / `insert-phase` maintain the ROADMAP.md that writing-plans references for context. `list-phase-assumptions` reviews the plan before executing-plans begins. | Phase management and plan writing are complementary — ROADMAP.md is the source of truth for what gets planned. |
 | `superpowers:executing-plans` | `start-next-phase` routes to executing-plans (via `list-phase-assumptions`) when a plan file exists for an active phase. `pause-work` can interrupt executing-plans cleanly. | list-phase-assumptions is a pre-execution gate; pause-work is a clean exit. |
 | `superpowers:subagent-driven-development` | `list-phase-assumptions` applies equally before subagent dispatch. `pause-work` captures state when stopping mid-subagent execution. | Both sub-skills work regardless of whether execution uses executing-plans or subagent-driven-development. |
