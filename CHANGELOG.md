@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.11.3](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.11.2...superpowers-extensions-v1.11.3) (2026-05-02)
+
+
+### Bug Fixes
+
+* **project-orchestration:** enforce disk writes and add brainstorm-first milestone planning ([0952d57](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/0952d5757068194e81fa2b1ece6e6334bfa87887))
+* **project-orchestration:** enforce disk writes and brainstorm-first milestone planning ([ebfac1d](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/ebfac1d1690ddd2e64125304e64dca29393f88ce))
+
 ## [1.11.2](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.11.1...superpowers-extensions-v1.11.2) (2026-05-01)
 
 
