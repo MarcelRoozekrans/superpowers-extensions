@@ -5,6 +5,28 @@ description: Use when the user asks to "test the UI", "screenshot the page", "ve
 
 # Regression Test Skill
 
+<HARD-GATE>
+This skill produces two artifacts on disk: screenshots under
+`docs/regression-screenshots/YYYY-MM-DD-HHmm/` and a markdown report at
+`docs/regression-report-YYYY-MM-DD-HHmm.md`. For both:
+
+1. **Use the `Write` tool** (or the Playwright MCP screenshot calls) to
+   actually create the files. Narrating "I've captured the screenshots"
+   or "the report has been generated" without a tool call leaves nothing
+   on disk and gives the user a false PASS signal.
+2. **VERIFY each artifact by re-reading** before announcing the verdict:
+   - For the report: `Read` it back and confirm the summary table,
+     per-page findings, and recommendations sections are present.
+   - For screenshots: `Glob` the screenshot directory and confirm the
+     expected number of files (3 viewports × N pages) is present.
+3. **Only then announce** the conversation summary. An announcement
+   before the artifacts exist on disk is the failure mode this gate
+   prevents.
+
+If the artifacts are missing at the verify step, the previous step did
+not complete — return to it and retry the tool call. Do not proceed.
+</HARD-GATE>
+
 ## Prerequisites
 
 This skill requires the **Microsoft Playwright MCP server** (`@playwright/mcp`) with the `--caps=testing` flag, which enables `browser_verify_*` assertion tools and `browser_generate_locator` used in Phase 3b.

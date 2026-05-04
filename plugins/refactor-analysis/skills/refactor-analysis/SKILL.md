@@ -5,6 +5,30 @@ description: Use before writing an implementation plan for a refactor that spans
 
 # Refactor Analysis Skill
 
+<HARD-GATE>
+This skill produces an impact analysis document on disk at
+`docs/plans/YYYY-MM-DD-<topic>-impact-analysis.md`. The document is the
+input to `superpowers:writing-plans` — without it, plan generation
+proceeds with no knowledge of the affected files or the safe execution
+order.
+
+1. **Use the `Write` tool** at Phase 7 to create the impact analysis
+   markdown file. Do not narrate the content as a substitute. Saying
+   "the analysis identifies 47 affected files across 3 risk groups"
+   without a tool call leaves the next link in the chain reading nothing.
+2. **VERIFY the document by re-reading** before transitioning to
+   `writing-plans`. Confirm the summary table, dependency graph (or
+   ASCII alternative), annotated file list, risk register, and
+   execution order sections are present.
+3. **Only then chain into `writing-plans`** — and per the existing
+   Phase 7 step, **read the actual `superpowers:writing-plans` skill
+   file end-to-end** rather than loosely invoking it.
+
+If the impact analysis file is missing at the verify step, Phase 7 did
+not complete — return to it and retry the tool call. Do not let
+writing-plans proceed on faith.
+</HARD-GATE>
+
 ## Prerequisites
 
 This skill requires only built-in tools (Grep, Glob, Read, Bash). No MCP servers are needed.

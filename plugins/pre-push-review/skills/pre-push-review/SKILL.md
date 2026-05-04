@@ -5,6 +5,29 @@ description: Use before pushing a branch or creating a PR. Triggers on phrases l
 
 # Pre-Push Review Skill
 
+<HARD-GATE>
+This skill produces a single artifact on disk: the review report at
+`docs/pre-push-review-YYYY-MM-DD-HHmm.md`. The report IS the deliverable
+— announcing PASS or FAIL without the report on disk leaves the user
+with no audit trail.
+
+1. **Use the `Write` tool** to create the report file at the end of
+   Phase 6. Do not narrate the report content as a substitute. Saying
+   "the verdict is FAIL with the following findings" in conversation
+   without a tool call leaves no record for the user, no record for
+   `audit-milestone`, and no record for any later session.
+2. **VERIFY the report by re-reading** it before pronouncing the verdict
+   in conversation. Confirm the header (verdict, base branch, commit
+   range), the per-phase findings sections, and — on FAIL — the
+   prioritized remediation plan are present.
+3. **Then announce.** Order: Write → Verify → Announce. A verdict
+   announcement before the report exists on disk is the failure mode
+   this gate prevents.
+
+If the report file is missing at the verify step, Phase 6 did not
+complete — return to it and retry the tool call. Do not proceed.
+</HARD-GATE>
+
 ## Prerequisites
 
 This skill requires a **git repository** with at least one commit on a feature branch that differs from the base branch. No additional MCP servers are required for the core review.
