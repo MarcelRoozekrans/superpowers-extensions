@@ -19,6 +19,7 @@ jobs:
             **/*.md
             #docs/plans
             #CHANGELOG.md
+            #plugins/ui-design-system/skills/ui-design-system/design-systems
 
   commitlint:
     runs-on: ubuntu-latest
