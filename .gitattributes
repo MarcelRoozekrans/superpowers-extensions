@@ -1,0 +1,10 @@
+# Force LF line endings on shell scripts and hook bodies so they run on
+# Linux CI and macOS hosts after a Windows checkout. Without this, Git's
+# autocrlf behavior on Windows can introduce CRLF and break bash parsing.
+hooks/session-start text eol=lf
+hooks/*.sh text eol=lf
+scripts/*.sh text eol=lf
+
+# Cmd files MUST keep CRLF on Windows
+hooks/*.cmd text eol=crlf
+scripts/*.cmd text eol=crlf
