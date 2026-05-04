@@ -29,6 +29,24 @@ When a sub-skill says it creates, appends to, or updates `docs/planning/ROADMAP.
 3. **Then** stage and commit. A `git commit` issued before the verify step will either fail (no diff) or commit the wrong state. Run `git status` after the commit and confirm a clean tree.
 
 If you find yourself thinking "I'll write the file in a moment" or "the description captured it" — STOP. Make the tool call now. Files do not appear by intention.
+
+**Post-compaction discipline (separate gate, fires when the conversation has been auto-compacted):**
+
+A "compaction-style entry" is when the session begins with — or recently received — a summary of prior work. Concrete tells:
+
+- The conversation contains a "Continuation Plan", "Next Steps", or "Resume Plan" section near the top, written by an automated summarizer.
+- The earliest assistant message paraphrases prior tool calls and decisions rather than executing the user's first message.
+- The user's most recent message reads as a follow-up ("continue", "next step", "fix that") with no fresh context, after a long gap.
+- The conversation is significantly shorter than the volume of work it describes — e.g. a single-page summary that references "Phase 2.3 task 4" without the conversation that produced 2.1 / 2.2 / 2.3.
+
+When any of these signals fires AND `docs/planning/` exists in the project, you MUST:
+
+1. **Treat the compaction summary's "Continuation Plan" as advisory, not authoritative.** The summary was written by a summarizer that did not have access to STATE.md, ROADMAP.md, or the current plan file. Its code-level instructions ("fix this method", "add this field") are best-effort recall, not the source of truth.
+2. **Run `resume-work` first.** Read `docs/planning/STATE.md`, `ROADMAP.md`, and `MILESTONE.md`. Then run `start-next-phase`, which will route to `complete-phase` if the prior session left a phase ready to close, or to the correct downstream skill (brainstorming / writing-plans / executing-plans) for the actual current state.
+3. **Reconcile the compaction summary against the state files.** If the summary's "next step" matches what `start-next-phase` would route to, proceed. If they disagree, trust the state files — they outlive any single conversation.
+4. **Only then act on code.** A compaction-induced jump straight to "fix the auth bug" without running steps 1-3 is exactly the failure mode this gate prevents.
+
+If you find yourself thinking "the Continuation Plan tells me to fix X, no need to read STATE.md" — STOP. The summarizer is a different model with no persistent state access; the planning files are the source of truth.
 </HARD-GATE>
 
 ## Prerequisites
@@ -257,7 +275,12 @@ When the user is stopping work and wants to preserve context for next session. T
 
 ### When to Use
 
-At the start of a session on a project with existing `docs/planning/` state. Triggers on: "resume", "where were we?", "continue from last time".
+At the start of a session on a project with existing `docs/planning/` state. Triggers on:
+
+- Direct user phrases: "resume", "where were we?", "continue from last time".
+- **Post-compaction signals** (per the Post-compaction discipline gate): a "Continuation Plan" / "Next Steps" / "Resume Plan" section appears in the conversation; the earliest assistant message paraphrases prior work; the user's first message reads as a continuation ("continue", "next step", "fix that") with no fresh context. When any of these fires AND `docs/planning/` exists, run `resume-work` BEFORE acting on any code-level instruction in the compaction summary.
+
+The post-compaction trigger exists because conversation summarizers do not have access to `STATE.md`, `ROADMAP.md`, or the current plan file. Their "Continuation Plan" sections are best-effort recall and routinely diverge from the actual project state on disk. `resume-work` reads the source of truth and reconciles.
 
 ### Process
 
@@ -612,6 +635,8 @@ After `complete-milestone`, or when the user wants to start a new version cycle 
 
 9. **Skipping `complete-phase` after `executing-plans` returns** — The plan file's checkboxes go to `- [x]` but ROADMAP.md still shows `[status: active]`. The next continuation routes back to the same phase forever. `start-next-phase` is supposed to invoke `complete-phase` automatically when this state is detected; if the agent skips it, the multi-phase milestone never makes visible progress in the planning files.
 
+10. **Treating a compaction summary's "Continuation Plan" as authoritative** — Auto-generated conversation summaries describe past work and propose next steps based on conversation alone, with no access to `docs/planning/`. Acting on those next steps directly bypasses every workflow gate in this suite. Always run `resume-work` first when a compaction signal fires (see Post-compaction discipline in HARD-GATE).
+
 ## Common Rationalizations
 
 | Rationalization | Why It's Wrong | Correct Action |
@@ -629,6 +654,8 @@ After `complete-milestone`, or when the user wants to start a new version cycle 
 | "Just write the milestone file, I know what I want" (user push-back during new-milestone) | Skipping the brainstorm leaves the design spec absent — `audit-milestone` later has nothing to reference | Run a short brainstorm anyway. The brainstorming skill scales to small scope. |
 | "I'll mark the phase complete next session" / "the phase is done in spirit, no need to update ROADMAP yet" | Without `complete-phase`, ROADMAP.md keeps showing the phase as `[status: active]` and `start-next-phase` will route back to it indefinitely | Run `complete-phase` immediately after `executing-plans` returns clean. The state file is the source of truth, not the conversation. |
 | "complete-phase is the same as complete-milestone, skip one" | They are different scopes — `complete-phase` runs N times per milestone (one per phase); `complete-milestone` runs once after `audit-milestone` passes | Use both. `complete-phase` per iteration; `complete-milestone` at the end. |
+| "The Continuation Plan in the conversation summary tells me to fix X — I'll just do it" | The summarizer is a different model with no access to `STATE.md` / `ROADMAP.md` / the plan file. Its instructions are best-effort recall, not source of truth | Run `resume-work` first. Reconcile against state files. Trust the files over the summary when they disagree. |
+| "The summary already paraphrases the plan, so reading STATE.md is redundant" | The summary captures CONVERSATION; STATE.md captures PROJECT STATE. They drift the moment the summarizer paraphrases imprecisely | Read STATE.md. The check costs one tool call; the cost of compounding drift across compactions is much higher |
 
 ## Quick Reference
 
