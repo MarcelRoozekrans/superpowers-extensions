@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.12.0](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.11.4...superpowers-extensions-v1.12.0) (2026-05-04)
+
+
+### Features
+
+* **ui-design-system:** scheduled workflow to refresh design system catalog from upstream ([0b09c4e](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/0b09c4ea38569e1f265ae425d1be83f775102e81))
+* **ui-design-system:** vendor 70-system catalog, curated mode, 7-question form, and design directions ([4c1c2db](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/4c1c2dbe04e763376b57c4ffd72f3cc8622496f6))
+* **ui-workflow:** add anti-slop scan and 5-dimension critique to ui-review ([52460f1](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/52460f1e50f0d11fb171fa2fb25deab5f98ae32f))
+* **ui:** vendor 70 design systems, add critique pipeline inspired by open-design ([ef9e7e7](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/ef9e7e770ff9edd2ca66a46341275ccd2bf55406))
+
 ## [1.11.4](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.11.3...superpowers-extensions-v1.11.4) (2026-05-03)
 
 
