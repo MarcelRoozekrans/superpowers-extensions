@@ -13,7 +13,7 @@ Extension skills for the [superpowers](https://github.com/anthropics/superpowers
 - **project-orchestration** -- GSD-inspired project lifecycle management for larger multi-session projects. Brownfield codebase mapping, milestone tracking, phase management, session pause/resume, milestone audit, release cycle management, and a `start-next-phase` routing hub that mechanically chains brainstorming → writing-plans → executing-plans for the next non-complete phase.
 - **ui-workflow** -- Frontend design contracts and visual auditing. Generates structured UI design contracts before implementing frontend phases (`ui-phase`) and performs visual audits afterwards (`ui-review`) using a three-layer grading: contract adherence, anti-slop scan, and 5-dimension critique.
 - **ui-design-system** -- Generates a complete design system before frontend implementation. Three modes: **curated** (pick from 70 vendored real-world references — Stripe, Linear, Vercel, Notion, Apple, Figma, Supabase, Cursor, Claude, …), **guided** (7 questions), or **quick** (inline one-liner). Includes 5 hand-tuned OKLch design directions and an anti-slop checklist. Auto-detects Blazor, React, Vue, Astro stacks. Outputs `docs/design/MASTER.md`.
-- **squad** -- Persistent AI agent teams (Lead, Backend Engineer, Frontend Engineer, Tester, Scribe) that participate in brainstorming and planning workflows, answer domain questions from project-specific knowledge that grows across sessions, and use tiered context lookup (semantic search → grep → recent history) to stay lean.
+- **squad** -- Persistent AI agent teams (Lead, Backend Engineer, Frontend Engineer, Tester, Scribe) **dispatched as parallel `Task` subagents** during brainstorming and planning workflows. Each specialist runs in an isolated context window with its own charter and tier-1 history, so they cannot anchor on each other's reasoning. Per-role `history.md` files accumulate project-specific knowledge across sessions; tiered context lookup (semantic search → grep → recent history) keeps each subagent's prompt lean.
 
 ---
 
@@ -393,17 +393,23 @@ No additional tools required.
 
 ## Squad Skill
 
-Squad creates persistent AI agent teams within your Claude Code session. Rather than treating Claude as a single assistant, squad instantiates five specialists — Lead, Backend Engineer, Frontend Engineer, Tester, and Scribe — that participate actively in superpowers workflows and grow smarter about your project across sessions.
+Squad creates persistent AI agent teams within your Claude Code session. Rather than treating Claude as a single assistant, squad dispatches five specialists — Lead, Backend Engineer, Frontend Engineer, Tester, and Scribe — as **parallel `Task` subagents** that participate actively in superpowers workflows and grow smarter about your project across sessions.
 
 ### How It Works
 
-Agents are not separate processes. When a question is routed to a specialist, Claude loads that agent's persona (charter) and project knowledge (history) and responds in that agent's voice. Tiered lookup keeps context lean:
+Each specialist runs in an **isolated `Task` subagent context window** — not as an in-context persona. When a question is routed to one or more specialists:
 
-1. **Semantic search** (LongtermMemory-MCP) — fastest, cross-session
-2. **Grep history** — keyword match against history file
-3. **Recent history** — last 50 lines only
-4. **Full history load** — last resort
-5. **Charter only** — no history yet
+1. **Routing** — match against `routing.md` to identify the relevant specialist(s) — possibly more than one.
+2. **Tiered lookup per specialist** — extract the most relevant slice of that specialist's `history.md`:
+   1. **Semantic search** (LongtermMemory-MCP) — fastest, cross-session
+   2. **Grep history** — keyword match against history file
+   3. **Recent history** — last 50 lines only
+   4. **Full history load** — last resort
+   5. **Charter only** — no history yet
+3. **Parallel dispatch** — all relevant specialists go out as `Task` calls **in a single assistant message**, which causes Claude Code to fan them out concurrently. Each subagent's prompt has the same four-block shape: charter + recent project history + the routed question + response rules (prefix with role's emoji + name, cite history when applicable, mark `[new-decision]` for `squad-sync`).
+4. **Integration** — when all subagents return, the main conversation presents their prefixed responses in stable order (Lead, Backend, Frontend, Tester, Scribe). For workflows that need a single answer (`writing-plans` review, `pre-push-review` verdict, `plan-roadmap` synthesis), Lead is then dispatched as a final subagent with the prior outputs as input.
+
+The point of dispatching as separate subagents — instead of voice-switching inline — is **isolation**. Specialists genuinely cannot see each other's reasoning, so the second never anchors on the first.
 
 ### Agents
 
@@ -417,15 +423,16 @@ Agents are not separate processes. When a question is routed to a specialist, Cl
 
 ### Workflow Integration
 
-- **brainstorming** — agents answer clarifying questions autonomously from project history
-- **writing-plans** — Tester reviews plan coverage; Scribe flags undocumented decisions
-- **subagent-driven-development** — specialist history injected into each agent's context
-- **pre-push-review** — Tester contributes risk knowledge; Scribe checks decisions.md
-- **project-orchestration** — `squad-sync` auto-fires on `pause-work`
+- **brainstorming** — multi-specialty clarifying questions dispatch all relevant specialists in one parallel `Task` message; the main conversation presents prefixed responses
+- **writing-plans** — Tester + Scribe dispatched in parallel after the plan is drafted; both findings merge into a `## Squad Review` section
+- **subagent-driven-development** — squad enriches each task subagent's prompt with role-specific tier-1 history (orthogonal to squad's own dispatch — both can run side by side)
+- **pre-push-review** — Phase 2 (Scribe / decisions) and Phase 3 (Tester / risk) dispatched in parallel during evidence gathering
+- **project-orchestration** — `squad-sync` auto-fires on `pause-work`. `plan-roadmap` dispatches all five specialists in parallel for roadmap-scope perspectives, then Lead synthesizes
+- **dispatching-parallel-agents** — the lower-level superpowers skill governing how to construct multi-call messages; squad's routing layer decides *which* specialists, that skill governs *how* the calls are issued
 
 ### Automatic Learning
 
-At session end, a background agent distills learnings and appends dated entries to each agent's `history.md` — no prompting needed. After a few sessions, agents know your auth pattern, naming conventions, risky areas, and more.
+At session end, a background agent distills learnings and appends dated entries to each agent's `history.md` — no prompting needed. After a few sessions, agents know your auth pattern, naming conventions, risky areas, and more. Subagents are instructed to mark new project decisions with `[new-decision]` so `squad-sync` can pick them up reliably.
 
 ### Usage
 
