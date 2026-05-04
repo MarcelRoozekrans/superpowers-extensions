@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.14.1](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.14.0...superpowers-extensions-v1.14.1) (2026-05-04)
+
+
+### Bug Fixes
+
+* **project-orchestration:** add complete-phase so ROADMAP.md updates per iteration ([adaca0e](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/adaca0ecc9eb4f9b178834219d4f0a55afbc0638))
+* **project-orchestration:** add complete-phase sub-skill so ROADMAP.md updates per iteration ([a2791f4](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/a2791f45f088047f80200c7f15d469c880530697))
+* **squad:** make squad-sync explicitly consume [new-decision] markers from subagents ([e60569c](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/e60569c9d75d1d699b1fe2ec166701b860a4a794))
+
 ## [1.14.0](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.13.0...superpowers-extensions-v1.14.0) (2026-05-04)
 
 
