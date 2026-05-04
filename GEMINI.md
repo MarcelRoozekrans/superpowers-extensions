@@ -1,0 +1,10 @@
+@./plugins/regression-test/skills/regression-test/SKILL.md
+@./plugins/pre-push-review/skills/pre-push-review/SKILL.md
+@./plugins/refactor-analysis/skills/refactor-analysis/SKILL.md
+@./plugins/decision-tracker/skills/decision-tracker/SKILL.md
+@./plugins/roslyn-codelens-integration/skills/roslyn-codelens-integration/SKILL.md
+@./plugins/memorylens-integration/skills/memorylens-integration/SKILL.md
+@./plugins/project-orchestration/skills/project-orchestration/SKILL.md
+@./plugins/ui-workflow/skills/ui-workflow/SKILL.md
+@./plugins/ui-design-system/skills/ui-design-system/SKILL.md
+@./plugins/squad/skills/squad/SKILL.md

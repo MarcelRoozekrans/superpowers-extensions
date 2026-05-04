@@ -20,6 +20,7 @@ jobs:
             #docs/plans
             #CHANGELOG.md
             #plugins/ui-design-system/skills/ui-design-system/design-systems
+            #GEMINI.md
 
   commitlint:
     runs-on: ubuntu-latest
