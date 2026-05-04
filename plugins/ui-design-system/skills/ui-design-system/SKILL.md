@@ -1,6 +1,6 @@
 ---
 name: ui-design-system
-description: Use before starting frontend implementation when no design system exists yet — first check for docs/design/MASTER.md, run this only if missing. Triggers on phrases like "set up the design system", "no design system yet", "establish UI conventions", "define our colors and typography", "make it look like Linear/Stripe/Notion", or implicitly when ui-workflow ui-phase needs a contract but docs/design/MASTER.md is absent. Generates a complete design system (colors, typography, spacing, component patterns) tailored to product type and stack — auto-detects Blazor, React, Vue, Astro. Three modes — curated (pick from 70 vendored real-world systems), guided (7 questions), or quick (inline one-liner description). Skip if docs/design/MASTER.md already exists; the user should update it manually.
+description: Use when no design system exists yet — check for docs/design/MASTER.md first, run only if missing. Triggers on "set up the design system", "no design system yet", "establish UI conventions", "define our colors and typography", or "make it look like <product>" (Linear, Stripe, Notion, Apple, Cursor, Figma, …). Also triggers implicitly when ui-workflow ui-phase needs a contract but docs/design/MASTER.md is absent. Skip if docs/design/MASTER.md already exists — update it manually instead.
 ---
 
 # UI Design System Skill

@@ -1,9 +1,19 @@
 ---
 name: ui-workflow
-description: Use for frontend phase work in two modes — (1) ui-phase before implementing, on triggers like "design the UI", "spec the page", "frontend design contract", "what should this screen look like"; produces a structured UI design contract for implementation to follow. (2) ui-review after implementing, on triggers like "review the UI", "audit the implementation", "did it match the design", "compare to spec"; uses regression-test to compare the result against the contract. Works with any frontend tech stack (React, Vue, Blazor, Astro, etc.). Skip for pure backend or non-visual changes.
+description: Use for frontend phase work in two modes. (1) ui-phase before implementing — triggers on "design the UI", "spec the page", "frontend design contract", "what should this screen look like". (2) ui-review after implementing — triggers on "review the UI", "audit the implementation", "did it match the design", "compare to spec", "is the UI ready to ship". Works with any frontend tech stack (React, Vue, Blazor, Astro). Skip for pure backend or non-visual changes.
 ---
 
 # UI Workflow Skill
+
+<HARD-GATE>
+Three invariants apply to every step in this skill that produces or consumes a `ui-contract.md`:
+
+1. **The contract is the source of truth.** Both `ui-phase` and `ui-review` operate against `docs/plans/*-ui-contract.md` on disk. Conversation memory is not the contract; the file is. If the file does not exist, neither sub-skill can proceed.
+2. **State changes use the `Write` or `Edit` tool, not narration.** Saying "I've drafted the contract" without a tool call leaves nothing on disk. Every save MUST be a tool call followed by a `Read`-tool VERIFY pass that confirms the expected sections are present, and only then a commit.
+3. **Order is Write → Verify → Commit → Status check → Announce → (optional) chain.** A `git commit` issued before VERIFY will commit the wrong state or fail with no diff. An announcement before the commit lets the user think state changed when it didn't. Chaining to `writing-plans` or `regression-test` before VERIFY proceeds on faith — re-confirm the artifact via `Glob`/`Read` before reading the next skill file end-to-end.
+
+If the artifact is missing at a verify step, the previous step did not complete — return to it and retry the tool call. Do not proceed.
+</HARD-GATE>
 
 ## Prerequisites
 
@@ -85,20 +95,20 @@ Do NOT invoke for:
 
 8. **Present each section to the user** — ask "does this look right?" after each major section. Be ready to revise.
 
-9. **Save the contract** using [ui-contract-template.md](ui-contract-template.md) as the structure:
+9. **Save the contract** — **use the `Write` tool** to create `docs/plans/YYYY-MM-DD-<phase-name>-ui-contract.md`, structured per [ui-contract-template.md](ui-contract-template.md). Do NOT narrate the contract content in conversation as a substitute — the file is the artifact. Saying "I've drafted the contract" without a Write tool call leaves nothing on disk for ui-review or writing-plans to read.
 
-   ```text
-   docs/plans/YYYY-MM-DD-<phase-name>-ui-contract.md
-   ```
+10. **VERIFY the contract** — re-read the file with the `Read` tool and confirm every required section is present (Components, Layouts at all three breakpoints, Interaction states, Design system tokens, Accessibility, Open questions). If any section is missing, the write was incomplete — re-write before committing.
 
-10. **Commit:**
+11. **Commit:**
 
     ```bash
     git add docs/plans/YYYY-MM-DD-<phase>-ui-contract.md
     git commit -m "docs(ui): add ui contract for phase N.M — <name>"
     ```
 
-11. **Transition to writing-plans** — the ui-contract is now input to the implementation plan. Invoke `writing-plans` skill.
+    Run `git status` and confirm a clean tree before continuing.
+
+12. **Transition to writing-plans** — only after VERIFY and a clean commit. **Confirm the contract file exists** with one final Glob before chaining (`docs/plans/*-ui-contract.md`). Then **read** the `superpowers:writing-plans` skill file and follow it end-to-end. Do not loosely "invoke" — read the actual skill body.
 
 ---
 
