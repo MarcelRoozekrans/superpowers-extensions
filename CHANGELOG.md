@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.13.0](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.12.0...superpowers-extensions-v1.13.0) (2026-05-04)
+
+
+### Features
+
+* **suite:** multi-provider support — cursor, codex, gemini, copilot cli, opencode ([4622903](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/4622903c678de8b12435b5b7592826f30f5cfc7f))
+* **suite:** phase 1 multi-provider — cursor and codex manifests + polymorphic session-start hook ([62c9d73](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/62c9d73a4d9d4e91faa1bc2cced6305afde2c805))
+* **suite:** phase 2 multi-provider — gemini, opencode, and copilot cli integrations ([2c43944](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/2c439448936de64d44e8565886dd2375fc906fd5))
+
 ## [1.12.0](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.11.4...superpowers-extensions-v1.12.0) (2026-05-04)
 
 
