@@ -283,6 +283,90 @@ At the start of a session on a project with existing `docs/planning/` state. Tri
 
 ---
 
+## complete-phase
+
+### When to Use
+
+When a phase's plan is finished — all tasks in `docs/plans/YYYY-MM-DD-<phase>.md` are checked off (`- [x]`), tests pass, and `executing-plans` returned a clean state. Promotes the phase from `active` to `complete` in the planning files.
+
+This sub-skill closes the loop that was missing: without it, `executing-plans` finishes a phase but ROADMAP.md still shows the phase as `active`, so the next session sees stale state and `start-next-phase` routes back to the same already-finished phase.
+
+`start-next-phase` invokes `complete-phase` automatically when it detects an `active` phase whose plan is fully checked off (see `start-next-phase` step 1 below). Manual invocation is also supported when the user says "mark phase N.M complete" or "wrap up this phase".
+
+**Pre-condition:** the phase's plan file exists, all task checkboxes in it are `- [x]`, and the phase is currently `[status: active]` in ROADMAP.md. If the phase is already `[status: complete]`, this sub-skill is a no-op.
+
+### Announce Line
+
+> "Marking Phase N.M — {name} complete."
+
+### Process
+
+1. **Read** `docs/planning/ROADMAP.md` and confirm the target phase is `[status: active]`. If it's already `[status: complete]`, exit silently — this is a no-op. If it's `[status: pending]`, refuse: "Phase N.M is pending, not active. Run `start-next-phase` to begin work first." and exit.
+
+2. **Read** the plan file referenced by the phase's `Plan:` line. Confirm all task checkboxes are `- [x]`. If any `- [ ]` remain, refuse: "Phase N.M has unchecked tasks — execution is not complete. Resume `executing-plans` first." and exit.
+
+3. **Use the `Edit` tool** on `docs/planning/ROADMAP.md` to make TWO precise edits to the phase's block. The exact transitions are:
+
+   **Before:**
+
+   ```markdown
+   ### Phase 1.2: <Name> [status: active]
+   **Goal:** <one sentence>
+   **Plan:** `docs/plans/<plan-file>.md`
+   ```
+
+   **After:**
+
+   ```markdown
+   ### Phase 1.2: <Name> [status: complete]
+   **Goal:** <one sentence>
+   **Plan:** `docs/plans/<plan-file>.md`
+   **Completed:** YYYY-MM-DD
+   ```
+
+   Two changes: (a) `[status: active]` → `[status: complete]` in the heading, (b) add `**Completed:** YYYY-MM-DD` line below `**Plan:**` with today's actual date.
+
+4. **VERIFY:** re-read `docs/planning/ROADMAP.md` and confirm both edits landed — the heading shows `[status: complete]`, the `**Completed:** ...` line is present, and no other phase was accidentally modified.
+
+5. **Use the `Edit` tool** on `docs/planning/MILESTONE.md` to update the `## Phases` list. The exact transition is:
+
+   **Before:**
+
+   ```markdown
+   2. Phase 1.2 — <name> [active]
+   ```
+
+   **After:**
+
+   ```markdown
+   2. Phase 1.2 — <name> [complete]
+   ```
+
+6. **VERIFY:** re-read `docs/planning/MILESTONE.md` and confirm the phase entry now reads `[complete]`.
+
+7. Stage and commit:
+
+   ```bash
+   git add docs/planning/ROADMAP.md docs/planning/MILESTONE.md
+   git commit -m "chore(roadmap): complete phase N.M — <name>"
+   ```
+
+   Run `git status` and confirm a clean tree.
+
+8. Announce only after the commit succeeds:
+
+   > "Phase N.M — {name} marked complete in ROADMAP.md and MILESTONE.md. Committed."
+
+### Why this exists separately from complete-milestone
+
+`complete-milestone` is end-of-milestone: marks the WHOLE milestone complete, tags a release, and only runs after `audit-milestone` passes. It is a one-time event per milestone.
+
+`complete-phase` is per-iteration: marks ONE phase complete inside an active milestone, runs after every phase wraps up. A milestone with 8 phases will see `complete-phase` run 8 times, then `audit-milestone` once, then `complete-milestone` once.
+
+Without `complete-phase`, working through a multi-phase milestone leaves ROADMAP.md frozen with every phase showing `[status: active]` until the very end — exactly the bug this sub-skill fixes.
+
+---
+
 ## start-next-phase
 
 ### When to Use
@@ -295,13 +379,15 @@ After `resume-work` confirmation, or any time the user says "continue", "next", 
 
 ### Process
 
-1. Read `docs/planning/ROADMAP.md` and `docs/planning/MILESTONE.md`. Identify the **next non-complete phase** (first phase with status `active`, falling back to first `pending` phase).
+1. Read `docs/planning/ROADMAP.md` and `docs/planning/MILESTONE.md`. **Before identifying the next phase**, check whether any phase in the current milestone is `[status: active]` AND its plan file has all tasks checked off (`- [x]`). If yes, **run `complete-phase` first** to promote it from `active` to `complete`. This closes the loop after the previous session — without it, every continuation routes back to the already-finished phase.
 
-2. Check artifacts for that phase:
+2. After any pending `complete-phase` runs, identify the **next non-complete phase** (first phase with status `active`, falling back to first `pending` phase).
+
+3. Check artifacts for that phase:
    - **Design spec** — does `docs/superpowers/specs/*-<phase>-*.md` (or the phase's referenced design doc) exist?
    - **Plan file** — does the phase's `Plan:` link in ROADMAP.md (`docs/superpowers/plans/*-<phase>-*.md` or similar) exist on disk?
 
-3. Route based on the table below. **Read** the target skill file and follow it end-to-end — do not loosely "invoke" it.
+4. Route based on the table below. **Read** the target skill file and follow it end-to-end — do not loosely "invoke" it.
 
    | Phase status | Design spec | Plan file | Action |
    |---|---|---|---|
@@ -310,9 +396,11 @@ After `resume-work` confirmation, or any time the user says "continue", "next", 
    | `pending` | exists | missing | **Read** the `superpowers:writing-plans` skill and follow it end-to-end. **VERIFY:** plan file exists. Then run `list-phase-assumptions` → `superpowers:executing-plans` |
    | `pending` | missing | missing | **Read** the `superpowers:brainstorming` skill and follow it end-to-end. **VERIFY:** design spec exists. Then chain to `superpowers:writing-plans` (verify plan file) → `list-phase-assumptions` → `superpowers:executing-plans` |
 
-4. After each step, **VERIFY the required artifact exists** (see HARD-GATE table at the top of this skill) before chaining to the next link. If a required artifact is missing, return to the prior step — do not proceed.
+5. **When `executing-plans` returns** (the leaf of every routing path): if all tasks in the plan file are now `- [x]`, **run `complete-phase`** to promote the phase from `active` → `complete` in ROADMAP.md and MILESTONE.md before the session continues or terminates. Skipping this step is the most common reason ROADMAP.md gets stale during multi-phase milestones.
 
-5. Do not stop and ask "what next?" between links. The chain is mechanical. Only stop for:
+6. After each step, **VERIFY the required artifact exists** (see HARD-GATE table at the top of this skill) before chaining to the next link. If a required artifact is missing, return to the prior step — do not proceed.
+
+7. Do not stop and ask "what next?" between links. The chain is mechanical. Only stop for:
    - `list-phase-assumptions` user confirmation (this is an explicit gate, not a menu)
    - Failures (missing artifact, failing tests, blockers surfaced by a sub-skill)
    - The user interrupting
@@ -323,6 +411,15 @@ After `resume-work` confirmation, or any time the user says "continue", "next", 
 resume-work / "continue" / "next"
         │
         ▼
+  ┌──────────────────────┐
+  │ Active phase with    │  Yes   ┌─────────────────┐
+  │ all tasks checked?   ├───────►│ complete-phase  │
+  │ (cleanup last run)   │        │ (active → done) │
+  └────────┬─────────────┘        └────────┬────────┘
+           │ No                            │
+           ◄───────────────────────────────┘
+           │
+           ▼
   ┌──────────────────┐
   │ Find next phase   │
   │ (first non-       │
@@ -344,9 +441,18 @@ resume-work / "continue" / "next"
      │ assumptions         │
      └─────┬──────────────┘
            │ User confirms
-     ┌─────▼──────────────┐
-     │ executing-plans     │
-     └────────────────────┘
+           ▼
+  ┌────────────────────┐
+  │ executing-plans    │
+  └────────┬───────────┘
+           │
+     ┌─────▼──────────────────┐  Yes   ┌─────────────────┐
+     │ All tasks now checked? ├───────►│ complete-phase  │
+     │ (close the loop)       │        │ (active → done) │
+     └─────┬──────────────────┘        └─────────────────┘
+           │ No (mid-phase pause)
+           ▼
+       (return — phase stays active for the next continuation)
 ```
 
 ---
@@ -504,6 +610,8 @@ After `complete-milestone`, or when the user wants to start a new version cycle 
 
 8. **Skipping the brainstorm in `new-milestone` / `plan-roadmap`** — Asking two questions ("goal?", "DoD?") and writing the file is not a brainstorm. The design spec at `docs/superpowers/specs/` is what `audit-milestone` and downstream skills reference. Skipping it leaves the milestone with no shared source of truth.
 
+9. **Skipping `complete-phase` after `executing-plans` returns** — The plan file's checkboxes go to `- [x]` but ROADMAP.md still shows `[status: active]`. The next continuation routes back to the same phase forever. `start-next-phase` is supposed to invoke `complete-phase` automatically when this state is detected; if the agent skips it, the multi-phase milestone never makes visible progress in the planning files.
+
 ## Common Rationalizations
 
 | Rationalization | Why It's Wrong | Correct Action |
@@ -519,6 +627,8 @@ After `complete-milestone`, or when the user wants to start a new version cycle 
 | "I'll write the file in a moment, let me announce first" | Announcements before writes leave the user thinking the state changed when it didn't | Write → verify → commit → announce. In that order. No exceptions. |
 | "The conversation captured the new milestone, no need to write the file" | The conversation evaporates between sessions. STATE.md / ROADMAP.md / MILESTONE.md are the persistent record. | Always Write to disk before claiming the milestone exists |
 | "Just write the milestone file, I know what I want" (user push-back during new-milestone) | Skipping the brainstorm leaves the design spec absent — `audit-milestone` later has nothing to reference | Run a short brainstorm anyway. The brainstorming skill scales to small scope. |
+| "I'll mark the phase complete next session" / "the phase is done in spirit, no need to update ROADMAP yet" | Without `complete-phase`, ROADMAP.md keeps showing the phase as `[status: active]` and `start-next-phase` will route back to it indefinitely | Run `complete-phase` immediately after `executing-plans` returns clean. The state file is the source of truth, not the conversation. |
+| "complete-phase is the same as complete-milestone, skip one" | They are different scopes — `complete-phase` runs N times per milestone (one per phase); `complete-milestone` runs once after `audit-milestone` passes | Use both. `complete-phase` per iteration; `complete-milestone` at the end. |
 
 ## Quick Reference
 
@@ -534,6 +644,7 @@ After `complete-milestone`, or when the user wants to start a new version cycle 
 | `pause-work` | "done for today" / stopping | `docs/planning/STATE.md` |
 | `resume-work` | "resume" / session start — chains to `start-next-phase` | None (read-only) |
 | `start-next-phase` | After `resume-work`, or on "continue" / "next" | None (read-only — routes to brainstorming/writing-plans/executing-plans) |
+| `complete-phase` | After `executing-plans` finishes a phase, or "mark phase N.M complete" | `docs/planning/ROADMAP.md`, `docs/planning/MILESTONE.md` (single phase: active → complete) |
 | `audit-milestone` | "verify milestone is done" | `docs/plans/YYYY-MM-DD-milestone-N-audit.md` |
 | `complete-milestone` | After audit PASS | `docs/planning/ROADMAP.md`, `docs/planning/MILESTONE.md`, git tag |
 | `plan-roadmap` | "plan the roadmap" / first project setup, no ROADMAP.md yet | `docs/superpowers/specs/YYYY-MM-DD-roadmap-design.md`, `docs/planning/ROADMAP.md`, `docs/planning/MILESTONE.md` |
