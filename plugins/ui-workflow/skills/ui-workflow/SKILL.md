@@ -132,6 +132,8 @@ Do NOT invoke when:
 - [ ] **Layout accuracy** — layouts match the contracted structure at each breakpoint
 - [ ] **Interaction states** — all states (loading, empty, error, success) are implemented
 - [ ] **Accessibility** — ARIA roles, keyboard nav, contrast present as contracted
+- [ ] **Anti-slop scan** — implementation does not exhibit common AI-generated UI patterns
+- [ ] **5-dimension critique** — score the implementation against Philosophy / Hierarchy / Execution / Specificity / Restraint
 - [ ] **Produce audit report** — saved to `docs/plans/YYYY-MM-DD-ui-review-<phase>.md`
 
 ### Process
@@ -164,7 +166,37 @@ Do NOT invoke when:
    - ⚠️ **Partial** — implemented but deviates from contract
    - ❌ **Missing** — contracted but not implemented
 
-6. **Produce audit report:**
+6. **Anti-slop scan** — independent of the contract, screen the implementation against the patterns that signal "AI improvised UI" rather than "a designer made decisions". The contract may be silent on these because they are expected to be obvious; in practice they slip through. Mark each as **Pass** (not present) or **Fail** (present in the implementation) with one-line evidence. Patterns to scan for:
+
+   | # | Pattern | What to look for |
+   |---|---|---|
+   | 1 | Aggressive purple/violet gradient as default brand or hero | Screenshot dominant colors; check for purple-to-pink or purple-to-blue radial gradients spanning > 25% of the viewport |
+   | 2 | Generic emoji feature icons (🚀 ⚡ 🎯 ✨) on landing/feature rows | Grep markup for these characters in headings or feature lists |
+   | 3 | Rounded card with coloured left-border accent as default content block | Grep CSS/component code for `border-left:` on cards plus `border-radius` on the same element |
+   | 4 | Hand-drawn / cartoon SVG humans padding empty space | Inspect inline `<svg>` content for stylized human figures; check `<img>` alt text mentioning "illustration" |
+   | 5 | Inter / Roboto / Arial used as the *display* (heading) face | Check the contract's display font vs what's actually applied to `h1`/`h2` in CSS |
+   | 6 | Invented metrics ("10× faster", "3× more productive") without citation | Grep marketing copy for `\d+x` or `\d+%` claims; flag any without a footnote or source |
+   | 7 | Filler copy in production paths ("Feature One", "Lorem ipsum", "Your headline here") | Grep content for these strings; flag any in components shipped to users |
+   | 8 | An icon next to every heading | Count headings that have an adjacent icon — if > 60% of headings, flag |
+   | 9 | A gradient on every full-width background | Count full-bleed sections; flag if gradients appear on > 1 per page |
+
+   Record results in the report (see step 8 template). Each fail blocks PASS verdict regardless of contract adherence — anti-slop is a hard floor, not a contract criterion.
+
+7. **5-dimension critique** — score the implementation 1-5 on each dimension below. This is independent of the contract; it grades the design quality, not the spec match. The contract can be honored and the result still feel cheap; this catches that.
+
+   Use the band labels strictly. Don't grade-inflate. **The score is the worst sustained band, not the average** — if hierarchy is 4 but execution is 2, the overall score is 2. Innovation is allowed to be low; restraint is allowed to be high.
+
+   | Dimension | What it grades | 1 — Broken | 3 — Functional | 5 — Exceptional |
+   |---|---|---|---|---|
+   | **Philosophy** | Does the UI have a coherent point of view? | No identity; could be any product | Recognizable category but generic | Unmistakable identity, every choice supports it |
+   | **Hierarchy** | Can the user's eye find the important thing first? | Equal weight everywhere; nothing reads as primary | One clear focal point per screen | Multiple ranks of attention, all working |
+   | **Execution** | Is the typography, spacing, alignment, color tight? | Visible misalignments, unintentional inconsistencies | Clean and consistent | Engineered — letter-spacing, optical alignment, matched x-heights |
+   | **Specificity** | Are the choices grounded in this product, or generic SaaS defaults? | Could lift any dashboard skeleton from the internet | Some product-specific decisions | Almost every choice is specific to this product's voice |
+   | **Restraint** | What's been left out? Does anything feel "added because we could"? | Maximalist — every section uses every feature | Some restraint visible | Aggressive editing — most pages remove things rather than add |
+
+   Record per-dimension scores (1-5) plus one-line evidence per dimension. Compute the **floor score** (worst band) and the **average**, both for the report. Any dimension scoring 1 or 2 is a regression that must be addressed before PASS — fix the weakest first, re-screenshot, re-score.
+
+8. **Produce audit report:**
 
    ```text
    docs/plans/YYYY-MM-DD-ui-review-<phase>.md
@@ -197,29 +229,63 @@ Do NOT invoke when:
    | ARIA roles | ❌ Missing | nav and main roles not applied |
    | Keyboard navigation | ✅ Pass | Tab order correct |
 
+   ## Anti-Slop Scan
+   | # | Pattern | Status | Evidence |
+   |---|---|---|---|
+   | 1 | Purple/violet gradient default | ✅ Pass | — |
+   | 2 | Generic emoji feature icons | ❌ Fail | Feature row uses 🚀 ⚡ 🎯 — replace with custom icons or remove |
+   | 3 | Card with coloured left border | ✅ Pass | — |
+   | 4 | Hand-drawn SVG humans | ✅ Pass | — |
+   | 5 | Inter as display face | ✅ Pass | Display is Söhne |
+   | 6 | Invented metrics without citation | ⚠️ Fail | "10× faster" on hero — no source |
+   | 7 | Filler copy in production | ✅ Pass | — |
+   | 8 | Icon next to every heading | ✅ Pass | 30% of headings, below threshold |
+   | 9 | Gradient on every full-width bg | ✅ Pass | One hero gradient, rest flat |
+
+   ## 5-Dimension Critique
+   | Dimension | Score (1-5) | Evidence |
+   |---|---|---|
+   | Philosophy | 4 | Clear "minimal observability" point of view in monochrome + signal green |
+   | Hierarchy | 3 | One focal point per screen but secondary rank flat |
+   | Execution | 4 | Clean alignment, consistent spacing rhythm |
+   | Specificity | 2 | Most components are generic SaaS skeletons; could be any dashboard |
+   | Restraint | 4 | Good — no decorative chrome |
+   | **Floor** | **2** | Specificity is the weakest |
+   | **Average** | **3.4** | — |
+
    ## Issues (prioritized)
-   1. ❌ Tablet sidebar not collapsing — Major
-   2. ❌ ARIA roles missing on nav/main — Major
-   3. ⚠️ H2 font size 20px vs contracted 24px — Minor
-   4. ⚠️ Empty state missing CTA — Minor
+   1. ❌ Tablet sidebar not collapsing — Major (contract)
+   2. ❌ ARIA roles missing on nav/main — Major (contract)
+   3. ❌ Generic emoji icons in feature row — Major (anti-slop #2)
+   4. ❌ Specificity score 2/5 — Major (critique floor)
+   5. ⚠️ Invented "10× faster" metric without source — Minor (anti-slop #6)
+   6. ⚠️ H2 font size 20px vs contracted 24px — Minor (contract)
+   7. ⚠️ Empty state missing CTA — Minor (contract)
 
    ## Verdict Rationale
-   FAIL — 2 missing criteria, both Major severity.
+   FAIL — 2 missing contract criteria + 1 anti-slop fail + critique floor of 2 (Specificity). Anti-slop and critique-floor are hard floors regardless of contract adherence.
    ```
 
-7. **Verdict logic:**
-   - **PASS** — no ❌ Missing criteria
-   - **PARTIAL** — only ⚠️ Partial deviations, no ❌ Missing
-   - **FAIL** — one or more ❌ Missing criteria
+9. **Verdict logic:**
 
-8. **Commit the report:**
+   The verdict is the worst of the three sub-verdicts:
 
-   ```bash
-   git add docs/plans/YYYY-MM-DD-ui-review-<phase>.md
-   git commit -m "docs(ui-review): add ui-review report for phase N.M — <name>"
-   ```
+   | Sub-verdict | PASS | PARTIAL | FAIL |
+   |---|---|---|---|
+   | Contract adherence | No ❌ Missing | Only ⚠️ Partial | Any ❌ Missing |
+   | Anti-slop | All 9 patterns Pass | n/a | Any pattern Fail |
+   | 5-dimension critique | Floor ≥ 3 and average ≥ 3.5 | Floor = 3, average ≥ 3 | Floor ≤ 2 |
 
-9. **Announce verdict** in conversation with issue count and top issues.
+   Final verdict: take the worst of the three. If any sub-verdict is FAIL, the report is FAIL — fix the weakest before claiming PASS.
+
+10. **Commit the report:**
+
+    ```bash
+    git add docs/plans/YYYY-MM-DD-ui-review-<phase>.md
+    git commit -m "docs(ui-review): add ui-review report for phase N.M — <name>"
+    ```
+
+11. **Announce verdict** in conversation with issue count, anti-slop fails, critique floor, and top issues.
 
 ---
 
@@ -243,6 +309,10 @@ Do NOT invoke when:
 | "Screenshots at one viewport are enough" | Responsive breakpoints are the most common source of layout bugs | Screenshot at all three viewports |
 | "The implementation looks good enough" | "Good enough" is not the contract | Grade against the written contract |
 | "I'll update the contract to match what was built" | The contract is a design input. If it needs changing, change it before implementation, not after | Fix the implementation or formally revise the contract with user approval |
+| "Anti-slop is subjective, skip it" | The 9 patterns are concrete and gradeable. Skipping them is how generic-AI-dashboard slop ships | Run the scan; each pattern is binary Pass/Fail with one-line evidence |
+| "The contract was met, the critique is overkill" | Contract match doesn't guarantee good design — generic implementations honor minimal contracts | Run both. They catch different failure modes. |
+| "Average score is 3.5, that's a pass" | Average hides the worst dimension. A 5/1/5/5/2 averages to 3.6 but two dimensions are broken | Use the floor score, not the average. Fix the worst before accepting PASS. |
+| "Innovation is low, downgrade Philosophy" | Innovation is allowed to be low; Philosophy grades coherence, not novelty | A boring product with strong identity scores 5 on Philosophy. Don't conflate. |
 
 ## Quick Reference
 
