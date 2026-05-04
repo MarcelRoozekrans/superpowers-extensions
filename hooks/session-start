@@ -1,0 +1,69 @@
+#!/usr/bin/env bash
+# SessionStart hook for superpowers-extensions.
+#
+# Injects a brief listing of available extension skills + their triggers
+# into the session context, so the agent knows the suite is loaded
+# regardless of which harness it is running in. The list is intentionally
+# short — each skill's own description carries the detailed selection
+# triggers.
+#
+# Detects the host harness via env vars and emits the JSON shape that
+# harness expects:
+#   - Cursor sets CURSOR_PLUGIN_ROOT  → "additional_context" (snake_case)
+#   - Claude Code sets CLAUDE_PLUGIN_ROOT (and not COPILOT_CLI)
+#                                     → "hookSpecificOutput.additionalContext"
+#   - Copilot CLI / SDK-standard      → "additionalContext" (top-level)
+#
+# Pattern adapted from obra/superpowers (MIT). The bootstrap content is
+# our own; the env-var detection and JSON shape branching mirrors theirs.
+
+set -euo pipefail
+
+context_body=$(cat <<'CONTEXT'
+You have superpowers-extensions skills loaded. Ten skills cover quality
+gates, refactor analysis, project orchestration, frontend workflow, and
+design systems:
+
+- regression-test       — UI/web regression with Playwright MCP
+- pre-push-review       — branch review before push or PR
+- refactor-analysis     — transitive impact analysis for multi-file refactors
+- decision-tracker      — cross-cutting decision recall via long-term memory
+- roslyn-codelens-integration — semantic .NET intelligence for every superpowers skill
+- memorylens-integration — .NET memory snapshot analysis during debugging
+- project-orchestration — multi-session project lifecycle (resume / pause / milestones)
+- ui-workflow           — UI design contracts + 3-layer audit (anti-slop + critique)
+- ui-design-system      — design system from 70 vendored references or 5 OKLch directions
+- squad                 — persistent AI agent team that grows across sessions
+
+Each skill triggers on specific phrases described in its frontmatter.
+Invoke via the host's native skill mechanism (Claude Code Skill tool,
+Cursor / Codex / Gemini / Copilot CLI / OpenCode native skill loading).
+
+The companion obra/superpowers skill suite is the core; this repo extends
+it with quality-gate, lifecycle, and frontend workflow skills.
+CONTEXT
+)
+
+# Escape for JSON embedding using bash parameter substitution
+escape_for_json() {
+  local s="$1"
+  s="${s//\\/\\\\}"
+  s="${s//\"/\\\"}"
+  s="${s//$'\n'/\\n}"
+  s="${s//$'\r'/\\r}"
+  s="${s//$'\t'/\\t}"
+  printf '%s' "$s"
+}
+
+context_escaped=$(escape_for_json "$context_body")
+
+# Emit the JSON shape that the current host expects
+if [ -n "${CURSOR_PLUGIN_ROOT:-}" ]; then
+  printf '{\n  "additional_context": "%s"\n}\n' "$context_escaped"
+elif [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -z "${COPILOT_CLI:-}" ]; then
+  printf '{\n  "hookSpecificOutput": {\n    "hookEventName": "SessionStart",\n    "additionalContext": "%s"\n  }\n}\n' "$context_escaped"
+else
+  printf '{\n  "additionalContext": "%s"\n}\n' "$context_escaped"
+fi
+
+exit 0

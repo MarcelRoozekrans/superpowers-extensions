@@ -1,0 +1,26 @@
+{
+  "name": "superpowers-extensions",
+  "displayName": "Superpowers Extensions",
+  "description": "Quality-gate, refactor, project-orchestration, UI workflow, and design-system skills extending the obra/superpowers suite for Claude Code, Cursor, Codex, Gemini, Copilot CLI, and OpenCode.",
+  "version": "1.12.0",
+  "author": {
+    "name": "Marcel Roozekrans"
+  },
+  "homepage": "https://github.com/MarcelRoozekrans/superpowers-extensions",
+  "repository": "https://github.com/MarcelRoozekrans/superpowers-extensions",
+  "license": "MIT",
+  "keywords": [
+    "skills",
+    "regression-test",
+    "pre-push-review",
+    "refactor-analysis",
+    "decision-tracker",
+    "roslyn-codelens",
+    "memorylens",
+    "project-orchestration",
+    "ui-workflow",
+    "ui-design-system",
+    "squad"
+  ],
+  "skills": "./plugins/"
+}

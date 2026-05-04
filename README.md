@@ -474,6 +474,68 @@ These skills can also be used with GitHub Copilot via [Copilot Skill Bridge](htt
 
 ---
 
+## Multi-Provider Support
+
+Source-of-truth is one shared `plugins/<name>/skills/<name>/SKILL.md` tree
+of markdown files. Each supported coding-agent harness has a manifest at
+the repo root pointing at the same files. Skill content does not change
+per harness; only how the harness loads them.
+
+| Harness | Manifest | Install instructions |
+|---|---|---|
+| **Claude Code** | [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json) + per-plugin `plugin.json` | [Installation](#installation) section above |
+| **Cursor Agent** | [`.cursor-plugin/plugin.json`](.cursor-plugin/plugin.json) + [`hooks/hooks-cursor.json`](hooks/hooks-cursor.json) | Add this repo as a Cursor plugin source; the manifest registers `./plugins/` as the skills root and `hooks/session-start` runs at session start |
+| **OpenAI Codex CLI / App** | [`.codex-plugin/plugin.json`](.codex-plugin/plugin.json) + [`.codex/INSTALL.md`](.codex/INSTALL.md) | Clone-and-symlink each plugin into `~/.agents/skills/`; instructions and a copy-paste loop in [`.codex/INSTALL.md`](.codex/INSTALL.md) |
+| **Gemini CLI** | [`gemini-extension.json`](gemini-extension.json) + [`GEMINI.md`](GEMINI.md) | `GEMINI.md` lists each SKILL.md via `@./plugins/.../SKILL.md` import syntax |
+| **GitHub Copilot CLI** | Reuses [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json) + [`.copilot-cli/INSTALL.md`](.copilot-cli/INSTALL.md) | `copilot plugin marketplace add MarcelRoozekrans/superpowers-extensions`, then install individual plugins |
+| **OpenCode.ai** | [`.opencode/plugins/superpowers-extensions.js`](.opencode/plugins/superpowers-extensions.js) | JS plugin registers all ten plugin skill paths via OpenCode's `config.skills.paths` array — no symlinks needed |
+
+The polymorphic [`hooks/session-start`](hooks/session-start) script
+detects which harness is running it via env vars (`CURSOR_PLUGIN_ROOT`,
+`CLAUDE_PLUGIN_ROOT`, `COPILOT_CLI`) and emits the JSON shape that
+harness expects (`additional_context` for Cursor, `hookSpecificOutput`
+for Claude Code, top-level `additionalContext` for SDK-standard hosts
+including Copilot CLI). [`hooks/run-hook.cmd`](hooks/run-hook.cmd) is the
+Windows polyglot wrapper that routes to Git Bash on Windows hosts.
+
+### What is **not** supported
+
+Honestly: VS Code Copilot Chat (`.github/copilot-instructions.md`),
+Copilot Workspace, Aider, Continue, and Windsurf are **not** targeted
+by these manifests. For VS Code Copilot Chat specifically, use the
+separate [Copilot Skill Bridge](https://github.com/MarcelRoozekrans/Copilot-Skill-Bridge)
+linked above — it converts Claude marketplace skills into Copilot
+instruction/prompt files at the project level.
+
+### Caveats
+
+- **Cursor / Codex / Gemini / Copilot CLI / OpenCode integrations are
+  best-effort.** Pattern adapted from [`obra/superpowers`](https://github.com/obra/superpowers)
+  (MIT). Verify in your environment before relying on it for production
+  work — the underlying plugin formats for some of these harnesses are
+  still evolving.
+- **No `using-superpowers-extensions` bootstrap skill.** This suite
+  piggy-backs on `obra/superpowers` for the meta-skill that disciplines
+  agents to invoke skills via the Skill tool. Install
+  `obra/superpowers` alongside (it is already a marketplace dependency
+  of this repo).
+- **The 70 vendored design systems** under
+  [`plugins/ui-design-system/skills/ui-design-system/design-systems/`](plugins/ui-design-system/skills/ui-design-system/design-systems/)
+  travel with each harness — they are plain markdown, every harness
+  reads them.
+
+### Pattern attribution
+
+The multi-provider mechanism here is adapted directly from
+[`obra/superpowers`](https://github.com/obra/superpowers) (MIT). Their
+session-start hook was the model for ours; their per-harness manifest
+pattern is what enables one shared markdown tree to load natively in
+each host. Differences: we are a marketplace of ten plugins (versus
+their single-plugin layout), so our manifests target the suite at the
+repo root with skills resolved via `./plugins/`.
+
+---
+
 ## Installation
 
 ### Option A: Install as Claude Code Plugin (Recommended)
