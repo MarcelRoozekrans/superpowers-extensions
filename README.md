@@ -266,6 +266,16 @@ The skill activates automatically in session context. You can also invoke it dir
 - "Verify milestone 1 is complete" → `audit-milestone`
 - `/project-orchestration`
 
+### Surviving conversation compaction
+
+When a long session is auto-compacted (VS Code Copilot Chat, long Claude Code sessions, etc.), the generated summary often contains a "Continuation Plan" with code-level instructions. **The agent treats those as user instructions and bypasses the workflow** — no `STATE.md` read, no plan check, straight into implementation. See [issue #77](https://github.com/MarcelRoozekrans/superpowers-extensions/issues/77).
+
+The skill's HARD-GATE includes a Post-compaction discipline section that names compaction as an explicit `resume-work` trigger and instructs the agent to treat the compaction summary as advisory, not authoritative. For this to fire reliably:
+
+- **Keep `docs/planning/STATE.md` current.** `pause-work` writes it; `complete-phase` and `complete-milestone` keep ROADMAP/MILESTONE up-to-date so STATE.md never drifts more than the active phase.
+- **Reference plan files instead of inlining code-level steps in summaries.** When you produce a manual session summary or hand-off note, prefer `Continue from docs/superpowers/plans/2026-05-04-m7.md step 3` over `fix the auth method to handle null tokens`. Reference > recall.
+- **If using a host that auto-compacts (VS Code Copilot Chat is the worst offender), the first message after compaction should be `resume`** — that hits the explicit `resume-work` trigger directly, sidestepping any compaction-summary heuristic.
+
 ---
 
 ## UI Workflow Skill
