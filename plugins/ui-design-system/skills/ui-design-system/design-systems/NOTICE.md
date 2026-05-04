@@ -54,16 +54,17 @@ endorsed by or affiliated with the named companies.
 ## Refreshing the catalog
 
 The upstream `awesome-design-md` repository is occasionally updated with new
-systems. To refresh:
+systems. The catalog refreshes automatically:
 
-```bash
-SYSTEMS=$(gh api repos/VoltAgent/awesome-design-md/contents/design-md \
-  --jq '.[] | select(.type=="dir") | .name')
-for sys in $SYSTEMS; do
-  mkdir -p "$sys"
-  gh api "repos/VoltAgent/awesome-design-md/contents/design-md/$sys/DESIGN.md" \
-    --jq '.content' | base64 -d > "$sys/DESIGN.md"
-done
-```
+- **Scheduled:** [`.github/workflows/refresh-design-systems.yml`](../../../../../.github/workflows/refresh-design-systems.yml)
+  runs every Monday at 06:00 UTC. If anything changed upstream, it opens a PR
+  for human review (see the workflow body for the review checklist).
+- **Manual:** trigger the same workflow via the GitHub Actions UI
+  (workflow_dispatch).
+- **Local:** run `bash scripts/refresh-design-systems.sh` from the repo root.
+  Atomic and idempotent — a no-op refresh produces no diff. Requires `gh` CLI
+  authenticated.
 
-Re-run from this directory to pull the latest versions.
+The script lives at [`scripts/refresh-design-systems.sh`](../../../../../scripts/refresh-design-systems.sh)
+and refuses to delete the catalog if the upstream listing comes back empty
+(network or auth glitches won't nuke local files).
