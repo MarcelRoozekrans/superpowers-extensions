@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.14.2](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.14.1...superpowers-extensions-v1.14.2) (2026-05-04)
+
+
+### Bug Fixes
+
+* **project-orchestration:** post-compaction discipline (closes [#77](https://github.com/MarcelRoozekrans/superpowers-extensions/issues/77)) ([0d99b1b](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/0d99b1b2c8617471d0361e2123cb9c244b64ddb9))
+* **project-orchestration:** post-compaction discipline so resume-work fires after auto-compaction ([62388ee](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/62388eeb42685350a486a579194197e27d880f48))
+
 ## [1.14.1](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.14.0...superpowers-extensions-v1.14.1) (2026-05-04)
 
 
