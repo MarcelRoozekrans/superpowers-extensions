@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.11.4](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.11.3...superpowers-extensions-v1.11.4) (2026-05-03)
+
+
+### Bug Fixes
+
+* **deps:** include squad in release-please version bumps ([49e6fd8](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/49e6fd81275a6e620d8e027eb6c4451f9cdc2940))
+* **deps:** include squad in release-please version bumps ([2048bbf](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/2048bbf759b6d08053de04994e317be84e89534d))
+
 ## [1.11.3](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.11.2...superpowers-extensions-v1.11.3) (2026-05-02)
 
 
