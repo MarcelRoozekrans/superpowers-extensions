@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.14.0](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.13.0...superpowers-extensions-v1.14.0) (2026-05-04)
+
+
+### Features
+
+* **squad:** replace in-context persona model with parallel Task subagent dispatch ([9a8c679](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/9a8c6795437aedb893f5412977c1d1d2d9645443))
+* **squad:** replace in-context persona model with parallel Task subagent dispatch ([8664e9c](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/8664e9cb82af902929da8440870fd2869fa39320))
+
 ## [1.13.0](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.12.0...superpowers-extensions-v1.13.0) (2026-05-04)
 
 
