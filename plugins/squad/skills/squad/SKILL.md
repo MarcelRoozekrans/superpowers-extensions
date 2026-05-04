@@ -275,17 +275,26 @@ When `plan-roadmap` fires (project-orchestration's roadmap-level brainstorm at p
 
 Launches a background agent (`run_in_background: true`) with the following task:
 
-> "Review the conversation history from this session. For each squad agent (Lead, Backend Engineer, Frontend Engineer, Tester, Scribe), identify any new conventions, patterns, architectural decisions, or project-specific knowledge that was established or confirmed. Write new entries to each agent's history.md using the format in history-format.md. Append only — do not overwrite existing entries. Skip entries that duplicate what's already in the file. Also update .squad/decisions.md with any decisions that qualify as cross-cutting."
+> "Review the conversation history from this session. For each squad agent (Lead, Backend Engineer, Frontend Engineer, Tester, Scribe):
+>
+> 1. **Grep the conversation transcript for `[new-decision]` markers.** When a specialist subagent records a new project decision per the dispatch prompt template, it prefixes the line with that marker — these are the highest-priority candidates for write-back. Capture the surrounding sentence, attribute it to the agent who emitted it, and add it to that agent's `history.md` plus to `decisions.md` if it is cross-cutting.
+> 2. **Beyond the explicit markers**, distill any new conventions, patterns, architectural decisions, or project-specific knowledge that was established or confirmed in the session — even if no marker was emitted. Markers are a hint, not a hard filter.
+> 3. **Read existing `history.md` first** before writing, and skip duplicates. Match by date + first-line summary.
+> 4. **Append only.** Use the format in history-format.md. Never rewrite existing entries.
+> 5. **Update `.squad/decisions.md`** with cross-cutting decisions (architectural, naming convention, library selection, anything that affects multiple modules)."
 
 The background agent:
 
 1. Reads all relevant `history.md` files (to avoid duplicates).
-2. Distills session learnings per agent.
-3. Appends dated entries to each `history.md`.
-4. Updates `decisions.md`.
-5. Exits.
+2. **Greps the transcript for `[new-decision]` markers** — these are explicit signals from the dispatch prompt template that a subagent flagged something worth persisting.
+3. Distills additional session learnings per agent (markers are a hint, not the only source).
+4. Appends dated entries to each `history.md`.
+5. Updates `decisions.md` with cross-cutting items.
+6. Exits.
 
 The main session does not wait for this agent — it continues immediately. The user is notified when write-back completes.
+
+**Why the marker matters:** the dispatch prompt template (see "Parallel Subagent Dispatch" earlier) instructs subagents to mark new project decisions with `[new-decision]`. Without the marker, squad-sync would still find decisions by free-form distillation, but the marker makes it explicit and reduces false negatives. The marker is suggested by every dispatch but is not strictly required — squad-sync handles both marker-tagged and unmarked decisions.
 
 **Manual sync:** The user can run `squad-sync` mid-session to checkpoint learnings without ending the session.
 
