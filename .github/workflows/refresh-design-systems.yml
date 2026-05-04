@@ -1,0 +1,63 @@
+name: Refresh design systems
+
+on:
+  schedule:
+    # Mondays 06:00 UTC — before the working week starts in EU/US
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Refresh design systems from upstream
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: bash scripts/refresh-design-systems.sh
+
+      - name: Open PR with refreshed catalog
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: automation/refresh-design-systems
+          delete-branch: true
+          commit-message: |
+            chore(ui-design-system): refresh design system catalog from upstream
+
+            Automated refresh from VoltAgent/awesome-design-md (MIT) via the
+            scheduled refresh-design-systems workflow.
+          title: 'chore(ui-design-system): refresh design system catalog from upstream'
+          body: |
+            ## Automated refresh
+
+            This PR was opened by the scheduled `refresh-design-systems`
+            workflow. It re-fetches every `DESIGN.md` from
+            [VoltAgent/awesome-design-md](https://github.com/VoltAgent/awesome-design-md)
+            (MIT) and applies any upstream additions, removals, or content edits.
+
+            The script (`scripts/refresh-design-systems.sh`) is idempotent: a no-op
+            refresh produces no diff and no PR.
+
+            ## Review checklist
+
+            - [ ] Spot-check changed `DESIGN.md` files for unexpected content (look at the diff stat — large delete-and-add patterns deserve a closer look than small edits)
+            - [ ] If new systems were added, decide whether they belong in the catalog and update [`design-systems/INDEX.md`](../tree/master/plugins/ui-design-system/skills/ui-design-system/design-systems/INDEX.md) accordingly (categorize + add a vibe one-liner)
+            - [ ] If systems were removed, decide whether to keep our copy (rename to `<name>-archived/` before merging this PR) or accept the deletion
+            - [ ] Confirm CI passes — `lint.yml` excludes the `design-systems/` directory so upstream formatting changes should not break the build
+
+            ## CI note
+
+            PRs opened by `GITHUB_TOKEN` do not automatically trigger downstream
+            workflows. If `lint` / `commitlint` show as "no checks", push an empty
+            commit to trigger them, or close-and-reopen this PR.
+
+            🤖 Opened by `.github/workflows/refresh-design-systems.yml`
+          labels: |
+            automation
+            ui-design-system
