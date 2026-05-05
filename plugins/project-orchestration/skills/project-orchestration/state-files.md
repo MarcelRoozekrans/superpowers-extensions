@@ -25,6 +25,7 @@ Tracks all milestones, their phases, and completion status.
 
 ### Phase 1.1: <Name> [status: complete|active|pending]
 **Goal:** One sentence
+**Surface:** UI | Backend | Refactor | Data | Infra | Docs | Mixed
 **Plan:** `docs/plans/YYYY-MM-DD-<phase>.md`
 **Completed:** YYYY-MM-DD (when status: complete)
 
@@ -44,6 +45,7 @@ state files stay machine-readable across sessions.
 - **Status bracket** — exactly `[status: active]`, `[status: complete]`, or `[status: pending]`. Lowercase status, single space after the colon, square brackets. Do **not** use parentheses, do **not** drop the `status:` prefix, do **not** capitalize.
 - **Status values are exhaustive** — only `active`, `complete`, `pending`. Never `wip`, `done`, `tbd`, `blocked`, or other free-form values. If a phase is blocked, leave its status as `active` and capture the blocker in `STATE.md` instead.
 - **Completed date** — always `**Completed:** YYYY-MM-DD` on its own line, ISO 8601 dashes, no time component. Add this line only when status transitions to `complete`. Never add it pre-emptively.
+- **Surface field** — `**Surface:**` on its own line below `**Goal:**`. Drives `start-next-phase`'s pre-plan routing (UI phases chain through `ui-design-system` + `ui-workflow ui-phase`; refactor phases chain through `refactor-analysis`; others go directly to `writing-plans`). Allowed values, exhaustive: `UI`, `Backend`, `Refactor`, `Data`, `Infra`, `Docs`, `Mixed`. Capitalized exactly as shown, no quotes, single space after the colon. If a phase blends two surfaces equally (e.g. a feature touching both API and UI), use `Mixed` and document the breakdown in the design spec; `start-next-phase` falls back to the default routing for `Mixed` so authors can drive the order manually. Phases authored before this convention existed may omit the field — `start-next-phase` treats missing `Surface` the same as `Mixed`.
 
 ### Edit transitions
 
@@ -91,10 +93,11 @@ After:  ## Milestone 1: Foundation [status: complete]
 ```markdown
 ### Phase 1.3: <New Name> [status: pending]
 **Goal:** <one sentence>
+**Surface:** <UI | Backend | Refactor | Data | Infra | Docs | Mixed>
 **Plan:** _to be written_
 ```
 
-(`Plan:` placeholder is replaced when `writing-plans` actually runs)
+(`Plan:` placeholder is replaced when `writing-plans` actually runs. `Surface:` is required at insertion time so `start-next-phase` can route correctly when the phase later activates.)
 
 ## STATE.md
 

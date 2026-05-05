@@ -56,6 +56,8 @@ Invoke this skill when:
 - **When asked for impact analysis** — The user explicitly asks what will be affected by a change.
 - **When a refactor scope feels uncertain** — You're not sure how deep the changes will ripple.
 
+**Auto-invoked by `project-orchestration:start-next-phase`:** when a phase in ROADMAP.md is tagged `**Surface:** Refactor`, the orchestration skill's Surface pre-plan hook runs `refactor-analysis` (Phases 1–7) automatically before chaining to `superpowers:writing-plans`. The impact analysis it produces is what writing-plans consumes to generate a safely ordered plan. Authors who use project-orchestration do not need to manually invoke this skill — they declare the surface on the phase and the routing fires it at the right moment. Manual invocation still works for ad-hoc refactor analysis outside the orchestration flow.
+
 Do NOT use this skill when:
 
 - The task is purely greenfield (no existing code to analyze)
