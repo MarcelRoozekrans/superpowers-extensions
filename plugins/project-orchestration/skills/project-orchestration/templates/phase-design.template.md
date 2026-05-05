@@ -1,10 +1,10 @@
-# Phase <N.M> Design — <Phase Name>
+# Phase N.M Design — `<Phase Name>`
 
 > Template consumed by `start-next-phase` when it routes to `superpowers:brainstorming` for a phase that has no design spec. The brainstorm fills in every section; `start-next-phase` then verifies the spec exists with a Surface declaration before chaining to the Surface pre-plan hook (UI: `ui-design-system` + `ui-workflow ui-phase`; Refactor: `refactor-analysis`; others: skip hook). Save the filled-in copy at `docs/superpowers/specs/YYYY-MM-DD-<phase>-design.md`.
 
 **Date:** YYYY-MM-DD
-**Phase:** <N.M>
-**Surface:** <UI | Backend | Refactor | Data | Infra | Docs | Mixed>
+**Phase:** `<N.M>`
+**Surface:** `<UI | Backend | Refactor | Data | Infra | Docs | Mixed>`
 **Stage:** phase (one phase, implementation-ready)
 
 > The `**Surface:**` line above is REQUIRED. `start-next-phase`'s VERIFY step grep-checks it. If it is missing, the design spec is rejected and the brainstorm is re-run. The Surface value here MUST match what is declared in `docs/planning/ROADMAP.md` for this phase — if they disagree, fix ROADMAP.md or re-tag the phase, do not let them drift.
@@ -32,9 +32,9 @@ Best-effort list of where the change lands. `refactor-analysis` will produce the
 
 What proves this phase done? Existing tests, new tests, regression scenarios.
 
-- Unit: <coverage>
-- Integration: <coverage>
-- Regression: <coverage>
+- Unit: what's covered
+- Integration: what's covered
+- Regression: what's covered
 
 ## Open Questions
 
@@ -49,4 +49,4 @@ Phase-scope risks — things that could go wrong during execution and what to do
 
 | Risk | Impact | Mitigation |
 |---|---|---|
-| <risk> | <impact> | <mitigation> |
+| `<risk>` | `<impact>` | `<mitigation>` |
