@@ -45,6 +45,8 @@ Invoke after `brainstorming` approves a frontend design and before writing the i
 - When the user says "let's design the UI" or "what should this look like?"
 - Before implementing any phase with significant visual surface area
 
+**Auto-invoked by `project-orchestration:start-next-phase`:** when a phase in ROADMAP.md is tagged `**Surface:** UI`, the orchestration skill's Surface pre-plan hook runs `ui-design-system` first (if `docs/design/MASTER.md` is missing) and then `ui-phase` automatically before chaining to `superpowers:writing-plans`. Authors who use project-orchestration do not need to manually invoke this skill — they declare the surface on the phase and the routing fires `ui-phase` at the right moment. Manual invocation still works for ad-hoc UI design work outside the orchestration flow.
+
 Do NOT invoke for:
 
 - Backend-only phases (API, database, services)

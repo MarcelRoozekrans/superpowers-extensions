@@ -152,13 +152,13 @@ When the user wants to append a new phase to the current milestone's roadmap.
 ### Process
 
 1. **Read** `docs/planning/ROADMAP.md` and `docs/planning/MILESTONE.md` (use the `Read` tool) to find the current milestone and its last phase number.
-2. Ask the user: "Phase name and goal?"
-3. **Use the `Edit` tool** to append the new phase block to `docs/planning/ROADMAP.md` under the current milestone with status `pending`. Format per [state-files.md](state-files.md).
-4. **VERIFY:** re-read `docs/planning/ROADMAP.md` and confirm the new phase block is present with the correct number, name, and `status: pending`. If missing, the Edit did not apply — retry.
+2. Ask the user: "Phase name, goal, and surface? (Surface is one of `UI` | `Backend` | `Refactor` | `Data` | `Infra` | `Docs` | `Mixed` — drives whether the phase auto-chains through `ui-design-system` + `ui-workflow ui-phase`, `refactor-analysis`, or goes directly to `writing-plans`.)"
+3. **Use the `Edit` tool** to append the new phase block to `docs/planning/ROADMAP.md` under the current milestone with status `pending` and the user's stated `**Surface:**`. Format per [state-files.md](state-files.md).
+4. **VERIFY:** re-read `docs/planning/ROADMAP.md` and confirm the new phase block is present with the correct number, name, `status: pending`, and `Surface:` value. If any is missing, the Edit did not apply — retry.
 5. **Use the `Edit` tool** to add the new phase to the `## Phases` list in `docs/planning/MILESTONE.md`.
 6. **VERIFY:** re-read `docs/planning/MILESTONE.md` and confirm the phase appears in the list.
 7. Stage and commit: `git add docs/planning/ROADMAP.md docs/planning/MILESTONE.md && git commit -m "chore(roadmap): add phase N.M — <name>"`. Run `git status` and confirm a clean tree.
-8. Announce the new phase number and name only after the commit succeeds.
+8. Announce the new phase number, name, and surface only after the commit succeeds.
 
 ---
 
@@ -171,9 +171,9 @@ When urgent work needs to be inserted between two existing phases.
 ### Process
 
 1. **Read** `docs/planning/ROADMAP.md` (use the `Read` tool), present the current phase list to the user.
-2. Ask: "Insert after which phase?" and "New phase name and goal?"
-3. **Use the `Edit` tool** to insert the new phase block into `docs/planning/ROADMAP.md` and renumber every subsequent phase (N.M+1 → N.M+2, etc.). Both inserts and renumbers are tool calls — narrating "I've shifted the numbers" does not change the file.
-4. **VERIFY:** re-read `docs/planning/ROADMAP.md` and confirm: (a) the new phase block is present with correct number/name/status, (b) every later phase is renumbered consecutively with no gaps or duplicates.
+2. Ask: "Insert after which phase?", "New phase name and goal?", and "Surface? (`UI` | `Backend` | `Refactor` | `Data` | `Infra` | `Docs` | `Mixed`)"
+3. **Use the `Edit` tool** to insert the new phase block into `docs/planning/ROADMAP.md` (with the user's stated `**Surface:**` line) and renumber every subsequent phase (N.M+1 → N.M+2, etc.). Both inserts and renumbers are tool calls — narrating "I've shifted the numbers" does not change the file.
+4. **VERIFY:** re-read `docs/planning/ROADMAP.md` and confirm: (a) the new phase block is present with correct number/name/status/Surface, (b) every later phase is renumbered consecutively with no gaps or duplicates.
 5. **Use the `Edit` tool** to update the `## Phases` list in `docs/planning/MILESTONE.md` to reflect the inserted phase and renumbered siblings.
 6. **VERIFY:** re-read `docs/planning/MILESTONE.md` and confirm the list matches ROADMAP.md.
 7. Stage and commit: `git add docs/planning/ROADMAP.md docs/planning/MILESTONE.md && git commit -m "chore(roadmap): insert phase N.M — <name>"`. Run `git status` and confirm a clean tree.
@@ -407,23 +407,37 @@ After `resume-work` confirmation, or any time the user says "continue", "next", 
 2. After any pending `complete-phase` runs, identify the **next non-complete phase** (first phase with status `active`, falling back to first `pending` phase).
 
 3. Check artifacts for that phase:
+   - **Surface** — read the phase block's `**Surface:**` line in ROADMAP.md. Drives the pre-plan hook in step 5. Missing or `Mixed` falls through to default routing.
    - **Design spec** — does `docs/superpowers/specs/*-<phase>-*.md` (or the phase's referenced design doc) exist?
    - **Plan file** — does the phase's `Plan:` link in ROADMAP.md (`docs/superpowers/plans/*-<phase>-*.md` or similar) exist on disk?
+   - **Surface artifacts** (only checked when Surface implies them):
+     - For `Surface: UI` — does `docs/design/MASTER.md` exist? Does a UI contract `docs/plans/*-<phase>-*-ui-contract.md` exist?
+     - For `Surface: Refactor` — does an impact analysis `docs/plans/*-<phase>-*-impact-analysis.md` exist?
 
-4. Route based on the table below. **Read** the target skill file and follow it end-to-end — do not loosely "invoke" it.
+4. **Base routing** — route based on design spec / plan file presence. **Read** the target skill file and follow it end-to-end — do not loosely "invoke" it.
 
    | Phase status | Design spec | Plan file | Action |
    |---|---|---|---|
    | `active` | — | exists | **Read** `list-phase-assumptions` (this skill) → on user confirmation, **read** the `superpowers:executing-plans` skill and follow it end-to-end |
-   | `active` | exists | missing | **Read** the `superpowers:writing-plans` skill and follow it end-to-end. **VERIFY:** plan file exists. Then run `list-phase-assumptions` → `superpowers:executing-plans` |
-   | `pending` | exists | missing | **Read** the `superpowers:writing-plans` skill and follow it end-to-end. **VERIFY:** plan file exists. Then run `list-phase-assumptions` → `superpowers:executing-plans` |
-   | `pending` | missing | missing | **Read** the `superpowers:brainstorming` skill and follow it end-to-end. **VERIFY:** design spec exists. Then chain to `superpowers:writing-plans` (verify plan file) → `list-phase-assumptions` → `superpowers:executing-plans` |
+   | `active` | exists | missing | Run **Surface pre-plan hook** (step 5) → **read** the `superpowers:writing-plans` skill and follow it end-to-end. **VERIFY:** plan file exists. Then run `list-phase-assumptions` → `superpowers:executing-plans` |
+   | `pending` | exists | missing | Run **Surface pre-plan hook** (step 5) → **read** the `superpowers:writing-plans` skill and follow it end-to-end. **VERIFY:** plan file exists. Then run `list-phase-assumptions` → `superpowers:executing-plans` |
+   | `pending` | missing | missing | **Read** the `superpowers:brainstorming` skill and follow it end-to-end. The brainstorm fills in [templates/phase-design.template.md](templates/phase-design.template.md) and saves it at `docs/superpowers/specs/YYYY-MM-DD-<phase>-design.md`. **VERIFY:** design spec exists AND its `**Surface:**` line matches the phase's Surface in ROADMAP.md. If Surface is missing or mismatched, the brainstorm did not complete — re-run it. Then run **Surface pre-plan hook** (step 5) → chain to `superpowers:writing-plans` (verify plan file) → `list-phase-assumptions` → `superpowers:executing-plans` |
 
-5. **When `executing-plans` returns** (the leaf of every routing path): if all tasks in the plan file are now `- [x]`, **run `complete-phase`** to promote the phase from `active` → `complete` in ROADMAP.md and MILESTONE.md before the session continues or terminates. Skipping this step is the most common reason ROADMAP.md gets stale during multi-phase milestones.
+5. **Surface pre-plan hook** — fires once a design spec exists for the phase and BEFORE chaining to `superpowers:writing-plans`. Reads the phase's `**Surface:**` value from ROADMAP.md and applies:
 
-6. After each step, **VERIFY the required artifact exists** (see HARD-GATE table at the top of this skill) before chaining to the next link. If a required artifact is missing, return to the prior step — do not proceed.
+   | Surface | Pre-plan chain | Required artifact after the hook runs |
+   |---|---|---|
+   | `UI` | (a) If `docs/design/MASTER.md` is missing, **read** the `ui-design-system` skill end-to-end and follow it. **VERIFY:** `docs/design/MASTER.md` exists. (b) **Read** the `ui-workflow` skill (sub-skill `ui-phase`) end-to-end and follow it. **VERIFY:** the phase's UI contract exists. | `docs/plans/*-<phase>-*-ui-contract.md` |
+   | `Refactor` | **Read** the `refactor-analysis` skill end-to-end and follow it (Phases 1–7) until it produces the impact analysis document. **VERIFY:** the impact analysis file exists. | `docs/plans/*-<phase>-*-impact-analysis.md` |
+   | `Backend` / `Data` / `Infra` / `Docs` / `Mixed` / unset | No pre-plan hook. Proceed directly to `superpowers:writing-plans`. | (none) |
 
-7. Do not stop and ask "what next?" between links. The chain is mechanical. Only stop for:
+   The hook produces inputs that `writing-plans` consumes — UI contracts give the plan concrete component / layout / state targets; impact analyses give the plan a safe execution order grounded in transitive dependencies. Skipping the hook for an applicable surface means `writing-plans` runs blind to those inputs and produces a less informed plan. **`Mixed` deliberately skips the hook** — the author signals that two surfaces are in play and they will sequence them manually; force-firing both `ui-phase` and `refactor-analysis` for `Mixed` produces noisy artifacts.
+
+6. **When `executing-plans` returns** (the leaf of every routing path): if all tasks in the plan file are now `- [x]`, **run `complete-phase`** to promote the phase from `active` → `complete` in ROADMAP.md and MILESTONE.md before the session continues or terminates. Skipping this step is the most common reason ROADMAP.md gets stale during multi-phase milestones.
+
+7. After each step, **VERIFY the required artifact exists** (see HARD-GATE table at the top of this skill) before chaining to the next link. If a required artifact is missing, return to the prior step — do not proceed.
+
+8. Do not stop and ask "what next?" between links. The chain is mechanical. Only stop for:
    - `list-phase-assumptions` user confirmation (this is an explicit gate, not a menu)
    - Failures (missing artifact, failing tests, blockers surfaced by a sub-skill)
    - The user interrupting
@@ -454,13 +468,29 @@ resume-work / "continue" / "next"
      │ exists?    │           │ (verify spec)    │  │
      └─────┬──────┘           └──────────────────┘  │
            │ Yes                       (chains to)  │
-     ┌─────▼──────┐    No     ┌──────────────────┐  │
-     │ Plan file  ├──────────►│ writing-plans    │◄─┘
-     │ exists?    │           │ (verify plan)    │
-     └─────┬──────┘           └────────┬─────────┘
-           │ Yes                       │
-     ┌─────▼──────────────┐            │
-     │ list-phase-         │◄──────────┘
+     ┌─────▼──────┐    No     ┌──────────────────────────────┐  │
+     │ Plan file  ├──────────►│ Surface pre-plan hook        │  │
+     │ exists?    │           │ ┌──────────────────────────┐ │  │
+     └─────┬──────┘           │ │ Surface == UI?           │ │  │
+           │ Yes              │ │  → ui-design-system      │ │  │
+           │                  │ │    (if no MASTER.md)     │ │  │
+           │                  │ │  → ui-workflow ui-phase  │ │  │
+           │                  │ │    (verify ui-contract)  │ │  │
+           │                  │ │ Surface == Refactor?     │ │  │
+           │                  │ │  → refactor-analysis     │ │  │
+           │                  │ │    (verify impact-       │ │  │
+           │                  │ │     analysis)            │ │  │
+           │                  │ │ Else: skip hook          │ │  │
+           │                  │ └────────┬─────────────────┘ │  │
+           │                  │          ▼                   │  │
+           │                  │ ┌──────────────────────────┐ │  │
+           │                  │ │ writing-plans            │◄┼──┘
+           │                  │ │ (verify plan)            │ │
+           │                  │ └────────┬─────────────────┘ │
+           │                  └──────────┼───────────────────┘
+           │                             │
+     ┌─────▼──────────────┐              │
+     │ list-phase-         │◄────────────┘
      │ assumptions         │
      └─────┬──────────────┘
            │ User confirms
@@ -545,12 +575,15 @@ This is the **roadmap-level brainstorming entry point** — it brainstorms the p
 
 1. **Optional: invoke `map-codebase` first** if the project is brownfield and the codebase has not been analyzed yet. Codebase context grounds milestone proposals. **Skip on greenfield** — empty repo means brainstorm from a blank sheet, no codebase to map.
 
-2. **Read** the `superpowers:brainstorming` skill file and follow it end-to-end at **roadmap scope** — the *generic layout of the entire project across multiple milestones and phases*, NOT a single milestone and NOT a single phase. The brainstorm answers "what is the shape of this project from start to finish?", and must produce:
+2. **Read** the `superpowers:brainstorming` skill file and follow it end-to-end at **roadmap scope** — the *generic layout of the entire project across multiple milestones and phases*, NOT a single milestone and NOT a single phase. The brainstorm answers "what is the shape of this project from start to finish?", and must produce a filled-in copy of [templates/roadmap-design.template.md](templates/roadmap-design.template.md), saved at `docs/superpowers/specs/YYYY-MM-DD-roadmap-design.md`. The template's required sections are:
    - Project goal (one paragraph)
    - Target users / stakeholders
    - Top-level success criteria for the project as a whole
    - A proposed sequence of 3-7 milestones, each with a one-line goal and a rough phase outline (3-8 phase titles per milestone, no per-phase implementation detail)
+   - For each phase title: a `Surface` tag — exactly one of `UI` | `Backend` | `Refactor` | `Data` | `Infra` | `Docs` | `Mixed`. This drives `start-next-phase`'s pre-plan routing (UI phases chain through `ui-design-system` + `ui-workflow ui-phase`; refactor phases chain through `refactor-analysis`; others skip the pre-plan hook). At roadmap scope a one-word tag is enough — no surface detail required yet.
    - Dependencies and ordering rationale between milestones
+
+   Use the template structure verbatim (headings, ordering, Surface tag formatting). The VERIFY step in step 3 grep-checks the filled-in copy against the template's required sections — drifting from the template makes the spec unreadable to downstream skills.
 
    **Scope guard — keep the abstraction level high:** if the brainstorm starts converging on the implementation details of a single milestone or phase (specific files to create, API endpoints, schemas, library choices), STOP and zoom out. That detail is `new-milestone`'s job (per-milestone scope) and `start-next-phase` → `superpowers:brainstorming` (per-phase scope), each fired separately when their turn comes. The roadmap brainstorm intentionally stays lossy at the milestone level so it covers the whole project in one pass without rat-holing on milestone 1.
 
@@ -596,14 +629,15 @@ After `complete-milestone`, or when the user wants to start a new version cycle 
 
 1. **Read** `docs/planning/ROADMAP.md` and confirm the previous milestone has status `complete`. If not, STOP. Announce: "Milestone N is not complete. Run `audit-milestone` then `complete-milestone` before starting milestone N+1." and exit this sub-skill.
 
-2. **Read** the `superpowers:brainstorming` skill file and follow it end-to-end at **milestone scope**. The brainstorming should produce:
+2. **Read** the `superpowers:brainstorming` skill file and follow it end-to-end at **milestone scope**. The brainstorm produces a filled-in copy of [templates/milestone-design.template.md](templates/milestone-design.template.md), saved at `docs/superpowers/specs/YYYY-MM-DD-milestone-N-design.md`. The template's required sections are:
    - Milestone goal (one paragraph)
    - Definition of done (concrete, verifiable criteria — not aspirational)
    - Proposed phase outline (rough — 3-8 phases, one-line goals)
+   - For each phase: a `Surface` tag — exactly one of `UI` | `Backend` | `Refactor` | `Data` | `Infra` | `Docs` | `Mixed`. If `plan-roadmap` already assigned a Surface for this phase, reuse it unless the milestone-scope brainstorm reveals it was wrong. The Surface drives `start-next-phase`'s pre-plan routing — get it right at milestone scope so the routing is deterministic when each phase activates.
    - Dependencies on prior milestones and any external constraints
    - Risk areas worth flagging up front
 
-   The design from `plan-roadmap` (if it exists) covers this milestone at low fidelity — use it as input, but do NOT skip the brainstorm because "the roadmap already says what this milestone is". Roadmap-level scope is intentionally lossy; per-milestone brainstorming is where the detail lives.
+   Use the template structure verbatim. The design from `plan-roadmap` (if it exists) covers this milestone at low fidelity — use it as input, but do NOT skip the brainstorm because "the roadmap already says what this milestone is". Roadmap-level scope is intentionally lossy; per-milestone brainstorming is where the detail lives.
 
 3. **VERIFY:** the brainstorming design spec exists at `docs/superpowers/specs/YYYY-MM-DD-milestone-N-design.md` (or equivalent). If missing, the brainstorm did not complete — return to step 2.
 
@@ -702,3 +736,6 @@ After `complete-milestone`, or when the user wants to start a new version cycle 
 | `regression-test` | `audit-milestone` optionally invokes regression-test as part of definition-of-done verification for projects with a web UI. | Regression-test provides the visual and functional evidence for milestone audit. |
 | `decision-tracker` | Independent but complementary. Both can be active simultaneously. `resume-work` triggers decision-tracker recall at session start. | decision-tracker handles cross-cutting decisions; project-orchestration handles project state and lifecycle. |
 | `pre-push-review` | `audit-milestone` checks tests and regression, but does NOT cover code quality review (security, YAGNI, dead code, naming). Run `pre-push-review` on each feature branch before `audit-milestone` for complete coverage. | No direct invocation — they operate at different scopes (branch vs milestone). |
+| `ui-design-system` | `start-next-phase`'s **Surface pre-plan hook** invokes `ui-design-system` for `Surface: UI` phases when `docs/design/MASTER.md` is missing. Runs once per project (the design system is global), then `ui-phase` consumes it for every subsequent UI phase. | Surface-driven dispatch — the phase declares `**Surface:** UI` in ROADMAP.md and the hook handles the rest. No manual invocation needed. |
+| `ui-workflow` (`ui-phase`) | Same hook: for `Surface: UI` phases, after `ui-design-system` (if needed), `start-next-phase` runs `ui-workflow ui-phase` to produce `docs/plans/*-<phase>-*-ui-contract.md` BEFORE chaining to `superpowers:writing-plans`. The contract feeds writing-plans concrete component / layout / state targets and is the audit baseline for `ui-review` later. | The contract is the bridge between design spec and implementation plan for UI work. |
+| `refactor-analysis` | For `Surface: Refactor` phases, the **Surface pre-plan hook** runs `refactor-analysis` (Phases 1–7) to produce `docs/plans/*-<phase>-*-impact-analysis.md` BEFORE chaining to `superpowers:writing-plans`. The analysis feeds writing-plans the safe execution order, transitive dependency map, and risk register. | Surface-driven dispatch — phases that involve restructuring existing code declare `**Surface:** Refactor` and get impact analysis automatically rather than relying on the agent to remember. |

@@ -3,6 +3,15 @@
 This document defines the format for the `docs/planning/` directory files used by
 the `project-orchestration` skill to persist project lifecycle state across sessions.
 
+> **Companion templates** for the design specs that feed these state files
+> live in `templates/`:
+>
+> - [`templates/roadmap-design.template.md`](templates/roadmap-design.template.md) — filled in by `plan-roadmap` at roadmap scope
+> - [`templates/milestone-design.template.md`](templates/milestone-design.template.md) — filled in by `new-milestone` at milestone scope
+> - [`templates/phase-design.template.md`](templates/phase-design.template.md) — filled in by `start-next-phase` (via brainstorming) at phase scope
+>
+> Filled-in copies are saved under `docs/superpowers/specs/`. The templates make brainstorm output deterministic so VERIFY steps can grep-check required sections (Surface tag, DoD criteria count, milestone count) instead of pattern-matching free-form prose.
+
 ## Directory
 
 `docs/planning/` in the project root. Add to `.gitignore` or commit — user's choice.
@@ -25,6 +34,7 @@ Tracks all milestones, their phases, and completion status.
 
 ### Phase 1.1: <Name> [status: complete|active|pending]
 **Goal:** One sentence
+**Surface:** UI | Backend | Refactor | Data | Infra | Docs | Mixed
 **Plan:** `docs/plans/YYYY-MM-DD-<phase>.md`
 **Completed:** YYYY-MM-DD (when status: complete)
 
@@ -44,6 +54,7 @@ state files stay machine-readable across sessions.
 - **Status bracket** — exactly `[status: active]`, `[status: complete]`, or `[status: pending]`. Lowercase status, single space after the colon, square brackets. Do **not** use parentheses, do **not** drop the `status:` prefix, do **not** capitalize.
 - **Status values are exhaustive** — only `active`, `complete`, `pending`. Never `wip`, `done`, `tbd`, `blocked`, or other free-form values. If a phase is blocked, leave its status as `active` and capture the blocker in `STATE.md` instead.
 - **Completed date** — always `**Completed:** YYYY-MM-DD` on its own line, ISO 8601 dashes, no time component. Add this line only when status transitions to `complete`. Never add it pre-emptively.
+- **Surface field** — `**Surface:**` on its own line below `**Goal:**`. Drives `start-next-phase`'s pre-plan routing (UI phases chain through `ui-design-system` + `ui-workflow ui-phase`; refactor phases chain through `refactor-analysis`; others go directly to `writing-plans`). Allowed values, exhaustive: `UI`, `Backend`, `Refactor`, `Data`, `Infra`, `Docs`, `Mixed`. Capitalized exactly as shown, no quotes, single space after the colon. If a phase blends two surfaces equally (e.g. a feature touching both API and UI), use `Mixed` and document the breakdown in the design spec; `start-next-phase` falls back to the default routing for `Mixed` so authors can drive the order manually. Phases authored before this convention existed may omit the field — `start-next-phase` treats missing `Surface` the same as `Mixed`.
 
 ### Edit transitions
 
@@ -91,10 +102,11 @@ After:  ## Milestone 1: Foundation [status: complete]
 ```markdown
 ### Phase 1.3: <New Name> [status: pending]
 **Goal:** <one sentence>
+**Surface:** <UI | Backend | Refactor | Data | Infra | Docs | Mixed>
 **Plan:** _to be written_
 ```
 
-(`Plan:` placeholder is replaced when `writing-plans` actually runs)
+(`Plan:` placeholder is replaced when `writing-plans` actually runs. `Surface:` is required at insertion time so `start-next-phase` can route correctly when the phase later activates.)
 
 ## STATE.md
 
