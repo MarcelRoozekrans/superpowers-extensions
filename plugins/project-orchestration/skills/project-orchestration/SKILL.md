@@ -421,7 +421,7 @@ After `resume-work` confirmation, or any time the user says "continue", "next", 
    | `active` | — | exists | **Read** `list-phase-assumptions` (this skill) → on user confirmation, **read** the `superpowers:executing-plans` skill and follow it end-to-end |
    | `active` | exists | missing | Run **Surface pre-plan hook** (step 5) → **read** the `superpowers:writing-plans` skill and follow it end-to-end. **VERIFY:** plan file exists. Then run `list-phase-assumptions` → `superpowers:executing-plans` |
    | `pending` | exists | missing | Run **Surface pre-plan hook** (step 5) → **read** the `superpowers:writing-plans` skill and follow it end-to-end. **VERIFY:** plan file exists. Then run `list-phase-assumptions` → `superpowers:executing-plans` |
-   | `pending` | missing | missing | **Read** the `superpowers:brainstorming` skill and follow it end-to-end. **VERIFY:** design spec exists AND includes a `Surface` declaration. If Surface is missing from the spec, ask the user before proceeding. Then run **Surface pre-plan hook** (step 5) → chain to `superpowers:writing-plans` (verify plan file) → `list-phase-assumptions` → `superpowers:executing-plans` |
+   | `pending` | missing | missing | **Read** the `superpowers:brainstorming` skill and follow it end-to-end. The brainstorm fills in [templates/phase-design.template.md](templates/phase-design.template.md) and saves it at `docs/superpowers/specs/YYYY-MM-DD-<phase>-design.md`. **VERIFY:** design spec exists AND its `**Surface:**` line matches the phase's Surface in ROADMAP.md. If Surface is missing or mismatched, the brainstorm did not complete — re-run it. Then run **Surface pre-plan hook** (step 5) → chain to `superpowers:writing-plans` (verify plan file) → `list-phase-assumptions` → `superpowers:executing-plans` |
 
 5. **Surface pre-plan hook** — fires once a design spec exists for the phase and BEFORE chaining to `superpowers:writing-plans`. Reads the phase's `**Surface:**` value from ROADMAP.md and applies:
 
@@ -575,13 +575,15 @@ This is the **roadmap-level brainstorming entry point** — it brainstorms the p
 
 1. **Optional: invoke `map-codebase` first** if the project is brownfield and the codebase has not been analyzed yet. Codebase context grounds milestone proposals. **Skip on greenfield** — empty repo means brainstorm from a blank sheet, no codebase to map.
 
-2. **Read** the `superpowers:brainstorming` skill file and follow it end-to-end at **roadmap scope** — the *generic layout of the entire project across multiple milestones and phases*, NOT a single milestone and NOT a single phase. The brainstorm answers "what is the shape of this project from start to finish?", and must produce:
+2. **Read** the `superpowers:brainstorming` skill file and follow it end-to-end at **roadmap scope** — the *generic layout of the entire project across multiple milestones and phases*, NOT a single milestone and NOT a single phase. The brainstorm answers "what is the shape of this project from start to finish?", and must produce a filled-in copy of [templates/roadmap-design.template.md](templates/roadmap-design.template.md), saved at `docs/superpowers/specs/YYYY-MM-DD-roadmap-design.md`. The template's required sections are:
    - Project goal (one paragraph)
    - Target users / stakeholders
    - Top-level success criteria for the project as a whole
    - A proposed sequence of 3-7 milestones, each with a one-line goal and a rough phase outline (3-8 phase titles per milestone, no per-phase implementation detail)
    - For each phase title: a `Surface` tag — exactly one of `UI` | `Backend` | `Refactor` | `Data` | `Infra` | `Docs` | `Mixed`. This drives `start-next-phase`'s pre-plan routing (UI phases chain through `ui-design-system` + `ui-workflow ui-phase`; refactor phases chain through `refactor-analysis`; others skip the pre-plan hook). At roadmap scope a one-word tag is enough — no surface detail required yet.
    - Dependencies and ordering rationale between milestones
+
+   Use the template structure verbatim (headings, ordering, Surface tag formatting). The VERIFY step in step 3 grep-checks the filled-in copy against the template's required sections — drifting from the template makes the spec unreadable to downstream skills.
 
    **Scope guard — keep the abstraction level high:** if the brainstorm starts converging on the implementation details of a single milestone or phase (specific files to create, API endpoints, schemas, library choices), STOP and zoom out. That detail is `new-milestone`'s job (per-milestone scope) and `start-next-phase` → `superpowers:brainstorming` (per-phase scope), each fired separately when their turn comes. The roadmap brainstorm intentionally stays lossy at the milestone level so it covers the whole project in one pass without rat-holing on milestone 1.
 
@@ -627,7 +629,7 @@ After `complete-milestone`, or when the user wants to start a new version cycle 
 
 1. **Read** `docs/planning/ROADMAP.md` and confirm the previous milestone has status `complete`. If not, STOP. Announce: "Milestone N is not complete. Run `audit-milestone` then `complete-milestone` before starting milestone N+1." and exit this sub-skill.
 
-2. **Read** the `superpowers:brainstorming` skill file and follow it end-to-end at **milestone scope**. The brainstorming should produce:
+2. **Read** the `superpowers:brainstorming` skill file and follow it end-to-end at **milestone scope**. The brainstorm produces a filled-in copy of [templates/milestone-design.template.md](templates/milestone-design.template.md), saved at `docs/superpowers/specs/YYYY-MM-DD-milestone-N-design.md`. The template's required sections are:
    - Milestone goal (one paragraph)
    - Definition of done (concrete, verifiable criteria — not aspirational)
    - Proposed phase outline (rough — 3-8 phases, one-line goals)
@@ -635,7 +637,7 @@ After `complete-milestone`, or when the user wants to start a new version cycle 
    - Dependencies on prior milestones and any external constraints
    - Risk areas worth flagging up front
 
-   The design from `plan-roadmap` (if it exists) covers this milestone at low fidelity — use it as input, but do NOT skip the brainstorm because "the roadmap already says what this milestone is". Roadmap-level scope is intentionally lossy; per-milestone brainstorming is where the detail lives.
+   Use the template structure verbatim. The design from `plan-roadmap` (if it exists) covers this milestone at low fidelity — use it as input, but do NOT skip the brainstorm because "the roadmap already says what this milestone is". Roadmap-level scope is intentionally lossy; per-milestone brainstorming is where the detail lives.
 
 3. **VERIFY:** the brainstorming design spec exists at `docs/superpowers/specs/YYYY-MM-DD-milestone-N-design.md` (or equivalent). If missing, the brainstorm did not complete — return to step 2.
 

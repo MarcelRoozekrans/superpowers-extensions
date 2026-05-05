@@ -3,6 +3,15 @@
 This document defines the format for the `docs/planning/` directory files used by
 the `project-orchestration` skill to persist project lifecycle state across sessions.
 
+> **Companion templates** for the design specs that feed these state files
+> live in `templates/`:
+>
+> - [`templates/roadmap-design.template.md`](templates/roadmap-design.template.md) — filled in by `plan-roadmap` at roadmap scope
+> - [`templates/milestone-design.template.md`](templates/milestone-design.template.md) — filled in by `new-milestone` at milestone scope
+> - [`templates/phase-design.template.md`](templates/phase-design.template.md) — filled in by `start-next-phase` (via brainstorming) at phase scope
+>
+> Filled-in copies are saved under `docs/superpowers/specs/`. The templates make brainstorm output deterministic so VERIFY steps can grep-check required sections (Surface tag, DoD criteria count, milestone count) instead of pattern-matching free-form prose.
+
 ## Directory
 
 `docs/planning/` in the project root. Add to `.gitignore` or commit — user's choice.
