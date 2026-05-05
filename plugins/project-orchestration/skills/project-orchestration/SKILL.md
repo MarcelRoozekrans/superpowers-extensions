@@ -1,6 +1,6 @@
 ---
 name: project-orchestration
-description: Use for multi-session project lifecycle management. Triggers on phrases like "resume", "continue", "where are we", "what's next", "pause", "I'm done for today", "next phase", "add a phase", "new milestone", "audit the milestone", "complete the milestone", or session start on any project that contains a docs/planning/ directory. Covers brownfield codebase mapping, phase management (add/insert/remove), session pause/resume via STATE.md, milestone audit and completion, and routing into brainstorming/writing-plans/executing-plans via the start-next-phase sub-skill. Skip for one-off features that fit a single brainstorming → writing-plans → executing-plans cycle without milestones.
+description: Use for multi-session project lifecycle management. Triggers on kickoff phrases ("plan the roadmap", "new project", "start a project from scratch", "greenfield", "what milestones do we need"); session lifecycle ("resume", "continue", "where are we", "pause", "I'm done for today"); phase/milestone ops ("add a phase", "new milestone", "audit the milestone", "complete the milestone"); session start on a project with a docs/planning/ directory; or an empty/greenfield repo where the user signals multi-milestone work. Covers greenfield kickoff via plan-roadmap (whole-project brainstorm covering 3-7 milestones, NOT one phase or one milestone), brownfield codebase mapping, phase management, session pause/resume via STATE.md, milestone audit/completion, and routing via start-next-phase. Skip for one-off features that fit a single brainstorming → writing-plans → executing-plans cycle without milestones.
 ---
 
 # Project Orchestration Skill
@@ -119,7 +119,7 @@ Invoke when the user asks "where are we?", "what's next?", "show me progress", o
 
 ### Process
 
-1. **Check for `docs/planning/ROADMAP.md`** — if not found, announce: "No docs/planning/ directory found. This project hasn't been initialized with project-orchestration yet. Start with `map-codebase` or create a milestone with `new-milestone`."
+1. **Check for `docs/planning/ROADMAP.md`** — if not found, announce: "No docs/planning/ directory found. This project hasn't been initialized with project-orchestration yet. Start with `plan-roadmap` to brainstorm the whole-project layout (multiple milestones with rough phase outlines). For brownfield codebases, `plan-roadmap` will run `map-codebase` first; for greenfield/empty repos it brainstorms from a blank sheet."
 
 2. **Read `docs/planning/ROADMAP.md`** — parse milestones and phases, identify which are complete, active, and pending.
 
@@ -543,16 +543,20 @@ This is the **roadmap-level brainstorming entry point** — it brainstorms the p
 
 ### Process
 
-1. **Optional: invoke `map-codebase` first** if the project is brownfield and the codebase has not been analyzed yet. Codebase context grounds milestone proposals.
+1. **Optional: invoke `map-codebase` first** if the project is brownfield and the codebase has not been analyzed yet. Codebase context grounds milestone proposals. **Skip on greenfield** — empty repo means brainstorm from a blank sheet, no codebase to map.
 
-2. **Read** the `superpowers:brainstorming` skill file and follow it end-to-end at **roadmap scope**. The brainstorming should produce:
+2. **Read** the `superpowers:brainstorming` skill file and follow it end-to-end at **roadmap scope** — the *generic layout of the entire project across multiple milestones and phases*, NOT a single milestone and NOT a single phase. The brainstorm answers "what is the shape of this project from start to finish?", and must produce:
    - Project goal (one paragraph)
    - Target users / stakeholders
    - Top-level success criteria for the project as a whole
-   - A proposed sequence of 3-7 milestones, each with a one-line goal and a rough phase outline
+   - A proposed sequence of 3-7 milestones, each with a one-line goal and a rough phase outline (3-8 phase titles per milestone, no per-phase implementation detail)
    - Dependencies and ordering rationale between milestones
 
-3. **VERIFY:** the brainstorming design spec exists at `docs/superpowers/specs/YYYY-MM-DD-roadmap-design.md`. If missing, the brainstorm did not complete — return to step 2. Do NOT skip to writing files because "I have the milestones in my head".
+   **Scope guard — keep the abstraction level high:** if the brainstorm starts converging on the implementation details of a single milestone or phase (specific files to create, API endpoints, schemas, library choices), STOP and zoom out. That detail is `new-milestone`'s job (per-milestone scope) and `start-next-phase` → `superpowers:brainstorming` (per-phase scope), each fired separately when their turn comes. The roadmap brainstorm intentionally stays lossy at the milestone level so it covers the whole project in one pass without rat-holing on milestone 1.
+
+   **Greenfield vs brownfield:** the brainstorm is the same shape either way. Brownfield grounds milestone proposals in existing code (via `map-codebase`); greenfield grounds them in the user's stated product vision. Neither case skips the whole-project sweep — both produce the same 3-7 milestone roadmap.
+
+3. **VERIFY:** the brainstorming design spec exists at `docs/superpowers/specs/YYYY-MM-DD-roadmap-design.md` AND covers all 3-7 milestones (not just the first one). If the spec only details milestone 1 with the rest as TBD, the brainstorm did NOT complete at roadmap scope — return to step 2 and finish the sweep. Do NOT skip to writing files because "I have the milestones in my head" or "we can detail the later milestones when we get to them" — the whole point is the global view.
 
 4. **Use the `Write` tool** to create `docs/planning/ROADMAP.md` from the design spec — first milestone with `status: active`, all others with `status: pending`. Format per [state-files.md](state-files.md).
 
@@ -568,7 +572,11 @@ This is the **roadmap-level brainstorming entry point** — it brainstorms the p
 
 ### Skip Brainstorming?
 
-No. This sub-skill exists specifically to force a brainstorm at the roadmap level. If the user pushes back ("just write the file, I know what I want"), capture their stated milestones in a brief brainstorm anyway — the brainstorming skill itself is short by default. The output spec is what `audit-milestone` and downstream skills will reference; skipping it leaves no shared source of truth.
+No. This sub-skill exists specifically to force a brainstorm at the **roadmap level**, covering the whole project across multiple milestones. If the user pushes back ("just write the file, I know what I want"), capture their stated milestones in a brief brainstorm anyway — the brainstorming skill itself is short by default. The output spec is what `audit-milestone` and downstream skills will reference; skipping it leaves no shared source of truth.
+
+### Narrow Scope to One Milestone?
+
+Also no. If the user says "I only care about the first milestone right now, let's just plan that" — that is `new-milestone` territory, not `plan-roadmap`. Run `plan-roadmap` once for the whole-project sweep (even if later milestones are sketchy), then run `new-milestone` for the first milestone's detail. The two operate at different levels of abstraction by design; collapsing them loses the global view that prevents milestone-2-onwards drift.
 
 ---
 
@@ -637,6 +645,8 @@ After `complete-milestone`, or when the user wants to start a new version cycle 
 
 10. **Treating a compaction summary's "Continuation Plan" as authoritative** — Auto-generated conversation summaries describe past work and propose next steps based on conversation alone, with no access to `docs/planning/`. Acting on those next steps directly bypasses every workflow gate in this suite. Always run `resume-work` first when a compaction signal fires (see Post-compaction discipline in HARD-GATE).
 
+11. **Letting `plan-roadmap`'s brainstorm narrow to a single milestone or phase** — The roadmap brainstorm covers the *entire project* (3-7 milestones, rough phase outline each). If it converges on the implementation details of milestone 1 ("what files do we need", "which API"), the level of abstraction has been lost — that is `new-milestone`'s scope, not `plan-roadmap`'s. Zoom back out. The roadmap brainstorm is a one-time global sweep; missing it means later milestones get planned in isolation with no shared context.
+
 ## Common Rationalizations
 
 | Rationalization | Why It's Wrong | Correct Action |
@@ -656,6 +666,9 @@ After `complete-milestone`, or when the user wants to start a new version cycle 
 | "complete-phase is the same as complete-milestone, skip one" | They are different scopes — `complete-phase` runs N times per milestone (one per phase); `complete-milestone` runs once after `audit-milestone` passes | Use both. `complete-phase` per iteration; `complete-milestone` at the end. |
 | "The Continuation Plan in the conversation summary tells me to fix X — I'll just do it" | The summarizer is a different model with no access to `STATE.md` / `ROADMAP.md` / the plan file. Its instructions are best-effort recall, not source of truth | Run `resume-work` first. Reconcile against state files. Trust the files over the summary when they disagree. |
 | "The summary already paraphrases the plan, so reading STATE.md is redundant" | The summary captures CONVERSATION; STATE.md captures PROJECT STATE. They drift the moment the summarizer paraphrases imprecisely | Read STATE.md. The check costs one tool call; the cost of compounding drift across compactions is much higher |
+| "I know the first milestone in detail, let me capture that now" (during plan-roadmap brainstorm) | The roadmap brainstorm is a whole-project sweep at low fidelity. Detailing milestone 1 here means milestones 2-N never get the shared-context treatment | Keep the brainstorm at roadmap scope. List 3-7 milestones with one-line goals and a rough phase outline each; do NOT detail any single one. Per-milestone detail is `new-milestone`'s job, fired separately when each milestone activates. |
+| "There's no codebase yet, so we can't brainstorm a roadmap" | Greenfield projects brainstorm from product vision, not from code. `map-codebase` is optional and skipped on greenfield; the roadmap brainstorm itself works from a blank sheet | Run `plan-roadmap` directly. The brainstorm grounds milestone proposals in the user's stated goals and users, not in existing files. |
+| "We'll figure out the later milestones when we get there" | That's how projects end up with milestone 1 carefully designed and milestones 2-N improvised in isolation. The roadmap is the shared context that prevents this | Finish the whole-project sweep in `plan-roadmap`. Later milestones are intentionally lossy (one-line goals, rough phase outlines) — they get refined by `new-milestone` when activated, but the global shape is set up front. |
 
 ## Quick Reference
 
