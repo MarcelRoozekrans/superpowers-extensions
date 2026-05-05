@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.15.0](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.14.3...superpowers-extensions-v1.15.0) (2026-05-05)
+
+
+### Features
+
+* **project-orchestration:** design spec templates for roadmap/milestone/phase ([69b6ced](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/69b6cede0a1988da601319e6f15e6f3b9c109d0b))
+* **project-orchestration:** surface-based dispatch (auto-chain ui-workflow / refactor-analysis) ([e6adee0](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/e6adee0cf3548d92be6c4731a97c5227e75392bb))
+* **project-orchestration:** surface-based pre-plan hook in start-next-phase ([d42a354](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/d42a35406d69321f49c444adcb015efa6afe975c))
+
+
+### Bug Fixes
+
+* **project-orchestration:** wrap template placeholders in backticks for markdownlint MD033/MD032 ([dbd2cfc](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/dbd2cfc235378f3b279d59c7e9c1006fbfb4f133))
+
 ## [1.14.3](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.14.2...superpowers-extensions-v1.14.3) (2026-05-05)
 
 

@@ -1,6 +1,6 @@
 {
   "name": "superpowers-extensions",
   "description": "Quality-gate, refactor, project-orchestration, UI workflow, and design-system skills extending the obra/superpowers suite.",
-  "version": "1.14.3",
+  "version": "1.15.0",
   "contextFileName": "GEMINI.md"
 }
