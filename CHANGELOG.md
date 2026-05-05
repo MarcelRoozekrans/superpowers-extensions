@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.14.3](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.14.2...superpowers-extensions-v1.14.3) (2026-05-05)
+
+
+### Bug Fixes
+
+* **project-orchestration:** make plan-roadmap discoverable on greenfield projects and reinforce roadmap-scope brainstorming ([4b48b78](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/4b48b78abc20e4b4fde1cb093bbfbe3d3699521f))
+* **project-orchestration:** plan-roadmap discoverable on greenfield + roadmap-scope guard ([b91ce9e](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/b91ce9ee88fc3897d74065c93a0e5c197de774c3))
+
 ## [1.14.2](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.14.1...superpowers-extensions-v1.14.2) (2026-05-04)
 
 
