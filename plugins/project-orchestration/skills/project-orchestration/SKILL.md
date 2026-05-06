@@ -602,7 +602,7 @@ One-time setup. Triggered manually by `/sync-to-github` or by an explicit invoca
 
 ### Process
 
-1. **Verify pre-conditions** (above). Refuse loudly if any fails.
+1. **Verify pre-conditions** (above). Refuse loudly if any fails. Then capture `git rev-parse HEAD` once and reuse it for all permalinks built in Step 4a — same pinning rule as `sync-github`. Do not re-resolve per iteration.
 2. **Create labels** if missing — `surface:ui`, `surface:backend`, `surface:refactor`, `surface:data`, `surface:infra`, `surface:docs`, `surface:mixed`, `status:pending`, `status:active`, `status:complete`, `help wanted`. Use `gh label create --force <name>` for each.
 3. **For each milestone in ROADMAP.md (top-down order):**
    a. `gh api -X POST repos/{owner}/{repo}/milestones -f title="Milestone N: <Name>" -f description="<goal + DoD>"` — capture the returned `number`.
@@ -876,7 +876,7 @@ After `complete-milestone`, or when the user wants to start a new version cycle 
 | `complete-milestone` | After audit PASS | `docs/planning/ROADMAP.md`, `docs/planning/MILESTONE.md`, git tag |
 | `plan-roadmap` | "plan the roadmap" / first project setup, no ROADMAP.md yet | `docs/superpowers/specs/YYYY-MM-DD-roadmap-design.md`, `docs/planning/ROADMAP.md`, `docs/planning/MILESTONE.md` |
 | `new-milestone` | After `complete-milestone` — chains through `superpowers:brainstorming` | `docs/superpowers/specs/YYYY-MM-DD-milestone-N-design.md`, `docs/planning/MILESTONE.md`, `docs/planning/ROADMAP.md` |
-| `init-github-sync` | "set up github sync" / first-time GitHub projection setup | `docs/planning/ROADMAP.md` (issue numbers stamped per phase), `.github/labels.json` (or label set), milestone created on GitHub |
+| `init-github-sync` | "set up github sync" / first-time GitHub projection setup | `docs/planning/ROADMAP.md` (Issue + Milestone numbers written back); labels, native Milestones, and Issues created on GitHub (not local files) |
 | `sync-github` | Auto-invoked from `pause-work` and `complete-phase`; manual on demand | None locally — projects ROADMAP.md state to GitHub issues/milestones (one-way write) |
 | `detect-external-signals` | Called from `sync-github` step 5 (embedded — not invoked directly) | None — only posts advisory comments on GitHub when external closes/edits are detected |
 
