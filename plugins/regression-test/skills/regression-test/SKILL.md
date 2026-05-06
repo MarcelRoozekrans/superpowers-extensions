@@ -131,6 +131,21 @@ digraph regression_test {
 
 The discovery phase gathers information about the project's testing infrastructure, application structure, and how to access the running application. This phase is entirely local and does not require a browser.
 
+### Recent-report dedup check
+
+Before running discovery, check for an existing recent report:
+
+1. **Glob** `docs/regression-report-*.md` — list any prior reports.
+2. If a report from within the last **30 minutes** exists (compare the timestamp in the filename `regression-report-YYYY-MM-DD-HHmm.md` to current time), present the user with a choice:
+
+   > "A recent regression report exists at `docs/regression-report-YYYY-MM-DD-HHmm.md` (NN minutes old). Re-run anyway, or use the existing report?"
+
+   - If the user chooses to re-use, exit `regression-test` immediately and let the caller (audit-milestone, ui-review, pre-push-review) consume the existing report.
+   - If the user chooses to re-run, proceed with discovery as normal.
+3. If no recent report exists OR the prior report is older than 30 minutes, proceed without prompting.
+
+This dedup is important when `regression-test` is invoked transitively — `audit-milestone`, `ui-workflow ui-review`, and `pre-push-review` all call `regression-test`, and a milestone closeout can plausibly trigger three runs back-to-back. Without dedup, that's three full screenshot sweeps for unchanged code. The 30-minute window is short enough that real changes between calls won't be hidden, and long enough that closeout chains won't re-run unnecessarily.
+
 ### Detect Test Frameworks
 
 Search for test framework configuration files using the following globs:

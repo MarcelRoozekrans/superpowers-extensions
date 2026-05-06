@@ -265,7 +265,9 @@ When the user is stopping work and wants to preserve context for next session. T
 4. **Use the `Write` tool** to create or overwrite `docs/planning/STATE.md` with the handoff note (see [state-files.md](state-files.md) for format). Do not narrate the content — write the file.
 5. **VERIFY:** re-read `docs/planning/STATE.md` and confirm the handoff note is present with all required sections (Current Position, Open Decisions, Blockers, Recommended Next Step). If any section is missing, the write did not capture it — re-write.
 6. Stage and commit: `git add docs/planning/STATE.md && git commit -m "chore(state): pause-work — phase N.M, last task: <description>"`. Run `git status` and confirm a clean tree.
-7. Announce only after the commit succeeds:
+7. **Squad sync (if installed)** — if a `.squad/` directory exists in the project, run `squad-sync` after the STATE.md commit. Squad's per-agent `history.md` files capture session learning that complements STATE.md (which captures position). Without this step, agent histories drift behind project state. If `squad` is not installed, skip silently — this step is best-effort.
+8. **Decision-tracker sync (if installed)** — if `decision-tracker` is active and any decisions were captured during this session, ensure they have been persisted to long-term memory before exiting. Pause is the natural fence for memory writes; deferring them risks losing the decision when the conversation ends. If `decision-tracker` is not active, skip silently.
+9. Announce only after the commit succeeds:
 
    > "Session state saved to `docs/planning/STATE.md`. Next session, start with `resume-work` or say 'resume' and I'll restore context."
 
@@ -427,17 +429,28 @@ After `resume-work` confirmation, or any time the user says "continue", "next", 
 
    | Surface | Pre-plan chain | Required artifact after the hook runs |
    |---|---|---|
-   | `UI` | (a) If `docs/design/MASTER.md` is missing, **read** the `ui-design-system` skill end-to-end and follow it. **VERIFY:** `docs/design/MASTER.md` exists. (b) **Read** the `ui-workflow` skill (sub-skill `ui-phase`) end-to-end and follow it. **VERIFY:** the phase's UI contract exists. | `docs/plans/*-<phase>-*-ui-contract.md` |
-   | `Refactor` | **Read** the `refactor-analysis` skill end-to-end and follow it (Phases 1–7) until it produces the impact analysis document. **VERIFY:** the impact analysis file exists. | `docs/plans/*-<phase>-*-impact-analysis.md` |
+   | `UI` | (a) If `decision-tracker` is active for this project, run a recall for `tags=[ui, design]` so prior UI conventions surface before a new contract is written. (b) If `docs/design/MASTER.md` is missing, **read** the `ui-design-system` skill end-to-end and follow it. **VERIFY:** `docs/design/MASTER.md` exists. (c) **Read** the `ui-workflow` skill (sub-skill `ui-phase`) end-to-end and follow it. **VERIFY:** the phase's UI contract exists. | `docs/plans/*-<phase>-*-ui-contract.md` |
+   | `Refactor` | (a) If `decision-tracker` is active, run a recall for `tags=[architecture, naming]` and any project-specific tags so prior structural decisions inform the impact analysis. (b) **Read** the `refactor-analysis` skill end-to-end and follow it (Phases 1–7) until it produces the impact analysis document. **VERIFY:** the impact analysis file exists. | `docs/plans/*-<phase>-*-impact-analysis.md` |
    | `Backend` / `Data` / `Infra` / `Docs` / `Mixed` / unset | No pre-plan hook. Proceed directly to `superpowers:writing-plans`. | (none) |
 
    The hook produces inputs that `writing-plans` consumes — UI contracts give the plan concrete component / layout / state targets; impact analyses give the plan a safe execution order grounded in transitive dependencies. Skipping the hook for an applicable surface means `writing-plans` runs blind to those inputs and produces a less informed plan. **`Mixed` deliberately skips the hook** — the author signals that two surfaces are in play and they will sequence them manually; force-firing both `ui-phase` and `refactor-analysis` for `Mixed` produces noisy artifacts.
 
-6. **When `executing-plans` returns** (the leaf of every routing path): if all tasks in the plan file are now `- [x]`, **run `complete-phase`** to promote the phase from `active` → `complete` in ROADMAP.md and MILESTONE.md before the session continues or terminates. Skipping this step is the most common reason ROADMAP.md gets stale during multi-phase milestones.
+   Decision recall is best-effort — if `decision-tracker` / `longterm-memory` MCP is not available, skip the recall step silently and proceed to the surface specialist. Recall failures are not chain failures.
 
-7. After each step, **VERIFY the required artifact exists** (see HARD-GATE table at the top of this skill) before chaining to the next link. If a required artifact is missing, return to the prior step — do not proceed.
+6. **When `executing-plans` returns** (the leaf of every routing path): if all tasks in the plan file are now `- [x]`, run the **Surface post-implementation hook** below FIRST, then **run `complete-phase`** to promote the phase from `active` → `complete` in ROADMAP.md and MILESTONE.md. Skipping `complete-phase` is the most common reason ROADMAP.md gets stale during multi-phase milestones.
 
-8. Do not stop and ask "what next?" between links. The chain is mechanical. Only stop for:
+7. **Surface post-implementation hook** — fires after `executing-plans` returns clean and BEFORE `complete-phase`. Mirrors the pre-plan hook on the audit side:
+
+   | Surface | Post-implementation chain |
+   |---|---|
+   | `UI` | **Read** the `ui-workflow` skill (sub-skill `ui-review`) end-to-end and follow it to audit the implementation against the UI contract produced in step 5. `ui-review` requires the Playwright MCP (via `regression-test`); if Playwright MCP is unavailable, log a note in the phase's audit history and proceed without the review (do not block `complete-phase`). |
+   | `Refactor` / `Backend` / `Data` / `Infra` / `Docs` / `Mixed` / unset | No post-implementation hook. Proceed directly to `complete-phase`. |
+
+   The post-impl hook closes the design-implementation loop for UI phases — `ui-phase` writes the contract before implementation; `ui-review` audits the result against the same contract. Without it, the contract becomes write-only and the audit value is lost.
+
+8. After each step, **VERIFY the required artifact exists** (see HARD-GATE table at the top of this skill) before chaining to the next link. If a required artifact is missing, return to the prior step — do not proceed.
+
+9. Do not stop and ask "what next?" between links. The chain is mechanical. Only stop for:
    - `list-phase-assumptions` user confirmation (this is an explicit gate, not a menu)
    - Failures (missing artifact, failing tests, blockers surfaced by a sub-skill)
    - The user interrupting
@@ -499,13 +512,21 @@ resume-work / "continue" / "next"
   │ executing-plans    │
   └────────┬───────────┘
            │
-     ┌─────▼──────────────────┐  Yes   ┌─────────────────┐
-     │ All tasks now checked? ├───────►│ complete-phase  │
-     │ (close the loop)       │        │ (active → done) │
-     └─────┬──────────────────┘        └─────────────────┘
-           │ No (mid-phase pause)
-           ▼
-       (return — phase stays active for the next continuation)
+     ┌─────▼──────────────────┐  Yes   ┌─────────────────────────────┐
+     │ All tasks now checked? ├───────►│ Surface post-impl hook      │
+     │ (close the loop)       │        │ ┌─────────────────────────┐ │
+     └─────┬──────────────────┘        │ │ Surface == UI?          │ │
+           │ No (mid-phase pause)      │ │  → ui-workflow ui-review│ │
+           ▼                           │ │    (degrade if no       │ │
+       (return — phase stays           │ │     Playwright MCP)     │ │
+        active for the next            │ │ Else: skip hook         │ │
+        continuation)                  │ └────────┬────────────────┘ │
+                                       │          ▼                  │
+                                       │ ┌─────────────────────────┐ │
+                                       │ │ complete-phase          │ │
+                                       │ │ (active → done)         │ │
+                                       │ └─────────────────────────┘ │
+                                       └─────────────────────────────┘
 ```
 
 ---
@@ -527,6 +548,7 @@ When the user believes a milestone is complete and wants to verify it against it
    - **All phases complete** — check ROADMAP.md, verify each phase has status `complete`.
    - **All tests passing** — run `npm test` / `dotnet test` / `pytest` (detect from project). Record pass/fail.
    - **Regression test PASS** — invoke `regression-test` skill if a web UI is available (optional, confirm with user).
+   - **Pre-push reviews on file** — `audit-milestone` does NOT re-run code-quality review (security, YAGNI, dead code, naming) — that is `pre-push-review`'s remit, run per phase before push. Check that at least one `docs/pre-push-review-*.md` report exists with a PASS verdict, dated within the milestone's lifespan. Record one of three outcomes: (a) PASS report on file → record verdict in audit; (b) FAIL or stale (older than the milestone's earliest phase commit) → record gap, recommend re-running `pre-push-review` on each feature branch; (c) no reports found → record gap as "code quality not independently reviewed in this milestone" with same recommendation. This is a **warning, not a hard fail** — milestones can pre-date the pre-push-review skill or have used a different review process. Surface the gap so the user decides.
    - **Documentation** — check that plan docs exist for each phase, design docs are present.
    - **Release tagged** — check `git tag -l` for expected tag.
 3. Produce verdict: **PASS** (all criteria met) or **FAIL** (gaps found).
@@ -734,8 +756,8 @@ After `complete-milestone`, or when the user wants to start a new version cycle 
 | `superpowers:subagent-driven-development` | `list-phase-assumptions` applies equally before subagent dispatch. `pause-work` captures state when stopping mid-subagent execution. | Both sub-skills work regardless of whether execution uses executing-plans or subagent-driven-development. |
 | `superpowers:finishing-a-development-branch` | `audit-milestone` + `complete-milestone` extend the finishing workflow to full milestone release management. | finishing-a-development-branch handles branch integration; complete-milestone handles milestone closure and release tagging. |
 | `regression-test` | `audit-milestone` optionally invokes regression-test as part of definition-of-done verification for projects with a web UI. | Regression-test provides the visual and functional evidence for milestone audit. |
-| `decision-tracker` | Independent but complementary. Both can be active simultaneously. `resume-work` triggers decision-tracker recall at session start. | decision-tracker handles cross-cutting decisions; project-orchestration handles project state and lifecycle. |
+| `decision-tracker` | Independent but complementary. Three integration points: (1) `resume-work` triggers decision-tracker recall at session start. (2) `Surface: UI` pre-plan hook runs a recall for `tags=[ui, design]` so prior UI conventions inform the contract. (3) `Surface: Refactor` pre-plan hook runs a recall for `tags=[architecture, naming]` so prior structural decisions inform the impact analysis. All three are best-effort — recall failures (MCP unavailable, no matching tags) are not chain failures. | decision-tracker handles cross-cutting decisions; project-orchestration handles project state and lifecycle. |
 | `pre-push-review` | `audit-milestone` checks tests and regression, but does NOT cover code quality review (security, YAGNI, dead code, naming). Run `pre-push-review` on each feature branch before `audit-milestone` for complete coverage. | No direct invocation — they operate at different scopes (branch vs milestone). |
 | `ui-design-system` | `start-next-phase`'s **Surface pre-plan hook** invokes `ui-design-system` for `Surface: UI` phases when `docs/design/MASTER.md` is missing. Runs once per project (the design system is global), then `ui-phase` consumes it for every subsequent UI phase. | Surface-driven dispatch — the phase declares `**Surface:** UI` in ROADMAP.md and the hook handles the rest. No manual invocation needed. |
-| `ui-workflow` (`ui-phase`) | Same hook: for `Surface: UI` phases, after `ui-design-system` (if needed), `start-next-phase` runs `ui-workflow ui-phase` to produce `docs/plans/*-<phase>-*-ui-contract.md` BEFORE chaining to `superpowers:writing-plans`. The contract feeds writing-plans concrete component / layout / state targets and is the audit baseline for `ui-review` later. | The contract is the bridge between design spec and implementation plan for UI work. |
+| `ui-workflow` (`ui-phase` and `ui-review`) | Two hook points for `Surface: UI` phases. **Pre-plan:** `start-next-phase` runs `ui-phase` after `ui-design-system` (if needed) to produce `docs/plans/*-<phase>-*-ui-contract.md` BEFORE chaining to `superpowers:writing-plans`. **Post-implementation:** when `executing-plans` returns clean, `start-next-phase` runs `ui-review` to audit the implementation against that same contract before `complete-phase` runs. Without the post-impl hook, the contract becomes write-only and the audit value is lost. | The contract is the bridge between design spec and implementation plan for UI work — and the audit target after implementation. `ui-review` requires the Playwright MCP (via `regression-test`); the chain degrades gracefully (logs and skips) when MCP is unavailable. |
 | `refactor-analysis` | For `Surface: Refactor` phases, the **Surface pre-plan hook** runs `refactor-analysis` (Phases 1–7) to produce `docs/plans/*-<phase>-*-impact-analysis.md` BEFORE chaining to `superpowers:writing-plans`. The analysis feeds writing-plans the safe execution order, transitive dependency map, and risk register. | Surface-driven dispatch — phases that involve restructuring existing code declare `**Surface:** Refactor` and get impact analysis automatically rather than relying on the agent to remember. |
