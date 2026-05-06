@@ -152,13 +152,13 @@ When the user wants to append a new phase to the current milestone's roadmap.
 ### Process
 
 1. **Read** `docs/planning/ROADMAP.md` and `docs/planning/MILESTONE.md` (use the `Read` tool) to find the current milestone and its last phase number.
-2. Ask the user: "Phase name, goal, and surface? (Surface is one of `UI` | `Backend` | `Refactor` | `Data` | `Infra` | `Docs` | `Mixed` — drives whether the phase auto-chains through `ui-design-system` + `ui-workflow ui-phase`, `refactor-analysis`, or goes directly to `writing-plans`.)"
-3. **Use the `Edit` tool** to append the new phase block to `docs/planning/ROADMAP.md` under the current milestone with status `pending` and the user's stated `**Surface:**`. Format per [state-files.md](state-files.md).
-4. **VERIFY:** re-read `docs/planning/ROADMAP.md` and confirm the new phase block is present with the correct number, name, `status: pending`, and `Surface:` value. If any is missing, the Edit did not apply — retry.
+2. Ask the user: "Phase name, goal, surface, and help-wanted? (Surface is one of `UI` | `Backend` | `Refactor` | `Data` | `Infra` | `Docs` | `Mixed`. HelpWanted is `yes` or `no` — defaults to `no`. `yes` flags the phase for external contributors when github-sync is enabled.)"
+3. **Use the `Edit` tool** to append the new phase block to `docs/planning/ROADMAP.md` under the current milestone with status `pending` and the user's stated `**Surface:**` and `**HelpWanted:**`. Format per [state-files.md](state-files.md).
+4. **VERIFY:** re-read `docs/planning/ROADMAP.md` and confirm the new phase block is present with the correct number, name, `status: pending`, `Surface:`, and `HelpWanted:` values. If any is missing, the Edit did not apply — retry.
 5. **Use the `Edit` tool** to add the new phase to the `## Phases` list in `docs/planning/MILESTONE.md`.
 6. **VERIFY:** re-read `docs/planning/MILESTONE.md` and confirm the phase appears in the list.
 7. Stage and commit: `git add docs/planning/ROADMAP.md docs/planning/MILESTONE.md && git commit -m "chore(roadmap): add phase N.M — <name>"`. Run `git status` and confirm a clean tree.
-8. Announce the new phase number, name, and surface only after the commit succeeds.
+8. Announce the new phase number, name, surface, and help-wanted only after the commit succeeds.
 
 ---
 
@@ -171,9 +171,9 @@ When urgent work needs to be inserted between two existing phases.
 ### Process
 
 1. **Read** `docs/planning/ROADMAP.md` (use the `Read` tool), present the current phase list to the user.
-2. Ask: "Insert after which phase?", "New phase name and goal?", and "Surface? (`UI` | `Backend` | `Refactor` | `Data` | `Infra` | `Docs` | `Mixed`)"
-3. **Use the `Edit` tool** to insert the new phase block into `docs/planning/ROADMAP.md` (with the user's stated `**Surface:**` line) and renumber every subsequent phase (N.M+1 → N.M+2, etc.). Both inserts and renumbers are tool calls — narrating "I've shifted the numbers" does not change the file.
-4. **VERIFY:** re-read `docs/planning/ROADMAP.md` and confirm: (a) the new phase block is present with correct number/name/status/Surface, (b) every later phase is renumbered consecutively with no gaps or duplicates.
+2. Ask: "Insert after which phase?", "New phase name and goal?", "Surface? (`UI` | `Backend` | `Refactor` | `Data` | `Infra` | `Docs` | `Mixed`)", and "HelpWanted? (`yes` or `no` — defaults to `no`. `yes` flags the phase for external contributors when github-sync is enabled.)"
+3. **Use the `Edit` tool** to insert the new phase block into `docs/planning/ROADMAP.md` (with the user's stated `**Surface:**` and `**HelpWanted:**` lines) and renumber every subsequent phase (N.M+1 → N.M+2, etc.). Both inserts and renumbers are tool calls — narrating "I've shifted the numbers" does not change the file.
+4. **VERIFY:** re-read `docs/planning/ROADMAP.md` and confirm: (a) the new phase block is present with correct number/name/status/Surface/HelpWanted, (b) every later phase is renumbered consecutively with no gaps or duplicates.
 5. **Use the `Edit` tool** to update the `## Phases` list in `docs/planning/MILESTONE.md` to reflect the inserted phase and renumbered siblings.
 6. **VERIFY:** re-read `docs/planning/MILESTONE.md` and confirm the list matches ROADMAP.md.
 7. Stage and commit: `git add docs/planning/ROADMAP.md docs/planning/MILESTONE.md && git commit -m "chore(roadmap): insert phase N.M — <name>"`. Run `git status` and confirm a clean tree.
