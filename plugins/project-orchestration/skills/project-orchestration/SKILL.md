@@ -640,6 +640,64 @@ Use this on first run to verify the labels, milestones, and issues look right be
 
 ---
 
+## sync-github
+
+### When to Use
+
+Automatic. Runs as a step of `pause-work` (full reconciliation across all milestones and phases) and `complete-phase` (just the finished phase). Manual invocation is also supported when the user says "resync GitHub" or "push roadmap changes to GitHub".
+
+### Pre-conditions
+
+- `gh auth status` succeeds. If not → log a warning to the conversation, skip silently, do NOT block the parent skill.
+- ROADMAP.md has been initialized via `init-github-sync` (at least one `**Issue:**` or `**Milestone:**` field present). If not → log "Sync not initialized; skipping. Run `/sync-to-github` to initialize", do NOT block.
+
+### Announce Line
+
+> "Reconciling GitHub state with ROADMAP.md."
+
+### Process
+
+1. **Verify pre-conditions** (above). Skip silently if any fails.
+2. **Read** `docs/planning/ROADMAP.md`.
+3. **Reconcile milestones.** For each milestone block:
+   - If `**Milestone:** N` exists → `gh api -X PATCH repos/{owner}/{repo}/milestones/N -f title="..." -f description="..." -f state="open|closed"` to update title, description (regenerate from current goal + DoD), and state (open if `[status: active|pending]`, closed if `[status: complete]`).
+   - If missing → create as in `init-github-sync` step 3, write back.
+4. **Reconcile phases.** For each phase block:
+   - Compute desired labels (surface, status, help-wanted) from the current ROADMAP.md fields.
+   - If `**Issue:** #N` exists → `gh issue edit N --title "..." --body "..." --milestone <m> --add-label <new> --remove-label <removed>`. Toggle issue state with `gh issue close N` or `gh issue reopen N` based on `[status: complete]`.
+   - If missing → create as in `init-github-sync` step 4, write back.
+5. **Detect external signals.** For each phase with `**Issue:** #N`:
+   - `gh issue view N --json state,closedAt,comments` — check GitHub-side state.
+   - Apply the table below. Never modify ROADMAP.md from this step.
+
+   | GitHub state | Local ROADMAP status | Action |
+   |---|---|---|
+   | `closed` | `active` | Post comment on the issue: *"Issue closed externally — maintainer should run `complete-phase N.M` locally to confirm. ROADMAP.md still shows this phase as active."* Idempotent — first scan the issue's comments; skip if a previous "closed externally" comment exists. |
+   | `closed` | `pending` | Same comment, adapted for pending phases. |
+   | `open` | `complete` | We marked complete locally; step 4 already issued `gh issue close`. No comment. |
+   | `open` | `active` / `pending` | Normal — no action. |
+
+6. **If anything was written back to ROADMAP.md** (new issues created or milestones added since last sync), stage and commit: `git add docs/planning/ROADMAP.md && git commit -m "chore(sync): reconcile github state"`. If no writes happened, skip the commit.
+7. **Announce** only the change set, briefly:
+
+   > "Synced. N issues updated, M created, K external-close signals posted."
+
+### Dry-run
+
+Same flag/trigger as `init-github-sync`. Prints intended `gh` calls, skips writes, skips commits. Useful when `sync-github` runs from a debugging session and you want to preview without producing real GitHub state changes.
+
+### Error handling
+
+| Condition | Response |
+|---|---|
+| `gh auth` missing/failed | Log + skip silently. Never block parent. |
+| Single `gh` call fails (network, rate limit, permission) | Log the specific failure, continue with the rest of the loop. Report aggregate failures at the end. Partial sync is acceptable; next run catches up. |
+| Issue #N returns 404 (deleted on GitHub) | Warn: "Issue #N referenced in ROADMAP.md no longer exists on GitHub. Skipping. Reconcile manually before next sync." Do NOT silently re-create with a new number. |
+| Phase removed locally via `remove-phase` | The phase block is gone from ROADMAP.md; the issue stays orphan on GitHub until the user manually closes it (or `remove-phase` invokes `gh issue close --comment "removed from roadmap"` directly — see `remove-phase` task). |
+| Phase renumbered locally via `insert-phase` | Issue number is stable; only the title (`Phase N.M: ...`) changes. The reconcile loop in step 4 handles this naturally. |
+
+---
+
 ## plan-roadmap
 
 ### When to Use
