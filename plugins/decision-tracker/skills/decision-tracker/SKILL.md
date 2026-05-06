@@ -132,14 +132,15 @@ When any superpowers skill activates, recall existing decisions:
 
 1. **Detect the project name** using the priority order above.
 2. **Call `search_by_tags`** with `["decision", "project:<name>"]`.
-3. **Group results by category** — architectural first, then convention, then task-specific.
-4. **Present the results:**
+3. **Read squad decisions if present** — if the project has a `.squad/decisions.md` file (created by the `squad` skill), read it. Squad records project decisions as a markdown list distinct from long-term memory; merging the two sources gives the agent a complete picture even when one is incomplete (e.g. squad was used in earlier sessions but long-term memory was added later, or vice versa). Each squad decision entry typically follows the format `- YYYY-MM-DD: <decision> — <rationale>`. De-duplicate against the long-term memory results by decision text; if both sources have the same decision, prefer the long-term-memory entry (it has structured tags and date validation).
+4. **Group results by category** — architectural first, then convention, then task-specific. Annotate each entry with its source (`[memory]` or `[.squad/decisions.md]`) so the user can see which decisions are persisted vs. which only live in the file.
+5. **Present the results:**
 
-   > "Recalled N decisions for ProjectName:"
+   > "Recalled N decisions for ProjectName (M from long-term memory, K from .squad/decisions.md):"
 
    Followed by the grouped list of decisions.
 
-5. **Validate stale decisions** — after the main recall, call `search_by_date_range` with:
+6. **Validate stale decisions** — after the main recall, call `search_by_date_range` with:
    - `start`: a fixed epoch date earlier than any realistic decision date (e.g., `2000-01-01`)
    - `end`: today's date minus 90 days
 
@@ -154,11 +155,13 @@ When any superpowers skill activates, recall existing decisions:
      - User says no longer valid → call `delete_memory`
      - User says superseded → call `update_memory` to record what replaced it
 
-6. **Once per session** — this recall happens once at the start. Do NOT re-recall on every skill invocation.
+7. **Once per session** — this recall happens once at the start. Do NOT re-recall on every skill invocation.
 
-7. **If `search_by_tags` is not available:** Skip recall and announce:
+8. **If `search_by_tags` is not available:** Skip the long-term-memory recall (steps 2 and 6) and announce:
 
    > "LongtermMemory-MCP not detected. Install it to persist decisions across sessions: `claude install gh:MarcelRoozekrans/LongtermMemory-MCP`"
+
+   Step 3 (read `.squad/decisions.md` if present) is independent and still runs — it does not require LongtermMemory-MCP. So a project with squad but no LongtermMemory still gets decision recall, just from the file.
 
 ## Decision Extraction (Save)
 
@@ -268,6 +271,7 @@ This skill is designed to complement — not replace — the superpowers workflo
 | `ui-design-system` | **Saves design system decisions.** After `ui-design-system` generates a design system, key choices (primary color, font pairing, component library) are saved as architectural decisions. These are recalled in subsequent sessions to prevent contradictory design choices. | Design token decisions are high-importance and long-lived — ideal candidates for decision-tracker. |
 | `ui-workflow` | **Saves UI contract decisions.** Accessibility contract level, component library choice, and breakpoint strategy from `ui-phase` are saved as convention decisions so all future phases and subagents inherit them. | Prevents ui-review from flagging issues that were intentional deviations approved in earlier phases. |
 | `longterm-memory:long-term-memory` | **Required dependency.** Provides the persistence layer (`save_memory`, `search_memory`, `search_by_tags`, `search_by_date_range`, `update_memory`, `delete_memory`) that this skill uses to store and recall decisions. | Skill degrades gracefully without it — see Graceful Degradation section. |
+| `squad` | **Read-side integration via `.squad/decisions.md`.** When squad is installed and has populated `.squad/decisions.md`, decision recall (step 3 of "Decision Recall") reads that file as a second source alongside long-term memory and de-duplicates by decision text. Squad continues to write `decisions.md` as normal — decision-tracker does not modify it; it only reads. This handles projects where squad records decisions before long-term memory is set up, or sessions where one of the two persistence layers is unavailable. | One-directional read integration. The reverse (long-term memory → squad) is not implemented; squad's file is the source for squad's own consumers (agent histories), not a downstream of decision-tracker. |
 
 **Recommended workflow chain:**
 
