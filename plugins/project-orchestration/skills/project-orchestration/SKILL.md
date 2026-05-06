@@ -663,6 +663,7 @@ Automatic. Runs as a step of `pause-work` (full reconciliation across all milest
    - If `**Milestone:** N` exists → `gh api -X PATCH repos/{owner}/{repo}/milestones/N -f title="..." -f description="..." -f state="open|closed"` to update title, description (regenerate from current goal + DoD), and state (open if `[status: active|pending]`, closed if `[status: complete]`).
    - If missing → create as in `init-github-sync` step 3, write back.
 4. **Reconcile phases.** For each phase block:
+   - Capture `git rev-parse HEAD` once at the start of this step (before any `gh` writes) and reuse it for permalinks in newly created issues. Same pinning rule as `init-github-sync`.
    - Compute desired labels (surface, status, help-wanted) from the current ROADMAP.md fields.
    - If `**Issue:** #N` exists → `gh issue edit N --title "..." --body "..." --milestone <m> --add-label <new> --remove-label <removed>`. Toggle issue state with `gh issue close N` or `gh issue reopen N` based on `[status: complete]`.
    - If missing → create as in `init-github-sync` step 4, write back.
@@ -691,7 +692,7 @@ Same flag/trigger as `init-github-sync`. Prints intended `gh` calls, skips write
 | Condition | Response |
 |---|---|
 | `gh auth` missing/failed | Log + skip silently. Never block parent. |
-| Single `gh` call fails (network, rate limit, permission) | Log the specific failure, continue with the rest of the loop. Report aggregate failures at the end. Partial sync is acceptable; next run catches up. |
+| Single `gh` call fails (network, rate limit, permission) | No mid-loop retry — log the specific failure, continue with the rest of the loop. Report aggregate failures at the end. Partial sync is acceptable; next run reconciles. (Differs intentionally from `init-github-sync`, which retries once before falling through, because `sync-github` runs frequently from `pause-work`/`complete-phase` and a transient failure is naturally re-tried on the next sync.) |
 | Issue #N returns 404 (deleted on GitHub) | Warn: "Issue #N referenced in ROADMAP.md no longer exists on GitHub. Skipping. Reconcile manually before next sync." Do NOT silently re-create with a new number. |
 | Phase removed locally via `remove-phase` | The phase block is gone from ROADMAP.md; the issue stays orphan on GitHub until the user manually closes it (or `remove-phase` invokes `gh issue close --comment "removed from roadmap"` directly — see `remove-phase` task). |
 | Phase renumbered locally via `insert-phase` | Issue number is stable; only the title (`Phase N.M: ...`) changes. The reconcile loop in step 4 handles this naturally. |
