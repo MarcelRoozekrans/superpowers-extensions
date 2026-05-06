@@ -267,9 +267,10 @@ When the user is stopping work and wants to preserve context for next session. T
 6. Stage and commit: `git add docs/planning/STATE.md && git commit -m "chore(state): pause-work — phase N.M, last task: <description>"`. Run `git status` and confirm a clean tree.
 7. **Squad sync (if installed)** — if a `.squad/` directory exists in the project, run `squad-sync` after the STATE.md commit. Squad's per-agent `history.md` files capture session learning that complements STATE.md (which captures position). Without this step, agent histories drift behind project state. If `squad` is not installed, skip silently — this step is best-effort.
 8. **Decision-tracker sync (if installed)** — if `decision-tracker` is active and any decisions were captured during this session, ensure they have been persisted to long-term memory before exiting. Pause is the natural fence for memory writes; deferring them risks losing the decision when the conversation ends. If `decision-tracker` is not active, skip silently.
-9. Announce only after the commit succeeds:
+9. **GitHub sync (if initialized)** — if `docs/planning/ROADMAP.md` contains any `**Issue:**` or `**Milestone:**` field (signal that `init-github-sync` has been run), invoke `sync-github` as a final step. This produces a full reconciliation of GitHub state with the just-written STATE.md / ROADMAP.md changes. If sync is not initialized, skip silently — do not invite the user to set it up here, that is `init-github-sync`'s job.
+10. Announce only after the commit succeeds:
 
-   > "Session state saved to `docs/planning/STATE.md`. Next session, start with `resume-work` or say 'resume' and I'll restore context."
+    > "Session state saved to `docs/planning/STATE.md`. Next session, start with `resume-work` or say 'resume' and I'll restore context."
 
 ---
 
@@ -378,7 +379,9 @@ This sub-skill closes the loop that was missing: without it, `executing-plans` f
 
    Run `git status` and confirm a clean tree.
 
-8. Announce only after the commit succeeds:
+8. **GitHub sync (if initialized)** — if the phase has an `**Issue:** #N` field, invoke `sync-github` to update the GitHub issue's status label and toggle it to closed. This is a single-phase update, not a full reconciliation. If the phase has no `**Issue:**` field, skip silently — sync was not initialized for this project.
+
+9. Announce only after the commit succeeds:
 
    > "Phase N.M — {name} marked complete in ROADMAP.md and MILESTONE.md. Committed."
 
