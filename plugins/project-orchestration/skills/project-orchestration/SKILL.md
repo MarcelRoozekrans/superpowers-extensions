@@ -581,6 +581,64 @@ After `audit-milestone` returns PASS.
 
 ---
 
+## init-github-sync
+
+### When to Use
+
+One-time setup. Triggered manually by `/sync-to-github` or by an explicit invocation when the user signals: "set up GitHub sync", "publish the roadmap to GitHub", "make the backlog visible to external devs". Refuses to run if sync is already initialized (any `**Issue:**` or `**Milestone:**` field present in ROADMAP.md) — incremental updates are `sync-github`'s job.
+
+### Pre-conditions
+
+- `gh auth status` succeeds. If not → refuse with: "Sync requires the GitHub CLI authenticated. Run `gh auth login`, then re-invoke `/sync-to-github`."
+- `git remote get-url origin` returns a `github.com` URL. If not → refuse with: "Project does not appear to be hosted on GitHub. Sync is GitHub-specific; skip for non-GitHub remotes."
+- `docs/planning/ROADMAP.md` exists with at least one milestone.
+
+### Announce Line
+
+> "Initializing GitHub sync. I'll create native Milestones and Issues for every roadmap entry, then write the GitHub numbers back into ROADMAP.md so future syncs are idempotent."
+
+### Process
+
+1. **Verify pre-conditions** (above). Refuse loudly if any fails.
+2. **Create labels** if missing — `surface:ui`, `surface:backend`, `surface:refactor`, `surface:data`, `surface:infra`, `surface:docs`, `surface:mixed`, `status:pending`, `status:active`, `status:complete`, `help wanted`. Use `gh label create --force <name>` for each.
+3. **For each milestone in ROADMAP.md (top-down order):**
+   a. `gh api -X POST repos/{owner}/{repo}/milestones -f title="Milestone N: <Name>" -f description="<goal + DoD>"` — capture the returned `number`.
+   b. `Edit` ROADMAP.md to add `**Milestone:** N` immediately after the milestone's `**Started:**` line.
+   c. VERIFY by re-reading ROADMAP.md.
+4. **For each phase under each milestone (in order):**
+   a. Build the issue body: phase goal + Surface tag + permalink to design spec at the current commit SHA (`https://github.com/{owner}/{repo}/blob/<sha>/docs/plans/<spec>.md` if a spec exists; otherwise note "no design spec yet").
+   b. Build the label list: `surface:<value>`, `status:<value>`, plus `help wanted` if `**HelpWanted:** yes`.
+   c. `gh issue create --title "Phase N.M: <Name>" --body "<body>" --milestone <milestone-number> --label "<labels>"` — capture the returned issue number.
+   d. `Edit` ROADMAP.md to add `**Issue:** #N` after the phase's `**Surface:**`/`**HelpWanted:**` lines.
+   e. VERIFY by re-reading ROADMAP.md.
+5. **Final VERIFY** — re-read ROADMAP.md end-to-end, confirm every milestone has `**Milestone:** N` and every phase has `**Issue:** #N`. If any is missing, the corresponding `gh` call did not return cleanly — re-attempt that one before commit.
+6. **Stage and commit:** `git add docs/planning/ROADMAP.md && git commit -m "chore(sync): init github sync — N issues, M milestones"`. Run `git status` and confirm a clean tree.
+7. **Announce** only after the commit succeeds:
+
+   > "GitHub sync initialized. N issues created across M milestones. Future `pause-work` and `complete-phase` runs will reconcile state automatically."
+
+### Dry-run
+
+Pass `--dry-run` (or trigger phrase "dry run", "preview the sync") to:
+
+- Print every `gh` call that would be made, with arguments
+- Skip all writes to ROADMAP.md
+- Skip the commit
+
+Use this on first run to verify the labels, milestones, and issues look right before any real GitHub state is created.
+
+### Error handling
+
+| Condition | Response |
+|---|---|
+| Already initialized (Issue/Milestone fields present) | Refuse: "Sync already initialized. Use `sync-github` for incremental updates." |
+| `gh auth status` fails | Refuse with `gh auth login` instruction |
+| No GitHub remote | Refuse with explanation |
+| Rate limit hit mid-loop | Stop with partial state. Report which milestones/issues were created. Re-running picks up where it left off (any phase already mapped is skipped because of the "already initialized" check — so the user fixes by running `sync-github` instead, which is incremental-aware). |
+| `gh` API error on a single call | Stop the loop. Report the failing call. Do NOT continue with other phases — partial state is confusing. |
+
+---
+
 ## plan-roadmap
 
 ### When to Use
