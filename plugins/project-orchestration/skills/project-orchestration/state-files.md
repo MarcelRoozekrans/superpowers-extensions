@@ -27,6 +27,7 @@ Tracks all milestones, their phases, and completion status.
 ## Milestone 1: <Name> [status: active|complete|pending]
 **Goal:** One sentence
 **Started:** YYYY-MM-DD (when status: active or complete)
+**Milestone:** N (when github sync is enabled — GitHub native milestone number)
 **Completed:** YYYY-MM-DD (when status: complete)
 **Definition of Done:**
 - [ ] Criterion 1
@@ -35,7 +36,9 @@ Tracks all milestones, their phases, and completion status.
 ### Phase 1.1: <Name> [status: complete|active|pending]
 **Goal:** One sentence
 **Surface:** UI | Backend | Refactor | Data | Infra | Docs | Mixed
+**HelpWanted:** yes | no
 **Plan:** `docs/plans/YYYY-MM-DD-<phase>.md`
+**Issue:** #N (when github sync is enabled)
 **Completed:** YYYY-MM-DD (when status: complete)
 
 ### Phase 1.2: <Name> [status: pending]
@@ -55,6 +58,9 @@ state files stay machine-readable across sessions.
 - **Status values are exhaustive** — only `active`, `complete`, `pending`. Never `wip`, `done`, `tbd`, `blocked`, or other free-form values. If a phase is blocked, leave its status as `active` and capture the blocker in `STATE.md` instead.
 - **Completed date** — always `**Completed:** YYYY-MM-DD` on its own line, ISO 8601 dashes, no time component. Add this line only when status transitions to `complete`. Never add it pre-emptively.
 - **Surface field** — `**Surface:**` on its own line below `**Goal:**`. Drives `start-next-phase`'s pre-plan routing (UI phases chain through `ui-design-system` + `ui-workflow ui-phase`; refactor phases chain through `refactor-analysis`; others go directly to `writing-plans`). Allowed values, exhaustive: `UI`, `Backend`, `Refactor`, `Data`, `Infra`, `Docs`, `Mixed`. Capitalized exactly as shown, no quotes, single space after the colon. If a phase blends two surfaces equally (e.g. a feature touching both API and UI), use `Mixed` and document the breakdown in the design spec; `start-next-phase` falls back to the default routing for `Mixed` so authors can drive the order manually. Phases authored before this convention existed may omit the field — `start-next-phase` treats missing `Surface` the same as `Mixed`.
+- **HelpWanted:** — value is exactly `yes` or `no` (lowercase). Drives the `help wanted` label on `sync-github`. Default `no`. Field is optional; missing is treated as `no`.
+- **Issue:** — written by `init-github-sync` on first GitHub-issue creation, read by `sync-github` thereafter. Format `**Issue:** #N` (with the hash). Do not edit manually unless reconciling a deleted issue.
+- **Milestone:** — same rules but stores the GitHub native Milestone number (no hash). Format `**Milestone:** N`.
 
 ### Edit transitions
 
@@ -103,10 +109,11 @@ After:  ## Milestone 1: Foundation [status: complete]
 ### Phase 1.3: <New Name> [status: pending]
 **Goal:** <one sentence>
 **Surface:** <UI | Backend | Refactor | Data | Infra | Docs | Mixed>
+**HelpWanted:** no
 **Plan:** _to be written_
 ```
 
-(`Plan:` placeholder is replaced when `writing-plans` actually runs. `Surface:` is required at insertion time so `start-next-phase` can route correctly when the phase later activates.)
+(`Plan:` placeholder is replaced when `writing-plans` actually runs. `Surface:` is required at insertion time so `start-next-phase` can route correctly when the phase later activates. `Issue:` is omitted — it gets written by `sync-github` on first sync.)
 
 ## STATE.md
 
