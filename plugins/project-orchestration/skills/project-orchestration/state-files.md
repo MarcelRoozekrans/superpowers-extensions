@@ -113,7 +113,7 @@ After:  ## Milestone 1: Foundation [status: complete]
 **Plan:** _to be written_
 ```
 
-(`Plan:` placeholder is replaced when `writing-plans` actually runs. `Surface:` is required at insertion time so `start-next-phase` can route correctly when the phase later activates. `Issue:` is omitted — it gets written by `sync-github` on first sync.)
+(`Plan:` placeholder is replaced when `writing-plans` actually runs. `Surface:` is required at insertion time so `start-next-phase` can route correctly when the phase later activates. `Issue:` is omitted — it gets written by `init-github-sync` on first GitHub-issue creation.)
 
 ## STATE.md
 
