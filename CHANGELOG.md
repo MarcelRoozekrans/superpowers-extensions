@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.16.0](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.15.0...superpowers-extensions-v1.16.0) (2026-05-06)
+
+
+### Features
+
+* **project-orchestration:** post-impl ui-review hook and decision recall in surface chains ([d274f76](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/d274f76441e6e325c3fd39f81044881cb813a9ac))
+
+
+### Bug Fixes
+
+* **suite:** close four cross-skill integration gaps ([ce32a72](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/ce32a722cd950d75e8266e76923aa7fa80570f81))
+* **suite:** five cross-skill integration gaps (incl. surface-dispatch follow-ups) ([826adb7](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/826adb7f43d6abf6518151f0ce4d621e4b59b103))
+
 ## [1.15.0](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.14.3...superpowers-extensions-v1.15.0) (2026-05-05)
 
 
