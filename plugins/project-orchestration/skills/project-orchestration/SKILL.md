@@ -606,12 +606,12 @@ One-time setup. Triggered manually by `/sync-to-github` or by an explicit invoca
    b. `Edit` ROADMAP.md to add `**Milestone:** N` immediately after the milestone's `**Started:**` line.
    c. VERIFY by re-reading ROADMAP.md.
 4. **For each phase under each milestone (in order):**
-   a. Build the issue body: phase goal + Surface tag + permalink to design spec at the current commit SHA (`https://github.com/{owner}/{repo}/blob/<sha>/docs/plans/<spec>.md` if a spec exists; otherwise note "no design spec yet").
+   a. Build the issue body: phase goal + Surface tag + permalink to design spec at the SHA captured in Step 1 (run `git rev-parse HEAD` once at the start of the sub-skill and reuse it for every issue body — do not re-resolve per iteration) (`https://github.com/{owner}/{repo}/blob/<sha>/docs/plans/<spec>.md` if a spec exists; otherwise include the literal text "no design spec yet" in the issue body in place of the permalink line).
    b. Build the label list: `surface:<value>`, `status:<value>`, plus `help wanted` if `**HelpWanted:** yes`.
    c. `gh issue create --title "Phase N.M: <Name>" --body "<body>" --milestone <milestone-number> --label "<labels>"` — capture the returned issue number.
    d. `Edit` ROADMAP.md to add `**Issue:** #N` after the phase's `**Surface:**`/`**HelpWanted:**` lines.
    e. VERIFY by re-reading ROADMAP.md.
-5. **Final VERIFY** — re-read ROADMAP.md end-to-end, confirm every milestone has `**Milestone:** N` and every phase has `**Issue:** #N`. If any is missing, the corresponding `gh` call did not return cleanly — re-attempt that one before commit.
+5. **Final VERIFY** — re-read ROADMAP.md end-to-end, confirm every milestone has `**Milestone:** N` and every phase has `**Issue:** #N`. If any is missing, the corresponding `gh` call did not return cleanly — re-attempt that one once. If it still fails, fall through to the `gh API error on a single call` row of the Error handling table — stop the loop, report the failing call, and direct the user to `sync-github` for incremental recovery.
 6. **Stage and commit:** `git add docs/planning/ROADMAP.md && git commit -m "chore(sync): init github sync — N issues, M milestones"`. Run `git status` and confirm a clean tree.
 7. **Announce** only after the commit succeeds:
 
@@ -624,6 +624,7 @@ Pass `--dry-run` (or trigger phrase "dry run", "preview the sync") to:
 - Print every `gh` call that would be made, with arguments
 - Skip all writes to ROADMAP.md
 - Skip the commit
+- Skip the Step 5 Final VERIFY (it would otherwise see an unmodified ROADMAP.md and report every field as missing)
 
 Use this on first run to verify the labels, milestones, and issues look right before any real GitHub state is created.
 
@@ -634,7 +635,7 @@ Use this on first run to verify the labels, milestones, and issues look right be
 | Already initialized (Issue/Milestone fields present) | Refuse: "Sync already initialized. Use `sync-github` for incremental updates." |
 | `gh auth status` fails | Refuse with `gh auth login` instruction |
 | No GitHub remote | Refuse with explanation |
-| Rate limit hit mid-loop | Stop with partial state. Report which milestones/issues were created. Re-running picks up where it left off (any phase already mapped is skipped because of the "already initialized" check — so the user fixes by running `sync-github` instead, which is incremental-aware). |
+| Rate limit hit mid-loop | Stop with partial state. Report which milestones/issues were created. Re-running `init-github-sync` will be refused (the already-initialized guard fires on the partial state). Direct the user to `sync-github`, which is incremental-aware and will fill in the missing issues/milestones. |
 | `gh` API error on a single call | Stop the loop. Report the failing call. Do NOT continue with other phases — partial state is confusing. |
 
 ---
