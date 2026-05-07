@@ -152,13 +152,13 @@ When the user wants to append a new phase to the current milestone's roadmap.
 ### Process
 
 1. **Read** `docs/planning/ROADMAP.md` and `docs/planning/MILESTONE.md` (use the `Read` tool) to find the current milestone and its last phase number.
-2. Ask the user: "Phase name, goal, and surface? (Surface is one of `UI` | `Backend` | `Refactor` | `Data` | `Infra` | `Docs` | `Mixed` — drives whether the phase auto-chains through `ui-design-system` + `ui-workflow ui-phase`, `refactor-analysis`, or goes directly to `writing-plans`.)"
-3. **Use the `Edit` tool** to append the new phase block to `docs/planning/ROADMAP.md` under the current milestone with status `pending` and the user's stated `**Surface:**`. Format per [state-files.md](state-files.md).
-4. **VERIFY:** re-read `docs/planning/ROADMAP.md` and confirm the new phase block is present with the correct number, name, `status: pending`, and `Surface:` value. If any is missing, the Edit did not apply — retry.
+2. Ask the user: "Phase name, goal, surface, and help-wanted? (Surface is one of `UI` | `Backend` | `Refactor` | `Data` | `Infra` | `Docs` | `Mixed`. HelpWanted is `yes` or `no` — defaults to `no`. `yes` flags the phase for external contributors when github-sync is enabled.)"
+3. **Use the `Edit` tool** to append the new phase block to `docs/planning/ROADMAP.md` under the current milestone with status `pending` and the user's stated `**Surface:**` and `**HelpWanted:**`. Format per [state-files.md](state-files.md).
+4. **VERIFY:** re-read `docs/planning/ROADMAP.md` and confirm the new phase block is present with the correct number, name, `status: pending`, `Surface:`, and `HelpWanted:` values. If any is missing, the Edit did not apply — retry.
 5. **Use the `Edit` tool** to add the new phase to the `## Phases` list in `docs/planning/MILESTONE.md`.
 6. **VERIFY:** re-read `docs/planning/MILESTONE.md` and confirm the phase appears in the list.
 7. Stage and commit: `git add docs/planning/ROADMAP.md docs/planning/MILESTONE.md && git commit -m "chore(roadmap): add phase N.M — <name>"`. Run `git status` and confirm a clean tree.
-8. Announce the new phase number, name, and surface only after the commit succeeds.
+8. Announce the new phase number, name, surface, and help-wanted only after the commit succeeds.
 
 ---
 
@@ -171,9 +171,9 @@ When urgent work needs to be inserted between two existing phases.
 ### Process
 
 1. **Read** `docs/planning/ROADMAP.md` (use the `Read` tool), present the current phase list to the user.
-2. Ask: "Insert after which phase?", "New phase name and goal?", and "Surface? (`UI` | `Backend` | `Refactor` | `Data` | `Infra` | `Docs` | `Mixed`)"
-3. **Use the `Edit` tool** to insert the new phase block into `docs/planning/ROADMAP.md` (with the user's stated `**Surface:**` line) and renumber every subsequent phase (N.M+1 → N.M+2, etc.). Both inserts and renumbers are tool calls — narrating "I've shifted the numbers" does not change the file.
-4. **VERIFY:** re-read `docs/planning/ROADMAP.md` and confirm: (a) the new phase block is present with correct number/name/status/Surface, (b) every later phase is renumbered consecutively with no gaps or duplicates.
+2. Ask: "Insert after which phase?", "New phase name and goal?", "Surface? (`UI` | `Backend` | `Refactor` | `Data` | `Infra` | `Docs` | `Mixed`)", and "HelpWanted? (`yes` or `no` — defaults to `no`. `yes` flags the phase for external contributors when github-sync is enabled.)"
+3. **Use the `Edit` tool** to insert the new phase block into `docs/planning/ROADMAP.md` (with the user's stated `**Surface:**` and `**HelpWanted:**` lines) and renumber every subsequent phase (N.M+1 → N.M+2, etc.). Both inserts and renumbers are tool calls — narrating "I've shifted the numbers" does not change the file.
+4. **VERIFY:** re-read `docs/planning/ROADMAP.md` and confirm: (a) the new phase block is present with correct number/name/status/Surface/HelpWanted, (b) every later phase is renumbered consecutively with no gaps or duplicates.
 5. **Use the `Edit` tool** to update the `## Phases` list in `docs/planning/MILESTONE.md` to reflect the inserted phase and renumbered siblings.
 6. **VERIFY:** re-read `docs/planning/MILESTONE.md` and confirm the list matches ROADMAP.md.
 7. Stage and commit: `git add docs/planning/ROADMAP.md docs/planning/MILESTONE.md && git commit -m "chore(roadmap): insert phase N.M — <name>"`. Run `git status` and confirm a clean tree.
@@ -267,9 +267,10 @@ When the user is stopping work and wants to preserve context for next session. T
 6. Stage and commit: `git add docs/planning/STATE.md && git commit -m "chore(state): pause-work — phase N.M, last task: <description>"`. Run `git status` and confirm a clean tree.
 7. **Squad sync (if installed)** — if a `.squad/` directory exists in the project, run `squad-sync` after the STATE.md commit. Squad's per-agent `history.md` files capture session learning that complements STATE.md (which captures position). Without this step, agent histories drift behind project state. If `squad` is not installed, skip silently — this step is best-effort.
 8. **Decision-tracker sync (if installed)** — if `decision-tracker` is active and any decisions were captured during this session, ensure they have been persisted to long-term memory before exiting. Pause is the natural fence for memory writes; deferring them risks losing the decision when the conversation ends. If `decision-tracker` is not active, skip silently.
-9. Announce only after the commit succeeds:
+9. **GitHub sync (if initialized)** — if `docs/planning/ROADMAP.md` contains any `**Issue:**` or `**Milestone:**` field (signal that `init-github-sync` has been run), invoke `sync-github` as a final step. This produces a full reconciliation of GitHub state with the just-written STATE.md / ROADMAP.md changes. If sync is not initialized, skip silently — do not invite the user to set it up here, that is `init-github-sync`'s job.
+10. Announce only after the commit succeeds:
 
-   > "Session state saved to `docs/planning/STATE.md`. Next session, start with `resume-work` or say 'resume' and I'll restore context."
+    > "Session state saved to `docs/planning/STATE.md`. Next session, start with `resume-work` or say 'resume' and I'll restore context."
 
 ---
 
@@ -378,7 +379,9 @@ This sub-skill closes the loop that was missing: without it, `executing-plans` f
 
    Run `git status` and confirm a clean tree.
 
-8. Announce only after the commit succeeds:
+8. **GitHub sync (if initialized)** — if the phase has an `**Issue:** #N` field, invoke `sync-github` to update the GitHub issue's status label and toggle it to closed. This is a single-phase update, not a full reconciliation. If the phase has no `**Issue:**` field, skip silently — sync was not initialized for this project.
+
+9. Announce only after the commit succeeds:
 
    > "Phase N.M — {name} marked complete in ROADMAP.md and MILESTONE.md. Committed."
 
@@ -581,6 +584,124 @@ After `audit-milestone` returns PASS.
 
 ---
 
+## init-github-sync
+
+### When to Use
+
+One-time setup. Triggered manually by `/sync-to-github` or by an explicit invocation when the user signals: "set up GitHub sync", "publish the roadmap to GitHub", "make the backlog visible to external devs". Refuses to run if sync is already initialized (any `**Issue:**` or `**Milestone:**` field present in ROADMAP.md) — incremental updates are `sync-github`'s job.
+
+### Pre-conditions
+
+- `gh auth status` succeeds. If not → refuse with: "Sync requires the GitHub CLI authenticated. Run `gh auth login`, then re-invoke `/sync-to-github`."
+- `git remote get-url origin` returns a `github.com` URL. If not → refuse with: "Project does not appear to be hosted on GitHub. Sync is GitHub-specific; skip for non-GitHub remotes."
+- `docs/planning/ROADMAP.md` exists with at least one milestone.
+
+### Announce Line
+
+> "Initializing GitHub sync. I'll create native Milestones and Issues for every roadmap entry, then write the GitHub numbers back into ROADMAP.md so future syncs are idempotent."
+
+### Process
+
+1. **Verify pre-conditions** (above). Refuse loudly if any fails. Then capture `git rev-parse HEAD` once and reuse it for all permalinks built in Step 4a — same pinning rule as `sync-github`. Do not re-resolve per iteration.
+2. **Create labels** if missing — `surface:ui`, `surface:backend`, `surface:refactor`, `surface:data`, `surface:infra`, `surface:docs`, `surface:mixed`, `status:pending`, `status:active`, `status:complete`, `help wanted`. Use `gh label create --force <name>` for each.
+3. **For each milestone in ROADMAP.md (top-down order):**
+   a. `gh api -X POST repos/{owner}/{repo}/milestones -f title="Milestone N: <Name>" -f description="<goal + DoD>"` — capture the returned `number`.
+   b. `Edit` ROADMAP.md to add `**Milestone:** N` immediately after the milestone's `**Started:**` line.
+   c. VERIFY by re-reading ROADMAP.md.
+4. **For each phase under each milestone (in order):**
+   a. Build the issue body: phase goal + Surface tag + permalink to design spec at the SHA captured in Step 1 (run `git rev-parse HEAD` once at the start of the sub-skill and reuse it for every issue body — do not re-resolve per iteration) (`https://github.com/{owner}/{repo}/blob/<sha>/docs/plans/<spec>.md` if a spec exists; otherwise include the literal text "no design spec yet" in the issue body in place of the permalink line).
+   b. Build the label list: `surface:<value>`, `status:<value>`, plus `help wanted` if `**HelpWanted:** yes`.
+   c. `gh issue create --title "Phase N.M: <Name>" --body "<body>" --milestone <milestone-number> --label "<labels>"` — capture the returned issue number.
+   d. `Edit` ROADMAP.md to add `**Issue:** #N` after the phase's `**Surface:**`/`**HelpWanted:**` lines.
+   e. VERIFY by re-reading ROADMAP.md.
+5. **Final VERIFY** — re-read ROADMAP.md end-to-end, confirm every milestone has `**Milestone:** N` and every phase has `**Issue:** #N`. If any is missing, the corresponding `gh` call did not return cleanly — re-attempt that one once. If it still fails, fall through to the `gh API error on a single call` row of the Error handling table — stop the loop, report the failing call, and direct the user to `sync-github` for incremental recovery.
+6. **Stage and commit:** `git add docs/planning/ROADMAP.md && git commit -m "chore(sync): init github sync — N issues, M milestones"`. Run `git status` and confirm a clean tree.
+7. **Announce** only after the commit succeeds:
+
+   > "GitHub sync initialized. N issues created across M milestones. Future `pause-work` and `complete-phase` runs will reconcile state automatically."
+
+### Dry-run
+
+Pass `--dry-run` (or trigger phrase "dry run", "preview the sync") to:
+
+- Print every `gh` call that would be made, with arguments
+- Skip all writes to ROADMAP.md
+- Skip the commit
+- Skip the Step 5 Final VERIFY (it would otherwise see an unmodified ROADMAP.md and report every field as missing)
+
+Use this on first run to verify the labels, milestones, and issues look right before any real GitHub state is created.
+
+### Error handling
+
+| Condition | Response |
+|---|---|
+| Already initialized (Issue/Milestone fields present) | Refuse: "Sync already initialized. Use `sync-github` for incremental updates." |
+| `gh auth status` fails | Refuse with `gh auth login` instruction |
+| No GitHub remote | Refuse with explanation |
+| Rate limit hit mid-loop | Stop with partial state. Report which milestones/issues were created. Re-running `init-github-sync` will be refused (the already-initialized guard fires on the partial state). Direct the user to `sync-github`, which is incremental-aware and will fill in the missing issues/milestones. |
+| `gh` API error on a single call | Stop the loop. Report the failing call. Do NOT continue with other phases — partial state is confusing. |
+
+---
+
+## sync-github
+
+### When to Use
+
+Automatic. Runs as a step of `pause-work` (full reconciliation across all milestones and phases) and `complete-phase` (just the finished phase). Manual invocation is also supported when the user says "resync GitHub" or "push roadmap changes to GitHub".
+
+### Pre-conditions
+
+- `gh auth status` succeeds. If not → log a warning to the conversation, skip silently, do NOT block the parent skill.
+- ROADMAP.md has been initialized via `init-github-sync` (at least one `**Issue:**` or `**Milestone:**` field present). If not → log "Sync not initialized; skipping. Run `/sync-to-github` to initialize", do NOT block.
+
+### Announce Line
+
+> "Reconciling GitHub state with ROADMAP.md."
+
+### Process
+
+1. **Verify pre-conditions** (above). Skip silently if any fails.
+2. **Read** `docs/planning/ROADMAP.md`.
+3. **Reconcile milestones.** For each milestone block:
+   - If `**Milestone:** N` exists → `gh api -X PATCH repos/{owner}/{repo}/milestones/N -f title="..." -f description="..." -f state="open|closed"` to update title, description (regenerate from current goal + DoD), and state (open if `[status: active|pending]`, closed if `[status: complete]`).
+   - If missing → create as in `init-github-sync` step 3, write back.
+4. **Reconcile phases.** For each phase block:
+   - Capture `git rev-parse HEAD` once at the start of this step (before any `gh` writes) and reuse it for permalinks in newly created issues. Same pinning rule as `init-github-sync`.
+   - Compute desired labels (surface, status, help-wanted) from the current ROADMAP.md fields.
+   - If `**Issue:** #N` exists → `gh issue edit N --title "..." --body "..." --milestone <m> --add-label <new> --remove-label <removed>`. Toggle issue state with `gh issue close N` or `gh issue reopen N` based on `[status: complete]`.
+   - If missing → create as in `init-github-sync` step 4, write back.
+5. **Detect external signals.** For each phase with `**Issue:** #N`:
+   - `gh issue view N --json state,closedAt,comments` — check GitHub-side state.
+   - Apply the table below. Never modify ROADMAP.md from this step.
+
+   | GitHub state | Local ROADMAP status | Action |
+   |---|---|---|
+   | `closed` | `active` | Post comment on the issue: *"Issue closed externally — maintainer should run `complete-phase N.M` locally to confirm. ROADMAP.md still shows this phase as active."* Idempotent — first scan the issue's comments; skip if a previous "closed externally" comment exists. |
+   | `closed` | `pending` | Same comment, adapted for pending phases. |
+   | `open` | `complete` | We marked complete locally; step 4 already issued `gh issue close`. No comment. |
+   | `open` | `active` / `pending` | Normal — no action. |
+
+6. **If anything was written back to ROADMAP.md** (new issues created or milestones added since last sync), stage and commit: `git add docs/planning/ROADMAP.md && git commit -m "chore(sync): reconcile github state"`. If no writes happened, skip the commit.
+7. **Announce** only the change set, briefly:
+
+   > "Synced. N issues updated, M created, K external-close signals posted."
+
+### Dry-run
+
+Same flag/trigger as `init-github-sync`. Prints intended `gh` calls, skips writes, skips commits. Useful when `sync-github` runs from a debugging session and you want to preview without producing real GitHub state changes.
+
+### Error handling
+
+| Condition | Response |
+|---|---|
+| `gh auth` missing/failed | Log + skip silently. Never block parent. |
+| Single `gh` call fails (network, rate limit, permission) | No mid-loop retry — log the specific failure, continue with the rest of the loop. Report aggregate failures at the end. Partial sync is acceptable; next run reconciles. (Differs intentionally from `init-github-sync`, which retries once before falling through, because `sync-github` runs frequently from `pause-work`/`complete-phase` and a transient failure is naturally re-tried on the next sync.) |
+| Issue #N returns 404 (deleted on GitHub) | Warn: "Issue #N referenced in ROADMAP.md no longer exists on GitHub. Skipping. Reconcile manually before next sync." Do NOT silently re-create with a new number. |
+| Phase removed locally via `remove-phase` | The phase block is gone from ROADMAP.md; the issue stays orphan on GitHub until the user manually closes it (or `remove-phase` invokes `gh issue close --comment "removed from roadmap"` directly — see `remove-phase` task). |
+| Phase renumbered locally via `insert-phase` | Issue number is stable; only the title (`Phase N.M: ...`) changes. The reconcile loop in step 4 handles this naturally. |
+
+---
+
 ## plan-roadmap
 
 ### When to Use
@@ -703,6 +824,12 @@ After `complete-milestone`, or when the user wants to start a new version cycle 
 
 11. **Letting `plan-roadmap`'s brainstorm narrow to a single milestone or phase** — The roadmap brainstorm covers the *entire project* (3-7 milestones, rough phase outline each). If it converges on the implementation details of milestone 1 ("what files do we need", "which API"), the level of abstraction has been lost — that is `new-milestone`'s scope, not `plan-roadmap`'s. Zoom back out. The roadmap brainstorm is a one-time global sweep; missing it means later milestones get planned in isolation with no shared context.
 
+12. **Letting GitHub state drift the local ROADMAP.md** — Files are the source of truth; `sync-github` writes one direction (local → GitHub). Never copy fields back from GitHub into ROADMAP.md. If a maintainer edited an issue title on GitHub, the next sync will overwrite that edit; that is the intended behavior, not a bug. Editing ROADMAP.md to match a GitHub-side change inverts the projection model and silently makes GitHub authoritative.
+
+13. **Re-creating an issue after a 404** — If a phase block has `**Issue:** #N` and `gh issue view N` returns 404, the issue was deleted on GitHub (intentionally or accidentally). Do NOT silently mint a new number and overwrite `**Issue:** #N` — that hides the deletion and detaches the phase from any GitHub history. Surface the 404 to the user (post a chain message, log it, and skip that phase's projection); let the maintainer decide whether to recreate or to clear the field.
+
+14. **Failing the parent skill on `gh` errors** — `sync-github` runs from `pause-work` and `complete-phase`. A failed sync — `gh` not installed, not authenticated, network down, rate-limited, repo not found — must NEVER prevent state files from being written or committed. Log the failure, skip the GitHub projection, and let the parent skill complete normally. The local state file is the source of truth and must remain writable even when GitHub is unreachable.
+
 ## Common Rationalizations
 
 | Rationalization | Why It's Wrong | Correct Action |
@@ -725,6 +852,10 @@ After `complete-milestone`, or when the user wants to start a new version cycle 
 | "I know the first milestone in detail, let me capture that now" (during plan-roadmap brainstorm) | The roadmap brainstorm is a whole-project sweep at low fidelity. Detailing milestone 1 here means milestones 2-N never get the shared-context treatment | Keep the brainstorm at roadmap scope. List 3-7 milestones with one-line goals and a rough phase outline each; do NOT detail any single one. Per-milestone detail is `new-milestone`'s job, fired separately when each milestone activates. |
 | "There's no codebase yet, so we can't brainstorm a roadmap" | Greenfield projects brainstorm from product vision, not from code. `map-codebase` is optional and skipped on greenfield; the roadmap brainstorm itself works from a blank sheet | Run `plan-roadmap` directly. The brainstorm grounds milestone proposals in the user's stated goals and users, not in existing files. |
 | "We'll figure out the later milestones when we get there" | That's how projects end up with milestone 1 carefully designed and milestones 2-N improvised in isolation. The roadmap is the shared context that prevents this | Finish the whole-project sweep in `plan-roadmap`. Later milestones are intentionally lossy (one-line goals, rough phase outlines) — they get refined by `new-milestone` when activated, but the global shape is set up front. |
+| "I'll just edit the issue directly on GitHub" | Maintainer-side edits get overwritten on next sync. ROADMAP.md is the source of truth; GitHub is a one-way projection target. | Edit ROADMAP.md, then `sync-github` (or wait for the next `pause-work` / `complete-phase`) propagates the change to GitHub. |
+| "External dev closed the issue, the work is done" | Closed-on-GitHub is a *signal*, not state. The maintainer reviews the evidence and runs `complete-phase` locally; that is what writes the authoritative status. | Read the advisory comment posted by `detect-external-signals`. Decide. If genuinely done, run `complete-phase`; if not, reopen on GitHub or leave it pending. |
+| "Sync failed; let me fix the file directly" | If `sync-github` fails, the desired GitHub state was not achieved, but ROADMAP.md is unaffected and still correct. Editing ROADMAP.md to "compensate" inverts the projection direction and corrupts the source of truth. | Investigate the `gh` failure (auth, network, rate limit, deleted issue). Re-run `sync-github`. Leave ROADMAP.md alone unless the local state itself is wrong. |
+| "I'll skip the dry-run, it's fine" | Dry-run is the fastest way to catch label/title/permission/repo-name mistakes before they create real GitHub state that has to be cleaned up afterwards. | Use `--dry-run` on first `init-github-sync` and after any structural change (renamed phase, new label scheme, repo move). Only run for-real after the dry-run output looks correct. |
 
 ## Quick Reference
 
@@ -745,6 +876,9 @@ After `complete-milestone`, or when the user wants to start a new version cycle 
 | `complete-milestone` | After audit PASS | `docs/planning/ROADMAP.md`, `docs/planning/MILESTONE.md`, git tag |
 | `plan-roadmap` | "plan the roadmap" / first project setup, no ROADMAP.md yet | `docs/superpowers/specs/YYYY-MM-DD-roadmap-design.md`, `docs/planning/ROADMAP.md`, `docs/planning/MILESTONE.md` |
 | `new-milestone` | After `complete-milestone` — chains through `superpowers:brainstorming` | `docs/superpowers/specs/YYYY-MM-DD-milestone-N-design.md`, `docs/planning/MILESTONE.md`, `docs/planning/ROADMAP.md` |
+| `init-github-sync` | "set up github sync" / first-time GitHub projection setup | `docs/planning/ROADMAP.md` (Issue + Milestone numbers written back); labels, native Milestones, and Issues created on GitHub (not local files) |
+| `sync-github` | Auto-invoked from `pause-work` and `complete-phase`; manual on demand | None locally — projects ROADMAP.md state to GitHub issues/milestones (one-way write) |
+| `detect-external-signals` | Called from `sync-github` step 5 (embedded — not invoked directly) | None — only posts advisory comments on GitHub when external closes/edits are detected |
 
 ## Relationship to Superpowers Skills
 
@@ -761,3 +895,4 @@ After `complete-milestone`, or when the user wants to start a new version cycle 
 | `ui-design-system` | `start-next-phase`'s **Surface pre-plan hook** invokes `ui-design-system` for `Surface: UI` phases when `docs/design/MASTER.md` is missing. Runs once per project (the design system is global), then `ui-phase` consumes it for every subsequent UI phase. | Surface-driven dispatch — the phase declares `**Surface:** UI` in ROADMAP.md and the hook handles the rest. No manual invocation needed. |
 | `ui-workflow` (`ui-phase` and `ui-review`) | Two hook points for `Surface: UI` phases. **Pre-plan:** `start-next-phase` runs `ui-phase` after `ui-design-system` (if needed) to produce `docs/plans/*-<phase>-*-ui-contract.md` BEFORE chaining to `superpowers:writing-plans`. **Post-implementation:** when `executing-plans` returns clean, `start-next-phase` runs `ui-review` to audit the implementation against that same contract before `complete-phase` runs. Without the post-impl hook, the contract becomes write-only and the audit value is lost. | The contract is the bridge between design spec and implementation plan for UI work — and the audit target after implementation. `ui-review` requires the Playwright MCP (via `regression-test`); the chain degrades gracefully (logs and skips) when MCP is unavailable. |
 | `refactor-analysis` | For `Surface: Refactor` phases, the **Surface pre-plan hook** runs `refactor-analysis` (Phases 1–7) to produce `docs/plans/*-<phase>-*-impact-analysis.md` BEFORE chaining to `superpowers:writing-plans`. The analysis feeds writing-plans the safe execution order, transitive dependency map, and risk register. | Surface-driven dispatch — phases that involve restructuring existing code declare `**Surface:** Refactor` and get impact analysis automatically rather than relying on the agent to remember. |
+| `gh` CLI / GitHub | External tool, not a sibling skill — `init-github-sync`, `sync-github`, and the embedded `detect-external-signals` shell out to `gh` to project local state onto GitHub. Files in `docs/planning/` are the source of truth; GitHub is a one-way visibility target written by `sync-github` from `pause-work` and `complete-phase`. External signals (closes/edits performed directly on GitHub) are surfaced as advisory comments — never copied back into ROADMAP.md. See [`docs/plans/2026-05-06-github-sync-design.md`](../../../../docs/plans/2026-05-06-github-sync-design.md) for the full projection model and rationale. | Hybrid signal handling: outbound writes are authoritative (ROADMAP.md → GitHub); inbound is advisory only (GitHub closes/edits → comment, maintainer decides). Sync failures must never block local state writes — `sync-github` logs and skips when `gh` is unavailable, mis-authenticated, or rate-limited. |
