@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.17.0](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.16.0...superpowers-extensions-v1.17.0) (2026-05-07)
+
+
+### Features
+
+* **project-orchestration:** add init-github-sync sub-skill ([3c3d4e5](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/3c3d4e56174305045395108cec3d207e71d4dece))
+* **project-orchestration:** add sync-github sub-skill with external signal detection ([59f1870](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/59f1870e32de2f851edff2e6ac8a91a54a756fdd))
+* **project-orchestration:** ask for HelpWanted in add-phase and insert-phase ([f223a3f](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/f223a3f6808d6b3abb8acf150c562e29fb4c349f))
+* **project-orchestration:** github-sync — visible backlog for external devs ([72940ae](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/72940ae8840da498eb61e9793d9ce9cc1e3814f5))
+* **project-orchestration:** trigger sync-github from pause-work and complete-phase ([e4048ca](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/e4048caede9db8e93b2079d93e428d2b8d9c809b))
+* **state:** add Issue/Milestone/HelpWanted fields for github-sync ([0f2ff91](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/0f2ff91b384d63f5832d1a6f43b6f615e9775054))
+
+
+### Bug Fixes
+
+* **project-orchestration:** explicit SHA capture in init Step 1 and accurate Quick Reference row ([12f59d4](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/12f59d43d8b9cf28dd5b2f86590fbb35592ff306))
+* **project-orchestration:** pin SHA and document retry divergence in sync-github ([a36d059](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/a36d059c097a28dd34225bc4e7c75e7ad3d8335d))
+* **project-orchestration:** tighten init-github-sync wording and allow chore(sync) scope ([d027af4](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/d027af492d6926951fa6b70daa1f5e1a7d6dfb69))
+* **state:** correct first-write attribution for Issue field in insert template ([07c2d13](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/07c2d13cfff90649b22eff8af5c2957798c936fc))
+
 ## [1.16.0](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.15.0...superpowers-extensions-v1.16.0) (2026-05-06)
 
 
