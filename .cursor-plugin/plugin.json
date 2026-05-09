@@ -2,7 +2,7 @@
   "name": "superpowers-extensions",
   "displayName": "Superpowers Extensions",
   "description": "Quality-gate, refactor, project-orchestration, UI workflow, and design-system skills extending the obra/superpowers suite for Claude Code, Cursor, Codex, Gemini, Copilot CLI, and OpenCode.",
-  "version": "1.17.0",
+  "version": "1.18.0",
   "author": {
     "name": "Marcel Roozekrans"
   },

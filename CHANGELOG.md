@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.18.0](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.17.0...superpowers-extensions-v1.18.0) (2026-05-09)
+
+
+### Features
+
+* **project-orchestration:** github-sync — visible backlog for external devs ([#91](https://github.com/MarcelRoozekrans/superpowers-extensions/issues/91)) ([8c7fcb8](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/8c7fcb8c63f2f29c35f6ca4134162d35164a3adf))
+
 ## [1.17.0](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.16.0...superpowers-extensions-v1.17.0) (2026-05-07)
 
 
