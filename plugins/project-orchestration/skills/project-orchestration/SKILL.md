@@ -607,7 +607,7 @@ One-time setup. Triggered manually by `/sync-to-github` or by an explicit invoca
 `gh api repos/{owner}/{repo}/...` paths use literal `{owner}` and `{repo}` placeholders — `gh api` substitutes them from the current repo's remote automatically. Pass them through verbatim, do not interpolate. **Markdown permalinks (`https://github.com/.../blob/...`) are NOT touched by `gh` — resolve owner/repo explicitly:**
 
 ```bash
-OWNER_REPO=$(gh repo view --json nameWithOwner -q .nameWithOwner)   # e.g. "MarcelRoozekrans/playwright-mcp-skill"
+OWNER_REPO=$(gh repo view --json nameWithOwner -q .nameWithOwner)   # e.g. "MarcelRoozekrans/superpowers-extensions"
 SHA=$(git rev-parse HEAD)
 ```
 
