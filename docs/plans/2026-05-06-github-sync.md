@@ -458,7 +458,7 @@ Expected: every commit header is valid.
 
 ```bash
 git push -u origin feat/github-sync
-gh -R MarcelRoozekrans/superpowers-extensions pr create --title "feat(project-orchestration): github-sync — visible backlog for external devs" --body "$(cat <<'EOF'
+gh -R MarcelRoozekrans/playwright-mcp-skill pr create --title "feat(project-orchestration): github-sync — visible backlog for external devs" --body "$(cat <<'EOF'
 ## Summary
 
 Adds three new sub-skills to project-orchestration that project ROADMAP.md state to GitHub Milestones + Issues for external-developer visibility, while keeping files as source of truth.

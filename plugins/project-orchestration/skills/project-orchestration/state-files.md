@@ -59,8 +59,8 @@ state files stay machine-readable across sessions.
 - **Completed date** — always `**Completed:** YYYY-MM-DD` on its own line, ISO 8601 dashes, no time component. Add this line only when status transitions to `complete`. Never add it pre-emptively.
 - **Surface field** — `**Surface:**` on its own line below `**Goal:**`. Drives `start-next-phase`'s pre-plan routing (UI phases chain through `ui-design-system` + `ui-workflow ui-phase`; refactor phases chain through `refactor-analysis`; others go directly to `writing-plans`). Allowed values, exhaustive: `UI`, `Backend`, `Refactor`, `Data`, `Infra`, `Docs`, `Mixed`. Capitalized exactly as shown, no quotes, single space after the colon. If a phase blends two surfaces equally (e.g. a feature touching both API and UI), use `Mixed` and document the breakdown in the design spec; `start-next-phase` falls back to the default routing for `Mixed` so authors can drive the order manually. Phases authored before this convention existed may omit the field — `start-next-phase` treats missing `Surface` the same as `Mixed`.
 - **HelpWanted:** — value is exactly `yes` or `no` (lowercase). Drives the `help wanted` label on `sync-github`. Default `no`. Field is optional; missing is treated as `no`.
-- **Issue:** — written by `init-github-sync` on first GitHub-issue creation, read by `sync-github` thereafter. Format `**Issue:** #N` (with the hash). Do not edit manually unless reconciling a deleted issue.
-- **Milestone:** — same rules but stores the GitHub native Milestone number (no hash). Format `**Milestone:** N`.
+- **Issue:** — written by `init-github-sync` on first GitHub-issue creation, read by `sync-github` thereafter. Format is `**Issue:** #N` *with* the leading hash (matches GitHub issue convention). Do not edit manually unless reconciling a deleted issue.
+- **Milestone:** — same rules but stores the GitHub native Milestone number *without* a hash. Format is `**Milestone:** N` (just the digit). The two formats differ deliberately so a stray copy-paste between fields is detectable.
 
 ### Edit transitions
 

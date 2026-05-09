@@ -197,11 +197,13 @@ When a future (pending) phase should be removed from the roadmap.
 1. **Read** `docs/planning/ROADMAP.md` (use the `Read` tool), present pending phases to the user.
 2. Ask: "Which phase to remove?"
 3. Confirm: "Remove Phase N.M — {name}? This cannot be undone."
-4. **Use the `Edit` tool** to remove the phase block from `docs/planning/ROADMAP.md` and renumber all subsequent phases (N.M+1 → N.M, etc.).
-5. **VERIFY:** re-read `docs/planning/ROADMAP.md` and confirm: (a) the removed phase block is absent, (b) every later phase is renumbered consecutively with no gaps or duplicates.
-6. **Use the `Edit` tool** to remove the phase from the `## Phases` list in `docs/planning/MILESTONE.md`.
-7. **VERIFY:** re-read `docs/planning/MILESTONE.md`.
-8. Stage and commit: `git add docs/planning/ROADMAP.md docs/planning/MILESTONE.md && git commit -m "chore(roadmap): remove phase N.M — <name>"`. Run `git status` and confirm a clean tree.
+4. **Capture the phase's `**Issue:** #N` value** (if present) BEFORE editing — the field is about to be deleted with the block, and it is needed in step 9 to close the GitHub issue. If the phase has no `**Issue:**` field, sync was not initialized for this phase; skip the capture.
+5. **Use the `Edit` tool** to remove the phase block from `docs/planning/ROADMAP.md` and renumber all subsequent phases (N.M+1 → N.M, etc.).
+6. **VERIFY:** re-read `docs/planning/ROADMAP.md` and confirm: (a) the removed phase block is absent, (b) every later phase is renumbered consecutively with no gaps or duplicates.
+7. **Use the `Edit` tool** to remove the phase from the `## Phases` list in `docs/planning/MILESTONE.md`.
+8. **VERIFY:** re-read `docs/planning/MILESTONE.md`.
+9. **Close the GitHub issue (if captured in step 4):** run `gh issue close <N> --comment "Phase removed from roadmap"`. If `gh` is not installed/authenticated or the call fails (404, network, rate limit), log the failure and continue — the local removal is authoritative; the orphan issue can be closed manually later. Never block the local commit on a `gh` failure.
+10. Stage and commit: `git add docs/planning/ROADMAP.md docs/planning/MILESTONE.md && git commit -m "chore(roadmap): remove phase N.M — <name>"`. Run `git status` and confirm a clean tree.
 
 ---
 
@@ -267,7 +269,7 @@ When the user is stopping work and wants to preserve context for next session. T
 6. Stage and commit: `git add docs/planning/STATE.md && git commit -m "chore(state): pause-work — phase N.M, last task: <description>"`. Run `git status` and confirm a clean tree.
 7. **Squad sync (if installed)** — if a `.squad/` directory exists in the project, run `squad-sync` after the STATE.md commit. Squad's per-agent `history.md` files capture session learning that complements STATE.md (which captures position). Without this step, agent histories drift behind project state. If `squad` is not installed, skip silently — this step is best-effort.
 8. **Decision-tracker sync (if installed)** — if `decision-tracker` is active and any decisions were captured during this session, ensure they have been persisted to long-term memory before exiting. Pause is the natural fence for memory writes; deferring them risks losing the decision when the conversation ends. If `decision-tracker` is not active, skip silently.
-9. **GitHub sync (if initialized)** — if `docs/planning/ROADMAP.md` contains any `**Issue:**` or `**Milestone:**` field (signal that `init-github-sync` has been run), invoke `sync-github` as a final step. This produces a full reconciliation of GitHub state with the just-written STATE.md / ROADMAP.md changes. If sync is not initialized, skip silently — do not invite the user to set it up here, that is `init-github-sync`'s job.
+9. **GitHub sync (if initialized)** — if `docs/planning/ROADMAP.md` contains any `**Issue:**` or `**Milestone:**` field (signal that `init-github-sync` has been run), invoke `sync-github` as a final step. This produces a full reconciliation of GitHub state with the just-written STATE.md / ROADMAP.md changes. If sync is not initialized, skip silently — do not invite the user to set it up here, that is `init-github-sync`'s job. **Note:** `sync-github` may produce its own `chore(sync): reconcile github state` commit when it writes new `**Issue:**` or `**Milestone:**` fields back into ROADMAP.md (e.g. phases added since the last sync). This is normal — `pause-work` ends with one commit on a quiet sync, two commits when sync had write-back work. Both are clean states.
 10. Announce only after the commit succeeds:
 
     > "Session state saved to `docs/planning/STATE.md`. Next session, start with `resume-work` or say 'resume' and I'll restore context."
@@ -600,19 +602,30 @@ One-time setup. Triggered manually by `/sync-to-github` or by an explicit invoca
 
 > "Initializing GitHub sync. I'll create native Milestones and Issues for every roadmap entry, then write the GitHub numbers back into ROADMAP.md so future syncs are idempotent."
 
+### Repo resolution
+
+`gh api repos/{owner}/{repo}/...` paths use literal `{owner}` and `{repo}` placeholders — `gh api` substitutes them from the current repo's remote automatically. Pass them through verbatim, do not interpolate. **Markdown permalinks (`https://github.com/.../blob/...`) are NOT touched by `gh` — resolve owner/repo explicitly:**
+
+```bash
+OWNER_REPO=$(gh repo view --json nameWithOwner -q .nameWithOwner)   # e.g. "MarcelRoozekrans/playwright-mcp-skill"
+SHA=$(git rev-parse HEAD)
+```
+
+Capture both once at the start of the sub-skill and reuse them for every iteration. Do not re-resolve per phase.
+
 ### Process
 
-1. **Verify pre-conditions** (above). Refuse loudly if any fails. Then capture `git rev-parse HEAD` once and reuse it for all permalinks built in Step 4a — same pinning rule as `sync-github`. Do not re-resolve per iteration.
+1. **Verify pre-conditions** (above). Refuse loudly if any fails. Then capture `OWNER_REPO` and `SHA` once per the Repo resolution section above and reuse them for every permalink built in Step 4a.
 2. **Create labels** if missing — `surface:ui`, `surface:backend`, `surface:refactor`, `surface:data`, `surface:infra`, `surface:docs`, `surface:mixed`, `status:pending`, `status:active`, `status:complete`, `help wanted`. Use `gh label create --force <name>` for each.
 3. **For each milestone in ROADMAP.md (top-down order):**
-   a. `gh api -X POST repos/{owner}/{repo}/milestones -f title="Milestone N: <Name>" -f description="<goal + DoD>"` — capture the returned `number`.
+   a. `gh api -X POST repos/{owner}/{repo}/milestones -f title="Milestone N: <Name>" -f description="<body>"` — pass `{owner}` / `{repo}` as literal placeholders (gh substitutes them). The `<body>` is the milestone's `## Goal` paragraph plus its `## Definition of Done` checklist, both read from `docs/planning/MILESTONE.md` for the active milestone, or from the matching milestone block in ROADMAP.md for inactive ones (DoD lives in the milestone block per [state-files.md](state-files.md)). Capture the returned `number`.
    b. `Edit` ROADMAP.md to add `**Milestone:** N` immediately after the milestone's `**Started:**` line.
    c. VERIFY by re-reading ROADMAP.md.
 4. **For each phase under each milestone (in order):**
-   a. Build the issue body: phase goal + Surface tag + permalink to design spec at the SHA captured in Step 1 (run `git rev-parse HEAD` once at the start of the sub-skill and reuse it for every issue body — do not re-resolve per iteration) (`https://github.com/{owner}/{repo}/blob/<sha>/docs/plans/<spec>.md` if a spec exists; otherwise include the literal text "no design spec yet" in the issue body in place of the permalink line).
+   a. Build the issue body: the phase's `**Goal:**` line + Surface tag + permalink to the design spec at `https://github.com/${OWNER_REPO}/blob/${SHA}/docs/plans/<spec>.md` if a spec exists; otherwise include the literal text "no design spec yet" in the issue body in place of the permalink line. Use the captured `OWNER_REPO` and `SHA` from Step 1 — do not paste the literal `{owner}/{repo}` placeholders here, those only work for `gh api`.
    b. Build the label list: `surface:<value>`, `status:<value>`, plus `help wanted` if `**HelpWanted:** yes`.
-   c. `gh issue create --title "Phase N.M: <Name>" --body "<body>" --milestone <milestone-number> --label "<labels>"` — capture the returned issue number.
-   d. `Edit` ROADMAP.md to add `**Issue:** #N` after the phase's `**Surface:**`/`**HelpWanted:**` lines.
+   c. `gh issue create --title "Phase N.M: <Name>" --body "<body>" --milestone <milestone-number> --label "<labels>"` — capture the returned issue number. Title comes from the phase's `### Phase N.M: <Name>` heading in ROADMAP.md.
+   d. `Edit` ROADMAP.md to add `**Issue:** #N` after the phase's `**HelpWanted:**` line if present, otherwise after `**Surface:**` (legacy phases authored before HelpWanted existed may omit it — fall through to Surface).
    e. VERIFY by re-reading ROADMAP.md.
 5. **Final VERIFY** — re-read ROADMAP.md end-to-end, confirm every milestone has `**Milestone:** N` and every phase has `**Issue:** #N`. If any is missing, the corresponding `gh` call did not return cleanly — re-attempt that one once. If it still fails, fall through to the `gh API error on a single call` row of the Error handling table — stop the loop, report the failing call, and direct the user to `sync-github` for incremental recovery.
 6. **Stage and commit:** `git add docs/planning/ROADMAP.md && git commit -m "chore(sync): init github sync — N issues, M milestones"`. Run `git status` and confirm a clean tree.
@@ -622,7 +635,9 @@ One-time setup. Triggered manually by `/sync-to-github` or by an explicit invoca
 
 ### Dry-run
 
-Pass `--dry-run` (or trigger phrase "dry run", "preview the sync") to:
+**Available only on direct invocation** — `/sync-to-github --dry-run` or explicit user phrases ("dry run", "preview the sync", "show me what would change"). The auto-invocations from `pause-work` and `complete-phase` always run for-real; they do NOT propagate flags or trigger phrases. If a dry-run is needed, run `init-github-sync` (or `sync-github`) directly before pausing.
+
+In dry-run mode:
 
 - Print every `gh` call that would be made, with arguments
 - Skip all writes to ROADMAP.md
@@ -660,15 +675,25 @@ Automatic. Runs as a step of `pause-work` (full reconciliation across all milest
 
 ### Process
 
-1. **Verify pre-conditions** (above). Skip silently if any fails.
+1. **Verify pre-conditions** (above). Skip silently if any fails. Then capture `OWNER_REPO` and `SHA` once per the Repo resolution section in `init-github-sync` (same rules apply here):
+
+   ```bash
+   OWNER_REPO=$(gh repo view --json nameWithOwner -q .nameWithOwner)
+   SHA=$(git rev-parse HEAD)
+   ```
+
+   Reuse both for every iteration in steps 3-4. `{owner}` and `{repo}` are passed as literal placeholders to `gh api` (auto-substituted); `OWNER_REPO` is interpolated into markdown permalinks (which `gh` does not touch).
 2. **Read** `docs/planning/ROADMAP.md`.
 3. **Reconcile milestones.** For each milestone block:
-   - If `**Milestone:** N` exists → `gh api -X PATCH repos/{owner}/{repo}/milestones/N -f title="..." -f description="..." -f state="open|closed"` to update title, description (regenerate from current goal + DoD), and state (open if `[status: active|pending]`, closed if `[status: complete]`).
+   - If `**Milestone:** N` exists → `gh api -X PATCH repos/{owner}/{repo}/milestones/N -f title="Milestone N: <Name>" -f description="<body>" -f state="open|closed"`. Title comes from the `## Milestone N: <Name>` heading. `<body>` is the milestone's `## Goal` paragraph + `## Definition of Done` checklist (read from `docs/planning/MILESTONE.md` for the active milestone, or from the matching milestone block in ROADMAP.md for inactive ones — DoD lives in the milestone block per [state-files.md](state-files.md)). State is `open` if `[status: active|pending]`, `closed` if `[status: complete]`.
    - If missing → create as in `init-github-sync` step 3, write back.
 4. **Reconcile phases.** For each phase block:
-   - Capture `git rev-parse HEAD` once at the start of this step (before any `gh` writes) and reuse it for permalinks in newly created issues. Same pinning rule as `init-github-sync`.
-   - Compute desired labels (surface, status, help-wanted) from the current ROADMAP.md fields.
-   - If `**Issue:** #N` exists → `gh issue edit N --title "..." --body "..." --milestone <m> --add-label <new> --remove-label <removed>`. Toggle issue state with `gh issue close N` or `gh issue reopen N` based on `[status: complete]`.
+   - Compute desired labels (surface, status, help-wanted) from the current ROADMAP.md fields → call this set `DESIRED`.
+   - If `**Issue:** #N` exists:
+     - **Read current labels:** `gh issue view N --json labels -q '.labels[].name'` → call this set `CURRENT`.
+     - **Diff:** `ADD = DESIRED - CURRENT`; `REMOVE = (CURRENT ∩ {known sync-managed labels}) - DESIRED`. The "known sync-managed labels" are the ones `init-github-sync` creates (`surface:*`, `status:*`, `help wanted`) — never propose to remove labels outside this set, those are maintainer-applied.
+     - `gh issue edit N --title "Phase N.M: <Name>" --body "<body>" --milestone <m>` plus one `--add-label <name>` per element of `ADD` and one `--remove-label <name>` per element of `REMOVE`. Title comes from the `### Phase N.M: <Name>` heading in ROADMAP.md; `<body>` follows the `init-github-sync` Step 4a recipe (goal + Surface tag + design-spec permalink at `OWNER_REPO`/`SHA`, or "no design spec yet"). Skip the edit entirely when both `ADD` and `REMOVE` are empty AND title/body/milestone are unchanged.
+     - Toggle issue state with `gh issue close N` or `gh issue reopen N` based on `[status: complete]`.
    - If missing → create as in `init-github-sync` step 4, write back.
 5. **Detect external signals.** For each phase with `**Issue:** #N`:
    - `gh issue view N --json state,closedAt,comments` — check GitHub-side state.
@@ -688,7 +713,7 @@ Automatic. Runs as a step of `pause-work` (full reconciliation across all milest
 
 ### Dry-run
 
-Same flag/trigger as `init-github-sync`. Prints intended `gh` calls, skips writes, skips commits. Useful when `sync-github` runs from a debugging session and you want to preview without producing real GitHub state changes.
+Same flag/trigger as `init-github-sync` — direct invocation only. The auto-invocations from `pause-work` (step 9) and `complete-phase` (step 8) always run for-real and do NOT accept `--dry-run`; flags do not propagate from the parent skill. To preview a sync, invoke `sync-github` directly before triggering the parent. Prints intended `gh` calls, skips writes, skips commits.
 
 ### Error handling
 
@@ -697,8 +722,16 @@ Same flag/trigger as `init-github-sync`. Prints intended `gh` calls, skips write
 | `gh auth` missing/failed | Log + skip silently. Never block parent. |
 | Single `gh` call fails (network, rate limit, permission) | No mid-loop retry — log the specific failure, continue with the rest of the loop. Report aggregate failures at the end. Partial sync is acceptable; next run reconciles. (Differs intentionally from `init-github-sync`, which retries once before falling through, because `sync-github` runs frequently from `pause-work`/`complete-phase` and a transient failure is naturally re-tried on the next sync.) |
 | Issue #N returns 404 (deleted on GitHub) | Warn: "Issue #N referenced in ROADMAP.md no longer exists on GitHub. Skipping. Reconcile manually before next sync." Do NOT silently re-create with a new number. |
-| Phase removed locally via `remove-phase` | The phase block is gone from ROADMAP.md; the issue stays orphan on GitHub until the user manually closes it (or `remove-phase` invokes `gh issue close --comment "removed from roadmap"` directly — see `remove-phase` task). |
-| Phase renumbered locally via `insert-phase` | Issue number is stable; only the title (`Phase N.M: ...`) changes. The reconcile loop in step 4 handles this naturally. |
+| Phase removed locally via `remove-phase` | `remove-phase` itself runs `gh issue close <N> --comment "Phase removed from roadmap"` (see `remove-phase` step 9). `sync-github` does not encounter this case because the phase block is already gone from ROADMAP.md by the time it next runs. If `remove-phase`'s `gh` call failed (gh missing/network), the issue is left open on GitHub as an orphan — the maintainer reconciles manually. |
+| Phase renumbered locally via `insert-phase` | Issue number is stable; only the title (`Phase N.M: <Name>` from the heading in ROADMAP.md) changes. The reconcile loop in step 4 picks the new title up via `gh issue edit --title`. |
+
+---
+
+## detect-external-signals
+
+Embedded in `sync-github` step 5 — not a standalone sub-skill. The procedure (read GitHub state with `gh issue view`, compare to local ROADMAP.md status, post idempotent advisory comments on drift) lives there. This section exists so cross-references (Red Flag #13, Common Rationalizations row "External dev closed the issue, the work is done", Quick Reference table) resolve to a real heading instead of looking like a missing skill.
+
+The procedure is intentionally embedded rather than separated because every signal it detects requires the surrounding `sync-github` reconciliation context — pulling it out would force callers to re-walk the same ROADMAP.md state immediately.
 
 ---
 
