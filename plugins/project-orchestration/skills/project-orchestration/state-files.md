@@ -62,6 +62,26 @@ state files stay machine-readable across sessions.
 - **Issue:** — written by `init-github-sync` on first GitHub-issue creation, read by `sync-github` thereafter. Format is `**Issue:** #N` *with* the leading hash (matches GitHub issue convention). Do not edit manually unless reconciling a deleted issue.
 - **Milestone:** — same rules but stores the GitHub native Milestone number *without* a hash. Format is `**Milestone:** N` (just the digit). The two formats differ deliberately so a stray copy-paste between fields is detectable.
 
+### Optional frontmatter — `compress_memory`
+
+`ROADMAP.md` may start with a YAML frontmatter block declaring per-project preferences. The only field currently defined is `compress_memory`, used by the `compress-memory` skill:
+
+```yaml
+---
+compress_memory: enabled   # or: disabled
+---
+```
+
+| Value | Behavior |
+|---|---|
+| `enabled` | `pause-work` invokes `compress-memory` on `STATE.md` after writing it, and on `ROADMAP.md` itself if it has changed since the last commit. Compression failures are logged and do not block `pause-work` (mirrors the `sync-github` graceful-failure pattern). |
+| `disabled` | `pause-work` skips compression. Users can still invoke `/compress-memory <file>` manually. |
+| (field absent) | Treated as `disabled` — backwards compatible default. |
+
+The field is set during `plan-roadmap` via an opt-in question, but may be edited by hand at any time. Flipping `enabled` → `disabled` stops further auto-compression; existing compressed files stay compressed (`*.original.md` backups remain on disk for recovery).
+
+The `compress_memory` field is the only field; do not invent additional keys here without updating this document and the `compress-memory` skill's safety rules.
+
 ### Edit transitions
 
 Agent-driven mutations to ROADMAP.md follow these exact patterns. Use `Edit` tool with the before/after blocks below as templates.
