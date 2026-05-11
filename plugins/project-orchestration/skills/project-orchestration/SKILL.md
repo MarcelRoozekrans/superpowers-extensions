@@ -767,17 +767,39 @@ This is the **roadmap-level brainstorming entry point** — it brainstorms the p
 
 3. **VERIFY:** the brainstorming design spec exists at `docs/superpowers/specs/YYYY-MM-DD-roadmap-design.md` AND covers all 3-7 milestones (not just the first one). If the spec only details milestone 1 with the rest as TBD, the brainstorm did NOT complete at roadmap scope — return to step 2 and finish the sweep. Do NOT skip to writing files because "I have the milestones in my head" or "we can detail the later milestones when we get to them" — the whole point is the global view.
 
-4. **Use the `Write` tool** to create `docs/planning/ROADMAP.md` from the design spec — first milestone with `status: active`, all others with `status: pending`. Format per [state-files.md](state-files.md).
+4. **Ask the compress-memory opt-in question.** If the `compress-memory` plugin is installed (check for `plugins/compress-memory/skills/compress-memory/SKILL.md` in the active marketplace), ask:
 
-5. **VERIFY:** re-read `docs/planning/ROADMAP.md` and confirm: (a) every brainstormed milestone is present, (b) exactly one is `active`, (c) milestone numbering is consecutive starting at 1.
+   > **Enable memory-file compression for this project?**
+   >
+   > When enabled, `pause-work` automatically compresses `STATE.md` and `ROADMAP.md` after writing them. Saves ~40-50% input tokens every time those files are read back (every `resume-work`, every `progress`, every session start). Code, URLs, paths, headings, and tables preserved byte-exact. Original files backed up as `*.original.md` before each compression.
+   >
+   > Trade-off: prose nuance gets terser. If you write long-form rationale in STATE.md notes, you may prefer to keep it readable.
+   >
+   > `(y/N)` — opt-out by default.
 
-6. **Use the `Write` tool** to create `docs/planning/MILESTONE.md` for milestone 1 only (subsequent milestones get their own MILESTONE.md when activated via `new-milestone`). Include goal, definition of done, and the proposed phase outline from the design.
+   Record the answer (`enabled` if yes, `disabled` if no or skipped). This value goes into the `compress_memory` frontmatter field on `ROADMAP.md` in the next step.
 
-7. **VERIFY:** re-read `docs/planning/MILESTONE.md` and confirm goal, DoD, and phase list are present.
+   If `compress-memory` is NOT installed, skip this question and treat the answer as absent (no frontmatter written). The user can install the plugin later and add the field manually.
 
-8. Stage and commit: `git add docs/planning/ROADMAP.md docs/planning/MILESTONE.md && git commit -m "chore(roadmap): plan project roadmap (M1-M<N>)"`. Run `git status` and confirm a clean tree.
+5. **Use the `Write` tool** to create `docs/planning/ROADMAP.md` from the design spec.
+   - If the user answered the opt-in question (step 4), prepend the YAML frontmatter block to the file:
+     ```yaml
+     ---
+     compress_memory: enabled
+     ---
+     ```
+     (or `disabled` per the user's answer)
+   - First milestone with `status: active`, all others with `status: pending`. Format per [state-files.md](state-files.md).
 
-9. Announce only after the commit succeeds: "Roadmap drafted with N milestones. Milestone 1 is active. Use `add-phase` to define phase 1.1, or invoke `brainstorming` to refine milestone 1's scope further."
+6. **VERIFY:** re-read `docs/planning/ROADMAP.md` and confirm: (a) every brainstormed milestone is present, (b) exactly one is `active`, (c) milestone numbering is consecutive starting at 1, (d) if the opt-in question was asked, frontmatter `compress_memory` field is present with value `enabled` or `disabled`.
+
+7. **Use the `Write` tool** to create `docs/planning/MILESTONE.md` for milestone 1 only (subsequent milestones get their own MILESTONE.md when activated via `new-milestone`). Include goal, definition of done, and the proposed phase outline from the design.
+
+8. **VERIFY:** re-read `docs/planning/MILESTONE.md` and confirm goal, DoD, and phase list are present.
+
+9. Stage and commit: `git add docs/planning/ROADMAP.md docs/planning/MILESTONE.md && git commit -m "chore(roadmap): plan project roadmap (M1-M<N>)"`. Run `git status` and confirm a clean tree.
+
+10. Announce only after the commit succeeds: "Roadmap drafted with N milestones. Milestone 1 is active. Use `add-phase` to define phase 1.1, or invoke `brainstorming` to refine milestone 1's scope further."
 
 ### Skip Brainstorming?
 
