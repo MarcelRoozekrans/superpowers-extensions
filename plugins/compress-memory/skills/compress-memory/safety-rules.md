@@ -20,7 +20,7 @@ The following path patterns are NEVER compressible. The denylist lives in this s
 
 When asked to compress a denied file, abort with the specific reason:
 
-Refusing to compress `<path>`: matches denylist pattern `<pattern>`. These files are contracts between skills and must remain in their original form. Use `compress-memory` on `CLAUDE.md`, `STATE.md`, `ROADMAP.md`, or project notes instead.
+> "Refusing to compress `<path>`: matches denylist pattern `<pattern>`. These files are contracts between skills and must remain in their original form. Use `compress-memory` on `CLAUDE.md`, `STATE.md`, `ROADMAP.md`, or project notes instead."
 
 ---
 
@@ -37,7 +37,7 @@ Any other extension → abort with reason.
 
 If the file is larger than 50 kB, abort with:
 
-Refusing to compress `<path>`: file size <X> kB exceeds the 50 kB memory-file threshold. Files this large are usually not natural-language memory — they are logs, exports, or generated content. Compression rules assume short-form prose.
+> "Refusing to compress `<path>`: file size <X> kB exceeds the 50 kB memory-file threshold. Files this large are usually not natural-language memory — they are logs, exports, or generated content. Compression rules assume short-form prose."
 
 ---
 
@@ -61,7 +61,7 @@ compress_memory: skip
 
 abort with:
 
-Skipping `<path>`: frontmatter explicitly opts out (`compress: skip` or `compress_memory: skip`).
+> Skipping `<path>`: frontmatter explicitly opts out (`compress: skip` or `compress_memory: skip`).
 
 ---
 
@@ -111,8 +111,8 @@ If invoked from `pause-work` (auto mode), report the failure to the orchestratin
 
 After a successful compression and write, report to the user:
 
-Compressed `<path>`:
-- Before: <X> bytes
-- After: <Y> bytes
-- Saved: <Z>% (<W> tokens approx)
-- Backup: `<path>.original.md`
+> Compressed `<path>`:
+> - Before: <X> bytes
+> - After: <Y> bytes
+> - Saved: <Z>% (<W> tokens approx)
+> - Backup: `<path>.original.md`
