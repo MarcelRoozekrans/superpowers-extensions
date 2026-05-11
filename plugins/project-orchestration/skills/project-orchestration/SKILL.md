@@ -266,11 +266,18 @@ When the user is stopping work and wants to preserve context for next session. T
 3. Determine recommended next step.
 4. **Use the `Write` tool** to create or overwrite `docs/planning/STATE.md` with the handoff note (see [state-files.md](state-files.md) for format). Do not narrate the content — write the file.
 5. **VERIFY:** re-read `docs/planning/STATE.md` and confirm the handoff note is present with all required sections (Current Position, Open Decisions, Blockers, Recommended Next Step). If any section is missing, the write did not capture it — re-write.
-6. Stage and commit: `git add docs/planning/STATE.md && git commit -m "chore(state): pause-work — phase N.M, last task: <description>"`. Run `git status` and confirm a clean tree.
-7. **Squad sync (if installed)** — if a `.squad/` directory exists in the project, run `squad-sync` after the STATE.md commit. Squad's per-agent `history.md` files capture session learning that complements STATE.md (which captures position). Without this step, agent histories drift behind project state. If `squad` is not installed, skip silently — this step is best-effort.
-8. **Decision-tracker sync (if installed)** — if `decision-tracker` is active and any decisions were captured during this session, ensure they have been persisted to long-term memory before exiting. Pause is the natural fence for memory writes; deferring them risks losing the decision when the conversation ends. If `decision-tracker` is not active, skip silently.
-9. **GitHub sync (if initialized)** — if `docs/planning/ROADMAP.md` contains any `**Issue:**` or `**Milestone:**` field (signal that `init-github-sync` has been run), invoke `sync-github` as a final step. This produces a full reconciliation of GitHub state with the just-written STATE.md / ROADMAP.md changes. If sync is not initialized, skip silently — do not invite the user to set it up here, that is `init-github-sync`'s job. **Note:** `sync-github` may produce its own `chore(sync): reconcile github state` commit when it writes new `**Issue:**` or `**Milestone:**` fields back into ROADMAP.md (e.g. phases added since the last sync). This is normal — `pause-work` ends with one commit on a quiet sync, two commits when sync had write-back work. Both are clean states.
-10. Announce only after the commit succeeds:
+6. **Compress state files (if enabled).** Read `docs/planning/ROADMAP.md` and check whether its YAML frontmatter contains `compress_memory: enabled`.
+
+   - If `enabled`: invoke the `compress-memory` skill on `docs/planning/STATE.md`. Then, if `git diff --quiet HEAD -- docs/planning/ROADMAP.md` exits non-zero (i.e. ROADMAP.md has changed since the last commit), also invoke `compress-memory` on `docs/planning/ROADMAP.md`.
+   - If `disabled`, absent, or the file has no frontmatter: skip compression entirely.
+   - If `compress-memory` is not installed: skip compression entirely (treat the field as absent).
+
+   **Graceful failure (matches the `sync-github` pattern):** if `compress-memory` reports a validation failure or any other error, log the failure to the user, leave the uncompressed file on disk, and continue with the remaining `pause-work` steps. Compression failure must NEVER prevent state files from being written, committed, or synced. Local state is the source of truth and must remain writable even when compression breaks.
+7. Stage and commit: `git add docs/planning/ && git commit -m "chore(state): pause-work — phase N.M, last task: <description>"`. The `docs/planning/` glob includes `STATE.md`, `ROADMAP.md`, and any `*.original.md` backups produced by step 6's compression. Users who do not want backups committed can add `docs/planning/*.original.md` to `.gitignore`. Run `git status` and confirm a clean tree.
+8. **Squad sync (if installed)** — if a `.squad/` directory exists in the project, run `squad-sync` after the STATE.md commit. Squad's per-agent `history.md` files capture session learning that complements STATE.md (which captures position). Without this step, agent histories drift behind project state. If `squad` is not installed, skip silently — this step is best-effort.
+9. **Decision-tracker sync (if installed)** — if `decision-tracker` is active and any decisions were captured during this session, ensure they have been persisted to long-term memory before exiting. Pause is the natural fence for memory writes; deferring them risks losing the decision when the conversation ends. If `decision-tracker` is not active, skip silently.
+10. **GitHub sync (if initialized)** — if `docs/planning/ROADMAP.md` contains any `**Issue:**` or `**Milestone:**` field (signal that `init-github-sync` has been run), invoke `sync-github` as a final step. This produces a full reconciliation of GitHub state with the just-written STATE.md / ROADMAP.md changes. If sync is not initialized, skip silently — do not invite the user to set it up here, that is `init-github-sync`'s job. **Note:** `sync-github` may produce its own `chore(sync): reconcile github state` commit when it writes new `**Issue:**` or `**Milestone:**` fields back into ROADMAP.md (e.g. phases added since the last sync). This is normal — `pause-work` ends with one commit on a quiet sync, two commits when sync had write-back work. Both are clean states.
+11. Announce only after the commit succeeds:
 
     > "Session state saved to `docs/planning/STATE.md`. Next session, start with `resume-work` or say 'resume' and I'll restore context."
 
@@ -713,7 +720,7 @@ Automatic. Runs as a step of `pause-work` (full reconciliation across all milest
 
 ### Dry-run
 
-Same flag/trigger as `init-github-sync` — direct invocation only. The auto-invocations from `pause-work` (step 9) and `complete-phase` (step 8) always run for-real and do NOT accept `--dry-run`; flags do not propagate from the parent skill. To preview a sync, invoke `sync-github` directly before triggering the parent. Prints intended `gh` calls, skips writes, skips commits.
+Same flag/trigger as `init-github-sync` — direct invocation only. The auto-invocations from `pause-work` (step 10) and `complete-phase` (step 8) always run for-real and do NOT accept `--dry-run`; flags do not propagate from the parent skill. To preview a sync, invoke `sync-github` directly before triggering the parent. Prints intended `gh` calls, skips writes, skips commits.
 
 ### Error handling
 
