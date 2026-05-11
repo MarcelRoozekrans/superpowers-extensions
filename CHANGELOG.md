@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.19.0](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.18.0...superpowers-extensions-v1.19.0) (2026-05-11)
+
+
+### Features
+
+* add compress-memory plugin (11th marketplace skill) ([#94](https://github.com/MarcelRoozekrans/superpowers-extensions/issues/94)) ([e29a5ae](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/e29a5ae0c04469b82354c133bdc1c5bbb730aee1))
+
 ## [1.18.0](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.17.0...superpowers-extensions-v1.18.0) (2026-05-09)
 
 
