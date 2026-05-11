@@ -2,12 +2,13 @@
 
 [![GitHub Sponsors](https://img.shields.io/github/sponsors/MarcelRoozekrans?style=flat&logo=githubsponsors&color=ea4aaa&label=Sponsor)](https://github.com/sponsors/MarcelRoozekrans)
 
-Extension skills for the [superpowers](https://github.com/anthropics/superpowers) suite, providing quality gates, development workflow skills, and project lifecycle management for web application development. It includes ten skills:
+Extension skills for the [superpowers](https://github.com/anthropics/superpowers) suite, providing quality gates, development workflow skills, and project lifecycle management for web application development. It includes eleven skills:
 
 - **regression-test** -- Comprehensive regression testing using the [Microsoft Playwright MCP server](https://github.com/microsoft/playwright-mcp), combining existing test suite execution with AI-powered visual and functional browser testing.
 - **pre-push-review** -- A structured branch review that diffs against the base branch and gates on plan adherence, code quality, commit hygiene, and regression testing, producing a PASS/FAIL verdict with a prioritized remediation plan on failure.
 - **refactor-analysis** -- Transitive impact analysis for complex refactorings. Maps all affected files, classifies breaking vs cosmetic changes, identifies risks, and produces a safe execution order with checkpoint boundaries before writing implementation plans.
 - **decision-tracker** -- Persistent cross-cutting decision tracking using [LongtermMemory-MCP](https://github.com/MarcelRoozekrans/LongtermMemory-MCP). Automatically extracts architectural decisions, conventions, and constraints during brainstorming and planning, persists them to semantic long-term memory, and recalls them at session start and subagent dispatch to prevent decision amnesia.
+- **compress-memory** -- Compresses natural-language memory files (`CLAUDE.md`, `STATE.md`, `ROADMAP.md`, project notes) to save input tokens replayed every session. Pure-markdown skill — preserves code blocks, URLs, file paths, frontmatter, headings, tables, and list structure byte-exact; backs up the original to `FILE.original.md` before each compression. Opt-in via `project-orchestration:plan-roadmap`; auto-invoked by `pause-work`. Inspired by [caveman-compress](https://github.com/JuliusBrussee/caveman) (MIT) but reimplemented without a Python toolchain.
 - **roslyn-codelens-integration** -- Superpowers integration for [Roslyn CodeLens](https://github.com/MarcelRoozekrans/roslyn-codelens-mcp) intelligence. Enforces use of 24 semantic .NET code analysis tools (instead of Grep/Glob and `dotnet build`) across every superpowers skill — brainstorming, refactor-analysis, writing-plans, executing-plans, subagent-driven-development, systematic-debugging, TDD, verification, code review, and pre-push review.
 - **memorylens-integration** -- Superpowers integration for [MemoryLens](https://github.com/MarcelRoozekrans/memorylens-mcp) memory profiling. Enhances `systematic-debugging` with .NET memory snapshot analysis, leak detection, and before/after fix validation. Direct triggers on "memory leak", "OOM", "high GC pressure". Inert on non-.NET projects.
 - **project-orchestration** -- GSD-inspired project lifecycle management for larger multi-session projects. Brownfield codebase mapping, milestone tracking, phase management, session pause/resume, milestone audit, release cycle management, and a `start-next-phase` routing hub that mechanically chains brainstorming → writing-plans → executing-plans for the next non-complete phase.
@@ -278,6 +279,78 @@ The skill's HARD-GATE includes a Post-compaction discipline section that names c
 
 ---
 
+## Compress Memory Skill
+
+The compress-memory skill compresses natural-language memory files to save input tokens replayed every Claude Code session, while preserving every byte a downstream consumer (skill or human) might key off.
+
+This is **input token compression**. Output-style "caveman speech" is explicitly not in scope — it would fight every other skill in this suite that produces structured artifacts.
+
+### What It Does
+
+When invoked, the skill:
+
+1. **Validates** the file is compressible (allowed extension, not on denylist, under 50 kB, no per-file `compress: skip` opt-out)
+2. **Backs up** the original to `<file>.original.md` (only on the first compression — subsequent runs leave the backup untouched)
+3. **Compresses** the prose per the drop / replace rules — strips articles, filler, pleasantries, hedging, connective fluff; replaces verbose phrasing with shorter equivalents
+4. **Preserves byte-exact:** fenced code blocks, indented code blocks, inline code spans, URLs and markdown links, file paths, shell commands, environment variables, version numbers, dates, frontmatter blocks, markdown tables, headings, and list nesting
+5. **Validates structurally** — counts of code blocks, headings, URLs, tables must match input; frontmatter byte-equal; code blocks byte-equal
+6. **Restores from backup** if validation fails (no partial corruption)
+7. **Reports** size delta to the user
+
+### Denylist (hard-coded, not configurable)
+
+The skill REFUSES to operate on:
+
+- `docs/plans/**` — plan documents read literally by `executing-plans`, `subagent-driven-development`
+- `*ui-contract*` — UI contracts audited by `ui-workflow:ui-review`
+- `*impact-analysis*` — refactor impact analyses with nuanced risk register prose
+- `*-design.md` — brainstorm design documents
+- `*-review-*.md` — pre-push review reports and UI review audits
+- `MILESTONE.md` — rewritten only on milestone transitions
+- `*.original.md` — backup files (never compressed, never overwritten)
+- Anything not `.md` or `.txt`, or larger than 50 kB
+
+These files are **contracts between skills**; compressing them would break downstream consumers.
+
+### Opt-in via project-orchestration
+
+The skill is opt-in. During `project-orchestration:plan-roadmap`, the user is asked once whether to enable compression. The answer is persisted as YAML frontmatter on `docs/planning/ROADMAP.md`:
+
+```yaml
+---
+compress_memory: enabled
+---
+```
+
+When enabled, `pause-work` invokes `compress-memory` on `STATE.md` after writing it (and on `ROADMAP.md` itself when it has changed since the last commit). Compression failures are logged and never block `pause-work` — local state remains the source of truth even when compression breaks.
+
+Flipping the field to `disabled` (or removing it) stops auto-compression on subsequent `pause-work` runs.
+
+### Manual usage
+
+The skill is always available manually, regardless of the opt-in setting:
+
+- `/compress-memory <path>`
+- "compress STATE.md"
+- "shrink CLAUDE.md"
+- "compact this memory file"
+
+### Output
+
+- **Modified file** — the input file is overwritten in place with the compressed version
+- **Backup** — `<basename>.original.md` containing the pristine first-write copy (e.g. `docs/planning/STATE.md` → `docs/planning/STATE.original.md`)
+- **Conversation report** — size delta (`Before / After / Saved`) and backup path
+
+### Prerequisites
+
+No additional tools required. Runs in the active Claude Code conversation — no Python, no extra MCP servers.
+
+### Attribution
+
+Inspired by [caveman-compress](https://github.com/JuliusBrussee/caveman) (MIT). See [plugins/compress-memory/skills/compress-memory/NOTICE.md](plugins/compress-memory/skills/compress-memory/NOTICE.md) for the full attribution.
+
+---
+
 ## UI Workflow Skill
 
 The ui-workflow skill provides two complementary capabilities that close the design-implementation gap in frontend work.
@@ -485,6 +558,10 @@ Superpowers Extensions serves as the single entrypoint for the entire superpower
 | **roslyn-codelens-mcp** | [MarcelRoozekrans/roslyn-codelens-mcp](https://github.com/MarcelRoozekrans/roslyn-codelens-mcp) | Roslyn-based .NET code graph intelligence -- enhances brainstorming and refactor-analysis with semantic code understanding |
 | **memorylens-mcp** | [MarcelRoozekrans/memorylens-mcp](https://github.com/MarcelRoozekrans/memorylens-mcp) | .NET memory profiling MCP server -- required by memorylens-integration for memory snapshot analysis and leak detection. Skill is inert without it. |
 
+### MCP description compression (optional, not bundled)
+
+If MCP tool descriptions bloat your context window — particularly Playwright's, which is large — [`caveman-shrink`](https://www.npmjs.com/package/caveman-shrink) is a Node middleware that wraps any MCP server and compresses tool descriptions on startup. It is intentionally NOT bundled in this suite because it is MCP runtime infrastructure, not a Claude Code skill. The two compress projects sit at different layers: `compress-memory` (this suite) compresses persistent files on disk; `caveman-shrink` (separate) compresses per-session MCP descriptions in memory. Install separately with `npm install -g caveman-shrink` if relevant.
+
 ### GitHub Copilot Support
 
 These skills can also be used with GitHub Copilot via [Copilot Skill Bridge](https://github.com/MarcelRoozekrans/Copilot-Skill-Bridge) -- a VS Code extension that discovers Claude marketplace skills, converts them to Copilot-compatible prompt/instruction files, and imports MCP server configurations. Add this repo as a marketplace source and the bridge will resolve all dependencies transitively.
@@ -577,6 +654,7 @@ claude plugin install project-orchestration
 claude plugin install ui-workflow
 claude plugin install ui-design-system
 claude plugin install squad
+claude plugin install compress-memory
 ```
 
 The regression-test plugin automatically configures the Playwright MCP server with `--caps=testing`. The pre-push-review plugin requires only git and no additional MCP servers for its core review.
@@ -665,6 +743,12 @@ xcopy /E /I plugins\ui-design-system\skills\ui-design-system %USERPROFILE%\.clau
 
 # macOS / Linux -- ui-design-system
 cp -r plugins/ui-design-system/skills/ui-design-system ~/.claude/skills/ui-design-system
+
+# Windows -- compress-memory
+xcopy /E /I plugins\compress-memory\skills\compress-memory %USERPROFILE%\.claude\skills\compress-memory
+
+# macOS / Linux -- compress-memory
+cp -r plugins/compress-memory/skills/compress-memory ~/.claude/skills/compress-memory
 ```
 
 **Note:** Some plugins require companion MCP servers. Install them separately:
@@ -825,6 +909,7 @@ memorylens-integration → snapshot before and after, compare, confirm fix
 | Frontend | ui-design-system → ui-workflow → subagent → ui-review | squad, regression-test |
 | Bug fix | systematic-debugging → TDD → pre-push-review | squad, memorylens-integration (.NET) |
 | Large project | project-orchestration wrapping any of the above | squad (histories auto-sync on pause) |
+| Memory hygiene | compress-memory (manual or auto) | project-orchestration (auto-invokes on pause-work when opted in) |
 
 The enrichment skills (squad, decision-tracker, roslyn-codelens-integration) activate automatically when present — no explicit invocation needed.
 
@@ -915,20 +1000,29 @@ superpowers-extensions/
 │   │               ├── linear.app/DESIGN.md
 │   │               ├── vercel/DESIGN.md
 │   │               └── ...                 # 67 more
-│   └── squad/
+│   ├── squad/
+│   │   ├── .claude-plugin/
+│   │   │   └── plugin.json
+│   │   └── skills/
+│   │       └── squad/
+│   │           ├── SKILL.md                # routing, persona switching, sub-skills
+│   │           ├── routing-rules.md        # default routing rules reference
+│   │           ├── history-format.md       # history.md format spec
+│   │           └── default-team/           # default agent charters
+│   │               ├── lead.md
+│   │               ├── backend.md
+│   │               ├── frontend.md
+│   │               ├── tester.md
+│   │               └── scribe.md
+│   └── compress-memory/                    # New plugin (added in this task — 11th plugin)
 │       ├── .claude-plugin/
 │       │   └── plugin.json
 │       └── skills/
-│           └── squad/
-│               ├── SKILL.md                # routing, persona switching, sub-skills
-│               ├── routing-rules.md        # default routing rules reference
-│               ├── history-format.md       # history.md format spec
-│               └── default-team/           # default agent charters
-│                   ├── lead.md
-│                   ├── backend.md
-│                   ├── frontend.md
-│                   ├── tester.md
-│                   └── scribe.md
+│           └── compress-memory/
+│               ├── SKILL.md                # Main skill — 5-step flow with hard denylist
+│               ├── compression-rules.md    # Drop / Replace / Preserve / Compress rules
+│               ├── safety-rules.md         # Denylist, backup invariant, validation
+│               └── NOTICE.md               # Attribution to caveman (MIT)
 └── docs/
     ├── planning/                           # Project lifecycle state (ROADMAP, MILESTONE, STATE)
     └── plans/                              # Design documents and phase plans
