@@ -582,7 +582,7 @@ per harness; only how the harness loads them.
 | **OpenAI Codex CLI / App** | [`.codex-plugin/plugin.json`](.codex-plugin/plugin.json) + [`.codex/INSTALL.md`](.codex/INSTALL.md) | Clone-and-symlink each plugin into `~/.agents/skills/`; instructions and a copy-paste loop in [`.codex/INSTALL.md`](.codex/INSTALL.md) |
 | **Gemini CLI** | [`gemini-extension.json`](gemini-extension.json) + [`GEMINI.md`](GEMINI.md) | `GEMINI.md` lists each SKILL.md via `@./plugins/.../SKILL.md` import syntax |
 | **GitHub Copilot CLI** | Reuses [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json) + [`.copilot-cli/INSTALL.md`](.copilot-cli/INSTALL.md) | `copilot plugin marketplace add MarcelRoozekrans/superpowers-extensions`, then install individual plugins |
-| **OpenCode.ai** | [`.opencode/plugins/superpowers-extensions.js`](.opencode/plugins/superpowers-extensions.js) | JS plugin registers all ten plugin skill paths via OpenCode's `config.skills.paths` array — no symlinks needed |
+| **OpenCode.ai** | [`.opencode/plugins/superpowers-extensions.js`](.opencode/plugins/superpowers-extensions.js) | JS plugin registers all eleven plugin skill paths via OpenCode's `config.skills.paths` array — no symlinks needed |
 
 The polymorphic [`hooks/session-start`](hooks/session-start) script
 detects which harness is running it via env vars (`CURSOR_PLUGIN_ROOT`,
@@ -624,7 +624,7 @@ The multi-provider mechanism here is adapted directly from
 [`obra/superpowers`](https://github.com/obra/superpowers) (MIT). Their
 session-start hook was the model for ours; their per-harness manifest
 pattern is what enables one shared markdown tree to load natively in
-each host. Differences: we are a marketplace of ten plugins (versus
+each host. Differences: we are a marketplace of eleven plugins (versus
 their single-plugin layout), so our manifests target the suite at the
 repo root with skills resolved via `./plugins/`.
 
