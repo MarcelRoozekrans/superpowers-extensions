@@ -20,13 +20,14 @@
     "project-orchestration",
     "ui-workflow",
     "ui-design-system",
-    "squad"
+    "squad",
+    "compress-memory"
   ],
   "skills": "./plugins/",
   "interface": {
     "displayName": "Superpowers Extensions",
     "shortDescription": "Quality gates, refactor analysis, project lifecycle, UI workflow, and design systems for the superpowers suite.",
-    "longDescription": "Ten extension skills that compose with obra/superpowers: regression-test (Playwright UI testing), pre-push-review (branch quality gate), refactor-analysis (transitive impact analysis), decision-tracker (cross-session memory), roslyn-codelens-integration (.NET semantic intelligence), memorylens-integration (.NET memory profiling), project-orchestration (multi-session lifecycle with brainstorm-first milestones), ui-workflow (design contracts + 3-layer audit), ui-design-system (70 vendored references + 5 OKLch directions), and squad (persistent AI agent teams). Source-of-truth markdown skills work across Claude Code, Cursor, Codex, Gemini, Copilot CLI, and OpenCode.",
+    "longDescription": "Eleven extension skills that compose with obra/superpowers: regression-test (Playwright UI testing), pre-push-review (branch quality gate), refactor-analysis (transitive impact analysis), decision-tracker (cross-session memory), roslyn-codelens-integration (.NET semantic intelligence), memorylens-integration (.NET memory profiling), project-orchestration (multi-session lifecycle with brainstorm-first milestones), ui-workflow (design contracts + 3-layer audit), ui-design-system (70 vendored references + 5 OKLch directions), squad (persistent AI agent teams), and compress-memory (long-term memory compression). Source-of-truth markdown skills work across Claude Code, Cursor, Codex, Gemini, Copilot CLI, and OpenCode.",
     "developerName": "Marcel Roozekrans",
     "category": "Coding",
     "capabilities": [
