@@ -266,11 +266,18 @@ When the user is stopping work and wants to preserve context for next session. T
 3. Determine recommended next step.
 4. **Use the `Write` tool** to create or overwrite `docs/planning/STATE.md` with the handoff note (see [state-files.md](state-files.md) for format). Do not narrate the content — write the file.
 5. **VERIFY:** re-read `docs/planning/STATE.md` and confirm the handoff note is present with all required sections (Current Position, Open Decisions, Blockers, Recommended Next Step). If any section is missing, the write did not capture it — re-write.
-6. Stage and commit: `git add docs/planning/STATE.md && git commit -m "chore(state): pause-work — phase N.M, last task: <description>"`. Run `git status` and confirm a clean tree.
-7. **Squad sync (if installed)** — if a `.squad/` directory exists in the project, run `squad-sync` after the STATE.md commit. Squad's per-agent `history.md` files capture session learning that complements STATE.md (which captures position). Without this step, agent histories drift behind project state. If `squad` is not installed, skip silently — this step is best-effort.
-8. **Decision-tracker sync (if installed)** — if `decision-tracker` is active and any decisions were captured during this session, ensure they have been persisted to long-term memory before exiting. Pause is the natural fence for memory writes; deferring them risks losing the decision when the conversation ends. If `decision-tracker` is not active, skip silently.
-9. **GitHub sync (if initialized)** — if `docs/planning/ROADMAP.md` contains any `**Issue:**` or `**Milestone:**` field (signal that `init-github-sync` has been run), invoke `sync-github` as a final step. This produces a full reconciliation of GitHub state with the just-written STATE.md / ROADMAP.md changes. If sync is not initialized, skip silently — do not invite the user to set it up here, that is `init-github-sync`'s job. **Note:** `sync-github` may produce its own `chore(sync): reconcile github state` commit when it writes new `**Issue:**` or `**Milestone:**` fields back into ROADMAP.md (e.g. phases added since the last sync). This is normal — `pause-work` ends with one commit on a quiet sync, two commits when sync had write-back work. Both are clean states.
-10. Announce only after the commit succeeds:
+6. **Compress state files (if enabled).** Read `docs/planning/ROADMAP.md` and check whether its YAML frontmatter contains `compress_memory: enabled`.
+
+   - If `enabled`: invoke the `compress-memory` skill on `docs/planning/STATE.md`. Then, if `git diff --quiet HEAD -- docs/planning/ROADMAP.md` exits non-zero (i.e. ROADMAP.md has changed since the last commit), also invoke `compress-memory` on `docs/planning/ROADMAP.md`.
+   - If `disabled`, absent, or the file has no frontmatter: skip compression entirely.
+   - If `compress-memory` is not installed: skip compression entirely (treat the field as absent).
+
+   **Graceful failure (matches the `sync-github` pattern):** if `compress-memory` reports a validation failure or any other error, log the failure to the user, leave the uncompressed file on disk, and continue with the remaining `pause-work` steps. Compression failure must NEVER prevent state files from being written, committed, or synced. Local state is the source of truth and must remain writable even when compression breaks.
+7. Stage and commit: `git add docs/planning/ && git commit -m "chore(state): pause-work — phase N.M, last task: <description>"`. The `docs/planning/` glob includes `STATE.md`, `ROADMAP.md`, and any `*.original.md` backups produced by step 6's compression. Users who do not want backups committed can add `docs/planning/*.original.md` to `.gitignore`. Run `git status` and confirm a clean tree.
+8. **Squad sync (if installed)** — if a `.squad/` directory exists in the project, run `squad-sync` after the STATE.md commit. Squad's per-agent `history.md` files capture session learning that complements STATE.md (which captures position). Without this step, agent histories drift behind project state. If `squad` is not installed, skip silently — this step is best-effort.
+9. **Decision-tracker sync (if installed)** — if `decision-tracker` is active and any decisions were captured during this session, ensure they have been persisted to long-term memory before exiting. Pause is the natural fence for memory writes; deferring them risks losing the decision when the conversation ends. If `decision-tracker` is not active, skip silently.
+10. **GitHub sync (if initialized)** — if `docs/planning/ROADMAP.md` contains any `**Issue:**` or `**Milestone:**` field (signal that `init-github-sync` has been run), invoke `sync-github` as a final step. This produces a full reconciliation of GitHub state with the just-written STATE.md / ROADMAP.md changes. If sync is not initialized, skip silently — do not invite the user to set it up here, that is `init-github-sync`'s job. **Note:** `sync-github` may produce its own `chore(sync): reconcile github state` commit when it writes new `**Issue:**` or `**Milestone:**` fields back into ROADMAP.md (e.g. phases added since the last sync). This is normal — `pause-work` ends with one commit on a quiet sync, two commits when sync had write-back work. Both are clean states.
+11. Announce only after the commit succeeds:
 
     > "Session state saved to `docs/planning/STATE.md`. Next session, start with `resume-work` or say 'resume' and I'll restore context."
 
@@ -308,6 +315,14 @@ The post-compaction trigger exists because conversation summarizers do not have 
 5. On confirmation, invoke `start-next-phase` to determine and execute the next action.
 
 > **CRITICAL:** Do NOT ask the user "what would you like to do?" after presenting the resume summary. The `start-next-phase` sub-skill determines the correct next action automatically. The user said "resume" — that means "continue working", not "present me a menu".
+
+### Compressed state files
+
+If `ROADMAP.md` frontmatter has `compress_memory: enabled`, `STATE.md` and `ROADMAP.md` on disk are in compressed form (written that way by `pause-work`). This is expected — the compression skill preserves frontmatter, headings, tables, and list structure byte-exact, so this skill's parsing of phase status, milestone numbers, and the current position is unchanged.
+
+If a human reader prefers the original prose (for example, when reading the file directly outside Claude Code), the pristine backup is at `docs/planning/STATE.original.md` and `docs/planning/ROADMAP.original.md`. These backups are the first-write originals; subsequent compressions do not overwrite them.
+
+If you encounter a malformed state file that `resume-work` cannot parse — frontmatter missing the `compress_memory` field but the body looks compressed, headings out of order, etc. — fall back to the `*.original.md` backup, report the corruption to the user, and ask whether to re-baseline.
 
 ---
 
@@ -713,7 +728,7 @@ Automatic. Runs as a step of `pause-work` (full reconciliation across all milest
 
 ### Dry-run
 
-Same flag/trigger as `init-github-sync` — direct invocation only. The auto-invocations from `pause-work` (step 9) and `complete-phase` (step 8) always run for-real and do NOT accept `--dry-run`; flags do not propagate from the parent skill. To preview a sync, invoke `sync-github` directly before triggering the parent. Prints intended `gh` calls, skips writes, skips commits.
+Same flag/trigger as `init-github-sync` — direct invocation only. The auto-invocations from `pause-work` (step 10) and `complete-phase` (step 8) always run for-real and do NOT accept `--dry-run`; flags do not propagate from the parent skill. To preview a sync, invoke `sync-github` directly before triggering the parent. Prints intended `gh` calls, skips writes, skips commits.
 
 ### Error handling
 
@@ -767,17 +782,41 @@ This is the **roadmap-level brainstorming entry point** — it brainstorms the p
 
 3. **VERIFY:** the brainstorming design spec exists at `docs/superpowers/specs/YYYY-MM-DD-roadmap-design.md` AND covers all 3-7 milestones (not just the first one). If the spec only details milestone 1 with the rest as TBD, the brainstorm did NOT complete at roadmap scope — return to step 2 and finish the sweep. Do NOT skip to writing files because "I have the milestones in my head" or "we can detail the later milestones when we get to them" — the whole point is the global view.
 
-4. **Use the `Write` tool** to create `docs/planning/ROADMAP.md` from the design spec — first milestone with `status: active`, all others with `status: pending`. Format per [state-files.md](state-files.md).
+4. **Ask the compress-memory opt-in question.** If the `compress-memory` plugin is installed (check for `plugins/compress-memory/skills/compress-memory/SKILL.md` in the active marketplace), ask:
 
-5. **VERIFY:** re-read `docs/planning/ROADMAP.md` and confirm: (a) every brainstormed milestone is present, (b) exactly one is `active`, (c) milestone numbering is consecutive starting at 1.
+   > **Enable memory-file compression for this project?**
+   >
+   > When enabled, `pause-work` automatically compresses `STATE.md` and `ROADMAP.md` after writing them. Saves ~40-50% input tokens every time those files are read back (every `resume-work`, every `progress`, every session start). Code, URLs, paths, headings, and tables preserved byte-exact. Original files backed up as `*.original.md` before each compression.
+   >
+   > Trade-off: prose nuance gets terser. If you write long-form rationale in STATE.md notes, you may prefer to keep it readable.
+   >
+   > `(y/N)` — opt-out by default.
 
-6. **Use the `Write` tool** to create `docs/planning/MILESTONE.md` for milestone 1 only (subsequent milestones get their own MILESTONE.md when activated via `new-milestone`). Include goal, definition of done, and the proposed phase outline from the design.
+   Record the answer (`enabled` if yes, `disabled` if no or skipped). This value goes into the `compress_memory` frontmatter field on `ROADMAP.md` in the next step.
 
-7. **VERIFY:** re-read `docs/planning/MILESTONE.md` and confirm goal, DoD, and phase list are present.
+   If `compress-memory` is NOT installed, skip this question and treat the answer as absent (no frontmatter written). The user can install the plugin later and add the field manually.
 
-8. Stage and commit: `git add docs/planning/ROADMAP.md docs/planning/MILESTONE.md && git commit -m "chore(roadmap): plan project roadmap (M1-M<N>)"`. Run `git status` and confirm a clean tree.
+5. **Use the `Write` tool** to create `docs/planning/ROADMAP.md` from the design spec.
+   - If the user answered the opt-in question (step 4), prepend the YAML frontmatter block to the file:
 
-9. Announce only after the commit succeeds: "Roadmap drafted with N milestones. Milestone 1 is active. Use `add-phase` to define phase 1.1, or invoke `brainstorming` to refine milestone 1's scope further."
+     ```yaml
+     ---
+     compress_memory: enabled
+     ---
+     ```
+
+     (or `disabled` per the user's answer)
+   - First milestone with `status: active`, all others with `status: pending`. Format per [state-files.md](state-files.md).
+
+6. **VERIFY:** re-read `docs/planning/ROADMAP.md` and confirm: (a) every brainstormed milestone is present, (b) exactly one is `active`, (c) milestone numbering is consecutive starting at 1, (d) if the opt-in question was asked, frontmatter `compress_memory` field is present with value `enabled` or `disabled`.
+
+7. **Use the `Write` tool** to create `docs/planning/MILESTONE.md` for milestone 1 only (subsequent milestones get their own MILESTONE.md when activated via `new-milestone`). Include goal, definition of done, and the proposed phase outline from the design.
+
+8. **VERIFY:** re-read `docs/planning/MILESTONE.md` and confirm goal, DoD, and phase list are present.
+
+9. Stage and commit: `git add docs/planning/ROADMAP.md docs/planning/MILESTONE.md && git commit -m "chore(roadmap): plan project roadmap (M1-M<N>)"`. Run `git status` and confirm a clean tree.
+
+10. Announce only after the commit succeeds: "Roadmap drafted with N milestones. Milestone 1 is active. Use `add-phase` to define phase 1.1, or invoke `brainstorming` to refine milestone 1's scope further."
 
 ### Skip Brainstorming?
 

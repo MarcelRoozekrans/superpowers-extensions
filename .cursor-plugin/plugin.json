@@ -20,7 +20,8 @@
     "project-orchestration",
     "ui-workflow",
     "ui-design-system",
-    "squad"
+    "squad",
+    "compress-memory"
   ],
   "skills": "./plugins/"
 }

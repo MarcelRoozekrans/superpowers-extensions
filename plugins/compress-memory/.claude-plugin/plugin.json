@@ -1,0 +1,7 @@
+{
+  "name": "compress-memory",
+  "description": "Compress natural-language memory files (CLAUDE.md, STATE.md, ROADMAP.md, project notes) to save input tokens replayed every session. Preserves code blocks, URLs, file paths, frontmatter, headings, tables, and list structure byte-exact. Backs up the original to FILE.original.md before each compression. Refuses to operate on downstream-consumed plan artifacts. Opt-in via project-orchestration plan-roadmap; auto-invoked by pause-work.",
+  "author": {
+    "name": "Marcel Roozekrans"
+  }
+}
