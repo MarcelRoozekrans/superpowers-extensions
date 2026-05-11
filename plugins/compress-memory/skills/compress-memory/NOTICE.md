@@ -15,7 +15,7 @@ The rule set is adapted from caveman:
 ## What is different here
 
 - **No Python toolchain.** caveman drives a separate Python implementation (`compress.py`, `detect.py`, `validate.py`, `cli.py`) that calls the Claude API itself. This skill runs in the active Claude Code conversation as pure markdown — no Python dependency, no second API key, no extra runtime.
-- **Denylist for downstream-consumed artifacts.** caveman has no per-file denylist; this skill refuses to operate on `docs/plans/*`, UI contracts, impact analyses, design documents, and review reports because those files are contracts between skills in the superpowers-extensions suite. Compressing them would break downstream consumers.
+- **Denylist for downstream-consumed artifacts.** caveman has no per-file denylist; this skill refuses to operate on `docs/plans/**`, UI contracts, impact analyses, design documents, and review reports because those files are contracts between skills in the superpowers-extensions suite. Compressing them would break downstream consumers.
 - **project-orchestration integration.** This skill is opt-in via a `compress_memory` frontmatter flag on `ROADMAP.md` set during `plan-roadmap`, and auto-invoked by `pause-work` after writing `STATE.md`. caveman has no comparable lifecycle integration.
 
 No source files were copied from caveman. The rule set is reimplemented as markdown content that codifies the same compression patterns.
@@ -27,7 +27,7 @@ caveman is licensed under the MIT License. superpowers-extensions is also MIT-li
 ```text
 MIT License
 
-Copyright (c) 2025 Julius Brussee
+Copyright (c) 2026 Julius Brussee
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
