@@ -61,7 +61,7 @@ compress_memory: skip
 
 abort with:
 
-> Skipping `<path>`: frontmatter explicitly opts out (`compress: skip` or `compress_memory: skip`).
+> "Skipping `<path>`: frontmatter explicitly opts out (`compress: skip` or `compress_memory: skip`)."
 
 ---
 
