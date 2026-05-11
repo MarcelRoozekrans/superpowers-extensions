@@ -77,7 +77,7 @@ The following constructs must appear in the compressed output byte-equal to the 
 
 ### Critical rule
 
-Anything inside triple-backtick fences must be copied EXACTLY. Do not:
+Anything inside fenced code blocks (three or more backticks) must be copied EXACTLY. Do not:
 
 - remove comments
 - collapse spacing
@@ -110,21 +110,21 @@ Where prose remains after Drop and Replace:
 
 **Original:**
 
-> You should always make sure to run the test suite before pushing any changes to the main branch. This is important because it helps catch bugs early and prevents broken builds from being deployed to production.
+You should always make sure to run the test suite before pushing any changes to the main branch. This is important because it helps catch bugs early and prevents broken builds from being deployed to production.
 
 **Compressed:**
 
-> Run tests before push to main. Catch bugs early, prevent broken prod deploys.
+Run tests before push to main. Catch bugs early, prevent broken prod deploys.
 
 ---
 
 **Original:**
 
-> The application uses a microservices architecture with the following components. The API gateway handles all incoming requests and routes them to the appropriate service. The authentication service is responsible for managing user sessions and JWT tokens.
+The application uses a microservices architecture with the following components. The API gateway handles all incoming requests and routes them to the appropriate service. The authentication service is responsible for managing user sessions and JWT tokens.
 
 **Compressed:**
 
-> Microservices architecture. API gateway routes incoming requests to services. Auth service manages user sessions + JWT tokens.
+Microservices architecture. API gateway routes incoming requests to services. Auth service manages user sessions + JWT tokens.
 
 ---
 
