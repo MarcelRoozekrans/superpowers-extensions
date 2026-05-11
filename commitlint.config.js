@@ -4,7 +4,7 @@ module.exports = {
     'scope-enum': [
       2,
       'always',
-      ['regression-test', 'pre-push-review', 'refactor-analysis', 'decision-tracker', 'roslyn-codelens-integration', 'memorylens-integration', 'project-orchestration', 'ui-workflow', 'ui-design-system', 'squad', 'marketplace', 'state', 'milestone', 'roadmap', 'plan', 'design', 'deps', 'suite', 'sync', 'readme'],
+      ['regression-test', 'pre-push-review', 'refactor-analysis', 'decision-tracker', 'roslyn-codelens-integration', 'memorylens-integration', 'project-orchestration', 'ui-workflow', 'ui-design-system', 'squad', 'compress-memory', 'manifests', 'marketplace', 'state', 'milestone', 'roadmap', 'plan', 'plans', 'design', 'deps', 'suite', 'sync', 'readme'],
     ],
     'scope-empty': [1, 'never'],
     'header-max-length': [2, 'always', 125],
