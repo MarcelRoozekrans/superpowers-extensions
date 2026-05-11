@@ -85,11 +85,16 @@ After producing the compressed candidate (but BEFORE writing it to disk), run al
 | Check | Rule |
 |---|---|
 | Fenced code blocks | Same count, each block byte-equal between input and output |
+| Indented code blocks | Same count, each block byte-equal between input and output |
 | Inline code spans | Same count |
 | URLs (full set) | The set of URLs in the output must equal the set in the input — no additions, no removals |
 | Markdown headings | Same count, same exact heading text, same order |
 | Frontmatter block | Byte-equal to input (or absent in both) |
 | Markdown tables | Same count of table blocks, same column count per table |
+
+### Not mechanically validated
+
+List item markers and nesting depth are listed under "preserve byte-exact" in `compression-rules.md`, but they are not mechanically validated here — exhaustive nesting comparison generates false positives on legitimate reformatting (renumbering, marker normalization). List structure is preserved on best-effort by the compression LLM following the rule set. The heading and table validations catch most large structural drift; minor list-nesting drift is acceptable.
 
 Validation is purely mechanical — counts and byte-equality. There is NO "is this still semantically equivalent?" LLM judgment in this loop. Mechanical checks are deterministic and auditable; semantic judgment is not.
 
@@ -115,4 +120,4 @@ After a successful compression and write, report to the user:
 > - Before: <X> bytes
 > - After: <Y> bytes
 > - Saved: <Z>% (<W> tokens approx)
-> - Backup: `<path>.original.md`
+> - Backup: `<path-with-.md-replaced-by-.original.md>` (e.g. `docs/planning/STATE.md` → `docs/planning/STATE.original.md`)
