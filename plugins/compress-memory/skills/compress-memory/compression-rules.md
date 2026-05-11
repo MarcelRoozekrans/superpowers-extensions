@@ -73,7 +73,7 @@ The following constructs must appear in the compressed output byte-equal to the 
 - **Frontmatter blocks** — YAML between `---` fences at file start.
 - **Markdown table structure** — every pipe `|` and alignment row stays. Cell text inside tables follows the same drop/replace/preserve rules.
 - **Heading hierarchy** — `#`, `##`, `###` levels and exact heading text.
-- **List item markers and nesting depth** — `- `, `1. `, indent level all preserved.
+- **List item markers and nesting depth** — `-`, `1.`, indent level all preserved (the marker plus its trailing space).
 
 ### Critical rule
 

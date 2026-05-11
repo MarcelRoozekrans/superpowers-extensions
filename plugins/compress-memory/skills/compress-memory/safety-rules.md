@@ -37,7 +37,7 @@ Any other extension → abort with reason.
 
 If the file is larger than 50 kB, abort with:
 
-> "Refusing to compress `<path>`: file size <X> kB exceeds the 50 kB memory-file threshold. Files this large are usually not natural-language memory — they are logs, exports, or generated content. Compression rules assume short-form prose."
+> "Refusing to compress `<path>`: file size `<X>` kB exceeds the 50 kB memory-file threshold. Files this large are usually not natural-language memory — they are logs, exports, or generated content. Compression rules assume short-form prose."
 
 ---
 
@@ -117,7 +117,8 @@ If invoked from `pause-work` (auto mode), report the failure to the orchestratin
 After a successful compression and write, report to the user:
 
 > Compressed `<path>`:
-> - Before: <X> bytes
-> - After: <Y> bytes
-> - Saved: <Z>% (<W> tokens approx)
+>
+> - Before: `<X>` bytes
+> - After: `<Y>` bytes
+> - Saved: `<Z>`% (`<W>` tokens approx)
 > - Backup: `<path-with-.md-replaced-by-.original.md>` (e.g. `docs/planning/STATE.md` → `docs/planning/STATE.original.md`)

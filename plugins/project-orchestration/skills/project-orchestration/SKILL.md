@@ -798,11 +798,13 @@ This is the **roadmap-level brainstorming entry point** — it brainstorms the p
 
 5. **Use the `Write` tool** to create `docs/planning/ROADMAP.md` from the design spec.
    - If the user answered the opt-in question (step 4), prepend the YAML frontmatter block to the file:
+
      ```yaml
      ---
      compress_memory: enabled
      ---
      ```
+
      (or `disabled` per the user's answer)
    - First milestone with `status: active`, all others with `status: pending`. Format per [state-files.md](state-files.md).
 
