@@ -316,6 +316,14 @@ The post-compaction trigger exists because conversation summarizers do not have 
 
 > **CRITICAL:** Do NOT ask the user "what would you like to do?" after presenting the resume summary. The `start-next-phase` sub-skill determines the correct next action automatically. The user said "resume" — that means "continue working", not "present me a menu".
 
+### Compressed state files
+
+If `ROADMAP.md` frontmatter has `compress_memory: enabled`, `STATE.md` and `ROADMAP.md` on disk are in compressed form (written that way by `pause-work`). This is expected — the compression skill preserves frontmatter, headings, tables, and list structure byte-exact, so this skill's parsing of phase status, milestone numbers, and the current position is unchanged.
+
+If a human reader prefers the original prose (for example, when reading the file directly outside Claude Code), the pristine backup is at `docs/planning/STATE.original.md` and `docs/planning/ROADMAP.original.md`. These backups are the first-write originals; subsequent compressions do not overwrite them.
+
+If you encounter a malformed state file that `resume-work` cannot parse — frontmatter missing the `compress_memory` field but the body looks compressed, headings out of order, etc. — fall back to the `*.original.md` backup, report the corruption to the user, and ask whether to re-baseline.
+
 ---
 
 ## complete-phase
