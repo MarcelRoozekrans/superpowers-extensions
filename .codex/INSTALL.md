@@ -2,7 +2,7 @@
 
 Codex auto-discovers skills under `~/.agents/skills/`. Each plugin in this
 suite is a separate skill bundle, so installation is a clone followed by
-ten symlinks (one per plugin).
+eleven symlinks (one per plugin).
 
 ## Prerequisites
 
@@ -26,7 +26,7 @@ ten symlinks (one per plugin).
    REPO=~/.codex/superpowers-extensions
    for plugin in regression-test pre-push-review refactor-analysis decision-tracker \
                  roslyn-codelens-integration memorylens-integration project-orchestration \
-                 ui-workflow ui-design-system squad; do
+                 ui-workflow ui-design-system squad compress-memory; do
      ln -sfn "$REPO/plugins/$plugin/skills/$plugin" "$HOME/.agents/skills/$plugin"
    done
    ```
@@ -39,7 +39,7 @@ ten symlinks (one per plugin).
    $plugins = @(
      'regression-test', 'pre-push-review', 'refactor-analysis', 'decision-tracker',
      'roslyn-codelens-integration', 'memorylens-integration', 'project-orchestration',
-     'ui-workflow', 'ui-design-system', 'squad'
+     'ui-workflow', 'ui-design-system', 'squad', 'compress-memory'
    )
    foreach ($plugin in $plugins) {
      $src = "$repo\plugins\$plugin\skills\$plugin"
@@ -53,10 +53,10 @@ ten symlinks (one per plugin).
 ## Verify
 
 ```bash
-ls -la ~/.agents/skills/ | grep -E '(regression-test|pre-push-review|refactor-analysis|decision-tracker|roslyn-codelens-integration|memorylens-integration|project-orchestration|ui-workflow|ui-design-system|squad)'
+ls -la ~/.agents/skills/ | grep -E '(regression-test|pre-push-review|refactor-analysis|decision-tracker|roslyn-codelens-integration|memorylens-integration|project-orchestration|ui-workflow|ui-design-system|squad|compress-memory)'
 ```
 
-You should see ten symlinks (or junctions on Windows), one per plugin.
+You should see eleven symlinks (or junctions on Windows), one per plugin.
 
 ## Updating
 
@@ -71,7 +71,7 @@ Skills update instantly through the symlinks.
 ```bash
 for plugin in regression-test pre-push-review refactor-analysis decision-tracker \
               roslyn-codelens-integration memorylens-integration project-orchestration \
-              ui-workflow ui-design-system squad; do
+              ui-workflow ui-design-system squad compress-memory; do
   rm -f "$HOME/.agents/skills/$plugin"
 done
 ```

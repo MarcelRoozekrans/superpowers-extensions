@@ -28,6 +28,7 @@ copilot plugin install project-orchestration
 copilot plugin install ui-workflow
 copilot plugin install ui-design-system
 copilot plugin install squad
+copilot plugin install compress-memory
 ```
 
 ## Tool name mapping
@@ -50,10 +51,10 @@ In a Copilot CLI session, ask:
 
 > What skills do you have loaded?
 
-The agent should list the ten skills from this suite (regression-test,
+The agent should list the eleven skills from this suite (regression-test,
 pre-push-review, refactor-analysis, decision-tracker,
 roslyn-codelens-integration, memorylens-integration, project-orchestration,
-ui-workflow, ui-design-system, squad).
+ui-workflow, ui-design-system, squad, compress-memory).
 
 ## Updating
 
