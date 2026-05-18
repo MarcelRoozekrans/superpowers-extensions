@@ -1,6 +1,6 @@
 ---
 version: alpha
-name: Replicate
+name: Replicate-design-analysis
 description: |
   Replicate's marketing surfaces pair the warm-cream developer-tools aesthetic
   of an indie ML playground with a confident hot-orange brand accent and a

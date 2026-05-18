@@ -1,6 +1,6 @@
 ---
 version: alpha
-name: Revolut
+name: Revolut-design-analysis
 description: |
   Revolut's marketing surfaces pair a stark black canvas with the brand's
   cobalt-violet (`#494fdf`) and a wide accent palette of deep, fully-saturated

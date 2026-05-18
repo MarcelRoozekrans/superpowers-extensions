@@ -1,6 +1,6 @@
 ---
 version: alpha
-name: Cohere
+name: Cohere-design-analysis
 description: Cohere's 2026 web system is a controlled enterprise AI interface built from stark white editorial space, deep green-black product bands, soft mineral surfaces, rounded media cards, and a distinctive type split between monospaced-feeling display headlines and precise Unica77 UI text.
 
 colors:
