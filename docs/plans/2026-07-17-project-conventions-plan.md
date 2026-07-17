@@ -145,7 +145,7 @@ they must be decided.
    | Language / runtime, package manager | `package.json` + lockfile, `*.csproj`, `pyproject.toml`, `go.mod`, `Cargo.toml` |
    | Framework | dependency names (react, vue, astro, aspnet, fastapi) |
    | Commit format | `commitlint.config.js` / `.commitlintrc*` / husky hooks; else sample `git log -50 --format=%s` for a `type(scope):` shape |
-   | Scopes | presence of a `scope-enum` rule |
+   | Scopes / Scope source | presence of a `scope-enum` rule; record the path of the file it was found in as `Scope source` (`n/a` when not enforced) |
    | Versioning scheme | shape of `git tag -l`: `vX.Y.Z`→semver, `vYYYY.MM*`→calver, `vN.0`→milestone, none→none |
    | Released by | `release-please-config.json`, `.releaserc*`, `.changeset/`, a release workflow in `.github/workflows/`; else manual |
    | Changelog | `CHANGELOG.md` present + whether the release automation writes it |

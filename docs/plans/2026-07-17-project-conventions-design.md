@@ -227,7 +227,7 @@ milestone is a major or a minor. Inventing `v2.0` is the defect being removed.
 | Language / package manager | `package.json` + lockfile, `*.csproj`, `pyproject.toml`, `go.mod`, `Cargo.toml` |
 | Framework | dependency names (react, vue, astro, aspnet, fastapi) |
 | Commit format | `commitlint.config.js` / `.commitlintrc` / husky; else sample `git log -50` for `type(scope):` shape |
-| Scopes enforced | presence of `scope-enum` |
+| Scopes / Scope source | presence of a `scope-enum` rule; record the path of the file it was found in as `Scope source` |
 | Versioning scheme | shape of `git tag -l` — `vX.Y.Z`→semver, `vYYYY.MM`→calver, `vN.0`→milestone |
 | Released by | `release-please-config.json`, `.releaserc`, changesets, release workflow; else manual |
 | Protected branches / PR required | `gh api` branch protection — best-effort, requires auth |
