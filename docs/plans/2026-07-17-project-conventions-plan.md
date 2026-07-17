@@ -60,14 +60,15 @@ Match the style of the three sibling templates (`roadmap-design.template.md` etc
 ## Commits
 
 **Format:** conventional | free-form
-**Scopes:** enforced — `<source>` | free | none
+**Scopes:** enforced | free | none
+**Scope source:** `<file | n/a>`
 **Fallback when scope not allowed:** omit scope | map to `<scope>`
 
 ## Branching
 
 **Model:** trunk | feature-branch | gitflow
 **PR required:** yes | no | unknown
-**Protected branches:** `<list | none>`
+**Protected branches:** `<comma-separated list | none>`
 
 ## Versioning & Release
 
@@ -78,7 +79,7 @@ Match the style of the three sibling templates (`roadmap-design.template.md` etc
 
 ## Deployment
 
-**Target:** `<where it runs>`
+**Deploy target:** `<where it runs>`
 **Environments:** `<list | none>`
 **Deployed by:** `<mechanism>`
 ```
@@ -258,7 +259,7 @@ Never create the branch or open the PR automatically — that belongs to
 | `free-form` | `<subject>` |
 
 If `Format: conventional` AND `Scopes: enforced` AND `<scope>` is not in the
-allowed list from the scope source → apply `Fallback when scope not allowed`:
+allowed list read from `Scope source` → apply `Fallback when scope not allowed`:
 
 - `omit scope` → `<type>: <subject>`
 - `map to <x>` → `<type>(<x>): <subject>`
@@ -493,7 +494,25 @@ git commit -am "feat(project-orchestration): establish conventions before the ro
 **Step 1: Add a `## CONVENTIONS.md` section**
 
 Follow the existing shape used for `ROADMAP.md` / `STATE.md` / `MILESTONE.md`:
-purpose, canonical field syntax, who writes it, who reads it. State explicitly:
+purpose, canonical field syntax, who writes it, who reads it.
+
+Include a **canonical syntax** subsection matching the bar set by
+`state-files.md` L51-63 ("Allowed values, exhaustive… Capitalized exactly as
+shown, no quotes, single space after the colon"). It must state the three rules
+decided during Task 1 review:
+
+1. **Trailing parenthetical.** The enum token is everything before the first
+   `(` that follows a space; an optional trailing `(...)` carries provenance or
+   detail and is ignored by the protocol. Enables
+   `**Released by:** none (defaulted)`. Do not write this rule as a code span
+   containing a space — markdownlint MD038 rejects it.
+2. **`Protected branches`** is comma-separated; `*` is a wildcard matching within
+   one path segment (`release/*` matches `release/1.2`, not `release/1/2`);
+   matching is case-sensitive.
+3. **Cross-field constraint:** `Scheme: none` implies
+   `Milestone completion tags a release: no`.
+
+State explicitly:
 
 - Written by `init-conventions` only.
 - Read by the Commit & Release Protocol before every commit and tag.
@@ -533,10 +552,11 @@ failure, node builtins only — no `npm ci` needed in CI). It asserts:
    `## Commit & Release Protocol` section. (`git tag -l` is a read and is allowed.)
 2. Every sub-skill that stages files references the protocol link.
 3. `templates/conventions.template.md` exists and has all five `##` sections.
-4. Every field the protocol reads (`Format`, `Scopes`, `Fallback when scope not
-   allowed`, `PR required`, `Protected branches`, `Scheme`, `Released by`,
-   `Milestone completion tags a release`) is present in the template — so the
-   protocol can never reference a field the template does not produce.
+4. Every field the protocol reads (`Format`, `Scopes`, `Scope source`, `Fallback
+   when scope not allowed`, `PR required`, `Protected branches`, `Scheme`,
+   `Released by`, `Milestone completion tags a release`) is present in the
+   template — so the protocol can never reference a field the template does not
+   produce.
 
 Check 4 is the important one: it ties the protocol and the template together so
 they cannot drift apart, which is the same failure this repo fixed in #112.

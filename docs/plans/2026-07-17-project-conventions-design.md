@@ -120,13 +120,14 @@ Field style matches the existing state files (`**Key:** value`, as in ROADMAP's
 
 ## Commits
 **Format:** conventional | free-form
-**Scopes:** enforced — <source> | free | none
+**Scopes:** enforced | free | none
+**Scope source:** <file | n/a>
 **Fallback when scope not allowed:** omit scope | map to <scope>
 
 ## Branching
 **Model:** trunk | feature-branch | gitflow
 **PR required:** yes | no | unknown
-**Protected branches:** <list | none>
+**Protected branches:** <comma-separated list | none>
 
 ## Versioning & Release
 **Scheme:** semver | calver | milestone | none
@@ -135,10 +136,38 @@ Field style matches the existing state files (`**Key:** value`, as in ROADMAP's
 **Changelog:** auto | manual | none
 
 ## Deployment
-**Target:** <where it runs>
+**Deploy target:** <where it runs>
 **Environments:** <list | none>
 **Deployed by:** <mechanism>
 ```
+
+### Field syntax rules
+
+Decided during Task 1 review, after the reviewer found the branch guard would
+fail open as originally specified.
+
+- **Enum values may carry a trailing parenthetical.** The enum token is
+  everything before the first `(` that follows a space; an optional trailing
+  `(...)` carries provenance or detail and is ignored by the protocol. (The
+  "follows a space" clause is load-bearing: it keeps a value like
+  `deploy(1) script` from being split at a bare paren. It also avoids writing
+  the rule as a code span containing a space, which markdownlint MD038 rejects
+  outright — the first draft of this rule was unlintable.) This is what makes
+  `**Released by:** none (defaulted)` expressible — design decision 5 requires
+  stating *which* fields were defaulted, and `**Source:**` is file-level so it
+  cannot say which. It also legalises the worked example below, which uses
+  `auto (CHANGELOG.md)`.
+- **`Protected branches` is comma-separated**; `*` is a wildcard matching within
+  one path segment (`release/*` matches `release/1.2`, not `release/1/2`);
+  matching is case-sensitive. Unspecified, the guard does membership testing
+  against a list with no delimiter and silently fails open on `release/*` — it
+  would commit to the branch it exists to protect.
+- **`Scopes` is split from `Scope source`.** The protocol needs the boolean and
+  the pointer independently. `Scope source` stays a *pointer* to the host's lint
+  config and never a copy of the scope list; copying would reintroduce the
+  duplication fixed in #112.
+- **Cross-field constraint:** `Scheme: none` implies
+  `Milestone completion tags a release: no`.
 
 ### Call-site contract
 
@@ -234,7 +263,8 @@ Every value below is detectable from files already present:
 
 ## Commits
 **Format:** conventional
-**Scopes:** enforced — commitlint.config.js
+**Scopes:** enforced
+**Scope source:** commitlint.config.js
 **Fallback when scope not allowed:** omit scope
 
 ## Branching
@@ -249,7 +279,7 @@ Every value below is detectable from files already present:
 **Changelog:** auto (CHANGELOG.md)
 
 ## Deployment
-**Target:** Claude Code plugin marketplace
+**Deploy target:** Claude Code plugin marketplace
 **Environments:** none
 **Deployed by:** release-please on merge to master
 ```
