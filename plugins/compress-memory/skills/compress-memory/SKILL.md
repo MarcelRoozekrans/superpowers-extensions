@@ -37,6 +37,7 @@ This skill REFUSES the following files (see [safety-rules.md](safety-rules.md) f
 - Any file under `docs/plans/` — these are plan documents read literally by downstream skills
 - `*-design.md`, `*-impact-analysis*`, `*ui-contract*`, `*-review-*.md` — contracts between skills
 - `MILESTONE.md` — rewritten on milestone transitions, not pause-work
+- `CONVENTIONS.md` — machine-read before every commit and tag; its fields are prose, so compression can break them while validation still passes
 - `*.original.md` — backup files
 - Anything not `.md` or `.txt`
 - Files larger than 50 kB
