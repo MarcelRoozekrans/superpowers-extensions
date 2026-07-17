@@ -111,127 +111,70 @@ Invoke before `brainstorming` when starting work on an existing codebase the age
 
 ### When to Use
 
-Once per project, at kickoff — invoked by `plan-roadmap`. Also invoked
-automatically by the Commit & Release Protocol when `docs/planning/CONVENTIONS.md`
-is missing (self-heal on existing projects). Re-runnable on demand when a
-convention changes ("we moved to release-please", "we adopted conventional
-commits").
+Once per project, at kickoff — invoked by `plan-roadmap`. Also invoked automatically by the Commit & Release Protocol when `docs/planning/CONVENTIONS.md` is missing (self-heal on existing projects). Re-runnable when a convention changes ("we moved to release-please").
 
-Unlike `map-codebase`, this runs on **greenfield and brownfield**. Greenfield is
-the case that most needs it — an empty repo has no conventions to observe, so
-they must be decided.
+Unlike `map-codebase`, this runs on **greenfield and brownfield**. Greenfield needs it most — an empty repo has no conventions to observe, so they must be decided.
 
 ### Announce Line
 
-> "Establishing project conventions. I'll detect what I can from the repo and
-> ask you to confirm before recording anything."
+> "Establishing project conventions. I'll detect what I can from the repo and ask you to confirm before recording anything."
 
 ### Process
 
-1. **Detect.** Best-effort; every signal is optional. Never fail on a missing one.
+Steps refer to each other by **name**, never by number.
+
+1. **Detect.** Best-effort. Every signal is optional; never fail on a missing one. A field with no signal is left unset for **Propose** to ask — do not ask here, and never infer a value from absence.
 
    | Field | Signal |
    |---|---|
-   | Language / runtime, package manager | `package.json` + lockfile, `*.csproj`, `pyproject.toml`, `go.mod`, `Cargo.toml` |
-   | Framework | dependency names (react, vue, astro, aspnet, fastapi) |
-   | Commit format | `commitlint.config.js` / `.commitlintrc*` / husky hooks; else sample `git log -50 --format=%s` for a `type(scope):` shape |
-   | Scopes / Scope source | presence of a `scope-enum` rule; record the path of the file it was found in as `Scope source` (`n/a` when not enforced) |
-   | Versioning scheme | shape of `git tag -l`: `vX.Y.Z`→semver, `vYYYY.MM*`→calver, `vN.0`→milestone, none→none |
-   | Released by | `release-please-config.json`, `.releaserc*`, `.changeset/`, a release workflow in `.github/workflows/`. If none found **and tags exist** → `manual git tag`. If none found **and no tags exist** → no signal; ask (do not infer `manual git tag` from absence — a greenfield repo has no automation *and* no manual tagging habit). |
-   | Changelog | `CHANGELOG.md` present + whether the release automation writes it |
-   | Protected branches / PR required | `gh api repos/{owner}/{repo}/branches/{branch}/protection` — requires auth; on failure record `unknown` |
-   | Deploy target / Deployed by | workflows with deploy/publish steps, `Dockerfile`, `vercel.json`, `fly.toml`, `*.tf` — the artifact/registry named is `Deploy target`, the mechanism is `Deployed by` |
-   | Environments | environment names in CI workflows (`environment:` keys), `*.tfvars`, compose/profile files; else `none` |
+   | Language / runtime, Package manager, Framework | If `map-codebase` ran this session, read `docs/plans/*-codebase-map.md` — it already detected these. Otherwise apply `map-codebase`'s **Read project root** and **Identify patterns** steps. Greenfield: no signal. |
+   | Datastore | ORM config, connection strings, compose service images; else no signal. |
+   | Commit format | `commitlint.config.js`, `.commitlintrc*`, husky hooks. Else sample `git log -50 --format=%s`: a clear majority matching `type(scope):` → `conventional`. No commits → no signal. |
+   | Scopes / Scope source | A `scope-enum` rule → `enforced` plus the path of the file holding it. Conventional but no rule → `free`, `Scope source: n/a`. Not conventional → `none`, `n/a`. |
+   | Scheme | Shape of `git tag -l`, ignoring any `<name>-` prefix — release-please monorepo tags look like `mypkg-v1.2.3`. `vX.Y.Z` → semver, `vYYYY.MM*` → calver, `vN.0` → milestone. Mixed shapes → whichever the 10 most recent tags mostly use. No tags → `none`. |
+   | Released by | `release-please-config.json`, `.releaserc*`, `.changeset/`, or a release workflow. None **and tags exist** → `manual git tag`. None **and no tags** → no signal: absence of automation is not evidence of a manual tagging habit. |
+   | Changelog | `CHANGELOG.md` present, and whether the release automation writes it; else `none`. |
+   | Protected branches | `gh api repos/{owner}/{repo}/branches --jq '.[] \| select(.protected) \| .name'`, joined with commas. Do **not** use the single-branch `/protection` endpoint — it answers for one branch and cannot enumerate a list. On `gh` failure → no signal. |
+   | PR required | From the same response: any protected branch carrying `required_pull_request_reviews` → `yes`. Protected branches empty → `no`. On `gh` failure → no signal. |
+   | Deploy target / Deployed by | Workflows with deploy/publish steps, `Dockerfile`, `vercel.json`, `fly.toml`, `*.tf`. The artifact or registry named is `Deploy target`; the mechanism is `Deployed by`. Neither found → `none`. |
+   | Environments | `environment:` keys in CI workflows, `*.tfvars`, compose profiles; else `none`. |
 
-   Six fields have no detection signal and are handled in step 3 instead: `Datastore`, `Model`, `Fallback when scope not allowed`, `Milestone completion tags a release`, `Established`, `Source`.
+2. **Handle re-runs — before any interaction.** If `docs/planning/CONVENTIONS.md` exists, load it and diff detected-vs-recorded. No differences → announce "Conventions unchanged" and stop, having asked nothing. Otherwise carry the recorded values forward as the baseline.
 
-2. **Handle re-runs — before any interaction.** If `docs/planning/CONVENTIONS.md`
-   already exists, load it and diff detected-vs-recorded **over the 14 detectable
-   fields only**. No differences → announce "Conventions unchanged" and stop,
-   having asked **zero questions**. Otherwise carry the recorded values forward
-   as the baseline and continue. Never silently overwrite.
+   **A field with no signal is not a difference — the recorded value stands.** Detection failure must never downgrade a recorded value. Without this rule a `gh` outage proposes `PR required: yes → unknown`, the user confirms, and a network error has disarmed the branch guard.
 
-   The diff excludes `Established` and `Source`: they are metadata about the
-   recording, not conventions, and including them guarantees a spurious diff on
-   every run.
+   The diff ignores `Established`, which is write-once.
 
-   **`Established` is preserved on a re-run, never reset to today.** It records
-   when the conventions were *first* established; re-running because `Released
-   by` changed does not re-establish them. (A "last checked" value would be a
-   separate field, not this one.) Resetting it is what makes the stop path
-   unreachable — the file always differs, so "Conventions unchanged" can never
-   fire no matter where this step sits.
+3. **Derive.** No signal can produce these.
 
-3. **Derive, default, or ask the six undetectable fields.** Detection cannot
-   produce these; leaving them to step 5's catch-all makes the sub-skill ask for
-   things it can work out.
-
-   | Field | How |
+   | Field | Rule |
    |---|---|
-   | `Established` | Today's date. Never ask. |
-   | `Source` | Judged over the 14 *detectable* fields only: `detected` if every one came from a signal, `user-stated` if every one was asked, else `mixed`. Never ask. Derived and asked-by-design fields (`Datastore`, `Model`, `Established`, `Source` itself) do not count — including them would make `detected` unreachable, since step 3 asks two of them on a first run. |
-   | `Milestone completion tags a release` | **Derive from `Released by` AND `Scheme`:** `yes` only when `Released by: manual git tag` AND `Scheme` is not `none`. Everything else → `no` — an automation already owns tagging and a second tag would collide; `Scheme: none` has no scheme to render a tag from (the template forbids pairing `none` with `yes`, and the protocol's tag table has no `none` row). Confirm the derived value; do not ask cold. **Re-derive after step 5** if the user edits `Released by` or `Scheme` — a stale one-shot derivation is how a corrected `Released by: release-please` still ends up double-tagging. |
-   | `Fallback when scope not allowed` | Default `omit scope` — conventional commits permit a scope-less message, so it always lands. Offer, don't impose. |
-   | `Datastore` | Ask on first run. On a re-run, keep the recorded value and do not re-ask. `n/a` is a normal answer. |
-   | `Model` | Ask on first run, seeded from evidence: `Protected branches` non-empty or `PR required: yes` suggests `feature-branch`; otherwise `trunk`. On a re-run, keep the recorded value and do not re-ask — two questions per re-run is what breaks the design's "brownfield asks ~zero questions". |
+   | `Established` | Today on a first run. Preserved unchanged on a re-run — it records when conventions were *first* set, not when last checked. |
+   | `Model` | `feature-branch` when `Protected branches` is non-empty or `PR required: yes`; else `trunk`. |
+   | `Fallback when scope not allowed` | `omit scope` — conventional commits permit a scope-less message, so it always lands. |
+   | `Milestone completion tags a release` | `yes` only when `Released by: manual git tag` **and** `Scheme` is not `none`. Everything else `no`: an automation already owns tagging, and `Scheme: none` has nothing to build a tag from. |
 
-4. **Mark uncertainty.** Any field inferred weakly — git log *looks* conventional
-   but no commitlint config; `gh` unavailable so protection unknown — renders as
-   `(uncertain — confirm)`. Do not present a guess as a fact.
+4. **Mark uncertainty.** A value inferred without a definitive signal — a `git log` that looks conventional with no commitlint config — is shown as `(uncertain)` **in the proposal only**. The marker is never written to the file.
 
-5. **Propose.** Present the filled-in template as a single block — on a re-run, show only the fields that changed. Ask:
+5. **Propose.** Present the filled-in fields as one block; on a re-run, show only what changed. Ask for every field still unset. Offer `conventional` and `semver` as defaults the user may reject — offered, never imposed.
 
    > "Confirm these, or tell me what's wrong. `[y / edit]`"
 
-   For fields with no signal at all (always the case on greenfield), ask for them.
-   Offer `conventional` and `semver` as **defaults the user may reject** — offered,
-   never imposed. The whole point of this sub-skill is that the skill stops
-   deciding these unilaterally.
+   If the user declines a field, record the default and mark it `(defaulted)` so the choice stays reviewable.
 
-6. **If the user declines to answer**, record explicit defaults and state which
-   fields were defaulted, with `**Source:** mixed`. Do NOT fall back to invisible
-   hardcodes — a recorded default is reviewable; a hardcode is not.
+6. **Re-derive.** If the user changed `Released by` or `Scheme` at **Propose**, re-run the **Derive** rules now. Skipping this leaves a corrected `Released by: release-please` paired with a stale `tags a release: yes`, which double-tags.
 
-7. **Use the `Write` tool** to create `docs/planning/CONVENTIONS.md` from
-   [templates/conventions.template.md](templates/conventions.template.md).
+7. **Write** `docs/planning/CONVENTIONS.md` from [templates/conventions.template.md](templates/conventions.template.md). Keep the headings and the `**Key:** value` lines; omit the `>` blockquotes — they are fill-in guidance, not file content.
 
-8. **VERIFY:** re-read the file and confirm all five `##` sections are present,
-   and that **no field value still contains `<` or a space-padded `|`**. Both
-   checks are needed: only 10 of the 20 fields use `<placeholder>` notation — the
-   other 10 are bare enums (`**Format:** conventional | free-form`), and an
-   unpicked enum contains no placeholder at all. Since the template's `|` is
-   choice syntax that vanishes on fill, a surviving pipe means a field was never
-   decided. This is safe for *every* field, not just enums, because the template
-   states one rule for the whole file: multiple values are comma-separated
-   (`node 24, .NET 8`), so a pipe never appears in a correctly filled value.
-   Confirm `**Established:**` is a real date, not `YYYY-MM-DD`.
+8. **VERIFY.** Re-read the file. All five `##` sections present, and no `**Key:**` line still containing `<` or a space-padded `|` — either means a field was never decided. `**Established:**` is a real date. On failure, re-write and VERIFY again; never continue with a failing VERIFY.
 
-   **On failure, re-write the file and VERIFY again. Do not proceed to step 9
-   with a failing VERIFY** — the protocol will read whatever is on disk.
+9. **Commit only `docs/planning/CONVENTIONS.md`, by explicit pathspec**, per [Commit & Release Protocol](#commit--release-protocol) with `type=chore, scope=state, subject=establish project conventions`. The pathspec is load-bearing: a self-heal enters here with the caller's files already staged, and a bare `git commit` would sweep them into this commit.
 
-9. Commit **only** `docs/planning/CONVENTIONS.md`, by explicit pathspec, per
-   [Commit & Release Protocol](#commit--release-protocol) with
-   `type=chore, scope=state, subject=establish project conventions`.
-
-   The pathspec is not optional. This sub-skill can be entered mid-commit by the
-   protocol's step 1 self-heal, at which point the *caller* has already staged
-   its own files (ROADMAP.md, MILESTONE.md). A bare `git commit` would commit the
-   index and sweep the caller's work into this commit, leaving the caller's own
-   commit with nothing to do. Stage and commit the one path explicitly.
-
-   Recursion is already prevented by ordering: step 7 writes the file before step
-   9 commits, so the protocol's step 1 finds it and does not re-enter.
-
-10. Announce: "Conventions recorded. `complete-milestone` will `<tag per the
-    recorded scheme | not tag — release handled by <Released by>>`." Do not name a
-    concrete version: on `Scheme: semver` the protocol *asks* for the version at
-    tag time rather than inventing one, so there is no `vX.Y.Z` to promise here.
+10. **Announce:** "Conventions recorded. `complete-milestone` will `<tag per the recorded scheme | not tag — release handled by <Released by>>`."
 
 ### Skip This?
 
-No. Without it, every commit falls back to a hardcoded format that may be
-rejected by the host project's lint config, and milestone completion invents a
-tag scheme the project does not use.
+No. Without it, every commit falls back to a format the host's lint config may reject, and milestone completion invents a tag scheme the project does not use.
 
 ---
 
