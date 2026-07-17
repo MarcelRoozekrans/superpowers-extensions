@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.19.1](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.19.0...superpowers-extensions-v1.19.1) (2026-07-17)
+
+
+### Bug Fixes
+
+* **suite:** repair plugin registry drift and guard it in CI ([#112](https://github.com/MarcelRoozekrans/superpowers-extensions/issues/112)) ([5e67128](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/5e67128527a67ccd1895e5ce6e9e0da282bf6879))
+
 ## [1.19.0](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.18.0...superpowers-extensions-v1.19.0) (2026-05-11)
 
 
