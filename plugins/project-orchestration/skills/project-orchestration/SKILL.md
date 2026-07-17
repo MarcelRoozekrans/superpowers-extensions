@@ -107,6 +107,86 @@ Invoke before `brainstorming` when starting work on an existing codebase the age
 
 ---
 
+## init-conventions
+
+### When to Use
+
+Once per project, at kickoff — invoked by `plan-roadmap`. Also invoked
+automatically by the Commit & Release Protocol when `docs/planning/CONVENTIONS.md`
+is missing (self-heal on existing projects). Re-runnable on demand when a
+convention changes ("we moved to release-please", "we adopted conventional
+commits").
+
+Unlike `map-codebase`, this runs on **greenfield and brownfield**. Greenfield is
+the case that most needs it — an empty repo has no conventions to observe, so
+they must be decided.
+
+### Announce Line
+
+> "Establishing project conventions. I'll detect what I can from the repo and
+> ask you to confirm before recording anything."
+
+### Process
+
+1. **Detect.** Best-effort; every signal is optional. Never fail on a missing one.
+
+   | Field | Signal |
+   |---|---|
+   | Language / runtime, package manager | `package.json` + lockfile, `*.csproj`, `pyproject.toml`, `go.mod`, `Cargo.toml` |
+   | Framework | dependency names (react, vue, astro, aspnet, fastapi) |
+   | Commit format | `commitlint.config.js` / `.commitlintrc*` / husky hooks; else sample `git log -50 --format=%s` for a `type(scope):` shape |
+   | Scopes / Scope source | presence of a `scope-enum` rule; record the path of the file it was found in as `Scope source` (`n/a` when not enforced) |
+   | Versioning scheme | shape of `git tag -l`: `vX.Y.Z`→semver, `vYYYY.MM*`→calver, `vN.0`→milestone, none→none |
+   | Released by | `release-please-config.json`, `.releaserc*`, `.changeset/`, a release workflow in `.github/workflows/`; else manual |
+   | Changelog | `CHANGELOG.md` present + whether the release automation writes it |
+   | Protected branches / PR required | `gh api repos/{owner}/{repo}/branches/{branch}/protection` — requires auth; on failure record `unknown` |
+   | Deployment | workflows with deploy/publish steps, `Dockerfile`, `vercel.json`, `fly.toml`, `*.tf` |
+
+2. **Mark uncertainty.** Any field inferred weakly — git log *looks* conventional
+   but no commitlint config; `gh` unavailable so protection unknown — renders as
+   `(uncertain — confirm)`. Do not present a guess as a fact.
+
+3. **Propose.** Present the filled-in template as a single block. Ask:
+
+   > "Confirm these, or tell me what's wrong. `[y / edit]`"
+
+   For fields with no signal at all (always the case on greenfield), ask for them.
+   Offer `conventional` and `semver` as **defaults the user may reject** — offered,
+   never imposed. The whole point of this sub-skill is that the skill stops
+   deciding these unilaterally.
+
+4. **Handle re-runs.** If `docs/planning/CONVENTIONS.md` already exists, diff
+   detected-vs-recorded and show only what changed. Never silently overwrite.
+   If nothing changed, announce "Conventions unchanged" and stop.
+
+5. **If the user declines to answer**, record explicit defaults and state which
+   fields were defaulted, with `**Source:** mixed`. Do NOT fall back to invisible
+   hardcodes — a recorded default is reviewable; a hardcode is not.
+
+6. **Use the `Write` tool** to create `docs/planning/CONVENTIONS.md` from
+   [templates/conventions.template.md](templates/conventions.template.md).
+
+7. **VERIFY:** re-read the file and confirm all five `##` sections are present and
+   no field still contains a `<placeholder>`.
+
+8. Stage and commit per [Commit & Release Protocol](#commit--release-protocol)
+   with `type=chore, scope=state, subject=establish project conventions`.
+
+   Note: this is the one site that may run *before* CONVENTIONS.md exists. The
+   protocol's step 1 self-heal must not recurse — when invoked from
+   `init-conventions`, the file has just been written, so step 1 finds it.
+
+9. Announce: "Conventions recorded. `complete-milestone` will `<tag vX.Y.Z |
+   not tag — release handled by <mechanism>>`."
+
+### Skip This?
+
+No. Without it, every commit falls back to a hardcoded format that may be
+rejected by the host project's lint config, and milestone completion invents a
+tag scheme the project does not use.
+
+---
+
 ## progress
 
 ### When to Use
