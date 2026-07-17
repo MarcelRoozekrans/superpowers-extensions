@@ -412,10 +412,15 @@ Each becomes, preserving the existing surrounding VERIFY/clean-tree language:
 
 ```bash
 F=plugins/project-orchestration/skills/project-orchestration/SKILL.md
-awk '/^## Commit & Release Protocol/{inp=1} /^## Sub-Skills/{inp=0} !inp' "$F" | grep -nE 'git commit -m|git tag -a' || echo "ok: no literals outside the protocol"
+awk '/^## Commit & Release Protocol/{inp=1} /^## Sub-Skills/{inp=0} !inp' "$F" | grep -nE 'git commit -m' || echo "ok: no commit literals outside the protocol"
 ```
 
-Expected: `ok: no literals outside the protocol`.
+Expected: `ok: no commit literals outside the protocol`.
+
+Note the gate checks `git commit -m` **only**. `git tag -a` still lives in
+`complete-milestone` until Task 5 removes it, so asserting it here would fail for
+a reason that has nothing to do with this task. Task 5 widens the gate to cover
+tags once it owns them; Task 9's guard asserts both permanently.
 
 **Step 3: Verify all 10 pointers exist**
 
@@ -468,9 +473,10 @@ roadmap" — it must not promise a tag unconditionally.
 ```bash
 F=plugins/project-orchestration/skills/project-orchestration/SKILL.md
 awk '/^## complete-milestone/,/^## init-github-sync/' "$F" | grep -E 'git tag -a' && echo "FAIL: literal tag survives" || echo "ok: tag is now conditional"
+awk '/^## Commit & Release Protocol/{inp=1} /^## Sub-Skills/{inp=0} !inp' "$F" | grep -nE 'git commit -m|git tag -a' || echo "ok: no literals of either kind outside the protocol"
 ```
 
-Expected: `ok: tag is now conditional`.
+Expected: `ok: tag is now conditional`, then `ok: no literals of either kind outside the protocol` — Task 4 removed the commit literals, this task removes the last tag literal, so the full gate can finally assert both.
 
 **Step 3: Commit**
 
