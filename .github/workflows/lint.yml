@@ -37,6 +37,11 @@ jobs:
       - name: Check every plugin is registered everywhere
         run: npm run check:registries
 
+      # Both guards are node-builtins-only by design, so they reuse this job's
+      # checkout and node setup and need no `npm ci`.
+      - name: Check project-orchestration hardcodes no commit messages or tags
+        run: npm run check:conventions
+
   commitlint:
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request' && !startsWith(github.head_ref, 'release-please--') && github.actor != 'renovate[bot]' && github.actor != 'dependabot[bot]'
