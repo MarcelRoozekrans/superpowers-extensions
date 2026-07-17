@@ -727,11 +727,21 @@ git commit -m "ci(suite): guard against commit and tag literals in project-orche
 | `complete-milestone` | After audit PASS | `docs/planning/ROADMAP.md`, `docs/planning/MILESTONE.md`, git tag *(only when conventions say so)* |
 ```
 
-**Step 2: Red Flags** — add a row:
+**Step 2: Red Flags** — add a row. **Write the scope as `chore(...)`, not
+`chore(roadmap):`** — Task 9's guard rejects a hardcoded conventional-commit
+shape anywhere outside the protocol, and it cannot tell your cautionary example
+from the hardcodes it exists to catch:
 
 ```markdown
-| "I'll just commit with `chore(roadmap):` like the examples show" | The examples are gone. Read CONVENTIONS.md and follow the Commit & Release Protocol — the host project's lint config decides the format, not this skill. |
+| "I'll just commit with `chore(...)` like the examples show" | The examples are gone. Read CONVENTIONS.md and follow the Commit & Release Protocol — the host project's lint config decides the format, not this skill. |
 ```
+
+**Then add `/release tagging/i` to `TAG_CLAIMS` in `scripts/check-conventions.mjs`.**
+Task 9 deliberately left that phrase out: the `finishing-a-development-branch`
+row below is the last unconditional tag promise in the file, and a Task 9 gate
+asserting Task 10's work would fail for a reason unrelated to Task 9 — the same
+defect Task 4's gate had. Once this task removes the phrase, the guard should
+start enforcing it.
 
 **Step 3: Relationship table** — add a `decision-tracker` note that conventions
 are deliberately a local file rather than a memory, because recall failures are
