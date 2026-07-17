@@ -236,6 +236,36 @@ milestone is a major or a minor. Inventing `v2.0` is the defect being removed.
 Greenfield has no signals and asks outright, offering conventional + semver as
 defaults the user may reject — offered, not imposed.
 
+### Fields detection cannot produce
+
+Found during Task 2 review: six of the twenty fields have no signal. Routing
+them all to "just ask the user" would make the sub-skill ask for things it can
+work out, so they are derived or defaulted instead.
+
+| Field | How |
+|---|---|
+| `Established` | Today's date. Never ask. |
+| `Source` | `detected` / `user-stated` / `mixed`, from where the values came. Never ask. |
+| `Milestone completion tags a release` | **Derived from `Released by`:** an automation (release-please, semantic-release, changesets, CI) → `no` — it already owns tagging, and a second tag would collide. `manual git tag` → `yes`. `none` → `no`. Confirmed, not asked cold. |
+| `Fallback when scope not allowed` | Default `omit scope`; conventional commits permit a scope-less message, so it always lands. |
+| `Datastore` | Ask. `n/a` is a normal answer. |
+| `Model` | Ask, seeded from evidence: protected branches or `PR required: yes` suggests `feature-branch`, else `trunk`. |
+
+The derivation of `Milestone completion tags a release` is the important one —
+it is the field that decides whether `complete-milestone` tags at all, and it is
+knowable from `Released by` rather than being a question.
+
+### The VERIFY rule
+
+Also found during Task 2 review. `init-conventions`' VERIFY must assert that no
+field value contains `<` **or** ` | `. Both are needed: only 11 of the 20 fields
+use `<placeholder>` notation, and the other 9 are bare enums
+(`**Format:** conventional | free-form`). An agent that never picks leaves the
+enum intact, which contains no placeholder and would pass a
+placeholder-only check — so the original rule verified barely half the contract.
+Since the template's `|` is choice notation that vanishes on fill, a surviving
+` | ` is proof a field was never decided.
+
 ### Error handling and degradation
 
 | Condition | Behavior |
