@@ -43,5 +43,5 @@
 ## Deployment
 
 **Deploy target:** `<where it runs>`
-**Environments:** `<list | none>`
+**Environments:** `<comma-separated list | none>`
 **Deployed by:** `<mechanism>`

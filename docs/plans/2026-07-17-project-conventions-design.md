@@ -137,7 +137,7 @@ Field style matches the existing state files (`**Key:** value`, as in ROADMAP's
 
 ## Deployment
 **Deploy target:** <where it runs>
-**Environments:** <list | none>
+**Environments:** <comma-separated list | none>
 **Deployed by:** <mechanism>
 ```
 
@@ -258,8 +258,8 @@ knowable from `Released by` rather than being a question.
 ### The VERIFY rule
 
 Also found during Task 2 review. `init-conventions`' VERIFY must assert that no
-field value contains `<` **or** ` | `. Both are needed: only 11 of the 20 fields
-use `<placeholder>` notation, and the other 9 are bare enums
+field value contains `<` **or** a space-padded `|`. Both are needed: only 10 of
+the 20 fields use `<placeholder>` notation, and the other 10 are bare enums
 (`**Format:** conventional | free-form`). An agent that never picks leaves the
 enum intact, which contains no placeholder and would pass a
 placeholder-only check — so the original rule verified barely half the contract.

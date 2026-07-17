@@ -80,7 +80,7 @@ Match the style of the three sibling templates (`roadmap-design.template.md` etc
 ## Deployment
 
 **Deploy target:** `<where it runs>`
-**Environments:** `<list | none>`
+**Environments:** `<comma-separated list | none>`
 **Deployed by:** `<mechanism>`
 ```
 
@@ -196,7 +196,7 @@ they must be decided.
 
 8. **VERIFY:** re-read the file and confirm all five `##` sections are present,
    and that **no field value still contains `<` or ` | `**. Both checks are
-   needed: only 11 of the 20 fields use `<placeholder>` notation — the other 9
+   needed: only 10 of the 20 fields use `<placeholder>` notation — the other 10
    are bare enums (`**Format:** conventional | free-form`), and an unpicked enum
    contains no placeholder at all. Since the template's `|` notation is choice
    syntax that vanishes on fill, a surviving ` | ` means a field was never
