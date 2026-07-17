@@ -671,17 +671,29 @@ they cannot drift apart, which is the same failure this repo fixed in #112.
 
 **Step 2: Verify the guard FAILS before the work and PASSES after**
 
-This is the closest thing to a red/green cycle available here — run it against
-the pre-change file to prove it catches the bug:
+**`git stash` does not work here and specifying it was a defect.** By the time
+this task runs, Tasks 1-8 are *committed*, so the tree is clean and `git stash`
+is a no-op — the guard would run against the fixed tree, pass, and "prove" it
+catches a bug it never saw. That is the eleventh instance on this branch of a
+check reporting something other than what it claims, in the task written to stop
+exactly that.
+
+Run it against a worktree at `master`, which still holds all twelve hardcodes —
+the same technique `check-registries` used in #112:
 
 ```bash
-git stash
-node scripts/check-conventions.mjs; echo "exit: $?"   # expect 1 + literals reported
-git stash pop
-node scripts/check-conventions.mjs; echo "exit: $?"   # expect 0
+git worktree add /tmp/master-guard master
+cp scripts/check-conventions.mjs /tmp/master-guard/scripts/
+cd /tmp/master-guard && node scripts/check-conventions.mjs; echo "exit: $?"
 ```
 
-Expected: exit `1` then exit `0`. **A guard that only ever passes proves nothing.**
+Expected on `master`: **exit 1**, reporting the `git tag -a vN.0`, the ten
+`chore(scope):` literals, and the prose hardcodes. Then on this branch: **exit
+0**. Clean up with `git worktree remove /tmp/master-guard --force`.
+
+**A guard that only ever passes proves nothing.** Name the specific violations it
+found on `master` in your report — "it failed" is not evidence it failed for the
+right reason.
 
 **Step 3: Wire into package.json and CI**
 
