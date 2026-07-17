@@ -17,6 +17,15 @@ the `project-orchestration` skill to persist project lifecycle state across sess
 `docs/planning/` in the project root. Add to `.gitignore` or commit — user's choice.
 Recommended: commit so state survives machine changes.
 
+Four files live here:
+
+| File | Holds | Written by | Lifecycle |
+|---|---|---|---|
+| [`ROADMAP.md`](#roadmapmd) | Every milestone, its phases, and completion status | `plan-roadmap`, then every phase and milestone sub-skill | Changes constantly |
+| [`STATE.md`](#statemd) | Session handoff — where work stopped and what is next | `pause-work` | Rewritten each pause |
+| [`MILESTONE.md`](#milestonemd) | The active milestone's definition and DoD | `new-milestone`, `complete-milestone` | Replaced per milestone |
+| [`CONVENTIONS.md`](#conventionsmd) | Project-invariant technical decisions — stack, commits, branching, release, deployment | `init-conventions` only | Stable; unchanged for the life of the project unless a convention actually changes |
+
 ## ROADMAP.md
 
 Tracks all milestones, their phases, and completion status.
@@ -192,3 +201,69 @@ One paragraph.
 |---|---|---|
 | YYYY-MM-DD | PASS | none |
 ```
+
+## CONVENTIONS.md
+
+The project's invariant technical decisions — stack, commits, branching, versioning/release, deployment. Written by `init-conventions`, read by the Commit & Release Protocol before every commit and tag. Filled in from [`templates/conventions.template.md`](templates/conventions.template.md), which carries the authoring guidance stripped from the written file.
+
+```markdown
+# Project Conventions
+
+> Written by `init-conventions`. Do not hand-edit — re-run the sub-skill instead; the Commit & Release Protocol reads these fields.
+
+**Established:** YYYY-MM-DD
+
+## Stack
+
+**Language / runtime:** <value>
+**Package manager:** <value>
+**Framework:** <value | none>
+**Datastore:** <value | n/a>
+
+## Commits
+
+**Format:** conventional | free-form
+**Scopes:** enforced | free | none
+**Scope source:** <file | n/a>
+**Fallback when scope not allowed:** omit scope | map to <scope>
+
+## Branching
+
+**Model:** trunk | feature-branch | gitflow
+**PR required:** yes | no | unknown
+**Protected branches:** <comma-separated list | none>
+
+## Versioning & Release
+
+**Scheme:** semver | calver | milestone | none
+**Released by:** release-please | semantic-release | changesets | manual git tag | CI | none
+**Milestone completion tags a release:** yes | no
+**Changelog:** auto | manual | none
+
+## Deployment
+
+**Deploy target:** <where it runs | none>
+**Environments:** <comma-separated list | none>
+**Deployed by:** <mechanism | none>
+```
+
+Nineteen fields: `Established` plus eighteen across the five sections. All five `##` headings are required even when a section's fields are all `none` — `init-conventions`' VERIFY checks that all five are present.
+
+### Canonical syntax — exact field and value rules
+
+The Commit & Release Protocol reads these fields mechanically, so a field it cannot parse is a field that does not exist. Follow these precisely.
+
+- **Field lines** — `**Key:** value` on its own line, key spelled and capitalized exactly as shown, single space after the colon. Consecutive field lines sit on adjacent lines with no blank line between them. Do not reflow them into a paragraph, a bullet list, or a table.
+- **Choice notation** — the `|` shown above separates the allowed values; it is notation, and **never appears in a written file**. A field holding several values separates them with commas: `**Language / runtime:** node 24, .NET 8`. A `<placeholder>` is likewise notation — `init-conventions`' VERIFY rejects any field line still containing `<` or a space-padded `|`, because either means the field was never decided.
+- **Trailing parenthetical** — a value may carry one. The value is everything before the first `(` that follows a space; the parenthetical carries provenance or detail and is ignored by the readers. `**Released by:** none (defaulted)` reads as `none`. Use it to mark a value that was defaulted or supplied by the user rather than detected.
+- **`Protected branches`** — a comma-separated list of patterns, or `none`. **`none` means the list is empty**, not a branch literally named `none`. `*` is a wildcard matching within a single path segment: `release/*` matches `release/1.2` but not `release/1/2`. Matching is case-sensitive. The file records the patterns; the Commit & Release Protocol's branch guard is what matches against them and decides what to do.
+- **`Established`** — an ISO 8601 date, write-once. It records when conventions were *first* set, not when last checked; a re-run of `init-conventions` preserves it.
+
+**Cross-field constraint:** `Scheme: none` implies `Milestone completion tags a release: no` — there is no scheme to render a tag from, so the pair `none` / `yes` is invalid. `init-conventions` derives the `no` rather than asking, so only a hand-edit can produce the invalid pair.
+
+### Lifecycle
+
+- **Written by `init-conventions` only** — at kickoff via `plan-roadmap`, as a self-heal when the Commit & Release Protocol finds the file missing, or on demand when a convention changes. No other sub-skill writes it. It commits the file by explicit pathspec, so a self-heal never sweeps the caller's staged files into its commit.
+- **Read by the Commit & Release Protocol** before every commit and tag, and by `audit-milestone` to decide whether the release-tag criterion applies at all.
+- **Stable.** Unlike `ROADMAP.md`, it does not change per phase or per milestone. A re-run that detects no differences asks nothing and writes nothing.
+- **Not auto-compressed.** `compress-memory` runs from `pause-work` on `STATE.md` and `ROADMAP.md` only; nothing auto-compresses this file. A manual `/compress-memory docs/planning/CONVENTIONS.md` is not refused by that skill's denylist, so if you invoke one, the `**Key:** value` lines must survive verbatim — the protocol greps them, and a field compressed into prose is a field it will not find.
