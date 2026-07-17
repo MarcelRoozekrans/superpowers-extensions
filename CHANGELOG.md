@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.20.0](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.19.1...superpowers-extensions-v1.20.0) (2026-07-17)
+
+
+### Features
+
+* **project-orchestration:** ask for and honor project conventions instead of hardcoding them ([#114](https://github.com/MarcelRoozekrans/superpowers-extensions/issues/114)) ([65f1987](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/65f198788bad09a882d1a20e527f38ab32b1f838))
+
 ## [1.19.1](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.19.0...superpowers-extensions-v1.19.1) (2026-07-17)
 
 
