@@ -1,6 +1,6 @@
 ---
 name: squad
-description: Use when the user runs squad commands (/squad-init, /squad-status, /squad-add, /squad-sync), uses `@`-mention triggers for a named specialist (`@lead`, `@backend`, `@frontend`, `@tester`, `@scribe`), asks to "activate the team" / "set up agents" / "who is on the squad", or begins brainstorming/planning on a project that already contains a `.squad/` directory. Dispatches Lead/Backend/Frontend/Tester/Scribe specialists as parallel Task subagents — each runs in an isolated context window with its own charter and tier-1 history — and accumulates per-role project knowledge across sessions in `history.md` files. Skip for one-off questions, single-file edits, or projects without an existing squad.
+description: Use when the user runs squad commands (/squad-init, /squad-status, /squad-sync, /squad-ask), uses `@`-mention triggers for a named specialist (`@lead`, `@backend`, `@frontend`, `@tester`, `@scribe`), asks to "activate the team" / "set up agents" / "who is on the squad", or begins brainstorming/planning on a project that already contains a `.squad/` directory. Dispatches Lead/Backend/Frontend/Tester/Scribe specialists as parallel Task subagents — each runs in an isolated context window with its own charter and tier-1 history — and accumulates per-role project knowledge across sessions in `history.md` files. Skip for one-off questions, single-file edits, or projects without an existing squad.
 ---
 
 # Squad Skill

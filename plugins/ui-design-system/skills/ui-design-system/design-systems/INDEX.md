@@ -1,6 +1,6 @@
 # Design Systems Catalog — Index
 
-70 vendored design systems organized by category. Each entry points at a
+74 vendored design systems organized by category. Each entry points at a
 `<system>/DESIGN.md` file with a 9-section spec (visual theme, color palette,
 typography, layout, components, motion, imagery, voice, edge cases) extracted
 from real production CSS.
@@ -48,6 +48,7 @@ For attribution and licensing, see [NOTICE.md](NOTICE.md).
 | [clickhouse](clickhouse/DESIGN.md) | Analytics database, yellow-on-graphite |
 | [framer](framer/DESIGN.md) | Animation-first design tool |
 | [webflow](webflow/DESIGN.md) | Visual web builder |
+| [expo](expo/DESIGN.md) | React Native platform, sky-gradient wash, black CTAs |
 
 ## SaaS productivity
 
@@ -65,6 +66,7 @@ For attribution and licensing, see [NOTICE.md](NOTICE.md).
 | [zapier](zapier/DESIGN.md) | Automation, orange-lightning |
 | [lovable](lovable/DESIGN.md) | AI app-builder, soft pastel |
 | [shopify](shopify/DESIGN.md) | Commerce platform, polaris-green |
+| [slack](slack/DESIGN.md) | Workplace messaging, deep aubergine, cream-lavender gradients |
 
 ## Consumer / lifestyle
 
@@ -81,6 +83,7 @@ For attribution and licensing, see [NOTICE.md](NOTICE.md).
 | [wired](wired/DESIGN.md) | Tech editorial, condensed-display heritage |
 | [meta](meta/DESIGN.md) | Multi-app blue, social-platform corporate |
 | [playstation](playstation/DESIGN.md) | Gaming, cinematic dark, console identity |
+| [nintendo-2001](nintendo-2001/DESIGN.md) | Y2K console chrome, beveled metal plates, amber glow (period piece) |
 
 ## Fintech / commerce
 
@@ -114,6 +117,8 @@ For attribution and licensing, see [NOTICE.md](NOTICE.md).
 | [nvidia](nvidia/DESIGN.md) | GPU-green, technical-corporate |
 | [vodafone](vodafone/DESIGN.md) | Telecom-red heritage |
 | [clay](clay/DESIGN.md) | B2B sales-intelligence, content-rich |
+| [hp](hp/DESIGN.md) | Enterprise-consumer white paper, electric-blue chevrons |
+| [dell-1996](dell-1996/DESIGN.md) | Catalog-era flat color blocks, GIF-sticker web (period piece) |
 
 ## Picking a system
 

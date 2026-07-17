@@ -1,13 +1,13 @@
 ---
 name: roslyn-codelens-integration
-description: Use on .NET / C# codebases (.cs/.csproj/.sln/.slnx) when roslyn-codelens MCP tools are available, in either of two paths — (1) the user directly asks for semantic .NET intelligence ("find callers of", "find implementations of", "who uses this", "show type hierarchy", "find unused symbols", "find circular dependencies", "what does this method do"), or (2) any superpowers skill is active (brainstorming, refactor-analysis, writing-plans, executing-plans, subagent-driven-development, systematic-debugging, test-driven-development, receiving-code-review, requesting-code-review, verification-before-completion, pre-push-review) and would benefit from grounded code-graph evidence. Applies whenever Claude would otherwise Grep/Glob for C# symbols or run dotnet build for diagnostics. Provides 24 Roslyn-powered tools (find_callers, find_implementations, get_diagnostics, get_type_hierarchy, analyze_data_flow, etc.). Skip for non-.NET projects or when roslyn-codelens MCP tools are unavailable.
+description: Use on .NET / C# codebases (.cs/.csproj/.sln/.slnx) when roslyn-codelens MCP tools are available, in either of two paths — (1) the user directly asks for semantic .NET intelligence ("find callers of", "find implementations of", "who uses this", "show type hierarchy", "find unused symbols", "find circular dependencies", "what does this method do"), or (2) any superpowers skill is active (brainstorming, refactor-analysis, writing-plans, executing-plans, subagent-driven-development, systematic-debugging, test-driven-development, receiving-code-review, requesting-code-review, verification-before-completion, pre-push-review) and would benefit from grounded code-graph evidence. Applies whenever Claude would otherwise Grep/Glob for C# symbols or run dotnet build for diagnostics. Provides 32 Roslyn-powered tools (find_callers, find_implementations, get_diagnostics, get_type_hierarchy, analyze_data_flow, etc.). Skip for non-.NET projects or when roslyn-codelens MCP tools are unavailable.
 ---
 
 # Roslyn CodeLens — Superpowers Integration
 
 ## Prerequisites
 
-This skill requires the roslyn-codelens MCP server (24 tools). Install via:
+This skill requires the roslyn-codelens MCP server (32 tools). Install via:
 
 ```bash
 claude install gh:MarcelRoozekrans/roslyn-codelens-mcp
@@ -264,6 +264,20 @@ This forces a full reload — re-opens the `.sln` / `.slnx`, recompiles all proj
 | `list_solutions` | Session start (multi-solution) | Session start (multi-solution) |
 | `set_active_solution` | When user targets specific project | When user targets specific project |
 | `rebuild_solution` | After structural changes | After structural changes |
+
+The eight tools below serve the other integrations rather than brainstorming or
+refactor-analysis, so they are mapped to their own workflows here:
+
+| Tool | Where it applies |
+|---|---|
+| `get_type_overview` | Structural questions instead of `Read`; scoping a task before starting it |
+| `get_file_overview` | Structural questions instead of `Read` — what a file defines |
+| `analyze_method` | TDD: verify the contract before writing the test |
+| `analyze_change_impact` | Executing plans: scope each task. Verification: does blast radius match the PR? Writing plans: set a realistic task count |
+| `analyze_data_flow` | Systematic debugging: what a statement range declares / reads / writes / captures |
+| `analyze_control_flow` | Systematic debugging: unreachable code, missing returns |
+| `get_code_actions` | TDD REFACTOR: discover standard refactorings |
+| `apply_code_action` | TDD REFACTOR: apply them in preview mode instead of hand-editing |
 
 ---
 

@@ -7,7 +7,8 @@
 #   DESIGN.md when the download succeeded and the file is non-empty. A failed
 #   network call cannot leave a stale or empty file behind.
 # - Removes systems no longer present upstream. To preserve a removed system,
-#   rename its directory before running (e.g. `<name>-archived/`).
+#   rename its directory to `<name>-archived/`; any directory whose name ends
+#   in `-archived` is never refreshed and never deleted.
 # - Refuses to delete the catalog if the upstream listing comes back empty
 #   (network glitch or auth failure should not nuke local files).
 
@@ -67,11 +68,21 @@ for sys in $SYSTEMS; do
 done
 wait
 
-# Remove systems no longer present upstream
+# Remove systems no longer present upstream. Directories renamed to
+# `<name>-archived/` are deliberate local keeps of a system upstream dropped —
+# they are absent from the upstream listing by definition, so skip them here
+# rather than deleting the very copy the rename was meant to preserve.
 removed=0
+kept=0
 shopt -s nullglob
 for dir in "$DEST"/*/; do
   name=$(basename "$dir")
+  case "$name" in
+    *-archived)
+      kept=$((kept + 1))
+      continue
+      ;;
+  esac
   if ! grep -qx "$name" "$SEEN_FILE"; then
     echo "Removing $name (no longer in upstream)"
     rm -rf "$dir"
@@ -79,4 +90,4 @@ for dir in "$DEST"/*/; do
   fi
 done
 
-echo "Refresh complete. Upstream count: $UPSTREAM_COUNT. Removed locally: $removed."
+echo "Refresh complete. Upstream count: $UPSTREAM_COUNT. Removed locally: $removed. Archived (skipped): $kept."

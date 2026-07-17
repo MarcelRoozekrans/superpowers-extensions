@@ -12,15 +12,30 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - name: Lint Markdown files
-        uses: DavidAnson/markdownlint-cli2-action@8de2aa07cae85fd17c0b35642db70cf5495f1d25 # v24
+      - uses: actions/setup-node@v7
         with:
-          globs: |
-            **/*.md
-            #docs/plans
-            #CHANGELOG.md
-            #plugins/ui-design-system/skills/ui-design-system/design-systems
-            #GEMINI.md
+          node-version: 24
+
+      - run: npm ci
+
+      # Runs the same command as local. The globs live in
+      # .markdownlint-cli2.jsonc rather than here, so CI and `npm run lint:md`
+      # cannot disagree about which files are linted — they previously did, and
+      # the local script failed with thousands of errors while CI stayed green.
+      - name: Lint Markdown files
+        run: npm run lint:md
+
+  check-registries:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - name: Check every plugin is registered everywhere
+        run: npm run check:registries
 
   commitlint:
     runs-on: ubuntu-latest
