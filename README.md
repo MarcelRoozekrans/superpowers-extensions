@@ -1064,6 +1064,43 @@ React Router, Next.js (App Router & Pages Router), Angular, Vue Router, SvelteKi
 - **For ui-design-system:** No additional tools required.
 - **For squad:** No hard requirements — works standalone. [LongtermMemory-MCP](https://github.com/MarcelRoozekrans/LongtermMemory-MCP) enables tier-1 semantic search for agent history (installed automatically via marketplace dependencies). Works without it, falling back to grep-based lookup.
 
+## Contributing
+
+Two checks run in CI and are worth running locally before pushing:
+
+```bash
+npm run lint:md          # markdownlint — globs live in .markdownlint-cli2.jsonc
+npm run check:registries # every plugin registered everywhere, counts match disk
+```
+
+### Adding a plugin
+
+A plugin is not one directory — it has to be registered in nine places, and
+missing one fails quietly. `npm run check:registries` enforces every item below,
+so add the plugin and run it rather than working from this list by hand:
+
+| Where | What to add |
+|---|---|
+| `plugins/<name>/.claude-plugin/plugin.json` | Manifest whose `name` matches the directory |
+| `plugins/<name>/skills/<name>/SKILL.md` | Skill whose frontmatter `name` matches the directory |
+| `.claude-plugin/marketplace.json` | Entry with `source: ./plugins/<name>` and the current version |
+| `release-please-config.json` | An `extra-files` entry for `$.plugins[<index>].version` — this list is index-based, so a new plugin is never version-bumped until you add its index |
+| `package.json` | `claude plugin install <name>` in the `install-plugins` script |
+| `hooks/session-start` | A line in the skill listing injected at session start |
+| `.opencode/plugins/superpowers-extensions.js` | The `PLUGINS` array |
+| `.cursor-plugin/plugin.json` + `.codex-plugin/plugin.json` | `keywords` |
+| `commitlint.config.js` | `scope-enum` — otherwise commits scoped to the plugin are rejected |
+
+### Design system catalog
+
+The catalog under `design-systems/` is refreshed weekly from upstream by
+[`refresh-design-systems.yml`](.github/workflows/refresh-design-systems.yml).
+Curated mode resolves a system through
+[`INDEX.md`](plugins/ui-design-system/skills/ui-design-system/design-systems/INDEX.md),
+so a directory that upstream adds is unreachable until it is indexed — when the
+refresh PR adds one, add its row and update the count. `check:registries` fails
+if the index and the directory listing disagree.
+
 ## License
 
 MIT
