@@ -98,12 +98,8 @@ const TAG_CLAIMS = [
   /tag the release/i,
   /tags a release,/i,
   /release tagged/i,
+  /release tagging/i,
 ];
-// NOTE: "release tagging" is a live unconditional tag promise in the
-// `finishing-a-development-branch` row of the Relationship table. It is Task
-// 10's to fix and is deliberately NOT asserted here — a Task 9 gate that fails
-// on Task 10's work would fail for a reason that has nothing to do with this
-// task. Add /release tagging/i to this list once Task 10 lands.
 
 for (const [i, line] of lines.entries()) {
   if (inProtocol(i)) continue;
