@@ -5,6 +5,8 @@
 **Established:** YYYY-MM-DD
 **Source:** detected | user-stated | mixed
 
+> `**Established:**` is write-once — the date the conventions were *first* recorded. A re-run of `init-conventions` preserves it and never resets it to today; it is not a "last checked" date. `**Source:**` is judged over the detectable fields only.
+
 > Value notation, for every field below. **A `|` is choice notation and never appears in a filled file — when a field holds several values, separate them with commas** (`node 24, .NET 8`). The enum token is everything before the first `(` that follows a space — an optional trailing `(...)` carries provenance or detail and is ignored by the protocol. So `**Released by:** none (defaulted)` reads as `none` and records that it was a default rather than a finding. `**Source:**` above is file-level; use the parenthetical to mark which individual values were defaulted or guessed.
 
 ## Stack

@@ -153,7 +153,7 @@ they must be decided.
    | Deploy target / Deployed by | workflows with deploy/publish steps, `Dockerfile`, `vercel.json`, `fly.toml`, `*.tf` — the artifact/registry named is `Deploy target`, the mechanism is `Deployed by` |
    | Environments | environment names in CI workflows (`environment:` keys), `*.tfvars`, compose/profile files; else `none` |
 
-   Six fields have no detection signal and are handled in step 2 instead:
+   Six fields have no detection signal and are handled in the **Derive** step instead:
    `Datastore`, `Model`, `Fallback when scope not allowed`,
    `Milestone completion tags a release`, `Established`, `Source`.
 
@@ -175,14 +175,14 @@ they must be decided.
    fire no matter where this step sits.
 
 3. **Derive, default, or ask the six undetectable fields.** Detection cannot
-   produce these; leaving them to step 5's catch-all makes the sub-skill ask for
+   produce these; leaving them to the **Propose** step's catch-all makes the sub-skill ask for
    things it can work out.
 
    | Field | How |
    |---|---|
    | `Established` | Today's date. Never ask. |
-   | `Source` | Judged over the 14 *detectable* fields only: `detected` if every one came from a signal, `user-stated` if every one was asked, else `mixed`. Never ask. Derived and asked-by-design fields (`Datastore`, `Model`, `Established`, `Source` itself) do not count — including them would make `detected` unreachable, since step 2 always asks two of them. |
-   | `Milestone completion tags a release` | **Derive from `Released by` AND `Scheme`:** `yes` only when `Released by: manual git tag` AND `Scheme` is not `none`. Everything else → `no` — an automation already owns tagging and a second tag would collide; `Scheme: none` has no scheme to render a tag from (the template forbids pairing `none` with `yes`, and the protocol's tag table has no `none` row). Confirm the derived value; do not ask cold. **Re-derive after step 4** if the user edits `Released by` or `Scheme` — a stale one-shot derivation is how a corrected `Released by: release-please` still ends up double-tagging. |
+   | `Source` | Judged over the 14 *detectable* fields only: `detected` if every one came from a signal, `user-stated` if every one was asked, else `mixed`. Never ask. Derived and asked-by-design fields (`Datastore`, `Model`, `Established`, `Source` itself) do not count — including them would make `detected` unreachable, since the **Derive** step asks two of them on a first run. |
+   | `Milestone completion tags a release` | **Derive from `Released by` AND `Scheme`:** `yes` only when `Released by: manual git tag` AND `Scheme` is not `none`. Everything else → `no` — an automation already owns tagging and a second tag would collide; `Scheme: none` has no scheme to render a tag from (the template forbids pairing `none` with `yes`, and the protocol's tag table has no `none` row). Confirm the derived value; do not ask cold. **Re-derive after the Propose step** if the user edits `Released by` or `Scheme` — re-deriving any earlier is before the user can edit anything, which silently reinstates the stale-derivation double-tag this rule exists to prevent. |
    | `Fallback when scope not allowed` | Default `omit scope` — conventional commits permit a scope-less message, so it always lands. Offer, don't impose. |
    | `Datastore` | Ask on first run. On a re-run, keep the recorded value and do not re-ask. `n/a` is a normal answer. |
    | `Model` | Ask on first run, seeded from evidence: `Protected branches` non-empty or `PR required: yes` suggests `feature-branch`; otherwise `trunk`. On a re-run, keep the recorded value and do not re-ask — two questions per re-run is what breaks the design's "brownfield asks ~zero questions". |
@@ -245,6 +245,12 @@ No. Without it, every commit falls back to a hardcoded format that may be
 rejected by the host project's lint config, and milestone completion invents a
 tag scheme the project does not use.
 ````
+
+**Cross-reference rule:** inside the Process, refer to other steps by **name**
+(the **Propose** step) rather than by number. Three consecutive reorders each
+left a batch of stale numeric refs, and one of them — "re-derive after step 4"
+— silently reinstated the double-tag bug it was written to prevent. Names
+survive renumbering; numbers do not.
 
 **Step 2: Verify the section landed with its required subsections**
 
