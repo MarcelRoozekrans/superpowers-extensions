@@ -145,7 +145,7 @@ Steps refer to each other by **name**, never by number.
 
    The diff ignores `Established`, which is write-once.
 
-3. **Derive.** No signal can produce these.
+3. **Derive.** No signal can produce these. **Derive only fills fields that are unset — a recorded value stands.** Otherwise a user who set `Model: gitflow` (reachable only by editing at **Propose**, since no rule produces it) gets it silently reverted to `feature-branch` on every re-run, and the same for a `Fallback` overridden to `map to <scope>`. `Established` was already protected this way; these need it too. Changed *inputs* are handled by **Re-derive**, not here.
 
    | Field | Rule |
    |---|---|
@@ -162,9 +162,13 @@ Steps refer to each other by **name**, never by number.
 
    If the user declines a field, record the default and mark it `(defaulted)` so the choice stays reviewable.
 
-6. **Re-derive.** If the user changed `Released by` or `Scheme` at **Propose**, re-run the **Derive** rules now. Skipping this leaves a corrected `Released by: release-please` paired with a stale `tags a release: yes`, which double-tags.
+6. **Re-derive.** If the user changed any field a **Derive** rule reads — `Released by` or `Scheme` (feeding `Milestone completion tags a release`), `PR required` or `Protected branches` (feeding `Model`) — recompute the field that reads it, overriding the recorded value, and show the result. This is the one place a derivation overrules what is on disk, because the user just changed its input. Skipping it leaves a corrected `Released by: release-please` paired with a stale `tags a release: yes`, which double-tags.
 
-7. **Write** `docs/planning/CONVENTIONS.md` from [templates/conventions.template.md](templates/conventions.template.md). Keep the headings and the `**Key:** value` lines; omit the `>` blockquotes — they are fill-in guidance, not file content.
+7. **Write** `docs/planning/CONVENTIONS.md` from [templates/conventions.template.md](templates/conventions.template.md). Keep the `#` title, the five `##` headings and the `**Key:** value` lines; omit the `>` blockquotes — they are fill-in guidance, not file content. Do **not** read this as "`**Key:**` lines only": dropping the headings fails VERIFY, whose remedy is to re-write from the template, which drops them again. In their place write one provenance line so the file is not anonymous:
+
+   ```markdown
+   > Written by `init-conventions`. Do not hand-edit — re-run the sub-skill instead; the Commit & Release Protocol reads these fields.
+   ```
 
 8. **VERIFY.** Re-read the file. All five `##` sections present, and no `**Key:**` line still containing `<` or a space-padded `|` — either means a field was never decided. `**Established:**` is a real date. On failure, re-write and VERIFY again; never continue with a failing VERIFY.
 
