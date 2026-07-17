@@ -645,6 +645,19 @@ failure, node builtins only — no `npm ci` needed in CI). It asserts:
 
 1. No `git commit -m` or `git tag -a` literal appears in `SKILL.md` outside the
    `## Commit & Release Protocol` section. (`git tag -l` is a read and is allowed.)
+
+   **This is necessary but not sufficient, and knowing why is the point.** Tasks
+   4 and 5 both found hardcodes that carry no git command at all — a commit
+   message quoted in prose (`chore(sync): reconcile github state`) and a tag
+   promised in prose (`Tagged as vN.0`). Both gates reported clean while the
+   hardcode survived. Grepping for the *shape of the bug* misses the bug.
+
+   So also assert the **claims**: no `chore\([a-z]+\):` anywhere outside the
+   protocol, and no prose promising a tag (`Tagged as`, `tag the release`,
+   `tags a release,`). A bare `vN.0` shape grep will **not** work — the shape
+   legitimately appears where `init-conventions` detects it and where the
+   protocol prohibits it, so the guard needs claim-phrase matching or an
+   allowlist of those two sites.
 2. Every sub-skill that stages files references the protocol link.
 3. `templates/conventions.template.md` exists and has all five `##` sections.
 4. Every field the protocol reads (`Format`, `Scopes`, `Scope source`, `Fallback
@@ -711,6 +724,12 @@ git commit -m "ci(suite): guard against commit and tag literals in project-orche
 **Step 3: Relationship table** — add a `decision-tracker` note that conventions
 are deliberately a local file rather than a memory, because recall failures are
 explicitly not chain failures and the protocol cannot be best-effort.
+
+**Also fix the `finishing-a-development-branch` row**, which asserts
+"`complete-milestone` handles milestone closure and release tagging." That is now
+conditional, and no other task owns this line — Task 5's implementer found it
+while auditing prose and correctly left it here. It is the last unconditional
+tag promise in the file.
 
 **Step 4: Commit**
 
