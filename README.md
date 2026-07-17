@@ -320,6 +320,7 @@ The skill REFUSES to operate on:
 - `*-design.md` — brainstorm design documents
 - `*-review-*.md` — pre-push review reports and UI review audits
 - `MILESTONE.md` — rewritten only on milestone transitions
+- `CONVENTIONS.md` — machine-read before every commit and tag; its `**Key:** value` fields are prose, so compression could break them while validation still passes
 - `*.original.md` — backup files (never compressed, never overwritten)
 - Anything not `.md` or `.txt`, or larger than 50 kB
 
@@ -1046,7 +1047,7 @@ superpowers-extensions/
 │               ├── safety-rules.md         # Denylist, backup invariant, validation
 │               └── NOTICE.md               # Attribution to caveman (MIT)
 └── docs/
-    ├── planning/                           # Project lifecycle state (ROADMAP, MILESTONE, STATE)
+    ├── planning/                           # Project lifecycle state (ROADMAP, MILESTONE, STATE, CONVENTIONS)
     └── plans/                              # Design documents and phase plans
 ```
 
