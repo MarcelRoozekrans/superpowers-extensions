@@ -1,6 +1,6 @@
 {
   "name": "superpowers-extensions",
-  "version": "1.19.0",
+  "version": "1.19.1",
   "description": "Quality-gate, refactor, project-orchestration, UI workflow, and design-system skills extending the obra/superpowers suite.",
   "author": {
     "name": "Marcel Roozekrans",
