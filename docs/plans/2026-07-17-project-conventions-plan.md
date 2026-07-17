@@ -240,8 +240,25 @@ continue. Do not guess a format, and do not fall back to a hardcoded one.
 
 ### Step 2 — Branch guard
 
-If `PR required: yes` AND the current branch (`git branch --show-current`) is
-listed under `Protected branches` → **STOP. Do not commit.** Announce:
+Read the current branch with `git branch --show-current`. If it returns empty
+(detached HEAD) → **STOP**: there is no branch to check against, so the guard
+cannot answer. Say so rather than committing.
+
+Match it against `Protected branches`, which is comma-separated. **`*` matches
+within one path segment**: `release/*` matches `release/1.2` but not
+`release/1/2`. Matching is case-sensitive. This definition lives here, not in
+`CONVENTIONS.md` — the file records the patterns; the rule that parses them
+belongs where it executes.
+
+| `PR required` | Current branch matches a protected pattern | Action |
+|---|---|---|
+| `yes` | yes | **STOP. Do not commit.** |
+| `yes` | no | Proceed |
+| `no` | — | Proceed |
+| `unknown` | yes | **STOP and ask.** `unknown` means detection could not reach the host — usually `gh` unauthenticated. Never treat it as `no`: that silently fails open on exactly the branch the guard exists to protect. |
+| `unknown` | no | Proceed |
+
+On STOP, announce:
 
 > "CONVENTIONS.md protects `<branch>` and requires a PR. Move to a feature branch
 > before I commit orchestration state."
@@ -256,13 +273,21 @@ Never create the branch or open the PR automatically — that belongs to
 | `conventional` | `<type>(<scope>): <subject>` |
 | `free-form` | `<subject>` |
 
-If `Format: conventional` AND `Scopes: enforced` AND `<scope>` is not in the
-allowed list read from `Scope source` → apply `Fallback when scope not allowed`:
+If `Format: conventional` AND `Scopes: enforced`, read the allowed scopes from
+the file named by `Scope source` and check `<scope>` against them. The source is
+a config file, not a list — grep it for a `scope-enum` rule and take the string
+array beside it. **If the file is missing, unreadable, or has no recognisable
+`scope-enum`, treat scopes as unrestricted and proceed** — a commit must never
+fail because the protocol could not parse someone's lint config.
+
+If `<scope>` is not allowed → apply `Fallback when scope not allowed`:
 
 - `omit scope` → `<type>: <subject>`
 - `map to <x>` → `<type>(<x>): <subject>`
 
-Warn once per session when a fallback fires. **Never fail a commit over a scope.**
+Warn once per session when a fallback fires — once, not per commit; a phase can
+commit repeatedly and the warning is information, not an alarm.
+**Never fail a commit over a scope.**
 
 ### Step 4 — Tag
 
@@ -274,8 +299,13 @@ Warn once per session when a fallback fires. **Never fail a commit over a scope.
 | `semver` | **Ask the user for the version.** Do not invent a bump — a milestone is not inherently major or minor. |
 | `calver` | `vYYYY.MM.DD` |
 | `milestone` | `vN.0` |
+| `none`, or anything unrecognised | Do not tag. Announce that the scheme is unset or unknown and that no tag was created. `init-conventions` derives `tags a release: no` whenever `Scheme: none`, so this row is only reachable via a hand-edited file — but a table the protocol can fall off the end of is how the vN.0 hardcode survived in the first place. |
 
-Verify with `git tag -l <tag>` before announcing success.
+Before tagging, check `git tag -l <tag>`: if the tag already exists, do **not**
+re-tag and do not fail — announce that it is already tagged and continue.
+`complete-milestone` is re-runnable, and `git tag -a` on an existing tag errors.
+
+After tagging, verify with `git tag -l <tag>` before announcing success.
 ````
 
 **Step 2: Verify placement — it must precede every sub-skill**
