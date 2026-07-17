@@ -110,7 +110,6 @@ Field style matches the existing state files (`**Key:** value`, as in ROADMAP's
 # Project Conventions
 
 **Established:** YYYY-MM-DD
-**Source:** detected | user-stated | mixed
 
 ## Stack
 **Language / runtime:** <value>
@@ -245,17 +244,33 @@ work out, so they are derived or defaulted instead.
 | Field | How |
 |---|---|
 | `Established` | Today's date on first run. **Preserved unchanged on a re-run** — it records when conventions were *first* established, not when they were last checked. Never ask. |
-| `Source` | `detected` / `user-stated` / `mixed`, judged over the 14 *detectable* fields only. Never ask. Scoping matters: counting the always-asked fields would make `detected` unreachable on every run. |
 | `Milestone completion tags a release` | **Derived from `Released by` AND `Scheme`:** `yes` only when `Released by: manual git tag` and `Scheme` is not `none`; everything else `no`. Keying on `Released by` alone produces the pairing the template forbids on the commonest greenfield repo (no tags, no automation → `Scheme: none` + `yes`), which the protocol's tag table cannot render. Re-derived if the user edits either field. Confirmed, not asked cold. |
 | `Fallback when scope not allowed` | Default `omit scope`; conventional commits permit a scope-less message, so it always lands. |
-| `Datastore` | Ask. `n/a` is a normal answer. |
-| `Model` | Ask, seeded from evidence: protected branches or `PR required: yes` suggests `feature-branch`, else `trunk`. |
+| `Datastore` | Ask on a first run only; `n/a` is a normal answer. It is the sole question a brownfield first run asks. |
+| `Model` | **Derived**, not asked: `feature-branch` when `Protected branches` is non-empty or `PR required: yes`, else `trunk`. Nothing reads it — the guard uses `PR required` + `Protected branches` — so it documents intent for humans and must not cost a question. |
 
 The derivation of `Milestone completion tags a release` is the important one —
 it is the field that decides whether `complete-milestone` tags at all, and it is
 knowable rather than being a question. It is also the easiest to get wrong: it
 must key on `Released by` **and** `Scheme`, and must be re-derived if the user
 corrects either at the confirm step, or a stale value silently double-tags.
+
+### Detection failure is not a change
+
+Found by the Task 2 code review, which ran the `gh` probe and found the
+specified command could not produce this design's own worked example.
+
+A field whose detection produced **no signal** is not a difference on a re-run —
+the recorded value stands. Without that rule, a `gh` outage proposes
+`PR required: yes → unknown`, the user confirms, and a transient network failure
+has silently disarmed the branch guard. Detection failure must never downgrade a
+recorded value.
+
+The same review found the precision was inversely distributed to the stakes: the
+stack and deployment fields, which nothing reads, were specified far more tightly
+than the nine fields that drive behavior. `Source` was cut for having no consumer
+at all, and `Model` moved from asked to derived, leaving `Datastore` as the only
+question a brownfield first run asks.
 
 ### The VERIFY rule
 
