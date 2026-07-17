@@ -274,12 +274,20 @@ belongs where it executes.
 | `no` | — | Proceed |
 | `unknown` | yes | **STOP and ask.** `unknown` means detection could not reach the host — usually `gh` unauthenticated. Never treat it as `no`: that silently fails open on exactly the branch the guard exists to protect. |
 | `unknown` | no | Proceed |
-| anything else, or the field is absent | — | **STOP and ask.** `Propose` lets the user type any value and `VERIFY` only rejects `<` and a space-padded `|` — it never checks a token against its enum — so `Yes`, `true`, `required`, or a missing line all reach here. An unmatched row must never mean "proceed": that is the fail-open this guard exists to prevent, reached through the door the table left open. |
+| anything else, or the field is absent | — | **STOP and ask.** `Propose` lets the user type any value and `VERIFY` only rejects `<` and a space-padded `\|` — it never checks a token against its enum — so `Yes`, `true`, `required`, or a missing line all reach here. An unmatched row must never mean "proceed": that is the fail-open this guard exists to prevent, reached through the door the table left open. Escape the pipe as `` `\|` `` — a bare one in a code span still splits the table cell. |
 
-On STOP, announce:
+The announce is per-row; one generic message is wrong on the catch-all, which
+fires regardless of branch match. On a protected-branch STOP:
 
 > "CONVENTIONS.md protects `<branch>` and requires a PR. Move to a feature branch
 > before I commit orchestration state."
+
+On the catch-all STOP, quote the offending value and point at the file — telling
+a user on an unprotected branch to move to a feature branch is both false and a
+remedy that fixes nothing:
+
+> "`PR required` in CONVENTIONS.md reads `<value>`, which I can't interpret.
+> Re-run `init-conventions`, or correct the field."
 
 Never create the branch or open the PR automatically — that belongs to
 `superpowers:using-git-worktrees` and `superpowers:finishing-a-development-branch`.
@@ -325,7 +333,7 @@ Render the tag in the shape the project's existing tags already use — take the
 prefix from `git tag -l` (most carry `v`; some carry none, and release-please
 monorepos carry `<name>-v`). Do not assume `v`.
 
-| `tags a release` | `Scheme` | Tag |
+| `Milestone completion tags a release` | `Scheme` | Tag |
 |---|---|---|
 | `no` | any | Do not tag. Announce: "Release handled by `<Released by>`; not tagging." |
 | `yes` | `semver` | **Ask the user for the version.** Do not invent a bump — a milestone is not inherently major or minor. **If the user declines, defers, or says "you pick": do not tag.** Announce that no version was given and no tag was created, and that `complete-milestone` can be re-run once there is one. A question is not a terminal state; every other row here ends in tag-or-announce and this one must too. |
