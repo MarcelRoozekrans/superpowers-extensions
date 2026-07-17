@@ -766,9 +766,13 @@ git commit -am "docs(project-orchestration): document init-conventions in the re
 **Files:**
 - Modify: `README.md`
 
-**Step 1: Update the sub-skill count.** README L989 says `17 sub-skills`;
+**Step 1: Update the sub-skill count.** README says `17 sub-skills`;
 `init-conventions` makes it **18**. Also add it to the sub-skill table in the
-project-orchestration section (the table that already lists the other 17).
+project-orchestration section. Note: a raw count of `##` sections in SKILL.md is
+**19**, because `detect-external-signals` is embedded ("not invoked directly")
+and deliberately absent from the README table. The README counts invocable
+sub-skills, so 17→18 is right; anyone reconciling 18 against 19 later should know
+one section is intentionally not a sub-skill.
 
 **Step 2: Document the behavior change** in the project-orchestration section —
 a short note that milestone completion now honors the project's release
