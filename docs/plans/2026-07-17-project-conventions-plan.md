@@ -422,13 +422,23 @@ Note the gate checks `git commit -m` **only**. `git tag -a` still lives in
 a reason that has nothing to do with this task. Task 5 widens the gate to cover
 tags once it owns them; Task 9's guard asserts both permanently.
 
+**The gate is blind to an 11th site, and grep cannot find it.** `pause-work`
+hardcodes a message in *prose* — "`sync-github` may produce its own
+`chore(sync): reconcile github state` commit" — with no `git commit -m` anywhere
+near it. The gate greps for the *shape* of the bug rather than the bug, so it
+reports "no commit literals" while a hardcoded message survives, and the note is
+simply false on a project whose conventions render differently. Convert it to
+"may produce its own reconcile commit (rendered per [Commit & Release
+Protocol])". Task 9's guard must grep for `chore\([a-z]+\):` — the message
+shape — not only for `git commit -m`.
+
 **Step 3: Verify all 10 pointers exist**
 
 ```bash
 grep -c "Commit & Release Protocol](#commit--release-protocol)" "$F"
 ```
 
-Expected: `10` (plus 1 from init-conventions = `11`; confirm the count matches sites written so far).
+Expected: **12** — the 10 sites, plus `init-conventions`' own commit step, plus the `pause-work` prose reference above. The earlier `11` predated the prose site.
 
 **Step 4: Commit**
 
