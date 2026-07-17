@@ -71,15 +71,19 @@ Every sub-skill in this file that commits or tags MUST follow this section. Do N
 
 Read `docs/planning/CONVENTIONS.md`.
 
-If it does not exist → run [init-conventions](#init-conventions) now, then continue. Do not guess a format, and do not fall back to a hardcoded one. That sub-skill writes and verifies the file before it commits, so its own commit re-enters this section with the file already on disk — the self-heal cannot loop.
+If it does not exist → run [init-conventions](#init-conventions) now, then **re-read the file. If it still does not exist, STOP** — the user aborted at Propose, or VERIFY never converged. Do not continue on faith: this file's top HARD-GATE requires verifying the artifact before chaining, and continuing with no conventions lands in the branch guard with every field absent. Do not guess a format, and do not fall back to a hardcoded one.
 
-**Reading a field.** The value is everything after the `**Key:**` prefix. The token this section matches on is everything before the first `(` that follows a space; a trailing `(...)` carries provenance and is ignored, so `**PR required:** yes (detected)` reads as `yes`. Match the token, never the raw line — a guard that compares against the whole value stops matching the moment `init-conventions` marks a field `(defaulted)`.
+This does not recurse: `init-conventions` writes and VERIFYs the file before it commits, so its commit re-enters here with the file already on disk.
+
+**A value may carry a trailing parenthetical** — the field's value is everything before the first `(` that follows a space, and `**PR required:** yes (detected)` reads as `yes`. This rule lives here, where fields are read; without it that value matches no row in the branch guard and the guard fails open.
+
+**`Protected branches: none` means the list is empty**, not a branch named `none`. The guard splits on commas, so this must be stated or it yields a one-element list. `init-conventions` also derives `Model` from whether this list is non-empty.
 
 ### Step 2 — Branch guard
 
 Read the current branch with `git branch --show-current`. If it returns empty (detached HEAD) → **STOP**: there is no branch to check against, so the guard cannot answer. Say so rather than committing.
 
-Match it against `Protected branches`, which is comma-separated; the literal value `none` means the list is empty and nothing matches. **`*` matches within one path segment**: `release/*` matches `release/1.2` but not `release/1/2`. Matching is case-sensitive. This definition lives here, not in `CONVENTIONS.md` — the file records the patterns; the rule that parses them belongs where it executes.
+Match it against `Protected branches`, which is comma-separated. **`*` matches within one path segment**: `release/*` matches `release/1.2` but not `release/1/2`. Matching is case-sensitive. This definition lives here, not in `CONVENTIONS.md` — the file records the patterns; the rule that parses them belongs where it executes.
 
 | `PR required` | Current branch matches a protected pattern | Action |
 |---|---|---|
@@ -88,21 +92,26 @@ Match it against `Protected branches`, which is comma-separated; the literal val
 | `no` | — | Proceed |
 | `unknown` | yes | **STOP and ask.** `unknown` means detection could not reach the host — usually `gh` unauthenticated. Never treat it as `no`: that silently fails open on exactly the branch the guard exists to protect. |
 | `unknown` | no | Proceed |
+| anything else, or the field is absent | — | **STOP and ask.** `Propose` lets the user type any value and `VERIFY` only rejects `<` and a space-padded `\|` — it never checks a token against its enum — so `Yes`, `true`, `required`, or a missing line all reach here. An unmatched row must never mean "proceed": that is the fail-open this guard exists to prevent, reached through the door the table left open. |
 
-On a STOP from that table, announce:
+On a STOP from the two protected-branch rows (`yes` + match, `unknown` + match), announce:
 
 > "CONVENTIONS.md protects `<branch>` and requires a PR. Move to a feature branch before I commit orchestration state."
+
+On a STOP from the last row, say what is actually wrong instead — quote the value found for `PR required`, or say the field is missing, and ask the user to correct `CONVENTIONS.md` or re-run `init-conventions`. Do not tell them to move branches: the branch may be perfectly fine, and changing it would not fix the file.
 
 Never create the branch or open the PR automatically — that belongs to `superpowers:using-git-worktrees` and `superpowers:finishing-a-development-branch`.
 
 ### Step 3 — Render the commit message
 
-| `Format` | Message |
-|---|---|
-| `conventional` | `<type>(<scope>): <subject>` |
-| `free-form` | `<subject>` |
+| `Format` | `Scopes` | Message |
+|---|---|---|
+| `conventional` | `enforced` or `free` | `<type>(<scope>): <subject>` |
+| `conventional` | `none` | `<type>: <subject>` — the project's conventions say it has no scopes; do not render one. |
+| `free-form` | any | `<subject>` |
+| anything else, or the field is absent | — | **STOP and ask.** Same reasoning as the branch guard: an unmatched row must never silently pick a format. |
 
-If `Format: conventional` AND `Scopes: enforced`, read the allowed scopes from the file named by `Scope source` and check `<scope>` against them. The source is a config file, not a list: **Read** the whole file and find its `scope-enum` rule, then take the array of strings that rule holds — it is frequently not on the same line as the rule name, and may be assembled from a variable or another module. **If the file is missing, unreadable, or holds no array of scopes you can read off it directly, treat scopes as unrestricted and proceed** — a commit must never fail because the protocol could not parse someone's lint config.
+If `Format: conventional` AND `Scopes: enforced`, read the allowed scopes from the file named by `Scope source` and check `<scope>` against them. **Read the whole file** — do not grep for `scope-enum` and expect the array beside it. On this repository's own `commitlint.config.js` the rule is on line 4 and its array starts on line 5; the array may also come from a variable or another module. **If the file is missing, unreadable, or its scope list cannot be read off it — including when the array comes from a variable or another module — apply `Fallback when scope not allowed` rather than assuming permission.** Treating an unreadable config as unrestricted renders `<type>(<scope>):` unvalidated, which commitlint then rejects — failing the commit, which the rule below forbids. The Fallback branch (`omit scope`) provably always lands. When the protocol cannot determine whether a scope is allowed, take the branch that cannot fail.
 
 If `<scope>` is not allowed → apply `Fallback when scope not allowed`:
 
@@ -113,17 +122,24 @@ Warn once per session when a fallback fires — once, not per commit; a phase ca
 
 ### Step 4 — Tag
 
-`complete-milestone` only — no other sub-skill tags.
+`complete-milestone` only. The table is keyed on **two** fields — keying it on `Scheme` alone leaves `tags a release: no` matching no row while `yes` + `semver` matches two, and two agents then diverge on whether to tag at all.
+
+Render the tag in the shape the project's existing tags already use — take the prefix from `git tag -l` (most carry `v`; some carry none, and release-please monorepos carry `<name>-v`). Do not assume `v`.
 
 | `Milestone completion tags a release` | `Scheme` | Tag |
 |---|---|---|
-| `no` | — | Do not tag. Announce: "Release handled by `<Released by>`; not tagging." |
-| `yes` | `semver` | **Ask the user for the version.** Do not invent a bump — a milestone is not inherently major or minor. |
-| `yes` | `calver` | `vYYYY.MM.DD` |
+| `no` | any | Do not tag. Announce: "Release handled by `<Released by>`; not tagging." |
+| `yes` | `semver` | **Ask the user for the version.** Do not invent a bump — a milestone is not inherently major or minor. **If the user declines, defers, or says "you pick": do not tag.** Announce that no version was given and no tag was created, and that `complete-milestone` can be re-run once there is one. A question is not a terminal state; every other row here ends in tag-or-announce and this one must too. |
+| `yes` | `calver` | Match the shape of the existing tags (`vYYYY.MM.DD`, `vYYYY.MM`, …) — `vYYYY.MM.DD` is not the only calver. **Calver carries no milestone identity, so two milestones completed on one day render the same string.** Before tagging, resolve the collision per the rule below — do not silently reuse the date. |
 | `yes` | `milestone` | `vN.0` |
-| `yes` | `none`, or anything unrecognised | Do not tag. Announce that the scheme is unset or unknown and that no tag was created. `init-conventions` derives `tags a release: no` whenever `Scheme: none`, so this row is only reachable via a hand-edited file — but a table the protocol can fall off the end of is how the `vN.0` hardcode survived in the first place. |
+| `yes` | `none`, or anything unrecognised | Do not tag. Announce that the scheme is unset or unknown and no tag was created. `init-conventions` derives `no` whenever `Scheme: none`, so this is reachable only via a hand-edited file — but a table the protocol can fall off the end of is how the `vN.0` hardcode survived in the first place. |
 
-Before tagging, check `git tag -l <tag>`: if the tag already exists, do **not** re-tag and do not fail — announce that it is already tagged and continue. `complete-milestone` is re-runnable, and `git tag -a` on an existing tag errors.
+Before tagging, check `git tag -l <tag>`. If it exists, **check what it points at** — `git rev-list -n 1 <tag>`:
+
+- Points at the commit being tagged → this is a re-run. Do not re-tag, do not fail; announce it is already tagged and continue.
+- Points anywhere else → **STOP and ask.** Two different commits want one tag name. Under `calver` this is routine, not exotic: two milestones completed on the same day both render today's date.
+
+Existence alone is not identity. A check that only asks "does a tag of this name exist" reports the second milestone as tagged while pointing at the first one's commit, and it announces success — it certifies the collision instead of catching it. That is this branch's recurring failure: a green check that is not checking.
 
 After tagging, verify with `git tag -l <tag>` before announcing success.
 
