@@ -314,7 +314,7 @@ When the user wants to append a new phase to the current milestone's roadmap.
 4. **VERIFY:** re-read `docs/planning/ROADMAP.md` and confirm the new phase block is present with the correct number, name, `status: pending`, `Surface:`, and `HelpWanted:` values. If any is missing, the Edit did not apply — retry.
 5. **Use the `Edit` tool** to add the new phase to the `## Phases` list in `docs/planning/MILESTONE.md`.
 6. **VERIFY:** re-read `docs/planning/MILESTONE.md` and confirm the phase appears in the list.
-7. Stage and commit: `git add docs/planning/ROADMAP.md docs/planning/MILESTONE.md && git commit -m "chore(roadmap): add phase N.M — <name>"`. Run `git status` and confirm a clean tree.
+7. Stage `git add docs/planning/ROADMAP.md docs/planning/MILESTONE.md`, then commit per [Commit & Release Protocol](#commit--release-protocol) with `type=chore, scope=roadmap, subject=add phase N.M — <name>`. Run `git status` and confirm a clean tree.
 8. Announce the new phase number, name, surface, and help-wanted only after the commit succeeds.
 
 ---
@@ -333,7 +333,7 @@ When urgent work needs to be inserted between two existing phases.
 4. **VERIFY:** re-read `docs/planning/ROADMAP.md` and confirm: (a) the new phase block is present with correct number/name/status/Surface/HelpWanted, (b) every later phase is renumbered consecutively with no gaps or duplicates.
 5. **Use the `Edit` tool** to update the `## Phases` list in `docs/planning/MILESTONE.md` to reflect the inserted phase and renumbered siblings.
 6. **VERIFY:** re-read `docs/planning/MILESTONE.md` and confirm the list matches ROADMAP.md.
-7. Stage and commit: `git add docs/planning/ROADMAP.md docs/planning/MILESTONE.md && git commit -m "chore(roadmap): insert phase N.M — <name>"`. Run `git status` and confirm a clean tree.
+7. Stage `git add docs/planning/ROADMAP.md docs/planning/MILESTONE.md`, then commit per [Commit & Release Protocol](#commit--release-protocol) with `type=chore, scope=roadmap, subject=insert phase N.M — <name>`. Run `git status` and confirm a clean tree.
 8. Announce: "Inserted Phase N.M — {name} between N.M-1 and old N.M (now N.M+1)." only after the commit succeeds.
 
 ---
@@ -360,7 +360,7 @@ When a future (pending) phase should be removed from the roadmap.
 7. **Use the `Edit` tool** to remove the phase from the `## Phases` list in `docs/planning/MILESTONE.md`.
 8. **VERIFY:** re-read `docs/planning/MILESTONE.md`.
 9. **Close the GitHub issue (if captured in step 4):** run `gh issue close <N> --comment "Phase removed from roadmap"`. If `gh` is not installed/authenticated or the call fails (404, network, rate limit), log the failure and continue — the local removal is authoritative; the orphan issue can be closed manually later. Never block the local commit on a `gh` failure.
-10. Stage and commit: `git add docs/planning/ROADMAP.md docs/planning/MILESTONE.md && git commit -m "chore(roadmap): remove phase N.M — <name>"`. Run `git status` and confirm a clean tree.
+10. Stage `git add docs/planning/ROADMAP.md docs/planning/MILESTONE.md`, then commit per [Commit & Release Protocol](#commit--release-protocol) with `type=chore, scope=roadmap, subject=remove phase N.M — <name>`. Run `git status` and confirm a clean tree.
 
 ---
 
@@ -430,10 +430,10 @@ When the user is stopping work and wants to preserve context for next session. T
    - If `compress-memory` is not installed: skip compression entirely (treat the field as absent).
 
    **Graceful failure (matches the `sync-github` pattern):** if `compress-memory` reports a validation failure or any other error, log the failure to the user, leave the uncompressed file on disk, and continue with the remaining `pause-work` steps. Compression failure must NEVER prevent state files from being written, committed, or synced. Local state is the source of truth and must remain writable even when compression breaks.
-7. Stage and commit: `git add docs/planning/ && git commit -m "chore(state): pause-work — phase N.M, last task: <description>"`. The `docs/planning/` glob includes `STATE.md`, `ROADMAP.md`, and any `*.original.md` backups produced by step 6's compression. Users who do not want backups committed can add `docs/planning/*.original.md` to `.gitignore`. Run `git status` and confirm a clean tree.
+7. Stage `git add docs/planning/`, then commit per [Commit & Release Protocol](#commit--release-protocol) with `type=chore, scope=state, subject=pause-work — phase N.M, last task: <description>`. The `docs/planning/` glob includes `STATE.md`, `ROADMAP.md`, and any `*.original.md` backups produced by step 6's compression. Users who do not want backups committed can add `docs/planning/*.original.md` to `.gitignore`. Run `git status` and confirm a clean tree.
 8. **Squad sync (if installed)** — if a `.squad/` directory exists in the project, run `squad-sync` after the STATE.md commit. Squad's per-agent `history.md` files capture session learning that complements STATE.md (which captures position). Without this step, agent histories drift behind project state. If `squad` is not installed, skip silently — this step is best-effort.
 9. **Decision-tracker sync (if installed)** — if `decision-tracker` is active and any decisions were captured during this session, ensure they have been persisted to long-term memory before exiting. Pause is the natural fence for memory writes; deferring them risks losing the decision when the conversation ends. If `decision-tracker` is not active, skip silently.
-10. **GitHub sync (if initialized)** — if `docs/planning/ROADMAP.md` contains any `**Issue:**` or `**Milestone:**` field (signal that `init-github-sync` has been run), invoke `sync-github` as a final step. This produces a full reconciliation of GitHub state with the just-written STATE.md / ROADMAP.md changes. If sync is not initialized, skip silently — do not invite the user to set it up here, that is `init-github-sync`'s job. **Note:** `sync-github` may produce its own `chore(sync): reconcile github state` commit when it writes new `**Issue:**` or `**Milestone:**` fields back into ROADMAP.md (e.g. phases added since the last sync). This is normal — `pause-work` ends with one commit on a quiet sync, two commits when sync had write-back work. Both are clean states.
+10. **GitHub sync (if initialized)** — if `docs/planning/ROADMAP.md` contains any `**Issue:**` or `**Milestone:**` field (signal that `init-github-sync` has been run), invoke `sync-github` as a final step. This produces a full reconciliation of GitHub state with the just-written STATE.md / ROADMAP.md changes. If sync is not initialized, skip silently — do not invite the user to set it up here, that is `init-github-sync`'s job. **Note:** `sync-github` may produce its own reconcile commit (rendered per [Commit & Release Protocol](#commit--release-protocol)) when it writes new `**Issue:**` or `**Milestone:**` fields back into ROADMAP.md (e.g. phases added since the last sync). This is normal — `pause-work` ends with one commit on a quiet sync, two commits when sync had write-back work. Both are clean states.
 11. Announce only after the commit succeeds:
 
     > "Session state saved to `docs/planning/STATE.md`. Next session, start with `resume-work` or say 'resume' and I'll restore context."
@@ -544,12 +544,7 @@ This sub-skill closes the loop that was missing: without it, `executing-plans` f
 
 6. **VERIFY:** re-read `docs/planning/MILESTONE.md` and confirm the phase entry now reads `[complete]`.
 
-7. Stage and commit:
-
-   ```bash
-   git add docs/planning/ROADMAP.md docs/planning/MILESTONE.md
-   git commit -m "chore(roadmap): complete phase N.M — <name>"
-   ```
+7. Stage `git add docs/planning/ROADMAP.md docs/planning/MILESTONE.md`, then commit per [Commit & Release Protocol](#commit--release-protocol) with `type=chore, scope=roadmap, subject=complete phase N.M — <name>`.
 
    Run `git status` and confirm a clean tree.
 
@@ -752,7 +747,7 @@ After `audit-milestone` returns PASS.
 3. **VERIFY:** re-read `docs/planning/ROADMAP.md` and confirm the milestone block now shows `[status: complete]` and a Completed date.
 4. **Use the `Edit` tool** on `docs/planning/MILESTONE.md`: set `**Status:** complete` and add `**Completed:** YYYY-MM-DD`.
 5. **VERIFY:** re-read `docs/planning/MILESTONE.md` and confirm the status and completion date.
-6. Stage and commit: `git add docs/planning/ROADMAP.md docs/planning/MILESTONE.md && git commit -m "chore(milestone): complete milestone N — <name>"`. Run `git status` and confirm a clean tree.
+6. Stage `git add docs/planning/ROADMAP.md docs/planning/MILESTONE.md`, then commit per [Commit & Release Protocol](#commit--release-protocol) with `type=chore, scope=milestone, subject=complete milestone N — <name>`. Run `git status` and confirm a clean tree.
 7. Tag the release: `git tag -a vN.0 -m "Milestone N: <name> complete"`. Verify with `git tag -l vN.0`.
 8. Announce only after tag verification: "Milestone N complete. Tagged as vN.0. Ready to start Milestone N+1 with `new-milestone`."
 
@@ -800,7 +795,7 @@ Capture both once at the start of the sub-skill and reuse them for every iterati
    d. `Edit` ROADMAP.md to add `**Issue:** #N` after the phase's `**HelpWanted:**` line if present, otherwise after `**Surface:**` (legacy phases authored before HelpWanted existed may omit it — fall through to Surface).
    e. VERIFY by re-reading ROADMAP.md.
 5. **Final VERIFY** — re-read ROADMAP.md end-to-end, confirm every milestone has `**Milestone:** N` and every phase has `**Issue:** #N`. If any is missing, the corresponding `gh` call did not return cleanly — re-attempt that one once. If it still fails, fall through to the `gh API error on a single call` row of the Error handling table — stop the loop, report the failing call, and direct the user to `sync-github` for incremental recovery.
-6. **Stage and commit:** `git add docs/planning/ROADMAP.md && git commit -m "chore(sync): init github sync — N issues, M milestones"`. Run `git status` and confirm a clean tree.
+6. **Stage** `git add docs/planning/ROADMAP.md`, **then commit** per [Commit & Release Protocol](#commit--release-protocol) with `type=chore, scope=sync, subject=init github sync — N issues, M milestones`. Run `git status` and confirm a clean tree.
 7. **Announce** only after the commit succeeds:
 
    > "GitHub sync initialized. N issues created across M milestones. Future `pause-work` and `complete-phase` runs will reconcile state automatically."
@@ -878,7 +873,7 @@ Automatic. Runs as a step of `pause-work` (full reconciliation across all milest
    | `open` | `complete` | We marked complete locally; step 4 already issued `gh issue close`. No comment. |
    | `open` | `active` / `pending` | Normal — no action. |
 
-6. **If anything was written back to ROADMAP.md** (new issues created or milestones added since last sync), stage and commit: `git add docs/planning/ROADMAP.md && git commit -m "chore(sync): reconcile github state"`. If no writes happened, skip the commit.
+6. **If anything was written back to ROADMAP.md** (new issues created or milestones added since last sync), stage `git add docs/planning/ROADMAP.md`, then commit per [Commit & Release Protocol](#commit--release-protocol) with `type=chore, scope=sync, subject=reconcile github state`. If no writes happened, skip the commit.
 7. **Announce** only the change set, briefly:
 
    > "Synced. N issues updated, M created, K external-close signals posted."
@@ -971,7 +966,7 @@ This is the **roadmap-level brainstorming entry point** — it brainstorms the p
 
 8. **VERIFY:** re-read `docs/planning/MILESTONE.md` and confirm goal, DoD, and phase list are present.
 
-9. Stage and commit: `git add docs/planning/ROADMAP.md docs/planning/MILESTONE.md && git commit -m "chore(roadmap): plan project roadmap (M1-M<N>)"`. Run `git status` and confirm a clean tree.
+9. Stage `git add docs/planning/ROADMAP.md docs/planning/MILESTONE.md`, then commit per [Commit & Release Protocol](#commit--release-protocol) with `type=chore, scope=roadmap, subject=plan project roadmap (M1-M<N>)`. Run `git status` and confirm a clean tree.
 
 10. Announce only after the commit succeeds: "Roadmap drafted with N milestones. Milestone 1 is active. Use `add-phase` to define phase 1.1, or invoke `brainstorming` to refine milestone 1's scope further."
 
@@ -1023,7 +1018,7 @@ After `complete-milestone`, or when the user wants to start a new version cycle 
 
 8. **VERIFY:** re-read `docs/planning/ROADMAP.md` and confirm the new milestone block is present with the correct number, name, status, and started date.
 
-9. Stage and commit: `git add docs/planning/MILESTONE.md docs/planning/ROADMAP.md && git commit -m "chore(milestone): start milestone N+1 — <name>"`. Run `git status` and confirm a clean tree.
+9. Stage `git add docs/planning/MILESTONE.md docs/planning/ROADMAP.md`, then commit per [Commit & Release Protocol](#commit--release-protocol) with `type=chore, scope=milestone, subject=start milestone N+1 — <name>`. Run `git status` and confirm a clean tree.
 
 10. Announce only after the commit succeeds: "Milestone N+1 — {name} started. Use `add-phase` to add the first phase, or `start-next-phase` to chain into brainstorming/writing-plans/executing-plans for phase 1."
 
