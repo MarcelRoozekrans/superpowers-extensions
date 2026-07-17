@@ -137,7 +137,7 @@ they must be decided.
    | Commit format | `commitlint.config.js` / `.commitlintrc*` / husky hooks; else sample `git log -50 --format=%s` for a `type(scope):` shape |
    | Scopes / Scope source | presence of a `scope-enum` rule; record the path of the file it was found in as `Scope source` (`n/a` when not enforced) |
    | Versioning scheme | shape of `git tag -l`: `vX.Y.Z`→semver, `vYYYY.MM*`→calver, `vN.0`→milestone, none→none |
-   | Released by | `release-please-config.json`, `.releaserc*`, `.changeset/`, a release workflow in `.github/workflows/`; else manual |
+   | Released by | `release-please-config.json`, `.releaserc*`, `.changeset/`, a release workflow in `.github/workflows/`. If none found **and tags exist** → `manual git tag`. If none found **and no tags exist** → no signal; ask (do not infer `manual git tag` from absence — a greenfield repo has no automation *and* no manual tagging habit). |
    | Changelog | `CHANGELOG.md` present + whether the release automation writes it |
    | Protected branches / PR required | `gh api repos/{owner}/{repo}/branches/{branch}/protection` — requires auth; on failure record `unknown` |
    | Deploy target / Deployed by | workflows with deploy/publish steps, `Dockerfile`, `vercel.json`, `fly.toml`, `*.tf` — the artifact/registry named is `Deploy target`, the mechanism is `Deployed by` |
@@ -152,8 +152,8 @@ they must be decided.
    | Field | How |
    |---|---|
    | `Established` | Today's date. Never ask. |
-   | `Source` | `detected` if every value came from a signal, `user-stated` if every value was asked, else `mixed`. Never ask. |
-   | `Milestone completion tags a release` | **Derive from `Released by`:** an automation (`release-please`, `semantic-release`, `changesets`, `CI`) → `no`, because it already owns tagging and a second tag would collide. `manual git tag` → `yes`. `none` → `no`. Confirm the derived value; do not ask cold. |
+   | `Source` | Judged over the 14 *detectable* fields only: `detected` if every one came from a signal, `user-stated` if every one was asked, else `mixed`. Never ask. Derived and asked-by-design fields (`Datastore`, `Model`, `Established`, `Source` itself) do not count — including them would make `detected` unreachable, since step 2 always asks two of them. |
+   | `Milestone completion tags a release` | **Derive from `Released by` AND `Scheme`:** `yes` only when `Released by: manual git tag` AND `Scheme` is not `none`. Everything else → `no` — an automation already owns tagging and a second tag would collide; `Scheme: none` has no scheme to render a tag from (the template forbids pairing `none` with `yes`, and the protocol's tag table has no `none` row). Confirm the derived value; do not ask cold. **Re-derive after step 4** if the user edits `Released by` or `Scheme` — a stale one-shot derivation is how a corrected `Released by: release-please` still ends up double-tagging. |
    | `Fallback when scope not allowed` | Default `omit scope` — conventional commits permit a scope-less message, so it always lands. Offer, don't impose. |
    | `Datastore` | Ask. `n/a` is a normal answer. |
    | `Model` | Ask, seeded from evidence: `Protected branches` non-empty or `PR required: yes` suggests `feature-branch`; otherwise `trunk`. |
@@ -186,22 +186,33 @@ they must be decided.
    and that **no field value still contains `<` or a space-padded `|`**. Both
    checks are needed: only 10 of the 20 fields use `<placeholder>` notation — the
    other 10 are bare enums (`**Format:** conventional | free-form`), and an
-   unpicked enum contains no placeholder at all. Since the template's `|`
-   notation is choice syntax that vanishes on fill, a surviving space-padded `|`
-   means a field was never decided. List values (`Protected branches`,
-   `Environments`) are comma-separated, so a pipe in them is choice syntax too,
-   never a separator. Confirm `**Established:**` is a real date, not
-   `YYYY-MM-DD`.
+   unpicked enum contains no placeholder at all. Since the template's `|` is
+   choice syntax that vanishes on fill, a surviving pipe means a field was never
+   decided. This is safe for *every* field, not just enums, because the template
+   states one rule for the whole file: multiple values are comma-separated
+   (`node 24, .NET 8`), so a pipe never appears in a correctly filled value.
+   Confirm `**Established:**` is a real date, not `YYYY-MM-DD`.
 
-9. Stage and commit per [Commit & Release Protocol](#commit--release-protocol)
-   with `type=chore, scope=state, subject=establish project conventions`.
+   **On failure, re-write the file and VERIFY again. Do not proceed to step 9
+   with a failing VERIFY** — the protocol will read whatever is on disk.
 
-   Note: this is the one site that may run *before* CONVENTIONS.md exists. The
-   protocol's step 1 self-heal must not recurse — when invoked from
-   `init-conventions`, the file has just been written, so step 1 finds it.
+9. Commit **only** `docs/planning/CONVENTIONS.md`, by explicit pathspec, per
+   [Commit & Release Protocol](#commit--release-protocol) with
+   `type=chore, scope=state, subject=establish project conventions`.
 
-10. Announce: "Conventions recorded. `complete-milestone` will `<tag vX.Y.Z |
-    not tag — release handled by <mechanism>>`."
+   The pathspec is not optional. This sub-skill can be entered mid-commit by the
+   protocol's step 1 self-heal, at which point the *caller* has already staged
+   its own files (ROADMAP.md, MILESTONE.md). A bare `git commit` would commit the
+   index and sweep the caller's work into this commit, leaving the caller's own
+   commit with nothing to do. Stage and commit the one path explicitly.
+
+   Recursion is already prevented by ordering: step 7 writes the file before step
+   9 commits, so the protocol's step 1 finds it and does not re-enter.
+
+10. Announce: "Conventions recorded. `complete-milestone` will `<tag per the
+    recorded scheme | not tag — release handled by <Released by>>`." Do not name a
+    concrete version: on `Scheme: semver` the protocol *asks* for the version at
+    tag time rather than inventing one, so there is no `vX.Y.Z` to promise here.
 
 ### Skip This?
 
