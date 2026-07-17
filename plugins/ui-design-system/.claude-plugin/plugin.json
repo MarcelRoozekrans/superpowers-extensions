@@ -1,6 +1,6 @@
 {
   "name": "ui-design-system",
-  "description": "Generates complete design systems before implementation. Supports quick mode (one-liner) and guided mode (4 questions). Auto-detects tech stack (Blazor, React, Vue, Astro, generic web). Outputs docs/design/MASTER.md for consumption by ui-workflow ui-phase.",
+  "description": "Generates complete design systems before implementation. Supports quick mode (one-liner) and guided mode (7 questions). Auto-detects tech stack (Blazor, React, Vue, Astro, generic web). Outputs docs/design/MASTER.md for consumption by ui-workflow ui-phase.",
   "author": {
     "name": "Marcel Roozekrans"
   }

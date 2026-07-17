@@ -3,6 +3,5 @@
   "description": "Persistent AI agent teams for Claude Code. Lead, Backend Engineer, Frontend Engineer, Tester, and Scribe agents participate in brainstorming, planning, and execution — answering questions from project-specific knowledge that grows across sessions.",
   "author": {
     "name": "Marcel Roozekrans"
-  },
-  "softDependencies": ["decision-tracker", "project-orchestration", "longterm-memory"]
+  }
 }

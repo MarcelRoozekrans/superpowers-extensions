@@ -2,18 +2,18 @@
 
 [![GitHub Sponsors](https://img.shields.io/github/sponsors/MarcelRoozekrans?style=flat&logo=githubsponsors&color=ea4aaa&label=Sponsor)](https://github.com/sponsors/MarcelRoozekrans)
 
-Extension skills for the [superpowers](https://github.com/anthropics/superpowers) suite, providing quality gates, development workflow skills, and project lifecycle management for web application development. It includes eleven skills:
+Extension skills for the [superpowers](https://github.com/obra/superpowers) suite, providing quality gates, development workflow skills, and project lifecycle management for web application development. It includes eleven skills:
 
 - **regression-test** -- Comprehensive regression testing using the [Microsoft Playwright MCP server](https://github.com/microsoft/playwright-mcp), combining existing test suite execution with AI-powered visual and functional browser testing.
 - **pre-push-review** -- A structured branch review that diffs against the base branch and gates on plan adherence, code quality, commit hygiene, and regression testing, producing a PASS/FAIL verdict with a prioritized remediation plan on failure.
 - **refactor-analysis** -- Transitive impact analysis for complex refactorings. Maps all affected files, classifies breaking vs cosmetic changes, identifies risks, and produces a safe execution order with checkpoint boundaries before writing implementation plans.
 - **decision-tracker** -- Persistent cross-cutting decision tracking using [LongtermMemory-MCP](https://github.com/MarcelRoozekrans/LongtermMemory-MCP). Automatically extracts architectural decisions, conventions, and constraints during brainstorming and planning, persists them to semantic long-term memory, and recalls them at session start and subagent dispatch to prevent decision amnesia.
 - **compress-memory** -- Compresses natural-language memory files (`CLAUDE.md`, `STATE.md`, `ROADMAP.md`, project notes) to save input tokens replayed every session. Pure-markdown skill — preserves code blocks, URLs, file paths, frontmatter, headings, tables, and list structure byte-exact; backs up the original to `FILE.original.md` before each compression. Opt-in via `project-orchestration:plan-roadmap`; auto-invoked by `pause-work`. Inspired by [caveman-compress](https://github.com/JuliusBrussee/caveman) (MIT) but reimplemented without a Python toolchain.
-- **roslyn-codelens-integration** -- Superpowers integration for [Roslyn CodeLens](https://github.com/MarcelRoozekrans/roslyn-codelens-mcp) intelligence. Enforces use of 24 semantic .NET code analysis tools (instead of Grep/Glob and `dotnet build`) across every superpowers skill — brainstorming, refactor-analysis, writing-plans, executing-plans, subagent-driven-development, systematic-debugging, TDD, verification, code review, and pre-push review.
+- **roslyn-codelens-integration** -- Superpowers integration for [Roslyn CodeLens](https://github.com/MarcelRoozekrans/roslyn-codelens-mcp) intelligence. Enforces use of 32 semantic .NET code analysis tools (instead of Grep/Glob and `dotnet build`) across every superpowers skill — brainstorming, refactor-analysis, writing-plans, executing-plans, subagent-driven-development, systematic-debugging, TDD, verification, code review, and pre-push review.
 - **memorylens-integration** -- Superpowers integration for [MemoryLens](https://github.com/MarcelRoozekrans/memorylens-mcp) memory profiling. Enhances `systematic-debugging` with .NET memory snapshot analysis, leak detection, and before/after fix validation. Direct triggers on "memory leak", "OOM", "high GC pressure". Inert on non-.NET projects.
 - **project-orchestration** -- GSD-inspired project lifecycle management for larger multi-session projects. Brownfield codebase mapping, milestone tracking, phase management, session pause/resume, milestone audit, release cycle management, and a `start-next-phase` routing hub that mechanically chains brainstorming → writing-plans → executing-plans for the next non-complete phase.
 - **ui-workflow** -- Frontend design contracts and visual auditing. Generates structured UI design contracts before implementing frontend phases (`ui-phase`) and performs visual audits afterwards (`ui-review`) using a three-layer grading: contract adherence, anti-slop scan, and 5-dimension critique.
-- **ui-design-system** -- Generates a complete design system before frontend implementation. Three modes: **curated** (pick from 70 vendored real-world references — Stripe, Linear, Vercel, Notion, Apple, Figma, Supabase, Cursor, Claude, …), **guided** (7 questions), or **quick** (inline one-liner). Includes 5 hand-tuned OKLch design directions and an anti-slop checklist. Auto-detects Blazor, React, Vue, Astro stacks. Outputs `docs/design/MASTER.md`.
+- **ui-design-system** -- Generates a complete design system before frontend implementation. Three modes: **curated** (pick from 74 vendored real-world references — Stripe, Linear, Vercel, Notion, Apple, Figma, Supabase, Cursor, Claude, …), **guided** (7 questions), or **quick** (inline one-liner). Includes 5 hand-tuned OKLch design directions and an anti-slop checklist. Auto-detects Blazor, React, Vue, Astro stacks. Outputs `docs/design/MASTER.md`.
 - **squad** -- Persistent AI agent teams (Lead, Backend Engineer, Frontend Engineer, Tester, Scribe) **dispatched as parallel `Task` subagents** during brainstorming and planning workflows. Each specialist runs in an isolated context window with its own charter and tier-1 history, so they cannot anchor on each other's reasoning. Per-role `history.md` files accumulate project-specific knowledge across sessions; tiered context lookup (semantic search → grep → recent history) keeps each subagent's prompt lean.
 
 ---
@@ -244,9 +244,12 @@ The project-orchestration skill provides GSD-inspired project lifecycle manageme
 | `pause-work` | "done for today" / stopping | Writes `docs/planning/STATE.md` with current position, open decisions, and recommended next step |
 | `resume-work` | "resume" / session start | Reads `STATE.md`, presents a session handoff summary, then chains into `start-next-phase` |
 | `start-next-phase` | After `resume-work`, or "continue" / "next" | Routing hub — finds the next non-complete phase and mechanically chains into brainstorming / writing-plans / executing-plans depending on which artifacts exist |
+| `complete-phase` | After `executing-plans` finishes a phase, or "mark phase N.M complete" | Promotes a phase from `active` to `complete`. Without it ROADMAP.md keeps showing the phase active and `start-next-phase` routes back to already-finished work |
 | `audit-milestone` | "verify milestone is done" | Verifies each definition-of-done criterion: phases, tests, regression test, docs, git tag |
 | `complete-milestone` | After audit PASS | Archives the milestone, tags the release in git, updates the roadmap |
 | `new-milestone` | After `complete-milestone` | Brainstorms the next milestone end-to-end before writing `MILESTONE.md` (refuses to start if previous milestone is not complete) |
+| `init-github-sync` | "set up GitHub sync" / `/sync-to-github`, one-time | Creates labels, native Milestones, and Issues on GitHub from `ROADMAP.md`, writing the resulting numbers back. Refuses if sync is already initialized |
+| `sync-github` | Auto-invoked from `pause-work` and `complete-phase`; manual on demand | Projects `ROADMAP.md` state onto GitHub issues/milestones (one-way write). Step 5 embeds `detect-external-signals`, which posts advisory comments when an external dev closes or edits an issue out of band. Skips silently rather than blocking when `gh` is unauthenticated |
 
 ### State Files
 
@@ -402,7 +405,7 @@ The ui-design-system skill generates a complete design system before frontend im
 
 ### Modes
 
-**Curated mode** — Pick a real-world reference from the 70-system vendored catalog (Stripe, Linear, Vercel, Notion, Apple, Figma, Supabase, Cursor, Claude, Cohere, Mistral, Notion, Airbnb, Spotify, and more). The skill loads the reference's `DESIGN.md` (real CSS tokens, fonts, shadow values extracted from production sites), asks 3 adaptation questions, and writes `MASTER.md` with explicit `Inspired by:` attribution and a `Deviations from reference:` section.
+**Curated mode** — Pick a real-world reference from the 74-system vendored catalog (Stripe, Linear, Vercel, Notion, Apple, Figma, Supabase, Cursor, Claude, Cohere, Mistral, Notion, Airbnb, Spotify, and more). The skill loads the reference's `DESIGN.md` (real CSS tokens, fonts, shadow values extracted from production sites), asks 3 adaptation questions, and writes `MASTER.md` with explicit `Inspired by:` attribution and a `Deviations from reference:` section.
 
 - `ui-design-system: like linear`
 - `ui-design-system: based on stripe`
@@ -417,17 +420,17 @@ The ui-design-system skill generates a complete design system before frontend im
 
 ### Curated catalog
 
-70 real-world design systems vendored from [VoltAgent/awesome-design-md](https://github.com/VoltAgent/awesome-design-md) (MIT) and categorized in [`design-systems/INDEX.md`](plugins/ui-design-system/skills/ui-design-system/design-systems/INDEX.md):
+74 real-world design systems vendored from [VoltAgent/awesome-design-md](https://github.com/VoltAgent/awesome-design-md) (MIT) and categorized in [`design-systems/INDEX.md`](plugins/ui-design-system/skills/ui-design-system/design-systems/INDEX.md):
 
 | Category | Systems |
 |---|---|
 | **AI / LLM** | claude, cohere, mistral.ai, ollama, x.ai, minimax, together.ai, composio, elevenlabs, runwayml, replicate |
-| **Developer tools** | vercel, cursor, supabase, mongodb, hashicorp, sentry, posthog, sanity, resend, mintlify, opencode.ai, voltagent, warp, ibm, clickhouse, framer, webflow |
-| **SaaS productivity** | linear.app, notion, figma, miro, airtable, cal, intercom, raycast, superhuman, zapier, lovable, shopify |
-| **Consumer / lifestyle** | apple, airbnb, spotify, pinterest, uber, nike, starbucks, theverge, wired, meta, playstation |
+| **Developer tools** | vercel, cursor, supabase, mongodb, hashicorp, sentry, posthog, sanity, resend, mintlify, opencode.ai, voltagent, warp, ibm, clickhouse, framer, webflow, expo |
+| **SaaS productivity** | linear.app, notion, figma, miro, airtable, cal, intercom, raycast, superhuman, zapier, lovable, shopify, slack |
+| **Consumer / lifestyle** | apple, airbnb, spotify, pinterest, uber, nike, starbucks, theverge, wired, meta, playstation, nintendo-2001 |
 | **Fintech / commerce** | stripe, coinbase, mastercard, revolut, wise, binance, kraken |
 | **Auto / luxury** | tesla, bmw, bmw-m, ferrari, lamborghini, bugatti, renault, spacex |
-| **Enterprise** | nvidia, vodafone, clay |
+| **Enterprise** | nvidia, vodafone, clay, hp, dell-1996 |
 
 The catalog auto-refreshes every Monday via [`refresh-design-systems.yml`](.github/workflows/refresh-design-systems.yml) — opens a PR with upstream additions, removals, and edits for human review.
 
@@ -577,7 +580,7 @@ per harness; only how the harness loads them.
 
 | Harness | Manifest | Install instructions |
 |---|---|---|
-| **Claude Code** | [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json) + per-plugin `plugin.json` | [Installation](#installation) section above |
+| **Claude Code** | [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json) + per-plugin `plugin.json` | [Installation](#installation) section below |
 | **Cursor Agent** | [`.cursor-plugin/plugin.json`](.cursor-plugin/plugin.json) + [`hooks/hooks-cursor.json`](hooks/hooks-cursor.json) | Add this repo as a Cursor plugin source; the manifest registers `./plugins/` as the skills root and `hooks/session-start` runs at session start |
 | **OpenAI Codex CLI / App** | [`.codex-plugin/plugin.json`](.codex-plugin/plugin.json) + [`.codex/INSTALL.md`](.codex/INSTALL.md) | Clone-and-symlink each plugin into `~/.agents/skills/`; instructions and a copy-paste loop in [`.codex/INSTALL.md`](.codex/INSTALL.md) |
 | **Gemini CLI** | [`gemini-extension.json`](gemini-extension.json) + [`GEMINI.md`](GEMINI.md) | `GEMINI.md` lists each SKILL.md via `@./plugins/.../SKILL.md` import syntax |
@@ -613,7 +616,7 @@ instruction/prompt files at the project level.
   agents to invoke skills via the Skill tool. Install
   `obra/superpowers` alongside (it is already a marketplace dependency
   of this repo).
-- **The 70 vendored design systems** under
+- **The 74 vendored design systems** under
   [`plugins/ui-design-system/skills/ui-design-system/design-systems/`](plugins/ui-design-system/skills/ui-design-system/design-systems/)
   travel with each harness — they are plain markdown, every harness
   reads them.
@@ -744,6 +747,12 @@ xcopy /E /I plugins\ui-design-system\skills\ui-design-system %USERPROFILE%\.clau
 # macOS / Linux -- ui-design-system
 cp -r plugins/ui-design-system/skills/ui-design-system ~/.claude/skills/ui-design-system
 
+# Windows -- squad
+xcopy /E /I plugins\squad\skills\squad %USERPROFILE%\.claude\skills\squad
+
+# macOS / Linux -- squad
+cp -r plugins/squad/skills/squad ~/.claude/skills/squad
+
 # Windows -- compress-memory
 xcopy /E /I plugins\compress-memory\skills\compress-memory %USERPROFILE%\.claude\skills\compress-memory
 
@@ -769,7 +778,7 @@ claude mcp add playwright -- npx @playwright/mcp@latest --caps=testing,pdf,visio
 
 ### Verify Installation
 
-In Claude Code, the skills should appear when you type `/regression-test`, `/pre-push-review`, `/refactor-analysis`, `/decision-tracker`, `/roslyn-codelens-integration`, `/memorylens-integration`, `/project-orchestration`, `/ui-workflow`, `/ui-design-system`, or `/squad`, or when you ask Claude to perform regression testing, a pre-push review, a refactor impact analysis, decision tracking, .NET code graph analysis, .NET memory profiling, project lifecycle management, UI design contract work, design system generation, or to activate your agent team.
+In Claude Code, the skills should appear when you type `/regression-test`, `/pre-push-review`, `/refactor-analysis`, `/decision-tracker`, `/roslyn-codelens-integration`, `/memorylens-integration`, `/project-orchestration`, `/ui-workflow`, `/ui-design-system`, `/squad`, or `/compress-memory`, or when you ask Claude to perform regression testing, a pre-push review, a refactor impact analysis, decision tracking, .NET code graph analysis, .NET memory profiling, project lifecycle management, UI design contract work, design system generation, to activate your agent team, or to compress a memory file.
 
 ---
 
@@ -842,7 +851,7 @@ When building or redesigning UI:
 
 ```text
 ui-design-system       → generate design tokens and component patterns (once per project)
-                         curated mode: pick from 70 vendored references (Stripe, Linear, …)
+                         curated mode: pick from 74 vendored references (Stripe, Linear, …)
                          guided mode: 7 questions
                          quick mode: inline one-liner
 ui-workflow ui-phase   → generate UI contract before implementing each frontend phase
@@ -970,14 +979,16 @@ superpowers-extensions/
 │   │   │   └── plugin.json
 │   │   └── skills/
 │   │       └── memorylens-integration/
-│   │           └── SKILL.md                # Phase 1 + Phase 3 augmentation for systematic-debugging
+│   │           ├── SKILL.md                # Phase 1 + Phase 3 augmentation for systematic-debugging
+│   │           └── rule-reference.md       # ML001-ML010 triggers, impact, and fix patterns
 │   ├── project-orchestration/
 │   │   ├── .claude-plugin/
 │   │   │   └── plugin.json
 │   │   └── skills/
 │   │       └── project-orchestration/
-│   │           ├── SKILL.md                # 14 sub-skills for project lifecycle (with start-next-phase routing hub and plan-roadmap)
-│   │           └── state-files.md          # docs/planning/ file format reference
+│   │           ├── SKILL.md                # 17 sub-skills for project lifecycle (start-next-phase routing hub, plan-roadmap, github-sync)
+│   │           ├── state-files.md          # docs/planning/ file format reference
+│   │           └── templates/              # roadmap / milestone / phase design templates
 │   ├── ui-workflow/
 │   │   ├── .claude-plugin/
 │   │   │   └── plugin.json
@@ -993,13 +1004,13 @@ superpowers-extensions/
 │   │           ├── SKILL.md                # curated / guided / quick modes
 │   │           ├── domains/                # SaaS / admin / marketing domain rules
 │   │           ├── stacks/                 # Astro / Blazor / generic-web / React / Vue stack notes
-│   │           └── design-systems/         # 70 vendored real-world DESIGN.md references (MIT)
+│   │           └── design-systems/         # 74 vendored real-world DESIGN.md references (MIT)
 │   │               ├── INDEX.md            # Categorized catalog with vibe one-liners
 │   │               ├── NOTICE.md           # Attribution + refresh instructions
 │   │               ├── stripe/DESIGN.md    # Real CSS tokens from production sites
 │   │               ├── linear.app/DESIGN.md
 │   │               ├── vercel/DESIGN.md
-│   │               └── ...                 # 67 more
+│   │               └── ...                 # 71 more
 │   ├── squad/
 │   │   ├── .claude-plugin/
 │   │   │   └── plugin.json
@@ -1014,7 +1025,7 @@ superpowers-extensions/
 │   │               ├── frontend.md
 │   │               ├── tester.md
 │   │               └── scribe.md
-│   └── compress-memory/                    # New plugin (added in this task — 11th plugin)
+│   └── compress-memory/                    # Memory file compression (11th plugin)
 │       ├── .claude-plugin/
 │       │   └── plugin.json
 │       └── skills/
@@ -1052,6 +1063,43 @@ React Router, Next.js (App Router & Pages Router), Angular, Vue Router, SvelteKi
 - **For memorylens-integration:** [memorylens-mcp](https://github.com/MarcelRoozekrans/memorylens-mcp) MCP server (installed automatically via marketplace dependencies). Skill is inert without it — safe to ignore on non-.NET projects.
 - **For ui-design-system:** No additional tools required.
 - **For squad:** No hard requirements — works standalone. [LongtermMemory-MCP](https://github.com/MarcelRoozekrans/LongtermMemory-MCP) enables tier-1 semantic search for agent history (installed automatically via marketplace dependencies). Works without it, falling back to grep-based lookup.
+
+## Contributing
+
+Two checks run in CI and are worth running locally before pushing:
+
+```bash
+npm run lint:md          # markdownlint — globs live in .markdownlint-cli2.jsonc
+npm run check:registries # every plugin registered everywhere, counts match disk
+```
+
+### Adding a plugin
+
+A plugin is not one directory — it has to be registered in nine places, and
+missing one fails quietly. `npm run check:registries` enforces every item below,
+so add the plugin and run it rather than working from this list by hand:
+
+| Where | What to add |
+|---|---|
+| `plugins/<name>/.claude-plugin/plugin.json` | Manifest whose `name` matches the directory |
+| `plugins/<name>/skills/<name>/SKILL.md` | Skill whose frontmatter `name` matches the directory |
+| `.claude-plugin/marketplace.json` | Entry with `source: ./plugins/<name>` and the current version |
+| `release-please-config.json` | An `extra-files` entry for `$.plugins[<index>].version` — this list is index-based, so a new plugin is never version-bumped until you add its index |
+| `package.json` | `claude plugin install <name>` in the `install-plugins` script |
+| `hooks/session-start` | A line in the skill listing injected at session start |
+| `.opencode/plugins/superpowers-extensions.js` | The `PLUGINS` array |
+| `.cursor-plugin/plugin.json` + `.codex-plugin/plugin.json` | `keywords` |
+| `commitlint.config.js` | `scope-enum` — otherwise commits scoped to the plugin are rejected |
+
+### Design system catalog
+
+The catalog under `design-systems/` is refreshed weekly from upstream by
+[`refresh-design-systems.yml`](.github/workflows/refresh-design-systems.yml).
+Curated mode resolves a system through
+[`INDEX.md`](plugins/ui-design-system/skills/ui-design-system/design-systems/INDEX.md),
+so a directory that upstream adds is unreachable until it is indexed — when the
+refresh PR adds one, add its row and update the count. `check:registries` fails
+if the index and the directory listing disagree.
 
 ## License
 

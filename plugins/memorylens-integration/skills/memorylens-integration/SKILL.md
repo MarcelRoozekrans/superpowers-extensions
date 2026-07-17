@@ -58,6 +58,8 @@ Call **`analyze`** to run the 10-rule engine (ML001-ML010) against the snapshot.
 | Medium | ML005 (unexpected retention), ML006 (hot path allocations), ML007 (closure retention) |
 | Low | ML008 (collection resizing), ML009 (finalizer without Dispose), ML010 (string interning) |
 
+For per-rule triggers, impact, and fix patterns, read [rule-reference.md](rule-reference.md). Use **`get_rules`** for live metadata including per-project overrides.
+
 ### Step 5: Present Findings
 
 Present findings **ordered by severity** alongside other Phase 1 evidence. Format:
