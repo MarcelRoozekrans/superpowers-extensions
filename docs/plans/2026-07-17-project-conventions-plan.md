@@ -157,8 +157,25 @@ they must be decided.
    `Datastore`, `Model`, `Fallback when scope not allowed`,
    `Milestone completion tags a release`, `Established`, `Source`.
 
-2. **Derive, default, or ask the six undetectable fields.** Detection cannot
-   produce these; leaving them to step 3's catch-all makes the sub-skill ask for
+2. **Handle re-runs — before any interaction.** If `docs/planning/CONVENTIONS.md`
+   already exists, load it and diff detected-vs-recorded **over the 14 detectable
+   fields only**. No differences → announce "Conventions unchanged" and stop,
+   having asked **zero questions**. Otherwise carry the recorded values forward
+   as the baseline and continue. Never silently overwrite.
+
+   The diff excludes `Established` and `Source`: they are metadata about the
+   recording, not conventions, and including them guarantees a spurious diff on
+   every run.
+
+   **`Established` is preserved on a re-run, never reset to today.** It records
+   when the conventions were *first* established; re-running because `Released
+   by` changed does not re-establish them. (A "last checked" value would be a
+   separate field, not this one.) Resetting it is what makes the stop path
+   unreachable — the file always differs, so "Conventions unchanged" can never
+   fire no matter where this step sits.
+
+3. **Derive, default, or ask the six undetectable fields.** Detection cannot
+   produce these; leaving them to step 5's catch-all makes the sub-skill ask for
    things it can work out.
 
    | Field | How |
@@ -167,14 +184,14 @@ they must be decided.
    | `Source` | Judged over the 14 *detectable* fields only: `detected` if every one came from a signal, `user-stated` if every one was asked, else `mixed`. Never ask. Derived and asked-by-design fields (`Datastore`, `Model`, `Established`, `Source` itself) do not count — including them would make `detected` unreachable, since step 2 always asks two of them. |
    | `Milestone completion tags a release` | **Derive from `Released by` AND `Scheme`:** `yes` only when `Released by: manual git tag` AND `Scheme` is not `none`. Everything else → `no` — an automation already owns tagging and a second tag would collide; `Scheme: none` has no scheme to render a tag from (the template forbids pairing `none` with `yes`, and the protocol's tag table has no `none` row). Confirm the derived value; do not ask cold. **Re-derive after step 4** if the user edits `Released by` or `Scheme` — a stale one-shot derivation is how a corrected `Released by: release-please` still ends up double-tagging. |
    | `Fallback when scope not allowed` | Default `omit scope` — conventional commits permit a scope-less message, so it always lands. Offer, don't impose. |
-   | `Datastore` | Ask. `n/a` is a normal answer. |
-   | `Model` | Ask, seeded from evidence: `Protected branches` non-empty or `PR required: yes` suggests `feature-branch`; otherwise `trunk`. |
+   | `Datastore` | Ask on first run. On a re-run, keep the recorded value and do not re-ask. `n/a` is a normal answer. |
+   | `Model` | Ask on first run, seeded from evidence: `Protected branches` non-empty or `PR required: yes` suggests `feature-branch`; otherwise `trunk`. On a re-run, keep the recorded value and do not re-ask — two questions per re-run is what breaks the design's "brownfield asks ~zero questions". |
 
-3. **Mark uncertainty.** Any field inferred weakly — git log *looks* conventional
+4. **Mark uncertainty.** Any field inferred weakly — git log *looks* conventional
    but no commitlint config; `gh` unavailable so protection unknown — renders as
    `(uncertain — confirm)`. Do not present a guess as a fact.
 
-4. **Propose.** Present the filled-in template as a single block. Ask:
+5. **Propose.** Present the filled-in template as a single block — on a re-run, show only the fields that changed. Ask:
 
    > "Confirm these, or tell me what's wrong. `[y / edit]`"
 
@@ -182,10 +199,6 @@ they must be decided.
    Offer `conventional` and `semver` as **defaults the user may reject** — offered,
    never imposed. The whole point of this sub-skill is that the skill stops
    deciding these unilaterally.
-
-5. **Handle re-runs.** If `docs/planning/CONVENTIONS.md` already exists, diff
-   detected-vs-recorded and show only what changed. Never silently overwrite.
-   If nothing changed, announce "Conventions unchanged" and stop.
 
 6. **If the user declines to answer**, record explicit defaults and state which
    fields were defaulted, with `**Source:** mixed`. Do NOT fall back to invisible

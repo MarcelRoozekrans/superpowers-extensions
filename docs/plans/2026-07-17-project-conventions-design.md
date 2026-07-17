@@ -244,7 +244,7 @@ work out, so they are derived or defaulted instead.
 
 | Field | How |
 |---|---|
-| `Established` | Today's date. Never ask. |
+| `Established` | Today's date on first run. **Preserved unchanged on a re-run** — it records when conventions were *first* established, not when they were last checked. Never ask. |
 | `Source` | `detected` / `user-stated` / `mixed`, judged over the 14 *detectable* fields only. Never ask. Scoping matters: counting the always-asked fields would make `detected` unreachable on every run. |
 | `Milestone completion tags a release` | **Derived from `Released by` AND `Scheme`:** `yes` only when `Released by: manual git tag` and `Scheme` is not `none`; everything else `no`. Keying on `Released by` alone produces the pairing the template forbids on the commonest greenfield repo (no tags, no automation → `Scheme: none` + `yes`), which the protocol's tag table cannot render. Re-derived if the user edits either field. Confirmed, not asked cold. |
 | `Fallback when scope not allowed` | Default `omit scope`; conventional commits permit a scope-less message, so it always lands. |
@@ -280,7 +280,7 @@ repo.
 | `CONVENTIONS.md` missing | Run `init-conventions` inline, write it, continue. Self-heal. |
 | Weak inference (git log looks conventional, no commitlint) | Render as `(uncertain — confirm)` in the proposal. |
 | `gh` unavailable | `PR required: unknown`; ask. Never block. |
-| Detection conflicts with recorded value | `init-conventions` is re-runnable; shows a detected-vs-recorded diff and asks. Never silently overwrites. |
+| Detection conflicts with recorded value | `init-conventions` is re-runnable; shows a detected-vs-recorded diff and asks. Never silently overwrites. The check runs immediately after detection, **before any interaction**, and diffs only the 14 detectable fields — so a clean re-run costs zero questions, which is what decision 4's "brownfield asks ~zero questions" actually requires. Two details make the stop path reachable at all, and both were missed on the first pass: the diff excludes `Established` and `Source` (they describe the recording, not the conventions), and `Established` is preserved rather than reset to today — resetting it means the file differs on every re-run, so "Conventions unchanged" can never fire regardless of ordering. `Datastore` and `Model` are asked on first run only. |
 | User declines to answer | Record explicit defaults and state which were defaulted. Do not revert to invisible hardcodes. |
 | Scope not allowed by host lint config | Apply recorded fallback (default: omit scope). Warn once. Never fail the commit. |
 
