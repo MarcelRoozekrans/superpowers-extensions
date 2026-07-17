@@ -47,6 +47,12 @@ are present in this repository's `commitlint.config.js` `scope-enum`. The host
 project was modified to accept the skill's vocabulary. On any project that has
 not been so modified, and that enforces scopes, these commits are rejected.
 
+A twelfth site was found during planning: `audit-milestone` lists
+`**Release tagged** — check `git tag -l` for expected tag` as a
+definition-of-done criterion. On a project that does not tag per milestone that
+criterion can never pass, so the audit fails forever and `complete-milestone`
+becomes unreachable. Same bug class; in scope.
+
 ### Why the gap is structural
 
 Three scopes each disown project-invariant decisions:
@@ -88,7 +94,7 @@ the case where the decisions must actually be made, gets nothing.
 | `templates/conventions.template.md` | new | Shape `init-conventions` fills, matching the 3 existing templates. |
 | `init-conventions` sub-skill | new | detect → propose → confirm → write. Runs greenfield and brownfield. |
 | **Commit & Release Protocol** section | new section in `SKILL.md` | Single authority for how to commit and whether to tag. |
-| 10 commit sites + `complete-milestone` tag | rewritten | Become pointers to the protocol. |
+| 10 commit sites + `complete-milestone` tag + `audit-milestone` tag check | rewritten | Become pointers to the protocol. |
 | `state-files.md` | extended | Document the new file. |
 
 `init-conventions` is a separate sub-skill rather than an extension of
