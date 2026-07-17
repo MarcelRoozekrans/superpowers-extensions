@@ -245,15 +245,17 @@ work out, so they are derived or defaulted instead.
 | Field | How |
 |---|---|
 | `Established` | Today's date. Never ask. |
-| `Source` | `detected` / `user-stated` / `mixed`, from where the values came. Never ask. |
-| `Milestone completion tags a release` | **Derived from `Released by`:** an automation (release-please, semantic-release, changesets, CI) → `no` — it already owns tagging, and a second tag would collide. `manual git tag` → `yes`. `none` → `no`. Confirmed, not asked cold. |
+| `Source` | `detected` / `user-stated` / `mixed`, judged over the 14 *detectable* fields only. Never ask. Scoping matters: counting the always-asked fields would make `detected` unreachable on every run. |
+| `Milestone completion tags a release` | **Derived from `Released by` AND `Scheme`:** `yes` only when `Released by: manual git tag` and `Scheme` is not `none`; everything else `no`. Keying on `Released by` alone produces the pairing the template forbids on the commonest greenfield repo (no tags, no automation → `Scheme: none` + `yes`), which the protocol's tag table cannot render. Re-derived if the user edits either field. Confirmed, not asked cold. |
 | `Fallback when scope not allowed` | Default `omit scope`; conventional commits permit a scope-less message, so it always lands. |
 | `Datastore` | Ask. `n/a` is a normal answer. |
 | `Model` | Ask, seeded from evidence: protected branches or `PR required: yes` suggests `feature-branch`, else `trunk`. |
 
 The derivation of `Milestone completion tags a release` is the important one —
 it is the field that decides whether `complete-milestone` tags at all, and it is
-knowable from `Released by` rather than being a question.
+knowable rather than being a question. It is also the easiest to get wrong: it
+must key on `Released by` **and** `Scheme`, and must be re-derived if the user
+corrects either at the confirm step, or a stale value silently double-tags.
 
 ### The VERIFY rule
 
@@ -264,7 +266,12 @@ the 20 fields use `<placeholder>` notation, and the other 10 are bare enums
 enum intact, which contains no placeholder and would pass a
 placeholder-only check — so the original rule verified barely half the contract.
 Since the template's `|` is choice notation that vanishes on fill, a surviving
-` | ` is proof a field was never decided.
+pipe is proof a field was never decided. This is only safe because the template
+states one rule for the whole file — multiple values are comma-separated
+(`node 24, .NET 8`) — so no correctly filled value contains a pipe. Fixing that
+per-field instead (as the first attempt did, for `Environments` alone) leaves
+`Language / runtime` rejecting a legitimate `node 24 | .NET 8` on any polyglot
+repo.
 
 ### Error handling and degradation
 
