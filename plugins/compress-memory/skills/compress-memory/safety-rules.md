@@ -17,6 +17,7 @@ The following path patterns are NEVER compressible. The denylist lives in this s
 | `*-review-*.md` | Pre-push review reports and UI review audits |
 | `*.original.md` | Backup files — never overwrite, never compress |
 | `MILESTONE.md` | Rewritten by `new-milestone` / `complete-milestone`, not every pause; compounding case weak |
+| `CONVENTIONS.md` | Machine-read contract. `project-orchestration`'s Commit & Release Protocol greps its `**Key:** value` lines before every commit and tag. Those lines are prose, so compression may reword them while every validation check — code blocks, headings, tables preserved — still passes. A silent pass that destroys the contract. |
 
 When asked to compress a denied file, abort with the specific reason:
 

@@ -234,7 +234,8 @@ The project-orchestration skill provides GSD-inspired project lifecycle manageme
 | Sub-skill | Trigger | What It Does |
 |---|---|---|
 | `map-codebase` | Before brainstorming on an existing project | Analyzes structure, entry points, dependencies, and patterns; saves a codebase map to `docs/plans/` |
-| `plan-roadmap` | "plan the roadmap" / first project setup, no `ROADMAP.md` yet | Brainstorms the project at roadmap scope (3-7 milestones with rough phase outlines), writes initial `ROADMAP.md` + `MILESTONE.md` for milestone 1 |
+| `init-conventions` | Kickoff via `plan-roadmap`; self-heal when `CONVENTIONS.md` is missing; on demand when a convention changes | Detects the project's stack, commit format, branching model, release mechanism, and deploy target from the repo, proposes them for confirmation, then records the confirmed set in `docs/planning/CONVENTIONS.md`. Every commit and tag the skill makes is rendered from that file |
+| `plan-roadmap` | "plan the roadmap" / first project setup, no `ROADMAP.md` yet | Brainstorms the project at roadmap scope (3-7 milestones with rough phase outlines), writes initial `ROADMAP.md` + `MILESTONE.md` for milestone 1. Runs `init-conventions` first so stack and release decisions are settled before the brainstorm |
 | `progress` | "where are we?" / session start | Reads `docs/planning/` state files and presents milestone/phase status |
 | `add-phase` | "add a phase" | Appends a new pending phase to the current milestone (Write tool + VERIFY gate) |
 | `insert-phase` | "insert urgent work" | Inserts a phase between two existing phases, renumbers subsequent phases |
@@ -245,8 +246,8 @@ The project-orchestration skill provides GSD-inspired project lifecycle manageme
 | `resume-work` | "resume" / session start | Reads `STATE.md`, presents a session handoff summary, then chains into `start-next-phase` |
 | `start-next-phase` | After `resume-work`, or "continue" / "next" | Routing hub — finds the next non-complete phase and mechanically chains into brainstorming / writing-plans / executing-plans depending on which artifacts exist |
 | `complete-phase` | After `executing-plans` finishes a phase, or "mark phase N.M complete" | Promotes a phase from `active` to `complete`. Without it ROADMAP.md keeps showing the phase active and `start-next-phase` routes back to already-finished work |
-| `audit-milestone` | "verify milestone is done" | Verifies each definition-of-done criterion: phases, tests, regression test, docs, git tag |
-| `complete-milestone` | After audit PASS | Archives the milestone, tags the release in git, updates the roadmap |
+| `audit-milestone` | "verify milestone is done" | Verifies each definition-of-done criterion: phases, tests, regression test, docs, and the release tag — the last one only on projects whose conventions say milestone completion tags a release, and skipped (not failed) otherwise |
+| `complete-milestone` | After audit PASS | Archives the milestone and updates the roadmap, then handles the release per `docs/planning/CONVENTIONS.md`. Creates a tag only when the project's conventions say milestone completion tags a release; where an automation owns releases, it creates none and says so |
 | `new-milestone` | After `complete-milestone` | Brainstorms the next milestone end-to-end before writing `MILESTONE.md` (refuses to start if previous milestone is not complete) |
 | `init-github-sync` | "set up GitHub sync" / `/sync-to-github`, one-time | Creates labels, native Milestones, and Issues on GitHub from `ROADMAP.md`, writing the resulting numbers back. Refuses if sync is already initialized |
 | `sync-github` | Auto-invoked from `pause-work` and `complete-phase`; manual on demand | Projects `ROADMAP.md` state onto GitHub issues/milestones (one-way write). Step 5 embeds `detect-external-signals`, which posts advisory comments when an external dev closes or edits an issue out of band. Skips silently rather than blocking when `gh` is unauthenticated |
@@ -258,6 +259,15 @@ All state is stored in `docs/planning/` at the project root (commit or gitignore
 - `docs/planning/ROADMAP.md` — All milestones and phases with completion status
 - `docs/planning/MILESTONE.md` — Current active milestone definition and definition of done
 - `docs/planning/STATE.md` — Session handoff document written by `pause-work`, read by `resume-work`
+- `docs/planning/CONVENTIONS.md` — The project's stack, commit, branching, release, and deployment conventions. Written by `init-conventions`, read before every commit and tag. Unlike the other three it is stable across milestones rather than per-phase state
+
+### Conventions-driven commits and releases
+
+The skill used to hardcode its own git conventions — `chore(roadmap): …` commit messages and a `git tag -a vN.0` release tag on every milestone. Both were wrong on any project that does not happen to share them, and the tag was wrong on this repository itself, where release-please owns releases.
+
+`init-conventions` now records what the project actually does in `docs/planning/CONVENTIONS.md`, and a single **Commit & Release Protocol** in `SKILL.md` is the only thing that decides how a commit message is rendered or whether a tag is created. Sub-skills pass intent (`type` / `scope` / `subject`); the protocol reads the conventions and renders it — omitting a scope when the host's commitlint would reject it, and never failing a commit over one.
+
+**Behavior change for existing users:** milestone completion no longer tags unconditionally. `complete-milestone` honors the project's recorded release mechanism, and where an automation owns releases (release-please, semantic-release, changesets, a CI job) it creates **no tag at all** and announces which mechanism owns the release instead. Honoring a project's conventions is sometimes the decision not to act. `audit-milestone`'s release-tag criterion is gated on the same field, so a project that does not tag per milestone no longer fails its own audit forever. Projects that do tag per milestone are unaffected — but the tag is now rendered in the scheme and prefix their existing tags already use rather than assumed to be `vN.0`. On a project with no `CONVENTIONS.md`, the protocol runs `init-conventions` to establish one rather than falling back to the old hardcodes.
 
 ### Usage
 
@@ -310,6 +320,7 @@ The skill REFUSES to operate on:
 - `*-design.md` — brainstorm design documents
 - `*-review-*.md` — pre-push review reports and UI review audits
 - `MILESTONE.md` — rewritten only on milestone transitions
+- `CONVENTIONS.md` — machine-read before every commit and tag; its `**Key:** value` fields are prose, so compression could break them while validation still passes
 - `*.original.md` — backup files (never compressed, never overwritten)
 - Anything not `.md` or `.txt`, or larger than 50 kB
 
@@ -878,12 +889,13 @@ For larger efforts that span multiple work sessions and milestones:
 
 ```text
 project-orchestration map-codebase   → understand the existing codebase
+project-orchestration init-conventions → record stack, commit, and release conventions
 project-orchestration progress       → "where are we?" at each session start
 [standard feature/refactor workflows per phase]
 project-orchestration pause-work     → checkpoint state + auto squad-sync
 project-orchestration resume-work    → restore context at next session
 project-orchestration audit-milestone → verify definition of done
-project-orchestration complete-milestone → tag release, archive milestone
+project-orchestration complete-milestone → archive milestone, release per conventions
 ```
 
 **Squad + project-orchestration:** `pause-work` automatically triggers `squad-sync`, so agent histories stay current without any extra steps.
@@ -986,9 +998,9 @@ superpowers-extensions/
 │   │   │   └── plugin.json
 │   │   └── skills/
 │   │       └── project-orchestration/
-│   │           ├── SKILL.md                # 17 sub-skills for project lifecycle (start-next-phase routing hub, plan-roadmap, github-sync)
+│   │           ├── SKILL.md                # 18 sub-skills for project lifecycle (start-next-phase routing hub, plan-roadmap, init-conventions, github-sync)
 │   │           ├── state-files.md          # docs/planning/ file format reference
-│   │           └── templates/              # roadmap / milestone / phase design templates
+│   │           └── templates/              # roadmap / milestone / phase design + conventions templates
 │   ├── ui-workflow/
 │   │   ├── .claude-plugin/
 │   │   │   └── plugin.json
@@ -1035,7 +1047,7 @@ superpowers-extensions/
 │               ├── safety-rules.md         # Denylist, backup invariant, validation
 │               └── NOTICE.md               # Attribution to caveman (MIT)
 └── docs/
-    ├── planning/                           # Project lifecycle state (ROADMAP, MILESTONE, STATE)
+    ├── planning/                           # Project lifecycle state (ROADMAP, MILESTONE, STATE, CONVENTIONS)
     └── plans/                              # Design documents and phase plans
 ```
 

@@ -18,7 +18,7 @@ Concrete, verifiable criteria — not aspirational. `audit-milestone` will check
 - [ ] All tests passing
 - [ ] Domain criterion 1, e.g. "API contract published"
 - [ ] Domain criterion 2, e.g. "Migration applied to staging"
-- [ ] Release tagged in git
+- [ ] Release tagged in git — include this line ONLY when `docs/planning/CONVENTIONS.md` says `Milestone completion tags a release: yes`. Omit it otherwise: `audit-milestone` skips the criterion, the release is owned by whatever `Released by` names, and a checkbox nothing will ever tick is a permanent false gap.
 
 ## Phases
 

@@ -61,6 +61,88 @@ This skill provides project lifecycle management for larger, multi-session proje
 
 A single brainstorming + writing-plans + executing-plans cycle works well for small features. Multi-milestone projects need a way to track where they are, manage their roadmap, pause and resume cleanly, and mark releases. This skill provides that structure without replacing the superpowers workflow — it wraps around it.
 
+## Commit & Release Protocol
+
+<HARD-GATE>
+Every sub-skill in this file that commits or tags MUST follow this section. Do NOT write a literal `git commit -m "..."` or `git tag -a` anywhere else in this file. Call sites supply intent as a triple — `type`, `scope`, `subject` — and this section decides the format. A CI guard enforces this (`npm run check:conventions`).
+</HARD-GATE>
+
+### Step 1 — Load conventions
+
+Read `docs/planning/CONVENTIONS.md`.
+
+If it does not exist → run [init-conventions](#init-conventions) now, then **re-read the file. If it still does not exist, STOP** — the user aborted at Propose, or VERIFY never converged. Do not continue on faith: this file's top HARD-GATE requires verifying the artifact before chaining, and continuing with no conventions lands in the branch guard with every field absent. Do not guess a format, and do not fall back to a hardcoded one.
+
+This does not recurse: `init-conventions` writes and VERIFYs the file before it commits, so its commit re-enters here with the file already on disk.
+
+**A value may carry a trailing parenthetical** — the field's value is everything before the first `(` that follows a space, and `**PR required:** yes (detected)` reads as `yes`. This rule lives here, where fields are read; without it that value matches no row in the branch guard and the guard fails open.
+
+**`Protected branches: none` means the list is empty**, not a branch named `none`. The guard splits on commas, so this must be stated or it yields a one-element list. `init-conventions` reads this list when it derives `Model` (see the Derive step for the exact rule).
+
+### Step 2 — Branch guard
+
+Read the current branch with `git branch --show-current`. If it returns empty (detached HEAD) → **STOP**: there is no branch to check against, so the guard cannot answer. Say so rather than committing.
+
+Match it against `Protected branches`, which is comma-separated. **`*` matches within one path segment**: `release/*` matches `release/1.2` but not `release/1/2`. Matching is case-sensitive. This definition lives here, not in `CONVENTIONS.md` — the file records the patterns; the rule that parses them belongs where it executes.
+
+| `PR required` | Current branch matches a protected pattern | Action |
+|---|---|---|
+| `yes` | yes | **STOP. Do not commit.** |
+| `yes` | no | Proceed |
+| `no` | — | Proceed |
+| `unknown` | yes | **STOP and ask.** `unknown` means detection could not reach the host — usually `gh` unauthenticated. Never treat it as `no`: that silently fails open on exactly the branch the guard exists to protect. |
+| `unknown` | no | Proceed |
+| anything else, or the field is absent | — | **STOP and ask.** `Propose` lets the user type any value and `VERIFY` only rejects `<` and a space-padded `\|` — it never checks a token against its enum — so `Yes`, `true`, `required`, or a missing line all reach here. An unmatched row must never mean "proceed": that is the fail-open this guard exists to prevent, reached through the door the table left open. |
+
+On a STOP from the two protected-branch rows (`yes` + match, `unknown` + match), announce:
+
+> "CONVENTIONS.md protects `<branch>` and requires a PR. Move to a feature branch before I commit orchestration state."
+
+On a STOP from the last row, say what is actually wrong instead — quote the value found for `PR required`, or say the field is missing, and ask the user to correct `CONVENTIONS.md` or re-run `init-conventions`. Do not tell them to move branches: the branch may be perfectly fine, and changing it would not fix the file.
+
+Never create the branch or open the PR automatically — that belongs to `superpowers:using-git-worktrees` and `superpowers:finishing-a-development-branch`.
+
+### Step 3 — Render the commit message
+
+| `Format` | `Scopes` | Message |
+|---|---|---|
+| `conventional` | `enforced` or `free` | `<type>(<scope>): <subject>` |
+| `conventional` | `none` | `<type>: <subject>` — the project's conventions say it has no scopes; do not render one. |
+| `free-form` | any | `<subject>` |
+| anything else, or the field is absent | — | **STOP and ask.** Same reasoning as the branch guard: an unmatched row must never silently pick a format. |
+
+If `Format: conventional` AND `Scopes: enforced`, read the allowed scopes from the file named by `Scope source` and check `<scope>` against them. **Read the whole file** — do not grep for `scope-enum` and expect the array beside it. On this repository's own `commitlint.config.js` the rule is on line 4 and its array starts on line 5; the array may also come from a variable or another module. **If the file is missing, unreadable, or its scope list cannot be read off it — including when the array comes from a variable or another module — apply `Fallback when scope not allowed` rather than assuming permission.** Treating an unreadable config as unrestricted renders `<type>(<scope>):` unvalidated, which commitlint then rejects — failing the commit, which the rule below forbids. The Fallback branch (`omit scope`) provably always lands. When the protocol cannot determine whether a scope is allowed, take the branch that cannot fail.
+
+If `<scope>` is not allowed → apply `Fallback when scope not allowed`:
+
+- `omit scope` → `<type>: <subject>`
+- `map to <x>` → `<type>(<x>): <subject>`
+
+Warn once per session when a fallback fires — once, not per commit; a phase can commit repeatedly and the warning is information, not an alarm. **Never fail a commit over a scope.**
+
+### Step 4 — Tag
+
+`complete-milestone` only. The table is keyed on **two** fields — keying it on `Scheme` alone leaves `tags a release: no` matching no row while `yes` + `semver` matches two, and two agents then diverge on whether to tag at all.
+
+Render the tag in the shape the project's existing tags already use — take the prefix from `git tag -l` (most carry `v`; some carry none, and release-please monorepos carry `<name>-v`). Do not assume `v`.
+
+| `Milestone completion tags a release` | `Scheme` | Tag |
+|---|---|---|
+| `no` | any | Do not tag. Announce: "Release handled by `<Released by>`; not tagging." |
+| `yes` | `semver` | **Ask the user for the version.** Do not invent a bump — a milestone is not inherently major or minor. **If the user declines, defers, or says "you pick": do not tag.** Announce that no version was given and no tag was created, and that `complete-milestone` can be re-run once there is one. A question is not a terminal state; every other row here ends in tag-or-announce and this one must too. |
+| `yes` | `calver` | Match the shape of the existing tags (`vYYYY.MM.DD`, `vYYYY.MM`, …) — `vYYYY.MM.DD` is not the only calver. **Calver carries no milestone identity, so two milestones completed on one day render the same string.** Before tagging, resolve the collision per the rule below — do not silently reuse the date. |
+| `yes` | `milestone` | `vN.0` |
+| `yes` | `none`, or anything unrecognised | Do not tag. Announce that the scheme is unset or unknown and no tag was created. `init-conventions` derives `no` whenever `Scheme: none`, so this is reachable only via a hand-edited file — but a table the protocol can fall off the end of is how the `vN.0` hardcode survived in the first place. |
+
+Before tagging, check `git tag -l <tag>`. If it exists, **check what it points at** — `git rev-list -n 1 <tag>`:
+
+- Points at the commit being tagged → this is a re-run. Do not re-tag, do not fail; announce it is already tagged and continue.
+- Points anywhere else → **STOP and ask.** Two different commits want one tag name. Under `calver` this is routine, not exotic: two milestones completed on the same day both render today's date.
+
+Existence alone is not identity. A check that only asks "does a tag of this name exist" reports the second milestone as tagged while pointing at the first one's commit, and it announces success — it certifies the collision instead of catching it. That is this branch's recurring failure: a green check that is not checking.
+
+After tagging, verify with `git tag -l <tag>` before announcing success.
+
 ## Sub-Skills
 
 This skill contains multiple sub-skills, each invoked by a specific trigger phrase or context. They share the `docs/planning/` state directory (see [state-files.md](state-files.md) for file formats).
@@ -104,6 +186,81 @@ Invoke before `brainstorming` when starting work on an existing codebase the age
 7. **Save to:** `docs/plans/YYYY-MM-DD-codebase-map.md`
 
 8. **Transition** — invoke `brainstorming` with the codebase map as context.
+
+---
+
+## init-conventions
+
+### When to Use
+
+Once per project, at kickoff — invoked by `plan-roadmap`. Also invoked automatically by the Commit & Release Protocol when `docs/planning/CONVENTIONS.md` is missing (self-heal on existing projects). Re-runnable when a convention changes ("we moved to release-please").
+
+Unlike `map-codebase`, this runs on **greenfield and brownfield**. Greenfield needs it most — an empty repo has no conventions to observe, so they must be decided.
+
+### Announce Line
+
+> "Establishing project conventions. I'll detect what I can from the repo and ask you to confirm before recording anything."
+
+### Process
+
+Steps refer to each other by **name**, never by number.
+
+1. **Detect.** Best-effort. Every signal is optional; never fail on a missing one. A field with no signal is left unset for **Propose** to ask — do not ask here, and never infer a value from absence.
+
+   | Field | Signal |
+   |---|---|
+   | Language / runtime, Package manager, Framework | If `map-codebase` ran this session, read `docs/plans/*-codebase-map.md` — it already detected these. Otherwise apply `map-codebase`'s **Read project root** and **Identify patterns** steps. Greenfield: no signal. |
+   | Datastore | ORM config, connection strings, compose service images; else no signal. |
+   | Commit format | `commitlint.config.js`, `.commitlintrc*`, husky hooks. Else sample `git log -50 --format=%s`: a clear majority matching `type(scope):` → `conventional`. No commits → no signal. |
+   | Scopes / Scope source | A `scope-enum` rule → `enforced` plus the path of the file holding it. Conventional but no rule → `free`, `Scope source: n/a`. Not conventional → `none`, `n/a`. |
+   | Scheme | Shape of `git tag -l`, ignoring any `<name>-` prefix — release-please monorepo tags look like `mypkg-v1.2.3`. `vX.Y.Z` → semver, `vYYYY.MM*` → calver, `vN.0` → milestone. Mixed shapes → whichever the 10 most recent tags mostly use. No tags → `none`. |
+   | Released by | `release-please-config.json`, `.releaserc*`, `.changeset/`, or a release workflow. None **and tags exist** → `manual git tag`. None **and no tags** → no signal: absence of automation is not evidence of a manual tagging habit. |
+   | Changelog | `CHANGELOG.md` present, and whether the release automation writes it; else `none`. |
+   | Protected branches | `gh api repos/{owner}/{repo}/branches --jq '.[] \| select(.protected) \| .name'`, joined with commas. Do **not** use the single-branch `/protection` endpoint — it answers for one branch and cannot enumerate a list. On `gh` failure → no signal. |
+   | PR required | For each protected branch, query `gh api repos/{owner}/{repo}/branches/{branch}/protection --jq '.required_pull_request_reviews'` — this is the one place the single-branch `/protection` endpoint is correct, because only it returns that field (the list endpoint above does not). Any branch requiring reviews → `yes`. Protected branches empty → `no`. On `gh` failure → no signal. |
+   | Deploy target / Deployed by | Workflows with deploy/publish steps, `Dockerfile`, `vercel.json`, `fly.toml`, `*.tf`. The artifact or registry named is `Deploy target`; the mechanism is `Deployed by`. Neither found → `none`. |
+   | Environments | `environment:` keys in CI workflows, `*.tfvars`, compose profiles; else `none`. |
+
+2. **Handle re-runs — before any interaction.** If `docs/planning/CONVENTIONS.md` exists, load it and diff detected-vs-recorded. No differences → announce "Conventions unchanged" and stop, having asked nothing. Otherwise carry the recorded values forward as the baseline.
+
+   **A field with no signal is not a difference — the recorded value stands.** Detection failure must never downgrade a recorded value. Without this rule a `gh` outage proposes `PR required: yes → unknown`, the user confirms, and a network error has disarmed the branch guard.
+
+   The diff ignores `Established`, which is write-once.
+
+3. **Derive.** No signal can produce these. **Derive only fills fields that are unset — a recorded value stands.** Otherwise a user who set `Model: gitflow` (reachable only by editing at **Propose**, since no rule produces it) gets it silently reverted to `feature-branch` on every re-run, and the same for a `Fallback` overridden to `map to <scope>`. `Established` was already protected this way; these need it too. Changed *inputs* are handled by **Re-derive**, not here.
+
+   | Field | Rule |
+   |---|---|
+   | `Established` | Today on a first run. Preserved unchanged on a re-run — it records when conventions were *first* set, not when last checked. |
+   | `Model` | `feature-branch` when `Protected branches` is non-empty or `PR required: yes`; else `trunk`. |
+   | `Fallback when scope not allowed` | `omit scope` — conventional commits permit a scope-less message, so it always lands. |
+   | `Milestone completion tags a release` | `yes` only when `Released by: manual git tag` **and** `Scheme` is not `none`. Everything else `no`: an automation already owns tagging, and `Scheme: none` has nothing to build a tag from. |
+
+4. **Mark uncertainty.** A value inferred without a definitive signal — a `git log` that looks conventional with no commitlint config — is shown as `(uncertain)` **in the proposal only**. The marker is never written to the file.
+
+5. **Propose.** Present the filled-in fields as one block; on a re-run, show only what changed. Ask for every field still unset. Offer `conventional` and `semver` as defaults the user may reject — offered, never imposed.
+
+   > "Confirm these, or tell me what's wrong. `[y / edit]`"
+
+   If the user declines a field, record the default and mark it `(defaulted)` so the choice stays reviewable.
+
+6. **Re-derive.** If the user changed any field a **Derive** rule reads — `Released by` or `Scheme` (feeding `Milestone completion tags a release`), `PR required` or `Protected branches` (feeding `Model`) — recompute the field that reads it, overriding the recorded value, and show the result. This is the one place a derivation overrules what is on disk, because the user just changed its input. Skipping it leaves a corrected `Released by: release-please` paired with a stale `tags a release: yes`, which double-tags.
+
+7. **Write** `docs/planning/CONVENTIONS.md` from [templates/conventions.template.md](templates/conventions.template.md). Keep the `#` title, the five `##` headings and the `**Key:** value` lines; omit the `>` blockquotes — they are fill-in guidance, not file content. Do **not** read this as "`**Key:**` lines only": dropping the headings fails VERIFY, whose remedy is to re-write from the template, which drops them again. In their place write one provenance line so the file is not anonymous:
+
+   ```markdown
+   > Written by `init-conventions`. Do not hand-edit — re-run the sub-skill instead; the Commit & Release Protocol reads these fields.
+   ```
+
+8. **VERIFY.** Re-read the file. All five `##` sections present, and no `**Key:**` line still containing `<` or a space-padded `|` — either means a field was never decided. `**Established:**` is a real date. On failure, re-write and VERIFY again; never continue with a failing VERIFY.
+
+9. **Commit only `docs/planning/CONVENTIONS.md`, by explicit pathspec**, per [Commit & Release Protocol](#commit--release-protocol) with `type=chore, scope=state, subject=establish project conventions`. The pathspec is load-bearing: a self-heal enters here with the caller's files already staged, and a bare `git commit` would sweep them into this commit.
+
+10. **Announce:** "Conventions recorded. `complete-milestone` will `<tag per the recorded scheme | not tag — release handled by <Released by>>`."
+
+### Skip This?
+
+No. Without it, every commit falls back to a format the host's lint config may reject, and milestone completion invents a tag scheme the project does not use.
 
 ---
 
@@ -157,7 +314,7 @@ When the user wants to append a new phase to the current milestone's roadmap.
 4. **VERIFY:** re-read `docs/planning/ROADMAP.md` and confirm the new phase block is present with the correct number, name, `status: pending`, `Surface:`, and `HelpWanted:` values. If any is missing, the Edit did not apply — retry.
 5. **Use the `Edit` tool** to add the new phase to the `## Phases` list in `docs/planning/MILESTONE.md`.
 6. **VERIFY:** re-read `docs/planning/MILESTONE.md` and confirm the phase appears in the list.
-7. Stage and commit: `git add docs/planning/ROADMAP.md docs/planning/MILESTONE.md && git commit -m "chore(roadmap): add phase N.M — <name>"`. Run `git status` and confirm a clean tree.
+7. Stage `git add docs/planning/ROADMAP.md docs/planning/MILESTONE.md`, then commit per [Commit & Release Protocol](#commit--release-protocol) with `type=chore, scope=roadmap, subject=add phase N.M — <name>`. Run `git status` and confirm a clean tree.
 8. Announce the new phase number, name, surface, and help-wanted only after the commit succeeds.
 
 ---
@@ -176,7 +333,7 @@ When urgent work needs to be inserted between two existing phases.
 4. **VERIFY:** re-read `docs/planning/ROADMAP.md` and confirm: (a) the new phase block is present with correct number/name/status/Surface/HelpWanted, (b) every later phase is renumbered consecutively with no gaps or duplicates.
 5. **Use the `Edit` tool** to update the `## Phases` list in `docs/planning/MILESTONE.md` to reflect the inserted phase and renumbered siblings.
 6. **VERIFY:** re-read `docs/planning/MILESTONE.md` and confirm the list matches ROADMAP.md.
-7. Stage and commit: `git add docs/planning/ROADMAP.md docs/planning/MILESTONE.md && git commit -m "chore(roadmap): insert phase N.M — <name>"`. Run `git status` and confirm a clean tree.
+7. Stage `git add docs/planning/ROADMAP.md docs/planning/MILESTONE.md`, then commit per [Commit & Release Protocol](#commit--release-protocol) with `type=chore, scope=roadmap, subject=insert phase N.M — <name>`. Run `git status` and confirm a clean tree.
 8. Announce: "Inserted Phase N.M — {name} between N.M-1 and old N.M (now N.M+1)." only after the commit succeeds.
 
 ---
@@ -203,7 +360,7 @@ When a future (pending) phase should be removed from the roadmap.
 7. **Use the `Edit` tool** to remove the phase from the `## Phases` list in `docs/planning/MILESTONE.md`.
 8. **VERIFY:** re-read `docs/planning/MILESTONE.md`.
 9. **Close the GitHub issue (if captured in step 4):** run `gh issue close <N> --comment "Phase removed from roadmap"`. If `gh` is not installed/authenticated or the call fails (404, network, rate limit), log the failure and continue — the local removal is authoritative; the orphan issue can be closed manually later. Never block the local commit on a `gh` failure.
-10. Stage and commit: `git add docs/planning/ROADMAP.md docs/planning/MILESTONE.md && git commit -m "chore(roadmap): remove phase N.M — <name>"`. Run `git status` and confirm a clean tree.
+10. Stage `git add docs/planning/ROADMAP.md docs/planning/MILESTONE.md`, then commit per [Commit & Release Protocol](#commit--release-protocol) with `type=chore, scope=roadmap, subject=remove phase N.M — <name>`. Run `git status` and confirm a clean tree.
 
 ---
 
@@ -273,10 +430,10 @@ When the user is stopping work and wants to preserve context for next session. T
    - If `compress-memory` is not installed: skip compression entirely (treat the field as absent).
 
    **Graceful failure (matches the `sync-github` pattern):** if `compress-memory` reports a validation failure or any other error, log the failure to the user, leave the uncompressed file on disk, and continue with the remaining `pause-work` steps. Compression failure must NEVER prevent state files from being written, committed, or synced. Local state is the source of truth and must remain writable even when compression breaks.
-7. Stage and commit: `git add docs/planning/ && git commit -m "chore(state): pause-work — phase N.M, last task: <description>"`. The `docs/planning/` glob includes `STATE.md`, `ROADMAP.md`, and any `*.original.md` backups produced by step 6's compression. Users who do not want backups committed can add `docs/planning/*.original.md` to `.gitignore`. Run `git status` and confirm a clean tree.
+7. Stage `git add docs/planning/`, then commit per [Commit & Release Protocol](#commit--release-protocol) with `type=chore, scope=state, subject=pause-work — phase N.M, last task: <description>`. The `docs/planning/` glob includes `STATE.md`, `ROADMAP.md`, and any `*.original.md` backups produced by step 6's compression. Users who do not want backups committed can add `docs/planning/*.original.md` to `.gitignore`. Run `git status` and confirm a clean tree.
 8. **Squad sync (if installed)** — if a `.squad/` directory exists in the project, run `squad-sync` after the STATE.md commit. Squad's per-agent `history.md` files capture session learning that complements STATE.md (which captures position). Without this step, agent histories drift behind project state. If `squad` is not installed, skip silently — this step is best-effort.
 9. **Decision-tracker sync (if installed)** — if `decision-tracker` is active and any decisions were captured during this session, ensure they have been persisted to long-term memory before exiting. Pause is the natural fence for memory writes; deferring them risks losing the decision when the conversation ends. If `decision-tracker` is not active, skip silently.
-10. **GitHub sync (if initialized)** — if `docs/planning/ROADMAP.md` contains any `**Issue:**` or `**Milestone:**` field (signal that `init-github-sync` has been run), invoke `sync-github` as a final step. This produces a full reconciliation of GitHub state with the just-written STATE.md / ROADMAP.md changes. If sync is not initialized, skip silently — do not invite the user to set it up here, that is `init-github-sync`'s job. **Note:** `sync-github` may produce its own `chore(sync): reconcile github state` commit when it writes new `**Issue:**` or `**Milestone:**` fields back into ROADMAP.md (e.g. phases added since the last sync). This is normal — `pause-work` ends with one commit on a quiet sync, two commits when sync had write-back work. Both are clean states.
+10. **GitHub sync (if initialized)** — if `docs/planning/ROADMAP.md` contains any `**Issue:**` or `**Milestone:**` field (signal that `init-github-sync` has been run), invoke `sync-github` as a final step. This produces a full reconciliation of GitHub state with the just-written STATE.md / ROADMAP.md changes. If sync is not initialized, skip silently — do not invite the user to set it up here, that is `init-github-sync`'s job. **Note:** `sync-github` may produce its own reconcile commit (rendered per [Commit & Release Protocol](#commit--release-protocol)) when it writes new `**Issue:**` or `**Milestone:**` fields back into ROADMAP.md (e.g. phases added since the last sync). This is normal — `pause-work` ends with one commit on a quiet sync, two commits when sync had write-back work. Both are clean states.
 11. Announce only after the commit succeeds:
 
     > "Session state saved to `docs/planning/STATE.md`. Next session, start with `resume-work` or say 'resume' and I'll restore context."
@@ -387,12 +544,7 @@ This sub-skill closes the loop that was missing: without it, `executing-plans` f
 
 6. **VERIFY:** re-read `docs/planning/MILESTONE.md` and confirm the phase entry now reads `[complete]`.
 
-7. Stage and commit:
-
-   ```bash
-   git add docs/planning/ROADMAP.md docs/planning/MILESTONE.md
-   git commit -m "chore(roadmap): complete phase N.M — <name>"
-   ```
+7. Stage `git add docs/planning/ROADMAP.md docs/planning/MILESTONE.md`, then commit per [Commit & Release Protocol](#commit--release-protocol) with `type=chore, scope=roadmap, subject=complete phase N.M — <name>`.
 
    Run `git status` and confirm a clean tree.
 
@@ -404,7 +556,7 @@ This sub-skill closes the loop that was missing: without it, `executing-plans` f
 
 ### Why this exists separately from complete-milestone
 
-`complete-milestone` is end-of-milestone: marks the WHOLE milestone complete, tags a release, and only runs after `audit-milestone` passes. It is a one-time event per milestone.
+`complete-milestone` is end-of-milestone: marks the WHOLE milestone complete, hands the release to the [Commit & Release Protocol](#commit--release-protocol)'s **Tag** step (which may create no tag), and only runs after `audit-milestone` passes. It is a one-time event per milestone.
 
 `complete-phase` is per-iteration: marks ONE phase complete inside an active milestone, runs after every phase wraps up. A milestone with 8 phases will see `complete-phase` run 8 times, then `audit-milestone` once, then `complete-milestone` once.
 
@@ -570,7 +722,7 @@ When the user believes a milestone is complete and wants to verify it against it
    - **Regression test PASS** — invoke `regression-test` skill if a web UI is available (optional, confirm with user).
    - **Pre-push reviews on file** — `audit-milestone` does NOT re-run code-quality review (security, YAGNI, dead code, naming) — that is `pre-push-review`'s remit, run per phase before push. Check that at least one `docs/pre-push-review-*.md` report exists with a PASS verdict, dated within the milestone's lifespan. Record one of three outcomes: (a) PASS report on file → record verdict in audit; (b) FAIL or stale (older than the milestone's earliest phase commit) → record gap, recommend re-running `pre-push-review` on each feature branch; (c) no reports found → record gap as "code quality not independently reviewed in this milestone" with same recommendation. This is a **warning, not a hard fail** — milestones can pre-date the pre-push-review skill or have used a different review process. Surface the gap so the user decides.
    - **Documentation** — check that plan docs exist for each phase, design docs are present.
-   - **Release tagged** — check `git tag -l` for expected tag.
+   - **Release will tag correctly** — only when `docs/planning/CONVENTIONS.md` says `Milestone completion tags a release: yes`. Do **not** check that the tag already exists: `complete-milestone` creates it, and it runs *after* this audit passes, so requiring it here is a deadlock — the mirror of the `no`-case forever-fail. Instead confirm the tag *can* be rendered: `Scheme` is a shape the [Commit & Release Protocol](#commit--release-protocol)'s **Tag** step handles (`semver` / `calver` / `milestone`, not `none` or unrecognised), and — for `semver` — that a version is obtainable. When conventions say `no`, **skip this criterion**: it is not a gap and must not count toward a FAIL verdict. The release is owned by whatever `Released by` names, and the absence of a milestone tag is the correct state. Unguarded either way, this criterion blocks `complete-milestone`: `no`-projects fail forever because the tag never comes, `yes`-projects deadlock because it cannot come yet.
 3. Produce verdict: **PASS** (all criteria met) or **FAIL** (gaps found).
 4. Save audit report to: `docs/plans/YYYY-MM-DD-milestone-N-audit.md`
 5. On **PASS**: announce and offer to invoke `complete-milestone`.
@@ -586,18 +738,18 @@ After `audit-milestone` returns PASS.
 
 ### Announce Line
 
-> "Completing milestone N — {name}. I'll archive the milestone doc, tag the release, and update the roadmap."
+> "Completing milestone N — {name}. I'll archive the milestone doc, update the roadmap, and handle the release per this project's conventions — which may mean no tag at all."
 
 ### Process
 
-1. Confirm with user: "Mark Milestone N — {name} as complete and tag release?"
+1. Confirm with user: "Mark Milestone N — {name} as complete?" Do not promise a tag here. Whether one is created is the [Commit & Release Protocol](#commit--release-protocol)'s **Tag** step's decision, made in step 7 against conventions this step has not read yet.
 2. **Use the `Edit` tool** on `docs/planning/ROADMAP.md`: set milestone status to `complete` and add `**Completed:** YYYY-MM-DD` line.
 3. **VERIFY:** re-read `docs/planning/ROADMAP.md` and confirm the milestone block now shows `[status: complete]` and a Completed date.
 4. **Use the `Edit` tool** on `docs/planning/MILESTONE.md`: set `**Status:** complete` and add `**Completed:** YYYY-MM-DD`.
 5. **VERIFY:** re-read `docs/planning/MILESTONE.md` and confirm the status and completion date.
-6. Stage and commit: `git add docs/planning/ROADMAP.md docs/planning/MILESTONE.md && git commit -m "chore(milestone): complete milestone N — <name>"`. Run `git status` and confirm a clean tree.
-7. Tag the release: `git tag -a vN.0 -m "Milestone N: <name> complete"`. Verify with `git tag -l vN.0`.
-8. Announce only after tag verification: "Milestone N complete. Tagged as vN.0. Ready to start Milestone N+1 with `new-milestone`."
+6. Stage `git add docs/planning/ROADMAP.md docs/planning/MILESTONE.md`, then commit per [Commit & Release Protocol](#commit--release-protocol) with `type=chore, scope=milestone, subject=complete milestone N — <name>`. Run `git status` and confirm a clean tree.
+7. Tag the release per the [Commit & Release Protocol](#commit--release-protocol)'s **Tag** step — it decides whether a tag is created at all, renders it in the project's own scheme, resolves collisions and re-runs, verifies it, and announces the outcome. Do not tag here, and do not presume it will tag: where the project's conventions hand releases to an automation, that step correctly performs no git action.
+8. Announce only after the **Tag** step returns: "Milestone N complete. Ready to start Milestone N+1 with `new-milestone`." The **Tag** step has already announced the release outcome — do not restate it and do not add a tag claim of your own. It carries an announce for every outcome it can reach, including the ones where no tag was created; a second announce written here could only drift from it.
 
 ---
 
@@ -643,7 +795,7 @@ Capture both once at the start of the sub-skill and reuse them for every iterati
    d. `Edit` ROADMAP.md to add `**Issue:** #N` after the phase's `**HelpWanted:**` line if present, otherwise after `**Surface:**` (legacy phases authored before HelpWanted existed may omit it — fall through to Surface).
    e. VERIFY by re-reading ROADMAP.md.
 5. **Final VERIFY** — re-read ROADMAP.md end-to-end, confirm every milestone has `**Milestone:** N` and every phase has `**Issue:** #N`. If any is missing, the corresponding `gh` call did not return cleanly — re-attempt that one once. If it still fails, fall through to the `gh API error on a single call` row of the Error handling table — stop the loop, report the failing call, and direct the user to `sync-github` for incremental recovery.
-6. **Stage and commit:** `git add docs/planning/ROADMAP.md && git commit -m "chore(sync): init github sync — N issues, M milestones"`. Run `git status` and confirm a clean tree.
+6. **Stage** `git add docs/planning/ROADMAP.md`, **then commit** per [Commit & Release Protocol](#commit--release-protocol) with `type=chore, scope=sync, subject=init github sync — N issues, M milestones`. Run `git status` and confirm a clean tree.
 7. **Announce** only after the commit succeeds:
 
    > "GitHub sync initialized. N issues created across M milestones. Future `pause-work` and `complete-phase` runs will reconcile state automatically."
@@ -721,7 +873,7 @@ Automatic. Runs as a step of `pause-work` (full reconciliation across all milest
    | `open` | `complete` | We marked complete locally; step 4 already issued `gh issue close`. No comment. |
    | `open` | `active` / `pending` | Normal — no action. |
 
-6. **If anything was written back to ROADMAP.md** (new issues created or milestones added since last sync), stage and commit: `git add docs/planning/ROADMAP.md && git commit -m "chore(sync): reconcile github state"`. If no writes happened, skip the commit.
+6. **If anything was written back to ROADMAP.md** (new issues created or milestones added since last sync), stage `git add docs/planning/ROADMAP.md`, then commit per [Commit & Release Protocol](#commit--release-protocol) with `type=chore, scope=sync, subject=reconcile github state`. If no writes happened, skip the commit.
 7. **Announce** only the change set, briefly:
 
    > "Synced. N issues updated, M created, K external-close signals posted."
@@ -766,7 +918,11 @@ This is the **roadmap-level brainstorming entry point** — it brainstorms the p
 
 1. **Optional: invoke `map-codebase` first** if the project is brownfield and the codebase has not been analyzed yet. Codebase context grounds milestone proposals. **Skip on greenfield** — empty repo means brainstorm from a blank sheet, no codebase to map.
 
-2. **Read** the `superpowers:brainstorming` skill file and follow it end-to-end at **roadmap scope** — the *generic layout of the entire project across multiple milestones and phases*, NOT a single milestone and NOT a single phase. The brainstorm answers "what is the shape of this project from start to finish?", and must produce a filled-in copy of [templates/roadmap-design.template.md](templates/roadmap-design.template.md), saved at `docs/superpowers/specs/YYYY-MM-DD-roadmap-design.md`. The template's required sections are:
+2. **Establish project conventions.** Read [init-conventions](#init-conventions) and follow it. On brownfield most fields are detected and the user just confirms; on greenfield they are decided here. This runs BEFORE the brainstorm so that stack decisions are settled and the brainstorm's scope guard — which defers library choices — does not have to carry them.
+
+   **VERIFY:** `docs/planning/CONVENTIONS.md` exists.
+
+3. **Read** the `superpowers:brainstorming` skill file and follow it end-to-end at **roadmap scope** — the *generic layout of the entire project across multiple milestones and phases*, NOT a single milestone and NOT a single phase. The brainstorm answers "what is the shape of this project from start to finish?", and must produce a filled-in copy of [templates/roadmap-design.template.md](templates/roadmap-design.template.md), saved at `docs/superpowers/specs/YYYY-MM-DD-roadmap-design.md`. The template's required sections are:
    - Project goal (one paragraph)
    - Target users / stakeholders
    - Top-level success criteria for the project as a whole
@@ -774,15 +930,15 @@ This is the **roadmap-level brainstorming entry point** — it brainstorms the p
    - For each phase title: a `Surface` tag — exactly one of `UI` | `Backend` | `Refactor` | `Data` | `Infra` | `Docs` | `Mixed`. This drives `start-next-phase`'s pre-plan routing (UI phases chain through `ui-design-system` + `ui-workflow ui-phase`; refactor phases chain through `refactor-analysis`; others skip the pre-plan hook). At roadmap scope a one-word tag is enough — no surface detail required yet.
    - Dependencies and ordering rationale between milestones
 
-   Use the template structure verbatim (headings, ordering, Surface tag formatting). The VERIFY step in step 3 grep-checks the filled-in copy against the template's required sections — drifting from the template makes the spec unreadable to downstream skills.
+   Use the template structure verbatim (headings, ordering, Surface tag formatting). The **VERIFY** step that follows grep-checks the filled-in copy against the template's required sections — drifting from the template makes the spec unreadable to downstream skills.
 
-   **Scope guard — keep the abstraction level high:** if the brainstorm starts converging on the implementation details of a single milestone or phase (specific files to create, API endpoints, schemas, library choices), STOP and zoom out. That detail is `new-milestone`'s job (per-milestone scope) and `start-next-phase` → `superpowers:brainstorming` (per-phase scope), each fired separately when their turn comes. The roadmap brainstorm intentionally stays lossy at the milestone level so it covers the whole project in one pass without rat-holing on milestone 1.
+   **Scope guard — keep the abstraction level high:** if the brainstorm starts converging on the implementation details of a single milestone or phase (specific files to create, API endpoints, schemas, library choices), STOP and zoom out. That detail is `new-milestone`'s job (per-milestone scope) and `start-next-phase` → `superpowers:brainstorming` (per-phase scope), each fired separately when their turn comes. Stack-level choices — language, package manager, framework, datastore — are not deferred but already decided: the **Establish project conventions** step above recorded them in `docs/planning/CONVENTIONS.md`, so read them off that file rather than re-litigating them here. Only per-milestone library choices belong to `new-milestone`. The roadmap brainstorm intentionally stays lossy at the milestone level so it covers the whole project in one pass without rat-holing on milestone 1.
 
    **Greenfield vs brownfield:** the brainstorm is the same shape either way. Brownfield grounds milestone proposals in existing code (via `map-codebase`); greenfield grounds them in the user's stated product vision. Neither case skips the whole-project sweep — both produce the same 3-7 milestone roadmap.
 
-3. **VERIFY:** the brainstorming design spec exists at `docs/superpowers/specs/YYYY-MM-DD-roadmap-design.md` AND covers all 3-7 milestones (not just the first one). If the spec only details milestone 1 with the rest as TBD, the brainstorm did NOT complete at roadmap scope — return to step 2 and finish the sweep. Do NOT skip to writing files because "I have the milestones in my head" or "we can detail the later milestones when we get to them" — the whole point is the global view.
+4. **VERIFY:** the brainstorming design spec exists at `docs/superpowers/specs/YYYY-MM-DD-roadmap-design.md` AND covers all 3-7 milestones (not just the first one). If the spec only details milestone 1 with the rest as TBD, the brainstorm did NOT complete at roadmap scope — return to the brainstorm step and finish the sweep. Do NOT skip to writing files because "I have the milestones in my head" or "we can detail the later milestones when we get to them" — the whole point is the global view.
 
-4. **Ask the compress-memory opt-in question.** If the `compress-memory` plugin is installed (check for `plugins/compress-memory/skills/compress-memory/SKILL.md` in the active marketplace), ask:
+5. **Ask the compress-memory opt-in question.** If the `compress-memory` plugin is installed (check for `plugins/compress-memory/skills/compress-memory/SKILL.md` in the active marketplace), ask:
 
    > **Enable memory-file compression for this project?**
    >
@@ -796,8 +952,8 @@ This is the **roadmap-level brainstorming entry point** — it brainstorms the p
 
    If `compress-memory` is NOT installed, skip this question and treat the answer as absent (no frontmatter written). The user can install the plugin later and add the field manually.
 
-5. **Use the `Write` tool** to create `docs/planning/ROADMAP.md` from the design spec.
-   - If the user answered the opt-in question (step 4), prepend the YAML frontmatter block to the file:
+6. **Use the `Write` tool** to create `docs/planning/ROADMAP.md` from the design spec.
+   - If the user answered the compress-memory opt-in question, prepend the YAML frontmatter block to the file:
 
      ```yaml
      ---
@@ -808,15 +964,15 @@ This is the **roadmap-level brainstorming entry point** — it brainstorms the p
      (or `disabled` per the user's answer)
    - First milestone with `status: active`, all others with `status: pending`. Format per [state-files.md](state-files.md).
 
-6. **VERIFY:** re-read `docs/planning/ROADMAP.md` and confirm: (a) every brainstormed milestone is present, (b) exactly one is `active`, (c) milestone numbering is consecutive starting at 1, (d) if the opt-in question was asked, frontmatter `compress_memory` field is present with value `enabled` or `disabled`.
+7. **VERIFY:** re-read `docs/planning/ROADMAP.md` and confirm: (a) every brainstormed milestone is present, (b) exactly one is `active`, (c) milestone numbering is consecutive starting at 1, (d) if the opt-in question was asked, frontmatter `compress_memory` field is present with value `enabled` or `disabled`.
 
-7. **Use the `Write` tool** to create `docs/planning/MILESTONE.md` for milestone 1 only (subsequent milestones get their own MILESTONE.md when activated via `new-milestone`). Include goal, definition of done, and the proposed phase outline from the design.
+8. **Use the `Write` tool** to create `docs/planning/MILESTONE.md` for milestone 1 only (subsequent milestones get their own MILESTONE.md when activated via `new-milestone`). Include goal, definition of done, and the proposed phase outline from the design.
 
-8. **VERIFY:** re-read `docs/planning/MILESTONE.md` and confirm goal, DoD, and phase list are present.
+9. **VERIFY:** re-read `docs/planning/MILESTONE.md` and confirm goal, DoD, and phase list are present.
 
-9. Stage and commit: `git add docs/planning/ROADMAP.md docs/planning/MILESTONE.md && git commit -m "chore(roadmap): plan project roadmap (M1-M<N>)"`. Run `git status` and confirm a clean tree.
+10. Stage `git add docs/planning/ROADMAP.md docs/planning/MILESTONE.md`, then commit per [Commit & Release Protocol](#commit--release-protocol) with `type=chore, scope=roadmap, subject=plan project roadmap (M1-M<N>)`. Run `git status` and confirm a clean tree.
 
-10. Announce only after the commit succeeds: "Roadmap drafted with N milestones. Milestone 1 is active. Use `add-phase` to define phase 1.1, or invoke `brainstorming` to refine milestone 1's scope further."
+11. Announce only after the commit succeeds: "Roadmap drafted with N milestones. Milestone 1 is active. Use `add-phase` to define phase 1.1, or invoke `brainstorming` to refine milestone 1's scope further."
 
 ### Skip Brainstorming?
 
@@ -866,7 +1022,7 @@ After `complete-milestone`, or when the user wants to start a new version cycle 
 
 8. **VERIFY:** re-read `docs/planning/ROADMAP.md` and confirm the new milestone block is present with the correct number, name, status, and started date.
 
-9. Stage and commit: `git add docs/planning/MILESTONE.md docs/planning/ROADMAP.md && git commit -m "chore(milestone): start milestone N+1 — <name>"`. Run `git status` and confirm a clean tree.
+9. Stage `git add docs/planning/MILESTONE.md docs/planning/ROADMAP.md`, then commit per [Commit & Release Protocol](#commit--release-protocol) with `type=chore, scope=milestone, subject=start milestone N+1 — <name>`. Run `git status` and confirm a clean tree.
 
 10. Announce only after the commit succeeds: "Milestone N+1 — {name} started. Use `add-phase` to add the first phase, or `start-next-phase` to chain into brainstorming/writing-plans/executing-plans for phase 1."
 
@@ -902,6 +1058,8 @@ After `complete-milestone`, or when the user wants to start a new version cycle 
 
 14. **Failing the parent skill on `gh` errors** — `sync-github` runs from `pause-work` and `complete-phase`. A failed sync — `gh` not installed, not authenticated, network down, rate-limited, repo not found — must NEVER prevent state files from being written or committed. Log the failure, skip the GitHub projection, and let the parent skill complete normally. The local state file is the source of truth and must remain writable even when GitHub is unreachable.
 
+15. **"I'll just commit with `chore(...)` like the examples show"** — The examples are gone. Read `docs/planning/CONVENTIONS.md` and follow the [Commit & Release Protocol](#commit--release-protocol) — the host project's lint config decides the format, not this skill. Every call site now passes a `type` / `scope` / `subject` triple and lets the protocol render it; copying a message shape out of this file's history is how the hardcodes got here in the first place, and it is exactly the message the host's commitlint may reject.
+
 ## Common Rationalizations
 
 | Rationalization | Why It's Wrong | Correct Action |
@@ -934,6 +1092,7 @@ After `complete-milestone`, or when the user wants to start a new version cycle 
 | Sub-skill | Trigger | State Files Written |
 |---|---|---|
 | `map-codebase` | Before brainstorming on existing project | `docs/plans/YYYY-MM-DD-codebase-map.md` |
+| `init-conventions` | Kickoff via `plan-roadmap`; self-heal when CONVENTIONS.md is missing; on demand when a convention changes | `docs/planning/CONVENTIONS.md` |
 | `progress` | "where are we?" / session start | None (read-only) |
 | `add-phase` | "add a phase" | `docs/planning/ROADMAP.md`, `docs/planning/MILESTONE.md` |
 | `insert-phase` | "insert urgent work" | `docs/planning/ROADMAP.md`, `docs/planning/MILESTONE.md` |
@@ -945,7 +1104,7 @@ After `complete-milestone`, or when the user wants to start a new version cycle 
 | `start-next-phase` | After `resume-work`, or on "continue" / "next" | None (read-only — routes to brainstorming/writing-plans/executing-plans) |
 | `complete-phase` | After `executing-plans` finishes a phase, or "mark phase N.M complete" | `docs/planning/ROADMAP.md`, `docs/planning/MILESTONE.md` (single phase: active → complete) |
 | `audit-milestone` | "verify milestone is done" | `docs/plans/YYYY-MM-DD-milestone-N-audit.md` |
-| `complete-milestone` | After audit PASS | `docs/planning/ROADMAP.md`, `docs/planning/MILESTONE.md`, git tag |
+| `complete-milestone` | After audit PASS | `docs/planning/ROADMAP.md`, `docs/planning/MILESTONE.md`, git tag *(only when conventions say so)* |
 | `plan-roadmap` | "plan the roadmap" / first project setup, no ROADMAP.md yet | `docs/superpowers/specs/YYYY-MM-DD-roadmap-design.md`, `docs/planning/ROADMAP.md`, `docs/planning/MILESTONE.md` |
 | `new-milestone` | After `complete-milestone` — chains through `superpowers:brainstorming` | `docs/superpowers/specs/YYYY-MM-DD-milestone-N-design.md`, `docs/planning/MILESTONE.md`, `docs/planning/ROADMAP.md` |
 | `init-github-sync` | "set up github sync" / first-time GitHub projection setup | `docs/planning/ROADMAP.md` (Issue + Milestone numbers written back); labels, native Milestones, and Issues created on GitHub (not local files) |
@@ -960,9 +1119,9 @@ After `complete-milestone`, or when the user wants to start a new version cycle 
 | `superpowers:writing-plans` | `start-next-phase` routes to writing-plans when a design spec exists but no plan file does. `add-phase` / `insert-phase` maintain the ROADMAP.md that writing-plans references for context. `list-phase-assumptions` reviews the plan before executing-plans begins. | Phase management and plan writing are complementary — ROADMAP.md is the source of truth for what gets planned. |
 | `superpowers:executing-plans` | `start-next-phase` routes to executing-plans (via `list-phase-assumptions`) when a plan file exists for an active phase. `pause-work` can interrupt executing-plans cleanly. | list-phase-assumptions is a pre-execution gate; pause-work is a clean exit. |
 | `superpowers:subagent-driven-development` | `list-phase-assumptions` applies equally before subagent dispatch. `pause-work` captures state when stopping mid-subagent execution. | Both sub-skills work regardless of whether execution uses executing-plans or subagent-driven-development. |
-| `superpowers:finishing-a-development-branch` | `audit-milestone` + `complete-milestone` extend the finishing workflow to full milestone release management. | finishing-a-development-branch handles branch integration; complete-milestone handles milestone closure and release tagging. |
+| `superpowers:finishing-a-development-branch` | `audit-milestone` + `complete-milestone` extend the finishing workflow to full milestone release management. | finishing-a-development-branch handles branch integration; `complete-milestone` handles milestone closure and hands the release to whatever `docs/planning/CONVENTIONS.md` records under `Released by`. It creates a tag only when `Milestone completion tags a release: yes` — on a project where an automation owns releases, closing a milestone correctly performs no git tag action at all. |
 | `regression-test` | `audit-milestone` optionally invokes regression-test as part of definition-of-done verification for projects with a web UI. | Regression-test provides the visual and functional evidence for milestone audit. |
-| `decision-tracker` | Independent but complementary. Three integration points: (1) `resume-work` triggers decision-tracker recall at session start. (2) `Surface: UI` pre-plan hook runs a recall for `tags=[ui, design]` so prior UI conventions inform the contract. (3) `Surface: Refactor` pre-plan hook runs a recall for `tags=[architecture, naming]` so prior structural decisions inform the impact analysis. All three are best-effort — recall failures (MCP unavailable, no matching tags) are not chain failures. | decision-tracker handles cross-cutting decisions; project-orchestration handles project state and lifecycle. |
+| `decision-tracker` | Independent but complementary. Three integration points: (1) `resume-work` triggers decision-tracker recall at session start. (2) `Surface: UI` pre-plan hook runs a recall for `tags=[ui, design]` so prior UI conventions inform the contract. (3) `Surface: Refactor` pre-plan hook runs a recall for `tags=[architecture, naming]` so prior structural decisions inform the impact analysis. All three are best-effort — recall failures (MCP unavailable, no matching tags) are not chain failures. | decision-tracker handles cross-cutting decisions; project-orchestration handles project state and lifecycle. **Project conventions are deliberately a local file (`docs/planning/CONVENTIONS.md`) rather than a decision-tracker memory**, and the best-effort clause above is the reason: a recall failure is explicitly not a chain failure, so conventions stored as memories would silently go absent whenever the MCP server is down. The Commit & Release Protocol cannot be best-effort — it must either read the conventions or stop, never guess a format or a release mechanism from a failed recall. A file is either on disk or it is not, and `init-conventions` self-heals the "not". Record the *rationale* for a convention in decision-tracker if it is worth remembering; the protocol still reads the file. |
 | `pre-push-review` | `audit-milestone` checks tests and regression, but does NOT cover code quality review (security, YAGNI, dead code, naming). Run `pre-push-review` on each feature branch before `audit-milestone` for complete coverage. | No direct invocation — they operate at different scopes (branch vs milestone). |
 | `ui-design-system` | `start-next-phase`'s **Surface pre-plan hook** invokes `ui-design-system` for `Surface: UI` phases when `docs/design/MASTER.md` is missing. Runs once per project (the design system is global), then `ui-phase` consumes it for every subsequent UI phase. | Surface-driven dispatch — the phase declares `**Surface:** UI` in ROADMAP.md and the hook handles the rest. No manual invocation needed. |
 | `ui-workflow` (`ui-phase` and `ui-review`) | Two hook points for `Surface: UI` phases. **Pre-plan:** `start-next-phase` runs `ui-phase` after `ui-design-system` (if needed) to produce `docs/plans/*-<phase>-*-ui-contract.md` BEFORE chaining to `superpowers:writing-plans`. **Post-implementation:** when `executing-plans` returns clean, `start-next-phase` runs `ui-review` to audit the implementation against that same contract before `complete-phase` runs. Without the post-impl hook, the contract becomes write-only and the audit value is lost. | The contract is the bridge between design spec and implementation plan for UI work — and the audit target after implementation. `ui-review` requires the Playwright MCP (via `regression-test`); the chain degrades gracefully (logs and skips) when MCP is unavailable. |
