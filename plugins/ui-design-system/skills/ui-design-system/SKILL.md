@@ -33,7 +33,7 @@ Three modes, in priority order:
 | `ui-design-system: <inline description>` | **Quick** — generate immediately from the one-liner, skip questions |
 | `ui-design-system` (no description) | **Guided** — ask the 7 questions below, then generate |
 
-If the user mentions a real product by name in conversation ("make it feel like Linear", "Stripe-style fintech"), prefer **curated mode** — the vendored catalog has 70 grounded references and is almost always a better starting point than improvising.
+If the user mentions a real product by name in conversation ("make it feel like Linear", "Stripe-style fintech"), prefer **curated mode** — the vendored catalog has 71 grounded references and is almost always a better starting point than improvising.
 
 ## Curated Mode
 
@@ -434,6 +434,6 @@ Base unit: 4px
 
 ## Catalog
 
-70 vendored real-world design systems live under [design-systems/](design-systems/). See [design-systems/INDEX.md](design-systems/INDEX.md) for the categorized list. Use them as references in curated mode (`ui-design-system: like linear`) or as fallback inspiration in guided mode question 7.
+71 vendored real-world design systems live under [design-systems/](design-systems/). See [design-systems/INDEX.md](design-systems/INDEX.md) for the categorized list. Use them as references in curated mode (`ui-design-system: like linear`) or as fallback inspiration in guided mode question 7.
 
 Refresh from upstream — see [design-systems/NOTICE.md](design-systems/NOTICE.md).

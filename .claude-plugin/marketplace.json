@@ -55,7 +55,7 @@
     },
     {
       "name": "roslyn-codelens-integration",
-      "description": "Superpowers integration for Roslyn CodeLens intelligence. Enforces use of 24 semantic .NET code analysis tools (instead of Grep/Glob and dotnet build) across every superpowers skill — brainstorming, refactor-analysis, writing-plans, executing-plans, subagent-driven-development, systematic-debugging, TDD, verification, code review, and pre-push review — for architectural context, dependency mapping, risk detection, and code quality analysis.",
+      "description": "Superpowers integration for Roslyn CodeLens intelligence. Enforces use of 32 semantic .NET code analysis tools (instead of Grep/Glob and dotnet build) across every superpowers skill — brainstorming, refactor-analysis, writing-plans, executing-plans, subagent-driven-development, systematic-debugging, TDD, verification, code review, and pre-push review — for architectural context, dependency mapping, risk detection, and code quality analysis.",
       "version": "1.19.0",
       "author": {
         "name": "Marcel Roozekrans"
@@ -95,7 +95,7 @@
     },
     {
       "name": "ui-design-system",
-      "description": "Generates complete design systems before frontend implementation. Quick mode (one-liner) and guided mode (4 questions). Auto-detects Blazor, React, Vue, Astro stacks. Outputs docs/design/MASTER.md for consumption by ui-workflow ui-phase.",
+      "description": "Generates complete design systems before frontend implementation. Quick mode (one-liner) and guided mode (7 questions). Auto-detects Blazor, React, Vue, Astro stacks. Outputs docs/design/MASTER.md for consumption by ui-workflow ui-phase.",
       "version": "1.19.0",
       "author": {
         "name": "Marcel Roozekrans"
