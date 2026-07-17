@@ -255,6 +255,18 @@ knowable rather than being a question. It is also the easiest to get wrong: it
 must key on `Released by` **and** `Scheme`, and must be re-derived if the user
 corrects either at the confirm step, or a stale value silently double-tags.
 
+### Derive fills; only Re-derive overrules
+
+`Derive` fills fields that are **unset**; a recorded value stands. `Re-derive`
+runs after the confirm step and is the only place a rule overrules what is on
+disk — justified because the user just changed the rule's input.
+
+Without the split, a derivation quietly reverts the user. `Model: gitflow` is
+reachable *only* by editing at the confirm step, since no rule produces it — so
+a re-run would recompute `feature-branch` and propose undoing it, every time.
+Same for a `Fallback` overridden to `map to <scope>`. `Established` was already
+protected against exactly this; the other derived fields were not.
+
 ### Detection failure is not a change
 
 Found by the Task 2 code review, which ran the `gh` probe and found the
