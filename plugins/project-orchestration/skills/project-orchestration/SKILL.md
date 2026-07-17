@@ -140,13 +140,29 @@ they must be decided.
    | Released by | `release-please-config.json`, `.releaserc*`, `.changeset/`, a release workflow in `.github/workflows/`; else manual |
    | Changelog | `CHANGELOG.md` present + whether the release automation writes it |
    | Protected branches / PR required | `gh api repos/{owner}/{repo}/branches/{branch}/protection` — requires auth; on failure record `unknown` |
-   | Deployment | workflows with deploy/publish steps, `Dockerfile`, `vercel.json`, `fly.toml`, `*.tf` |
+   | Deploy target / Deployed by | workflows with deploy/publish steps, `Dockerfile`, `vercel.json`, `fly.toml`, `*.tf` — the artifact/registry named is `Deploy target`, the mechanism is `Deployed by` |
+   | Environments | environment names in CI workflows (`environment:` keys), `*.tfvars`, compose/profile files; else `none` |
 
-2. **Mark uncertainty.** Any field inferred weakly — git log *looks* conventional
+   Six fields have no detection signal and are handled in step 2 instead: `Datastore`, `Model`, `Fallback when scope not allowed`, `Milestone completion tags a release`, `Established`, `Source`.
+
+2. **Derive, default, or ask the six undetectable fields.** Detection cannot
+   produce these; leaving them to step 4's catch-all makes the sub-skill ask for
+   things it can work out.
+
+   | Field | How |
+   |---|---|
+   | `Established` | Today's date. Never ask. |
+   | `Source` | `detected` if every value came from a signal, `user-stated` if every value was asked, else `mixed`. Never ask. |
+   | `Milestone completion tags a release` | **Derive from `Released by`:** an automation (`release-please`, `semantic-release`, `changesets`, `CI`) → `no`, because it already owns tagging and a second tag would collide. `manual git tag` → `yes`. `none` → `no`. Confirm the derived value; do not ask cold. |
+   | `Fallback when scope not allowed` | Default `omit scope` — conventional commits permit a scope-less message, so it always lands. Offer, don't impose. |
+   | `Datastore` | Ask. `n/a` is a normal answer. |
+   | `Model` | Ask, seeded from evidence: `Protected branches` non-empty or `PR required: yes` suggests `feature-branch`; otherwise `trunk`. |
+
+3. **Mark uncertainty.** Any field inferred weakly — git log *looks* conventional
    but no commitlint config; `gh` unavailable so protection unknown — renders as
    `(uncertain — confirm)`. Do not present a guess as a fact.
 
-3. **Propose.** Present the filled-in template as a single block. Ask:
+4. **Propose.** Present the filled-in template as a single block. Ask:
 
    > "Confirm these, or tell me what's wrong. `[y / edit]`"
 
@@ -155,29 +171,37 @@ they must be decided.
    never imposed. The whole point of this sub-skill is that the skill stops
    deciding these unilaterally.
 
-4. **Handle re-runs.** If `docs/planning/CONVENTIONS.md` already exists, diff
+5. **Handle re-runs.** If `docs/planning/CONVENTIONS.md` already exists, diff
    detected-vs-recorded and show only what changed. Never silently overwrite.
    If nothing changed, announce "Conventions unchanged" and stop.
 
-5. **If the user declines to answer**, record explicit defaults and state which
+6. **If the user declines to answer**, record explicit defaults and state which
    fields were defaulted, with `**Source:** mixed`. Do NOT fall back to invisible
    hardcodes — a recorded default is reviewable; a hardcode is not.
 
-6. **Use the `Write` tool** to create `docs/planning/CONVENTIONS.md` from
+7. **Use the `Write` tool** to create `docs/planning/CONVENTIONS.md` from
    [templates/conventions.template.md](templates/conventions.template.md).
 
-7. **VERIFY:** re-read the file and confirm all five `##` sections are present and
-   no field still contains a `<placeholder>`.
+8. **VERIFY:** re-read the file and confirm all five `##` sections are present,
+   and that **no field value still contains `<` or a space-padded `|`**. Both
+   checks are needed: only 10 of the 20 fields use `<placeholder>` notation — the
+   other 10 are bare enums (`**Format:** conventional | free-form`), and an
+   unpicked enum contains no placeholder at all. Since the template's `|`
+   notation is choice syntax that vanishes on fill, a surviving space-padded `|`
+   means a field was never decided. List values (`Protected branches`,
+   `Environments`) are comma-separated, so a pipe in them is choice syntax too,
+   never a separator. Confirm `**Established:**` is a real date, not
+   `YYYY-MM-DD`.
 
-8. Stage and commit per [Commit & Release Protocol](#commit--release-protocol)
+9. Stage and commit per [Commit & Release Protocol](#commit--release-protocol)
    with `type=chore, scope=state, subject=establish project conventions`.
 
    Note: this is the one site that may run *before* CONVENTIONS.md exists. The
    protocol's step 1 self-heal must not recurse — when invoked from
    `init-conventions`, the file has just been written, so step 1 finds it.
 
-9. Announce: "Conventions recorded. `complete-milestone` will `<tag vX.Y.Z |
-   not tag — release handled by <mechanism>>`."
+10. Announce: "Conventions recorded. `complete-milestone` will `<tag vX.Y.Z |
+    not tag — release handled by <mechanism>>`."
 
 ### Skip This?
 
