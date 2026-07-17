@@ -5,7 +5,7 @@
   "description": "Extension skills for the superpowers suite — quality gates and development workflow skills for Claude Code",
   "scripts": {
     "lint:md": "markdownlint-cli2 '**/*.md' '#node_modules' '#docs/plans' '#CHANGELOG.md'",
-    "install-plugins": "claude plugin marketplace update superpowers-extensions && claude plugin install regression-test && claude plugin install pre-push-review && claude plugin install refactor-analysis && claude plugin install decision-tracker && claude plugin install roslyn-codelens-integration && claude plugin install memorylens-integration && claude plugin install project-orchestration && claude plugin install ui-workflow && claude plugin install ui-design-system"
+    "install-plugins": "claude plugin marketplace update superpowers-extensions && claude plugin install regression-test && claude plugin install pre-push-review && claude plugin install refactor-analysis && claude plugin install decision-tracker && claude plugin install roslyn-codelens-integration && claude plugin install memorylens-integration && claude plugin install project-orchestration && claude plugin install ui-workflow && claude plugin install ui-design-system && claude plugin install squad && claude plugin install compress-memory"
   },
   "devDependencies": {
     "@commitlint/cli": "^21.0.0",

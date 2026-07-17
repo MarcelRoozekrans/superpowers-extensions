@@ -1,6 +1,6 @@
 # Design Systems Catalog — Index
 
-70 vendored design systems organized by category. Each entry points at a
+71 vendored design systems organized by category. Each entry points at a
 `<system>/DESIGN.md` file with a 9-section spec (visual theme, color palette,
 typography, layout, components, motion, imagery, voice, edge cases) extracted
 from real production CSS.
@@ -48,6 +48,7 @@ For attribution and licensing, see [NOTICE.md](NOTICE.md).
 | [clickhouse](clickhouse/DESIGN.md) | Analytics database, yellow-on-graphite |
 | [framer](framer/DESIGN.md) | Animation-first design tool |
 | [webflow](webflow/DESIGN.md) | Visual web builder |
+| [expo](expo/DESIGN.md) | React Native platform, sky-gradient wash, black CTAs |
 
 ## SaaS productivity
 
@@ -65,6 +66,7 @@ For attribution and licensing, see [NOTICE.md](NOTICE.md).
 | [zapier](zapier/DESIGN.md) | Automation, orange-lightning |
 | [lovable](lovable/DESIGN.md) | AI app-builder, soft pastel |
 | [shopify](shopify/DESIGN.md) | Commerce platform, polaris-green |
+| [slack](slack/DESIGN.md) | Workplace messaging, deep aubergine, cream-lavender gradients |
 
 ## Consumer / lifestyle
 
