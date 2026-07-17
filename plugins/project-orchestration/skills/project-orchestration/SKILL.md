@@ -918,7 +918,11 @@ This is the **roadmap-level brainstorming entry point** — it brainstorms the p
 
 1. **Optional: invoke `map-codebase` first** if the project is brownfield and the codebase has not been analyzed yet. Codebase context grounds milestone proposals. **Skip on greenfield** — empty repo means brainstorm from a blank sheet, no codebase to map.
 
-2. **Read** the `superpowers:brainstorming` skill file and follow it end-to-end at **roadmap scope** — the *generic layout of the entire project across multiple milestones and phases*, NOT a single milestone and NOT a single phase. The brainstorm answers "what is the shape of this project from start to finish?", and must produce a filled-in copy of [templates/roadmap-design.template.md](templates/roadmap-design.template.md), saved at `docs/superpowers/specs/YYYY-MM-DD-roadmap-design.md`. The template's required sections are:
+2. **Establish project conventions.** Read [init-conventions](#init-conventions) and follow it. On brownfield most fields are detected and the user just confirms; on greenfield they are decided here. This runs BEFORE the brainstorm so that stack decisions are settled and the brainstorm's scope guard — which defers library choices — does not have to carry them.
+
+   **VERIFY:** `docs/planning/CONVENTIONS.md` exists.
+
+3. **Read** the `superpowers:brainstorming` skill file and follow it end-to-end at **roadmap scope** — the *generic layout of the entire project across multiple milestones and phases*, NOT a single milestone and NOT a single phase. The brainstorm answers "what is the shape of this project from start to finish?", and must produce a filled-in copy of [templates/roadmap-design.template.md](templates/roadmap-design.template.md), saved at `docs/superpowers/specs/YYYY-MM-DD-roadmap-design.md`. The template's required sections are:
    - Project goal (one paragraph)
    - Target users / stakeholders
    - Top-level success criteria for the project as a whole
@@ -926,15 +930,15 @@ This is the **roadmap-level brainstorming entry point** — it brainstorms the p
    - For each phase title: a `Surface` tag — exactly one of `UI` | `Backend` | `Refactor` | `Data` | `Infra` | `Docs` | `Mixed`. This drives `start-next-phase`'s pre-plan routing (UI phases chain through `ui-design-system` + `ui-workflow ui-phase`; refactor phases chain through `refactor-analysis`; others skip the pre-plan hook). At roadmap scope a one-word tag is enough — no surface detail required yet.
    - Dependencies and ordering rationale between milestones
 
-   Use the template structure verbatim (headings, ordering, Surface tag formatting). The VERIFY step in step 3 grep-checks the filled-in copy against the template's required sections — drifting from the template makes the spec unreadable to downstream skills.
+   Use the template structure verbatim (headings, ordering, Surface tag formatting). The **VERIFY** step that follows grep-checks the filled-in copy against the template's required sections — drifting from the template makes the spec unreadable to downstream skills.
 
-   **Scope guard — keep the abstraction level high:** if the brainstorm starts converging on the implementation details of a single milestone or phase (specific files to create, API endpoints, schemas, library choices), STOP and zoom out. That detail is `new-milestone`'s job (per-milestone scope) and `start-next-phase` → `superpowers:brainstorming` (per-phase scope), each fired separately when their turn comes. The roadmap brainstorm intentionally stays lossy at the milestone level so it covers the whole project in one pass without rat-holing on milestone 1.
+   **Scope guard — keep the abstraction level high:** if the brainstorm starts converging on the implementation details of a single milestone or phase (specific files to create, API endpoints, schemas, library choices), STOP and zoom out. That detail is `new-milestone`'s job (per-milestone scope) and `start-next-phase` → `superpowers:brainstorming` (per-phase scope), each fired separately when their turn comes. Stack-level choices — language, package manager, framework, datastore — are not deferred but already decided: the **Establish project conventions** step above recorded them in `docs/planning/CONVENTIONS.md`, so read them off that file rather than re-litigating them here. Only per-milestone library choices belong to `new-milestone`. The roadmap brainstorm intentionally stays lossy at the milestone level so it covers the whole project in one pass without rat-holing on milestone 1.
 
    **Greenfield vs brownfield:** the brainstorm is the same shape either way. Brownfield grounds milestone proposals in existing code (via `map-codebase`); greenfield grounds them in the user's stated product vision. Neither case skips the whole-project sweep — both produce the same 3-7 milestone roadmap.
 
-3. **VERIFY:** the brainstorming design spec exists at `docs/superpowers/specs/YYYY-MM-DD-roadmap-design.md` AND covers all 3-7 milestones (not just the first one). If the spec only details milestone 1 with the rest as TBD, the brainstorm did NOT complete at roadmap scope — return to step 2 and finish the sweep. Do NOT skip to writing files because "I have the milestones in my head" or "we can detail the later milestones when we get to them" — the whole point is the global view.
+4. **VERIFY:** the brainstorming design spec exists at `docs/superpowers/specs/YYYY-MM-DD-roadmap-design.md` AND covers all 3-7 milestones (not just the first one). If the spec only details milestone 1 with the rest as TBD, the brainstorm did NOT complete at roadmap scope — return to the brainstorm step and finish the sweep. Do NOT skip to writing files because "I have the milestones in my head" or "we can detail the later milestones when we get to them" — the whole point is the global view.
 
-4. **Ask the compress-memory opt-in question.** If the `compress-memory` plugin is installed (check for `plugins/compress-memory/skills/compress-memory/SKILL.md` in the active marketplace), ask:
+5. **Ask the compress-memory opt-in question.** If the `compress-memory` plugin is installed (check for `plugins/compress-memory/skills/compress-memory/SKILL.md` in the active marketplace), ask:
 
    > **Enable memory-file compression for this project?**
    >
@@ -948,8 +952,8 @@ This is the **roadmap-level brainstorming entry point** — it brainstorms the p
 
    If `compress-memory` is NOT installed, skip this question and treat the answer as absent (no frontmatter written). The user can install the plugin later and add the field manually.
 
-5. **Use the `Write` tool** to create `docs/planning/ROADMAP.md` from the design spec.
-   - If the user answered the opt-in question (step 4), prepend the YAML frontmatter block to the file:
+6. **Use the `Write` tool** to create `docs/planning/ROADMAP.md` from the design spec.
+   - If the user answered the compress-memory opt-in question, prepend the YAML frontmatter block to the file:
 
      ```yaml
      ---
@@ -960,15 +964,15 @@ This is the **roadmap-level brainstorming entry point** — it brainstorms the p
      (or `disabled` per the user's answer)
    - First milestone with `status: active`, all others with `status: pending`. Format per [state-files.md](state-files.md).
 
-6. **VERIFY:** re-read `docs/planning/ROADMAP.md` and confirm: (a) every brainstormed milestone is present, (b) exactly one is `active`, (c) milestone numbering is consecutive starting at 1, (d) if the opt-in question was asked, frontmatter `compress_memory` field is present with value `enabled` or `disabled`.
+7. **VERIFY:** re-read `docs/planning/ROADMAP.md` and confirm: (a) every brainstormed milestone is present, (b) exactly one is `active`, (c) milestone numbering is consecutive starting at 1, (d) if the opt-in question was asked, frontmatter `compress_memory` field is present with value `enabled` or `disabled`.
 
-7. **Use the `Write` tool** to create `docs/planning/MILESTONE.md` for milestone 1 only (subsequent milestones get their own MILESTONE.md when activated via `new-milestone`). Include goal, definition of done, and the proposed phase outline from the design.
+8. **Use the `Write` tool** to create `docs/planning/MILESTONE.md` for milestone 1 only (subsequent milestones get their own MILESTONE.md when activated via `new-milestone`). Include goal, definition of done, and the proposed phase outline from the design.
 
-8. **VERIFY:** re-read `docs/planning/MILESTONE.md` and confirm goal, DoD, and phase list are present.
+9. **VERIFY:** re-read `docs/planning/MILESTONE.md` and confirm goal, DoD, and phase list are present.
 
-9. Stage `git add docs/planning/ROADMAP.md docs/planning/MILESTONE.md`, then commit per [Commit & Release Protocol](#commit--release-protocol) with `type=chore, scope=roadmap, subject=plan project roadmap (M1-M<N>)`. Run `git status` and confirm a clean tree.
+10. Stage `git add docs/planning/ROADMAP.md docs/planning/MILESTONE.md`, then commit per [Commit & Release Protocol](#commit--release-protocol) with `type=chore, scope=roadmap, subject=plan project roadmap (M1-M<N>)`. Run `git status` and confirm a clean tree.
 
-10. Announce only after the commit succeeds: "Roadmap drafted with N milestones. Milestone 1 is active. Use `add-phase` to define phase 1.1, or invoke `brainstorming` to refine milestone 1's scope further."
+11. Announce only after the commit succeeds: "Roadmap drafted with N milestones. Milestone 1 is active. Use `add-phase` to define phase 1.1, or invoke `brainstorming` to refine milestone 1's scope further."
 
 ### Skip Brainstorming?
 
