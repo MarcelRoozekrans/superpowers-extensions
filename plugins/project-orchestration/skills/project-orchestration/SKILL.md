@@ -61,6 +61,72 @@ This skill provides project lifecycle management for larger, multi-session proje
 
 A single brainstorming + writing-plans + executing-plans cycle works well for small features. Multi-milestone projects need a way to track where they are, manage their roadmap, pause and resume cleanly, and mark releases. This skill provides that structure without replacing the superpowers workflow — it wraps around it.
 
+## Commit & Release Protocol
+
+<HARD-GATE>
+Every sub-skill in this file that commits or tags MUST follow this section. Do NOT write a literal `git commit -m "..."` or `git tag -a` anywhere else in this file. Call sites supply intent as a triple — `type`, `scope`, `subject` — and this section decides the format. A CI guard enforces this (`npm run check:conventions`).
+</HARD-GATE>
+
+### Step 1 — Load conventions
+
+Read `docs/planning/CONVENTIONS.md`.
+
+If it does not exist → run [init-conventions](#init-conventions) now, then continue. Do not guess a format, and do not fall back to a hardcoded one. That sub-skill writes and verifies the file before it commits, so its own commit re-enters this section with the file already on disk — the self-heal cannot loop.
+
+**Reading a field.** The value is everything after the `**Key:**` prefix. The token this section matches on is everything before the first `(` that follows a space; a trailing `(...)` carries provenance and is ignored, so `**PR required:** yes (detected)` reads as `yes`. Match the token, never the raw line — a guard that compares against the whole value stops matching the moment `init-conventions` marks a field `(defaulted)`.
+
+### Step 2 — Branch guard
+
+Read the current branch with `git branch --show-current`. If it returns empty (detached HEAD) → **STOP**: there is no branch to check against, so the guard cannot answer. Say so rather than committing.
+
+Match it against `Protected branches`, which is comma-separated; the literal value `none` means the list is empty and nothing matches. **`*` matches within one path segment**: `release/*` matches `release/1.2` but not `release/1/2`. Matching is case-sensitive. This definition lives here, not in `CONVENTIONS.md` — the file records the patterns; the rule that parses them belongs where it executes.
+
+| `PR required` | Current branch matches a protected pattern | Action |
+|---|---|---|
+| `yes` | yes | **STOP. Do not commit.** |
+| `yes` | no | Proceed |
+| `no` | — | Proceed |
+| `unknown` | yes | **STOP and ask.** `unknown` means detection could not reach the host — usually `gh` unauthenticated. Never treat it as `no`: that silently fails open on exactly the branch the guard exists to protect. |
+| `unknown` | no | Proceed |
+
+On a STOP from that table, announce:
+
+> "CONVENTIONS.md protects `<branch>` and requires a PR. Move to a feature branch before I commit orchestration state."
+
+Never create the branch or open the PR automatically — that belongs to `superpowers:using-git-worktrees` and `superpowers:finishing-a-development-branch`.
+
+### Step 3 — Render the commit message
+
+| `Format` | Message |
+|---|---|
+| `conventional` | `<type>(<scope>): <subject>` |
+| `free-form` | `<subject>` |
+
+If `Format: conventional` AND `Scopes: enforced`, read the allowed scopes from the file named by `Scope source` and check `<scope>` against them. The source is a config file, not a list: **Read** the whole file and find its `scope-enum` rule, then take the array of strings that rule holds — it is frequently not on the same line as the rule name, and may be assembled from a variable or another module. **If the file is missing, unreadable, or holds no array of scopes you can read off it directly, treat scopes as unrestricted and proceed** — a commit must never fail because the protocol could not parse someone's lint config.
+
+If `<scope>` is not allowed → apply `Fallback when scope not allowed`:
+
+- `omit scope` → `<type>: <subject>`
+- `map to <x>` → `<type>(<x>): <subject>`
+
+Warn once per session when a fallback fires — once, not per commit; a phase can commit repeatedly and the warning is information, not an alarm. **Never fail a commit over a scope.**
+
+### Step 4 — Tag
+
+`complete-milestone` only — no other sub-skill tags.
+
+| `Milestone completion tags a release` | `Scheme` | Tag |
+|---|---|---|
+| `no` | — | Do not tag. Announce: "Release handled by `<Released by>`; not tagging." |
+| `yes` | `semver` | **Ask the user for the version.** Do not invent a bump — a milestone is not inherently major or minor. |
+| `yes` | `calver` | `vYYYY.MM.DD` |
+| `yes` | `milestone` | `vN.0` |
+| `yes` | `none`, or anything unrecognised | Do not tag. Announce that the scheme is unset or unknown and that no tag was created. `init-conventions` derives `tags a release: no` whenever `Scheme: none`, so this row is only reachable via a hand-edited file — but a table the protocol can fall off the end of is how the `vN.0` hardcode survived in the first place. |
+
+Before tagging, check `git tag -l <tag>`: if the tag already exists, do **not** re-tag and do not fail — announce that it is already tagged and continue. `complete-milestone` is re-runnable, and `git tag -a` on an existing tag errors.
+
+After tagging, verify with `git tag -l <tag>` before announcing success.
+
 ## Sub-Skills
 
 This skill contains multiple sub-skills, each invoked by a specific trigger phrase or context. They share the `docs/planning/` state directory (see [state-files.md](state-files.md) for file formats).
