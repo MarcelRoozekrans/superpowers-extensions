@@ -236,7 +236,19 @@ this section decides the format. A CI guard enforces this
 Read `docs/planning/CONVENTIONS.md`.
 
 If it does not exist → run [init-conventions](#init-conventions) now, then
-continue. Do not guess a format, and do not fall back to a hardcoded one.
+continue. Do not guess a format, and do not fall back to a hardcoded one. This
+does not recurse: `init-conventions` writes and VERIFYs the file before it
+commits, so its commit re-enters here with the file already on disk.
+
+**A value may carry a trailing parenthetical** — the field's value is everything
+before the first `(` that follows a space, and `**PR required:** yes (detected)`
+reads as `yes`. This rule lives here, where fields are read; without it that
+value matches no row in the branch guard and the guard fails open.
+
+**`Protected branches: none` means the list is empty**, not a branch named
+`none`. The guard splits on commas, so this must be stated or it yields a
+one-element list. `init-conventions` also derives `Model` from whether this list
+is non-empty.
 
 ### Step 2 — Branch guard
 
@@ -274,11 +286,13 @@ Never create the branch or open the PR automatically — that belongs to
 | `free-form` | `<subject>` |
 
 If `Format: conventional` AND `Scopes: enforced`, read the allowed scopes from
-the file named by `Scope source` and check `<scope>` against them. The source is
-a config file, not a list — grep it for a `scope-enum` rule and take the string
-array beside it. **If the file is missing, unreadable, or has no recognisable
-`scope-enum`, treat scopes as unrestricted and proceed** — a commit must never
-fail because the protocol could not parse someone's lint config.
+the file named by `Scope source` and check `<scope>` against them. **Read the
+whole file** — do not grep for `scope-enum` and expect the array beside it. On
+this repository's own `commitlint.config.js` the rule is on line 4 and its array
+starts on line 5; the array may also come from a variable or another module.
+**If the file is missing, unreadable, or has no recognisable `scope-enum`, treat
+scopes as unrestricted and proceed** — a commit must never fail because the
+protocol could not parse someone's lint config.
 
 If `<scope>` is not allowed → apply `Fallback when scope not allowed`:
 
@@ -291,15 +305,17 @@ commit repeatedly and the warning is information, not an alarm.
 
 ### Step 4 — Tag
 
-`complete-milestone` only, and only if `Milestone completion tags a release: yes`.
+`complete-milestone` only. The table is keyed on **two** fields — keying it on
+`Scheme` alone leaves `tags a release: no` matching no row while `yes` + `semver`
+matches two, and two agents then diverge on whether to tag at all.
 
-| `Scheme` | Tag |
-|---|---|
-| (`tags a release: no`) | Do not tag. Announce: "Release handled by `<Released by>`; not tagging." |
-| `semver` | **Ask the user for the version.** Do not invent a bump — a milestone is not inherently major or minor. |
-| `calver` | `vYYYY.MM.DD` |
-| `milestone` | `vN.0` |
-| `none`, or anything unrecognised | Do not tag. Announce that the scheme is unset or unknown and that no tag was created. `init-conventions` derives `tags a release: no` whenever `Scheme: none`, so this row is only reachable via a hand-edited file — but a table the protocol can fall off the end of is how the vN.0 hardcode survived in the first place. |
+| `tags a release` | `Scheme` | Tag |
+|---|---|---|
+| `no` | any | Do not tag. Announce: "Release handled by `<Released by>`; not tagging." |
+| `yes` | `semver` | **Ask the user for the version.** Do not invent a bump — a milestone is not inherently major or minor. |
+| `yes` | `calver` | `vYYYY.MM.DD` |
+| `yes` | `milestone` | `vN.0` |
+| `yes` | `none`, or anything unrecognised | Do not tag. Announce that the scheme is unset or unknown and no tag was created. `init-conventions` derives `no` whenever `Scheme: none`, so this is reachable only via a hand-edited file — but a table the protocol can fall off the end of is how the `vN.0` hardcode survived in the first place. |
 
 Before tagging, check `git tag -l <tag>`: if the tag already exists, do **not**
 re-tag and do not fail — announce that it is already tagged and continue.
