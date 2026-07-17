@@ -1,8 +1,38 @@
 # Project Conventions — Design
 
 **Date:** 2026-07-17
-**Status:** approved, pending implementation plan
+**Status:** implemented and dogfooded
 **Skill:** `project-orchestration`
+
+## Dogfood record (Task 12 — the acceptance test)
+
+`init-conventions` was traced by hand against this repository — the counter-example
+that started the change, where the old skill would `git tag -a vN.0` while the repo
+actually releases `v1.19.1` via release-please. No `docs/planning/CONVENTIONS.md`
+was planted: this repo does not run `project-orchestration` on itself, so a real
+file would be a fake. What the Detect → Derive steps produce:
+
+| Field | Value | From |
+|---|---|---|
+| Language / runtime, Package manager | node, npm | `package.json` + `package-lock.json` |
+| Format | conventional | `commitlint.config.js` present |
+| Scopes / Scope source | enforced / `commitlint.config.js` | `scope-enum` rule |
+| Scheme | semver | `git tag -l` shapes like `1.19.1`, `<name>-` prefix stripped |
+| Released by | release-please | `release-please-config.json` |
+| Changelog | auto | release-please writes `CHANGELOG.md` |
+| Protected branches / PR required | `master` / yes | `gh api .../branches --jq select(.protected)` — the corrected command returns `master` |
+| Deploy target / Deployed by | marketplace / release-please on merge | `release-please.yml` |
+| **Milestone completion tags a release** | **no** | **Derived:** `Released by` is an automation and `Scheme` is not `none` → an automation already owns tagging, a second tag would collide |
+
+**Step 2 — simulated `complete-milestone`:** the protocol's Tag step reads
+`Milestone completion tags a release: no` → matches the first table row → **creates
+no tag**, announces "Release handled by release-please; not tagging." The founding
+contradiction is resolved: the skill's own home repo is now handled correctly by
+the skill.
+
+The corrected `gh` command matters here — the reviewer proved the original
+single-branch `/protection` endpoint 404s on a feature branch and could never
+produce this `master` result, which is exactly what this test asserts.
 
 ## Problem
 
