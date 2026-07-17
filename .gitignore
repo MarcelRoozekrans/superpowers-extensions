@@ -15,5 +15,14 @@ docs/regression-screenshots/
 docs/regression-report-*.md
 docs/pre-push-review-*.md
 
+# Local agent state. settings.local.json is per-developer by convention and
+# holds absolute paths from whoever wrote it; scheduled_tasks.lock is a
+# session/PID lock. Shared settings belong in .claude/settings.json.
+.claude/settings.local.json
+.claude/scheduled_tasks.lock
+
+# Local embeddings cache
+.lucent/
+
 # Node
 node_modules/
