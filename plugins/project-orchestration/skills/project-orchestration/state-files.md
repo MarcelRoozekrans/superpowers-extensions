@@ -180,7 +180,7 @@ One paragraph.
 - [ ] All planned phases complete
 - [ ] All tests passing
 - [ ] Regression test PASS
-- [ ] Release tagged in git
+- [ ] Release tagged in git (only when CONVENTIONS.md says "Milestone completion tags a release: yes"; omit otherwise)
 
 ## Phases
 1. Phase 1.1 — <name> [complete]

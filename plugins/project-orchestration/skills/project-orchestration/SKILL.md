@@ -556,7 +556,7 @@ This sub-skill closes the loop that was missing: without it, `executing-plans` f
 
 ### Why this exists separately from complete-milestone
 
-`complete-milestone` is end-of-milestone: marks the WHOLE milestone complete, tags a release, and only runs after `audit-milestone` passes. It is a one-time event per milestone.
+`complete-milestone` is end-of-milestone: marks the WHOLE milestone complete, hands the release to the [Commit & Release Protocol](#commit--release-protocol)'s **Tag** step (which may create no tag), and only runs after `audit-milestone` passes. It is a one-time event per milestone.
 
 `complete-phase` is per-iteration: marks ONE phase complete inside an active milestone, runs after every phase wraps up. A milestone with 8 phases will see `complete-phase` run 8 times, then `audit-milestone` once, then `complete-milestone` once.
 
@@ -722,7 +722,7 @@ When the user believes a milestone is complete and wants to verify it against it
    - **Regression test PASS** — invoke `regression-test` skill if a web UI is available (optional, confirm with user).
    - **Pre-push reviews on file** — `audit-milestone` does NOT re-run code-quality review (security, YAGNI, dead code, naming) — that is `pre-push-review`'s remit, run per phase before push. Check that at least one `docs/pre-push-review-*.md` report exists with a PASS verdict, dated within the milestone's lifespan. Record one of three outcomes: (a) PASS report on file → record verdict in audit; (b) FAIL or stale (older than the milestone's earliest phase commit) → record gap, recommend re-running `pre-push-review` on each feature branch; (c) no reports found → record gap as "code quality not independently reviewed in this milestone" with same recommendation. This is a **warning, not a hard fail** — milestones can pre-date the pre-push-review skill or have used a different review process. Surface the gap so the user decides.
    - **Documentation** — check that plan docs exist for each phase, design docs are present.
-   - **Release tagged** — check `git tag -l` for expected tag.
+   - **Release tagged** — only when `docs/planning/CONVENTIONS.md` says `Milestone completion tags a release: yes`. Check `git tag -l` for the tag the [Commit & Release Protocol](#commit--release-protocol)'s **Tag** step would render for this milestone — do not assume `vN.0` or any other shape. When conventions say `no`, **skip this criterion**: it is not a gap and must not count toward a FAIL verdict. The release is owned by whatever `Released by` names, and the absence of a milestone tag is the correct state. Unguarded, this criterion can never pass on such a project, so the audit fails forever and `complete-milestone` is unreachable.
 3. Produce verdict: **PASS** (all criteria met) or **FAIL** (gaps found).
 4. Save audit report to: `docs/plans/YYYY-MM-DD-milestone-N-audit.md`
 5. On **PASS**: announce and offer to invoke `complete-milestone`.
@@ -738,18 +738,18 @@ After `audit-milestone` returns PASS.
 
 ### Announce Line
 
-> "Completing milestone N — {name}. I'll archive the milestone doc, tag the release, and update the roadmap."
+> "Completing milestone N — {name}. I'll archive the milestone doc, update the roadmap, and handle the release per this project's conventions — which may mean no tag at all."
 
 ### Process
 
-1. Confirm with user: "Mark Milestone N — {name} as complete and tag release?"
+1. Confirm with user: "Mark Milestone N — {name} as complete?" Do not promise a tag here. Whether one is created is the [Commit & Release Protocol](#commit--release-protocol)'s **Tag** step's decision, made in step 7 against conventions this step has not read yet.
 2. **Use the `Edit` tool** on `docs/planning/ROADMAP.md`: set milestone status to `complete` and add `**Completed:** YYYY-MM-DD` line.
 3. **VERIFY:** re-read `docs/planning/ROADMAP.md` and confirm the milestone block now shows `[status: complete]` and a Completed date.
 4. **Use the `Edit` tool** on `docs/planning/MILESTONE.md`: set `**Status:** complete` and add `**Completed:** YYYY-MM-DD`.
 5. **VERIFY:** re-read `docs/planning/MILESTONE.md` and confirm the status and completion date.
 6. Stage `git add docs/planning/ROADMAP.md docs/planning/MILESTONE.md`, then commit per [Commit & Release Protocol](#commit--release-protocol) with `type=chore, scope=milestone, subject=complete milestone N — <name>`. Run `git status` and confirm a clean tree.
-7. Tag the release: `git tag -a vN.0 -m "Milestone N: <name> complete"`. Verify with `git tag -l vN.0`.
-8. Announce only after tag verification: "Milestone N complete. Tagged as vN.0. Ready to start Milestone N+1 with `new-milestone`."
+7. Tag the release per the [Commit & Release Protocol](#commit--release-protocol)'s **Tag** step — it decides whether a tag is created at all, renders it in the project's own scheme, resolves collisions and re-runs, verifies it, and announces the outcome. Do not tag here, and do not presume it will tag: where the project's conventions hand releases to an automation, that step correctly performs no git action.
+8. Announce only after the **Tag** step returns: "Milestone N complete. Ready to start Milestone N+1 with `new-milestone`." The **Tag** step has already announced the release outcome — do not restate it and do not add a tag claim of your own. It carries an announce for every outcome it can reach, including the ones where no tag was created; a second announce written here could only drift from it.
 
 ---
 
