@@ -38,7 +38,7 @@ It is the wrong choice when the product's name is the whole idea (wordmark), or 
 1. **Place one seed primitive on the grid.** A circle or a square, centred on `(128, 128)`, sized to a grid multiple. Write the seed down as a sentence before drawing anything else — everything in the mark will hang off it.
 2. **Derive the second element from the first, never from the artboard.** Three derivations carry their own arithmetic and are the ones to reach for:
    - **Circle intersection.** Two circles of radius `r` whose centres are `r` apart — each centre sitting on the other's circumference. The intersection points lie at `± r·√3/2` from the line of centres, and the lens between the two arcs has 120° cusps. The radius stays on the grid, the arcs are exact, and only the two cusps leave the grid. This is the construction to try first.
-   - **Concentric offset.** `inner radius = outer radius − stroke weight`. The counter is then `outer r − inner r` by construction, which is what makes it computable at all. Two circles that are *not* concentric generalise it: the narrowest gap is `outer r − centre distance − inner r`, still one subtraction.
+   - **Concentric offset.** `inner radius = outer radius − stroke weight`, where both radii bound **ink**. `outer r − inner r` is then the weight you just declared, restated — it is *not* the counter. The counter is the hole the inner radius encloses: `2 × inner r`. Measure the negative space, never the ring thickness. A ring at `w 16` with outer 96 and inner 80 has a counter of **160**; read it as 16 and you condemn a sound mark as sitting on the hard floor, then thin or redraw it for nothing. Two circles that are *not* concentric generalise the same subtraction to the **ink**, not to the counter: the narrowest ink is `outer r − centre distance − inner r`, and that is the number the weight band checks. The lens below is exactly that case.
    - **Half-step subdivision.** Halving a grid multiple: `128 → 64 → 32`. 16 is the floor and 8 is below the legal stroke band, so three levels is the practical depth.
 3. **Draw arcs, not guessed curves.** Use `circle` and `rect` where the shape is one; use `A` in path data for a partial arc. Author a cubic only when the curve is genuinely not circular — and then put the control handles at `0.5523 × r` from each endpoint along the tangent, per construction.md's kappa note. Four cubics with guessed handles produce a visibly lumpy oval that passes every mechanical check in construction.md and still looks wrong.
 4. **Cut every counter as a knockout.** Two subpaths in a single `path`, with `fill-rule="evenodd"` written out. SVG's initial fill rule is `nonzero`, under which two subpaths wound the same way fill solid: the ring becomes a disc, at every size, with no error and no warning. Never leave the fill rule to the default.
@@ -55,12 +55,15 @@ A lens derived from two circles whose centres sit on each other's circumference,
        centre sits on the other's circumference. Both are construction geometry and are
        not in the shipped file; only their intersection is drawn.
        Lens x-extremes 80 and 176 (both ×16). Cusp interior angle 120°, clear of
-       correction 7's 60° floor. Counter: r 32 on the centre, edges 96 and 160 (both ×16),
-       64 across ≥ max(16 × 1.25, 32) = 32.
-       Narrowest ink = 96 − 48 − 32 = 16, at y 128, where the lens boundary tangent is
-       vertical — so there is no horizontal stroke here and correction 4 does not bind.
-       This is a filled form, not a stroked one: its narrowest ink, 16, is the number
-       checked against the 16 … 32 weight band. -->
+       correction 7's 60° floor. Counter = the hole, 2 × 32 = 64 across, edges 96 and 160
+       (both ×16), ≥ max(16 × 1.25, 32) = 32.
+       Narrowest ink = 96 − 48 − 32 = 16, at y 128. This is a filled form, not a stroked
+       one, so the narrowest ink is the weight: 16, inside the 16 … 32 band. The boundary
+       tangent is vertical there and horizontal nowhere on the ink, so correction 4 has no
+       horizontal stroke to act on here.
+       Thick–thin axis: widest ink 51.14 (cusp 44.86 up to counter edge 96, on the
+       centreline) against narrowest 16 is 3.2×, past the ~2× threshold — recorded in
+       LOGO.md as a design decision, per stroke discipline. -->
   <!-- OPTICAL: cusp y 128 ± 83.14 → 44.86 and 211.14 · lens cusp from grid circles · 96 × √3/2 = 83.14 -->
   <path fill="currentColor" fill-rule="evenodd"
         d="M128 44.86A96 96 0 0 0 128 211.14A96 96 0 0 0 128 44.86Z
@@ -68,7 +71,7 @@ A lens derived from two circles whose centres sit on each other's circumference,
 </svg>
 ```
 
-Both subpaths are wound the same way (`sweep-flag 0` throughout), which is exactly the case `nonzero` fills solid. `fill-rule="evenodd"` is what makes the hole a hole.
+Both subpaths are wound the same way (`sweep-flag 0` throughout), so `fill-rule="evenodd"` is what makes the hole a hole.
 
 Corrections 1, 2, 3, 5, 8 and 9 do not bind: nothing flat shares an edge with the curve, nothing has to read as the same size as anything else, the form is symmetric about both axes so there is no single apex to centre, there is no diagonal outline, no rotation, and no letterform.
 
@@ -101,7 +104,16 @@ Two letters is the ceiling. Three initials at a 16 px render is about five pixel
 
 1. **Choose the letters on legibility, not on the name.** An `I`, a `J` or an `L` alone is a stroke, not a mark. A pair whose terminals are both flat (`H` + `I`) gives you nothing to space against. Prefer one flat-terminal letter and one round or pointed one — the contrast is what the sidebearing rule is for.
 2. **Set the writing line before the letters.** Cap height and baseline both on the grid; for flat-terminal letters both are painted edges, so they are checked. Centre the cap height on `128` vertically unless you draw a container.
-3. **Set one stroke weight, and let the counter decide it.** At weight `w` the narrowest slot must clear `max(1.25 w, 32)`, so a two-stem letter cannot be narrower than `w + max(1.25 w, 32) + w`:
+3. **Decide the container — including deciding against one — and take correction 6's split immediately.** This is the step that separates a monogram from a sticker, and "no container" is a decision recorded like any other. construction.md's Order of application puts the container split at its step 3, *ahead* of the weights, the joins, the overshoot and the sidebearings, and it belongs there: the split translates the whole letterform, so every clearance measured afterwards has to be measured from where the letter actually ended up. With no container the letter is exactly centred and takes no shift — the artboard is not a container. With one:
+
+   ```text
+   roundel inner r 96  →  inner field 192;  letter 96 tall
+   slack  = 192 − 96 = 96
+   above  = 96 × 0.45 = 43.2        (geometric centring would give 48)
+   shift  = 48 − 43.2 = 4.8 up      ( = 0.05 × slack, always)
+   ```
+
+4. **Set one stroke weight, and let the counter decide it.** At weight `w` the narrowest slot must clear `max(1.25 w, 32)`, so a two-stem letter cannot be narrower than `w + max(1.25 w, 32) + w`:
 
    ```text
    w 16  →  16 + 32 + 16 = 64      (already a grid multiple)
@@ -109,23 +121,32 @@ Two letters is the ceiling. Three initials at a 16 px render is about five pixel
    w 32  →  32 + 40 + 32 = 104     (not permitted at w 32; round up to 112)
    ```
 
-4. **Overshoot the round and pointed letters against the flat ones** — correction 1, taken on the corrected cap height: 2% per side for `O C G S Q`, 3% for `A V W`. This is what stops the `O` in a two-letter monogram reading short.
-5. **Space by area, and solve the base sidebearing from the fit.** The gap between two letters is the sum of the two facing sidebearings, scaled by terminal shape per correction 9. Do not pick `s` and multiply — fix the letter widths on the grid, fix the row centred on `128`, take the gap from the subtraction, and divide back to get `s`. Deriving the gap from an already-rounded `s` drifts by a hundredth, which is exactly the drift construction.md's precedence rule 4 warns about.
-6. **Then decide the container, with arithmetic.** This is the step that separates a monogram from a sticker, and "no container" is a decision that gets recorded like any other. If you do draw one, it must clear the letterform at the letterform's *nearest* point — for a rectangular letter in a roundel that is the corner, not the side:
+5. **Run the container's clearance gate from the shifted corner, never the concentric one.** A container has to clear the letterform at the letterform's *nearest* point, which for a rectangular letter in a roundel is a corner rather than a side. Step 3 has already moved the letter up, so the binding corner is the top one and it sits closer to the ring than concentric arithmetic reports:
 
    ```text
-   letter 64 wide × 96 tall, w 16, counter target max(1.25 × 16, 32) = 32
-   corner distance from centre = √(32² + 48²) = √3328 = 57.69
-   roundel inner r 96   →  clearance 96 − 57.69 = 38.31 ≥ 32   affordable
+   letter 64 × 96, w 16, counter target max(1.25 × 16, 32) = 32
+   half-width 32, half-height 48, shift 4.8 up (step 3)
+   concentric corner    √(32² + 48²)   = 57.69   clearance 96 − 57.69 = 38.31
+   shifted top corner   √(32² + 52.8²) = 61.74   clearance 96 − 61.74 = 34.26   ≥ 32   affordable
    roundel outer r 112  →  ring weight 16, outer edge on the live-area boundary
    ```
 
-   If the clearance comes out under the target, the container is not affordable at that letter size. Enlarge the container or shrink the letter — never thin the stroke, which walks the weight below the 16-unit band. Once a container is drawn, correction 6 binds: split the slack inside it 45% above, 55% below.
-7. **Corrections that bind for a monogram:** 1 (round against flat), 4 (every horizontal bar), 6 (only with a drawn container), 7 (stem-to-bar joins), 9 (you positioned the letterforms, so this is the one type where correction 9 always applies). Corrections 2, 3, 5 and 8 bind only if you drew a shape that has to match another by area, a single apex to centre, a diagonal outline, or a rotation.
+   The two readings differ by 4.05 units here, and the difference grows with the letter. **A concentrically computed gate passes marks that ship under target** — the same roundel with a 64 × 104 letter:
+
+   ```text
+   shift = 0.05 × (192 − 104) = 4.4
+   concentric corner    √(32² + 52²)   = 61.06   clearance 34.94   ≥ 32   gate says yes
+   shifted top corner   √(32² + 56.4²) = 64.85   clearance 31.15   < 32   ships broken
+   ```
+
+   That mark violates the counter target while its own gate approved it, which is exactly the failure described at the end of this section. If the clearance comes out under the target, the container is not affordable at that letter size: enlarge the container or shrink the letter — never thin the stroke, which walks the weight below the 16-unit band.
+6. **Overshoot the round and pointed letters against the flat ones** — correction 1, taken on the corrected cap height: 2% per side for `O C G S Q`, 3% for `A V W`. This is what stops the `O` in a two-letter monogram reading short.
+7. **Space by area, and solve the base sidebearing from the fit.** The gap between two letters is the sum of the two facing sidebearings, scaled by terminal shape per correction 9. Do not pick `s` and multiply — fix the letter widths on the grid, fix the row centred on `128`, take the gap from the subtraction, and divide back to get `s`. Deriving the gap from an already-rounded `s` drifts by a hundredth, which is the drift construction.md's correction 2 warns about in its table note: never derive from an already-rounded intermediate.
+8. **Corrections that bind for a monogram:** 1 (round against flat), 4 (every horizontal bar), 6 (only with a drawn container), 7 (stem-to-bar joins), 9 (you positioned the letterforms, so this is the one type where correction 9 always applies). Corrections 2, 3, 5 and 8 bind only if you drew a shape that has to match another by area, a single apex to centre, a diagonal outline, or a rotation.
 
 ### Worked fragment
 
-Two letters, no container — the containerless decision taken deliberately, with step 6's arithmetic as the gate for taking the other one.
+Two letters, no container — the containerless decision taken deliberately at step 3, with step 5's gate as what it would have had to clear otherwise.
 
 ```svg
 <svg viewBox="0 0 256 256" role="img" aria-label="HO">
@@ -139,7 +160,7 @@ Two letters, no container — the containerless decision taken deliberately, wit
   <!-- OPTICAL: crossbar 16 → 15.36 · horizontal strokes read heavier · 16 × 0.96; edges 120.32 and 135.68 about the letter centre 128 -->
   <path d="M32 80H48V120.32H80V80H96V176H80V135.68H48V176H32Z" fill="currentColor"/>
   <!-- OPTICAL: O radius 48 → 49.92 · shared-edge overshoot · 2% of 96 = 1.92 per side; extremes x 124.16 / 224, y 78.08 / 177.92 -->
-  <!-- OPTICAL: counter rx 33.92 (49.92 − 16), ry 34.56 (49.92 − 15.36) · horizontal strokes read heavier · 16 × 0.96 = 15.36 -->
+  <!-- OPTICAL: counter rx 33.92 (49.92 − 16), ry 34.56 (49.92 − 15.36) · horizontal strokes read heavier · 16 × 0.96 = 15.36; edges x 140.16 / 208, y 93.44 / 162.56 -->
   <path fill="currentColor" fill-rule="evenodd"
         d="M174.08 78.08A49.92 49.92 0 1 0 174.08 177.92A49.92 49.92 0 1 0 174.08 78.08Z
            M174.08 93.44A33.92 34.56 0 1 0 174.08 162.56A33.92 34.56 0 1 0 174.08 93.44Z"/>
@@ -156,7 +177,7 @@ The `O` is an ellipse rather than a circle for the reason construction.md gives 
 - The letter was drawn first at a comfortable size and the container was drawn around it at whatever radius looked snug. There is no recorded clearance number.
 - At a 16 px render the mark reads as a filled disc with a smudge in it.
 
-Detect it by computing the clearance at the letter's nearest point, which for a rectangular letterform in a roundel is the corner, not the side — measuring at the side overstates the clearance by tens of units and is the specific mistake this failure is made of.
+Detect it by computing the clearance at the letter's nearest point *after* correction 6 has moved the letter — for a rectangular letterform in a roundel that is the top corner, not the side and not the concentric corner. Measuring at the side overstates the clearance by tens of units; measuring at the concentric corner overstates it by a few, which is worse, because a few units is exactly the margin the gate is deciding on. Step 5's second worked example is a mark that passes the concentric reading and fails the real one.
 
 A second tell, specific to two letters: if the pair was tracked with a single number instead of per-terminal sidebearings, the round letter sits visibly loose. Compare the gap on either side of the `O`.
 
@@ -174,7 +195,7 @@ The master ships a `text` element. **This skill has no font engine and does not 
 
 - **Tracking is `letter-spacing`** — one global number for the whole run. It cannot express a per-pair correction.
 - **Correction 9 does not apply.** Its scope note says so directly: sidebearings come from the font's own metrics and SVG gives you no lever on them.
-- **The one custom detail cannot be a modification of a glyph.** A single run offers no per-glyph handle, and the subtractive route (`mask`, `clipPath`) is forbidden. So the detail is drawn geometry placed *beside* one letter, not inside it.
+- **The one custom detail cannot cut ink away.** The subtractive routes (`mask`, `clipPath`) are forbidden and a single run gives no per-glyph handle to reshape a glyph with — but that rules out *subtraction* and nothing more. An **additive** detail in the same fill needs neither: a bar driven through the `O`, a stroke extending one terminal, a rule joining two letters. So the detail may sit beside a letter or be overlaid on one; it may not carve into one. An overlay usually answers this type's characteristic failure better than something sitting underneath the word — it costs one measurement, because it needs the glyph's ink position.
 - **The type's painted edges are not computable here.** Cap height, sidebearings and the font's own overshoot are metrics you do not have. The grid binds what you draw and what you anchor; the type's ink extents are measured off a render and recorded, not asserted.
 
 The alternative model — individually placed glyphs — buys the per-glyph detail and brings correction 9 back. It costs two or more `text` elements with a drawn path between them, manual kerning at every seam, and a mark with no single source of truth for its spacing. Take it deliberately, state it in `LOGO.md`, and expect the flag count to rise. It is not the default and it must not be arrived at by accident.
@@ -183,10 +204,10 @@ The alternative model — individually placed glyphs — buys the per-glyph deta
 
 1. **Declare the font before setting anything.** Family, weight, fallback. A wordmark whose typeface is not written down is not reproducible, and the file will render correctly on the machine that drew it and wrong on a build server.
 2. **Anchor the row on the grid.** `text-anchor="start"` with `x` on a grid line and the baseline `y` on a grid line. Both are choices you make, so both are checkable. `text-anchor="middle"` centres the run without knowing its width, which is genuinely useful — but it makes every subsequent position depend on a measurement, and most renderers apply `letter-spacing` after the final glyph too, so a middle-anchored run sits half a tracking step left of where you asked.
-3. **Fit the row to the live area by measurement, not by arithmetic.** Render, measure the right-hand ink edge, and adjust `font-size` until it lands on the far grid line. Adjust `letter-spacing` only after `font-size`, or you will be tuning two variables against one measurement.
+3. **Treat `font-size` as a starting value, and record the fit as unmeasured until it has been measured.** The row is fitted to the live area by reading the right-hand ink edge off a render and adjusting `font-size` until it lands on the far grid line; adjust `letter-spacing` only after `font-size`, or you are tuning two variables against one measurement. **This file has no measurement mechanism of its own.** The render is the contact-sheet pass in `logo-concept`, and until that pass has run there is no measured edge — so `LOGO.md` records the fit as *not yet measured* and the size as what it is, a starting value. Writing a starting value down as a measured result is the same failure as calling a `text`-bearing wordmark finished.
 4. **Track deliberately, and say what the number means.** Express tracking relative to the size: `letter-spacing = font-size × t`. For a name set in caps, `t` between 0.05 and 0.12 — below 0.05 it reads as the font's default and buys nothing, above 0.12 the word stops being a word. At `font-size 64`, `t = 0.1` gives `letter-spacing = 6.4`.
-5. **Draw exactly one custom detail, anchored to one letter.** It is drawn geometry, on the grid, at the mark's declared stroke weight, and its position comes from the measured render rather than from an assumed advance width. One is the whole budget.
-6. **Corrections.** For a single-run wordmark with one drawn detail, corrections 1, 2, 3, 5, 8 and 9 do not bind — there is no drawn curve sharing an edge, no area match, no apex, no diagonal outline, no rotation, and no letterform you positioned. Correction 4 binds only if the mark contains a drawn vertical counterpart to the detail; the type's own stems belong to the font and cannot be matched by arithmetic. Correction 6 binds only if you draw a container. Record either decision in `LOGO.md` rather than leaving it inferred.
+5. **Draw exactly one custom detail.** Drawn geometry, on the grid, at the mark's declared stroke weight. One is the whole budget. Prefer a position that shares the run's own anchor: a detail starting at the run's `x` is the only position that needs no measurement at all. Anything keyed to a glyph further along the row — and every overlay — needs that glyph's ink position from the same render as step 3, and is recorded as unmeasured until then.
+6. **Corrections.** For a single-run wordmark with one drawn detail, corrections 1, 2, 3, 5, 8 and 9 do not bind — there is no drawn curve sharing an edge, no area match, no apex, no diagonal outline, no rotation, and no letterform you positioned. **Correction 4 binds unconditionally.** It is not a relational rule: a lone horizontal bar reads heavier than its measured width whether or not the mark contains a vertical to compare it against, and the 4% is what makes it look like the weight you declared. A horizontal detail at a declared 16 is drawn at 15.36. Correction 6 binds only if you draw a container. Record either decision in `LOGO.md` rather than leaving it inferred.
 7. **Record what could not be checked.** The self-check items about painted edges cannot be run against the `text` element. Say so in `LOGO.md` alongside the un-performed outline conversion. An unrunnable check recorded as unrun is honest; an unrunnable check reported as passed is not.
 
 ### Worked fragment
@@ -196,17 +217,22 @@ The alternative model — individually placed glyphs — buys the per-glyph deta
   <!-- Webfont: Inter 700, declared in LOGO.md. NOT converted to outlines — recorded as
        an un-performed step in LOGO.md's Production handoff. This file is not a finished
        asset anywhere the webfont is absent.
-       Anchor x 32 and baseline y 144 are both on the grid because both are chosen.
-       font-size 64 with letter-spacing 6.4 (t = 0.1) was tuned until the measured
-       right-hand ink edge landed on 224; changing the family means re-measuring.
-       The type's ink extents are font metrics and are recorded from the render, not
-       asserted here — so the painted-edge checks do not apply to the text element.
-       The one custom detail is the bar, sat under the first letter only, at the mark's
-       declared weight of 16. It has no drawn vertical counterpart, so correction 4 has
-       nothing to thin against and does not bind; the 16 stands as declared. -->
-  <text x="32" y="144" font-family="Inter, sans-serif" font-size="64" font-weight="700"
-        letter-spacing="6.4" fill="currentColor">NOVA</text>
-  <path d="M32 176H80V192H32Z" fill="currentColor"/>
+       text-anchor start, x 32 and baseline y 144 are on the grid because all three are
+       chosen rather than measured.
+       font-size 64 with letter-spacing 6.4 (t = 0.1) is a STARTING value. Whether the
+       right-hand ink edge lands on 224 is read off the contact-sheet render in
+       logo-concept, which has not run here — so LOGO.md records the fit as not yet
+       measured. Changing the family restarts that measurement.
+       The type's ink extents are font metrics, so the painted-edge checks cannot be run
+       against the text element; LOGO.md records them as unrun, not as passed.
+       The one custom detail is the bar. It starts at the run's own anchor, 32, the one
+       position that needs no measurement. Correction 4 applies to it unconditionally:
+       the top edge is held on 176, where it sets the 32-unit gap below the baseline, and
+       the thinning is spent on the free lower edge. -->
+  <text x="32" y="144" text-anchor="start" font-family="Inter, sans-serif" font-size="64"
+        font-weight="700" letter-spacing="6.4" fill="currentColor">NOVA</text>
+  <!-- OPTICAL: bar 16 → 15.36 · horizontal strokes read heavier · 16 × 0.96; free edge 192 → 191.36, top held on 176 -->
+  <path d="M32 176H80V191.36H32Z" fill="currentColor"/>
 </svg>
 ```
 
@@ -239,13 +265,13 @@ It is the type with the least for a viewer to hold on to, which makes it the typ
 
 1. **Write the rule as one sentence before drawing.** "Rotate the arm 90° about the centre, four times." "Inset the square by 16, then 32, alternating." "Halve the side and place the result in the next quadrant clockwise." If it takes two sentences it is two rules, and two rules read as none.
 2. **Choose a rule whose output lands on the grid.**
-   - **Rotation.** Multiples of 90° map the grid onto itself exactly and cost nothing. Any other angle has to be baked into the coordinates — `transform` is forbidden on final geometry — and produces an off-grid value at every vertex of every copy. Four copies of a six-vertex form is twenty-four candidate flags against a ceiling of six. If the rule genuinely needs 45°, cut it to two elements or accept that it consumes the entire flag budget.
+   - **Rotation.** Multiples of 90° map the grid onto itself exactly and cost nothing. Any other angle has to be baked into the coordinates — `transform` is forbidden on final geometry — and puts an off-grid value at every vertex of every copy. **The cost is the render, not the audit.** The flag ceiling counts distinct reasons, so twenty-four vertices falling out of one stated rotation rule is one entry and no deterrent at all; what those twenty-four painted edges do is anti-alias at every reproduction size, on a grid that exists for the sole purpose of preventing that. So if the rule genuinely needs 45°, do not cut the number of copies — that trips step 6, where two applications read as a coincidence. Place the vertices so the **outermost** edges, the ones that define the silhouette, still land on the grid, and let the interior ones drift where the eye has no reference to catch them.
    - **Offset.** Constant insets on grid multiples stay on the grid indefinitely. Alternate the inset so that ink and counter each get their own number — a single repeated inset gives ink and counter the same width, and the counter is the one with the higher floor.
    - **Subdivision.** Halving stays on the grid down to 16, which is the counter floor and the bottom of the stroke band. Three levels from 128 is the practical depth.
 3. **Apply the rule to the whole element, then re-derive the corrections per copy.** Correction 8 is explicit that rotation does not carry its corrections with it: a bar that rotates into a stem loses the 4% thinning, and a stem that rotates into a bar gains it. **The shipped mark is therefore not exactly symmetric, and that is correct.** A four-fold rotation whose four copies are byte-identical has skipped correction 4.
 4. **Decide whether the rule produces a union or a nesting, because that decides the fill rule.**
    - A rotation rule usually produces a **union**: overlapping copies that merge into one silhouette. Flatten it to a single outline. There is no knockout and no fill rule to set.
-   - Offset and subdivision rules produce **nesting**: a shape inside a shape. That is a knockout, and it needs `fill-rule="evenodd"` written on the `path`. The initial rule is `nonzero`, under which two same-wound subpaths fill solid — the inner shape simply is not there, at any size, with no error raised. See construction.md's knockout section.
+   - Offset and subdivision rules produce **nesting**: a shape inside a shape. That is a knockout, and it needs `fill-rule="evenodd"` written on the `path` — never left to the default, for the reason construction.md's knockout section gives.
 
    If you cannot say which of the two your rule produced, you do not yet know what you drew.
 5. **Put the counter where the rule puts it, or have none.** A rotation rule whose arms meet at the centre produces a solid block of `2w × 2w` there, and a hole cut into that block leaves a frame thinner than the stroke. Forcing a counter into a construction that does not want one is how an abstract mark acquires a detail no reproduction below 64 px will carry. A mark with no enclosed counter is fine.
