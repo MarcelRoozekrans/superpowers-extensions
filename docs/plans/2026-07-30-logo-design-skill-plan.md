@@ -550,19 +550,34 @@ The guard does not check prose. These are the places a stale count survives CI.
 **Files:**
 
 - Modify: `README.md` — several sites
-- Modify: `.codex-plugin/plugin.json` — `interface.longDescription`
+- Modify: `.codex/INSTALL.md` — **added after Task 1 review**, see Step 1a
+- Modify: `.copilot-cli/INSTALL.md` — **added after Task 1 review**, see Step 1a
 - Modify: `.cursor-plugin/plugin.json` + `.codex-plugin/plugin.json` — `description` fields if they enumerate concerns
+- ~~`.codex-plugin/plugin.json` → `interface.longDescription`~~ — **already done in Task 1**, see Step 3
 
 **Step 1: Find every count and list**
 
 Run:
 
 ```bash
-grep -rn "eleven skills\|eleven plugins\|Eleven extension\|eleven extension" \
-  README.md .codex-plugin .cursor-plugin .opencode GEMINI.md hooks/
+grep -rn "eleven\|Eleven" README.md .codex .codex-plugin .cursor-plugin \
+  .copilot-cli .opencode GEMINI.md hooks/
 ```
 
-Expected: several hits. Each becomes "twelve".
+Expected: several hits. Each becomes "twelve" — **except one false positive**.
+
+**`README.md:438` contains `elevenlabs`**, a design-system name in the curated-catalog table. A blanket find-and-replace corrupts it to `twelvelabs`. Match on word boundaries or review each hit by hand.
+
+**Step 1a: The two unguarded install docs**
+
+Task 1's implementer and its spec reviewer independently found these. Neither is read by `check-registries.mjs`, and neither was in the original Task 10 file list, so they would have shipped stale through a green CI:
+
+| File | Sites |
+|---|---|
+| `.codex/INSTALL.md` | prose count (line 5), the bash symlink loop, the PowerShell array, the verify-grep alternation, the uninstall loop, and "You should see eleven symlinks" (line 59) |
+| `.copilot-cli/INSTALL.md` | the install command block, and "The agent should list the eleven skills" (line 54) |
+
+The loops and arrays enumerate plugin names, so each needs `logo-design` added — not just the count word changed.
 
 **Step 2: Update README**
 
@@ -574,9 +589,11 @@ Four kinds of site, all needed:
 4. The `### Frontend Development` workflow block and the **Skill Composition at a Glance** table — logo-design slots between `ui-design-system` and `ui-workflow`
 5. The Verify Installation slash-command list
 
-**Step 3: Update the Codex long description**
+**Step 3: Update the Codex long description — already done**
 
-`.codex-plugin/plugin.json` → `interface.longDescription` opens with "Eleven extension skills that compose with obra/superpowers" and enumerates all of them. Change the count and append logo-design to the enumeration.
+`.codex-plugin/plugin.json` → `interface.longDescription` was updated in Task 1 (count to "twelve", `logo-design (brand marks as SVG)` appended to the enumeration). **Expect to find this work complete.** Verify it rather than redoing it; an empty grep result here is the correct outcome, not a missed edit.
+
+The same applies to `hooks/session-start`'s "Eleven skills cover…" sentence, also corrected in Task 1.
 
 **Step 4: Optional cleanup — a pre-existing inconsistency**
 
