@@ -300,7 +300,7 @@
     <h2>What the readout measures</h2>
     <dl>
       <dt>ink bbox</dt>
-      <dd>Union of <code>getBBox()</code> over every painted element, widened by half the stroke width wherever a stroke is actually painted. In the candidate's own user units — check the <code>viewBox</code> line before reading it as artboard units.</dd>
+      <dd>Union of <code>getBBox()</code> over every painted element, widened by half the stroke width wherever a stroke is actually painted. In the candidate's own user units — check the <code>viewBox</code> line before reading it as artboard units. On a stroked mark a second, geometry-only box is printed beside it: the widening is exact at a round or square cap and up to <code>w/2</code> too long at a butt-capped open end, so the true ink lies between the two. A filled mark has no gap between them.</dd>
       <dt>live area</dt>
       <dd>construction.md: geometry occupies 16&nbsp;…&nbsp;240 on both axes. Overshoot is allowed to spill outward by its own amount; nothing else is.</dd>
       <dt>nodes</dt>
@@ -457,7 +457,7 @@
   function analyseSvg(svg) {
     var r = {
       viewBox: svg.getAttribute('viewBox') || '',
-      bbox: null, bboxErr: null,
+      bbox: null, bboxGeom: null, bboxErr: null, strokes: 0,
       paths: [], nodes: 0, contourMax: 0, primitives: 0, transforms: 0,
       paints: {}, texts: [], warn: []
     };
@@ -478,20 +478,46 @@
         r.paints[v] = (r.paints[v] || 0) + 1;
       });
 
-      /* --- ink bounding box ---------------------------------------------- */
+      /* --- ink bounding box ----------------------------------------------
+         getBBox() is geometry only — it excludes the stroke, so a stroked mark
+         would under-report its ink by half a stroke on every side. Two boxes
+         are therefore kept and, where they differ, both are printed:
+
+           bboxGeom  the geometry box, exact, an under-estimate when stroked
+           bbox      that box widened by stroke-width/2 per side
+
+         The widening is exact at a round or square cap and at a miter join, and
+         over-long by w/2 at a BUTT-capped open end, which does not extend past
+         its endpoint. construction.md's own 16-wide stem on centreline 120 is
+         the case: the true painted box is y 48 … 208 and the widened one says
+         40 … 216. Chrome's getBoundingClientRect uses the same conservative
+         stroke box, so there is nothing more exact to reach for without
+         re-implementing stroke offsetting. The true ink is bracketed between
+         the two boxes, both are shown, and the readout says which is which —
+         reporting one of them alone as "the" answer is the failure mode this
+         plugin exists to avoid. Filled paths, which construction.md calls the
+         safer final form, have no gap between the two. */
       try {
         var b = e.getBBox();
-        var x0 = b.x, y0 = b.y, x1 = b.x + b.width, y1 = b.y + b.height;
+        var gx0 = b.x, gy0 = b.y, gx1 = b.x + b.width, gy1 = b.y + b.height;
+        var x0 = gx0, y0 = gy0, x1 = gx1, y1 = gy1;
         var cs = window.getComputedStyle(e);
         if (cs.stroke && cs.stroke !== 'none') {
           var sw = parseFloat(cs.strokeWidth);
-          if (isFinite(sw) && sw > 0) { x0 -= sw / 2; y0 -= sw / 2; x1 += sw / 2; y1 += sw / 2; }
+          if (isFinite(sw) && sw > 0) {
+            r.strokes++;
+            x0 -= sw / 2; y0 -= sw / 2; x1 += sw / 2; y1 += sw / 2;
+          }
         }
         if (b.width > 0 || b.height > 0 || tag === 'text') {
           r.bbox = r.bbox
             ? { x0: Math.min(r.bbox.x0, x0), y0: Math.min(r.bbox.y0, y0),
                 x1: Math.max(r.bbox.x1, x1), y1: Math.max(r.bbox.y1, y1) }
             : { x0: x0, y0: y0, x1: x1, y1: y1 };
+          r.bboxGeom = r.bboxGeom
+            ? { x0: Math.min(r.bboxGeom.x0, gx0), y0: Math.min(r.bboxGeom.y0, gy0),
+                x1: Math.max(r.bboxGeom.x1, gx1), y1: Math.max(r.bboxGeom.y1, gy1) }
+            : { x0: gx0, y0: gy0, x1: gx1, y1: gy1 };
         }
       } catch (err) { r.bboxErr = String(err && err.message || err); }
 
@@ -697,6 +723,12 @@
         row(g, 'ink bbox y', n2(b.y0) + ' … ' + n2(b.y1) + '  h ' + n2(n2(b.y1) - n2(b.y0)));
         row(g, 'live area', LIVE_MIN + ' … ' + LIVE_MAX + '  —  ' + (inside ? 'inside' : 'OUTSIDE'),
             inside ? '' : 'warn');
+        if (a.strokes && a.bboxGeom) {
+          var bg = a.bboxGeom;
+          row(g, 'stroke', a.strokes + ' painted stroke(s) — the box above widens each by w/2 per side, which is exact at a round or square cap and up to w/2 too long at a butt-capped open end. Geometry-only box: x '
+              + n2(bg.x0) + ' … ' + n2(bg.x1) + '  y ' + n2(bg.y0) + ' … ' + n2(bg.y1)
+              + '. The true ink lies between the two.', 'warn', true);
+        }
       } else {
         row(g, 'ink bbox', 'not measurable' + note(a.bboxErr || 'no painted geometry found'), 'bad', true);
       }
