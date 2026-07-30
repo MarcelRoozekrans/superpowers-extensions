@@ -563,7 +563,7 @@ That single binding is what makes the mono and dark variants *derivable* rather 
 **That promise is conditional, and the condition is a size.** A light mark on a dark ground reads optically heavier — ink grows and counters shrink by the same absolute amount `r · w`, where `r` is type practice's 2–4% reversed-weight compensation. Applying that compensation *is* a drawing difference, so the guarantee cannot hold unconditionally. [reproduction.md](reproduction.md) derives the fork threshold; take it from there rather than re-deriving it here:
 
 ```text
-R ≥ 256 / (r · w)        at r = 3%:   533 px at w 16,  356 px at w 24,  267 px at w 32
+R ≥ 256 / (r · w)        at r = 3%:   534 px at w 16,  356 px at w 24,  267 px at w 32
 ```
 
 - **Below the threshold** the compensation is under one device pixel. It cannot be seen, it is not applied, and the promise holds exactly: the dark variant is the master with `color` resolved and nothing else.
