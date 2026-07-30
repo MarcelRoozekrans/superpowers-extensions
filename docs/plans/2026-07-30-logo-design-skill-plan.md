@@ -514,6 +514,19 @@ Decide before writing step 6:
 
 `reproduction.md` computes lockup minimums by a different route already (mark side computed, type side measured), which is weak evidence for **C** — the file's own arithmetic treats the lockup as a composition problem rather than a rendering one. But whichever is chosen, the answer has to be written down, because step 6's self-verification currently implies all seven variants get the same treatment and they cannot.
 
+**Sharper than first recorded — found by Task 7, the first task to read all six files together.** This is not merely an undefined pass. Two files *specify a measurement against an instrument that cannot take it*:
+
+- `reproduction.md` § Full lockup says the lockup minimum is "measured, not computed", and that the render comes from `logo-concept`'s contact sheet.
+- `logo.template.md`'s Lockup measurements block repeats it — "measured off a 256 px cap-height render from `logo-concept`'s contact sheet".
+
+The harness assumes `0 0 256 256` throughout and warns-then-stops on a differing `viewBox`. So `φ_ink`, `φ_ctr`, and the lockup width minimum are specified against something that cannot produce them, and **neither reference file knows** — both state the measurement as available.
+
+Until this question is resolved, the honest status of those rows is `UNRUN` for every mark. Whichever option is chosen, the resolution has to propagate back into `reproduction.md` § Full lockup and `logo.template.md`, or those two files keep promising a measurement that never arrives.
+
+### Third open question — the favicon filename
+
+`favicon.svg` in the design doc's Step 6 variant list; `logo-favicon.svg` in `logo.template.md`'s Variants table. Pick one and make the other match. The template is the later artifact and the `logo-` prefix is consistent with the other six variants, which is weak evidence for `logo-favicon.svg` — but the design doc is what the README will describe.
+
 **Step 1: Write the seven steps**
 
 Per the design doc, as numbered procedure with explicit tool calls:
@@ -710,6 +723,26 @@ git commit -m "docs(logo-design): dogfood record — a real mark for this repo"
 ---
 
 ## Task 12: Branch review
+
+### Added scope — a guard gap this branch created
+
+**Found by Task 7.** `scripts/check-conventions.mjs` hardcodes its target:
+
+```js
+const SKILL = 'plugins/project-orchestration/skills/project-orchestration/SKILL.md';
+```
+
+It scans that file and only that file. `logo-design`'s `SKILL.md` states that it delegates every commit to project-orchestration's Commit & Release Protocol — and **nothing enforces that**. A hardcoded commit literal in `logo-design`'s `SKILL.md`, or in either sub-skill flow, passes CI green today.
+
+That matters because the guard's own header says every check in it exists because the failure already happened. This branch adds a second plugin making the same delegation promise, and the guard does not reach it.
+
+**Recommendation:** widen the guard to scan every `plugins/*/skills/*/SKILL.md` that references the Commit & Release Protocol, rather than one hardcoded path. Keep project-orchestration's stricter structural checks (protocol section exists, precedes `## Sub-Skills`) scoped to that file, since they are about the protocol's own definition; apply only the literal checks to the delegating files.
+
+Decide during review whether this lands on this branch or as a follow-up — it is repo infrastructure rather than plugin content, and the branch is already large.
+
+### Reconcile the plan's task numbering
+
+Tasks were executed 1, 3, 2, 4, 5, 6, 7 against a plan numbered 1, 2, 3, … — Task 3 (`construction.md`) was deliberately moved ahead of Task 2 (`mark-types.md`) because Task 2's worked fragments must obey Task 3's rules. The plan still carries the original numbering with a note at Task 2. Either renumber or leave the note; do not leave it unmentioned in the branch summary.
 
 **Step 1: Run the full local gate**
 
