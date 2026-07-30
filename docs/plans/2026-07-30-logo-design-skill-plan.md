@@ -470,6 +470,8 @@ The Step 0 guard routes any project with an existing logo to `logo-review`. But 
 
 The trigger phrase `"make a favicon"` was removed from the skill description in `fix(logo-design): correct the trigger surface…` precisely because it advertised a path the flow does not serve. That removed the false promise; it did not solve the underlying gap.
 
+Be precise about what that removal bought, because it is easy to over-read: it makes the skill *less likely to activate* on a favicon request. It does not change routing. If the skill fires anyway — via "through to a favicon" in the description, or any nearby phrasing — Step 0.3 still sends that user to `logo-review`. The narrowed trigger surface hides the gap more than it closes it.
+
 Decide one of:
 
 | Option | Shape | Cost |
