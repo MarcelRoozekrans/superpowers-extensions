@@ -74,7 +74,16 @@ The grid rule says every coordinate is a multiple of 16. The optical rules below
 
 An unflagged non-permitted number is a bug until proven otherwise. Every flag is copied into the **Construction** section of `docs/design/LOGO.md`, so the exception list is auditable after the fact by someone who was not there when it was drawn.
 
+**The token is `OPTICAL:` whatever the reason.** Read it as *"off the grid, for the reason stated on this line"* — not as a claim that the reason was perceptual. Two kinds of value earn it:
+
+- an **optical correction** — a number produced by one of the nine below;
+- a **derived coordinate** — a number that falls out of a construction rather than being placed, such as the cusp where two circles intersect, or an arc endpoint fixed by a radius chosen elsewhere.
+
+Both are deliberate, both must show their arithmetic, and both are audited identically. One token, one gate, nothing to drift. The middle field of the flag carries the distinction, which is where it belongs: a reader who needs to know *why* reads the reason, not the prefix.
+
 **Ceiling: about six surviving flags in one mark.** Past six, the form is fighting the grid rather than being corrected against it, and the audit trail stops being readable — twenty flags is not a well-documented mark, it is an undocumented one with twenty comments in it. Six is a redraw signal, not a budget to spend down. If a mark needs more, the geometry underneath is wrong.
+
+**Count decisions, not numbers.** Several coordinates falling out of one stated construction — the two cusps of a single lens, the four endpoints of one arc system — are **one** entry against the ceiling, even though each is annotated where it appears. Six distinct *reasons* is the limit. A construction-derived mark is not penalised for being constructed.
 
 ## Optical correction
 
@@ -90,7 +99,7 @@ Corrections compound, and applying them out of order produces a shape that is co
 
 1. Lay the composition out on the grid, uncorrected.
 2. Size the shapes against each other by area (correction 2).
-3. Place them: container split (correction 6), apex centring (correction 3), rotation (correction 8).
+3. Place them: container split (correction 6 — **only if a container is actually drawn**; the artboard is not one), apex centring (correction 3), rotation (correction 8).
 4. Set stroke weights, then the axis corrections (corrections 4, 5) and the joins (correction 7).
 5. Apply shared-edge overshoot last (correction 1) — it only touches extrema, so nothing downstream depends on it.
 6. Sidebearings, for letterforms you position yourself (correction 9).
@@ -241,9 +250,11 @@ Secondary correction, once the widths are correct: a diagonal at 45° still read
 
 **Rule.** A mark inside a container — roundel, tile, badge, squircle — sits **above** the geometric centre. Split the slack **45% above, 55% below**.
 
+**This binds only when a container is actually drawn.** A container is ink: a roundel, a tile, a badge, a plate that ships as part of the mark. **The artboard is not a container.** It is a coordinate space with no ink in it, so there is no frame for the eye to read the mark against and nothing for it to sag inside. A mark sitting free on the artboard is centred at 128 — exactly centred — and takes no shift. Every fragment in this file does that, which is why none of them shows a 6.4-unit offset. Read the rule the other way and every mark in the plugin acquires a shift it does not need and a flag to document it.
+
 **Why.** The optical centre of a bounded field is above its geometric centre; we read the base of a frame as heavier and a perfectly centred object as sagging. 45:55 is the smallest split that reliably reads as centred. Do not push further: at 40:60 the mark stops reading as centred and starts reading as deliberately top-aligned, which is a different design decision and needs stating as one.
 
-**Worked.** A 128-unit mark inside the 256 artboard:
+**Worked.** A 128-unit mark inside a drawn 256-unit container — a tile that bleeds to the artboard edge, which the live-area rule permits when the container is the mark:
 
 ```text
 slack = 256 − 128 = 128
@@ -325,6 +336,10 @@ Both weights are multiples of 8. Three weights is not a system, it is an acciden
 
 **Weight band.** Keep stroke weights between **16 and 32 units** (1 to 2 px at favicon size). Under 16 the stroke renders below a pixel at 16 px and anti-aliases to grey. Over 32 the counters start closing, which is the failure in the next section.
 
+**What counts as "the weight" for a form whose ink varies.** For a stroked path it is `stroke-width`. For a filled stem of constant thickness it is the distance between its two edges. For a form whose thickness varies by construction — a lens built from two overlapping circles, which is thin at the waist and several times thicker at the cusps — **the weight is the narrowest ink**. That single number is what you check against the 16 … 32 band and what you feed to the counter target.
+
+The narrowest point is what disappears first at 16 px, and disappearing is the failure the band exists to prevent. Measuring at the widest point would pass a mark whose waist had already closed — a lens that reads as two separate arcs at favicon size while its arithmetic dutifully reports the thickness at the cusps. Where the widest ink is more than about twice the narrowest, say so in `LOGO.md`: the mark has a thick–thin axis, and that is a design decision worth recording rather than an accident of construction.
+
 **What a 24-unit weight costs.** 16 and 32 are multiples of the grid unit, so both painted edges of a 16- or 32-wide filled stroke land on full units. 24 is not: a 24-wide stem starting at 128 ends at 152, putting one edge on the half-unit. Read that off the render table above — a half-unit is a whole pixel at 32, 64, 128 and 256 px, and half a pixel at 16 and 48 px. So a 24-unit weight softens one edge at exactly two reproduction sizes, one of which (16 px) is redrawn from scratch anyway — see [reproduction.md](reproduction.md).
 
 It costs a second thing, and this is the paragraph to learn it in rather than twenty lines further down: **a 24-unit weight forfeits the counter hard floor.** The floor requires both counter edges on full units, which only weights divisible by 16 deliver. A 24-unit mark must meet the 32-unit counter target instead — which is its target anyway under `max(24 × 1.25, 32)`, so it costs nothing in practice, but it removes the fallback.
@@ -386,10 +401,23 @@ The rules:
 
 | Family | Narrowest gap | Example |
 |---|---|---|
-| Concentric round | `outer r − inner r` | a ring, a bowl inside a bowl |
+| Concentric round | `outer r − inner r`, where both radii bound the **negative** space. Where the negative space is a plain hole rather than an annular gap, it is simply `2 × r`. | a ring's hole; the gap between two concentric rings; a bowl inside a bowl |
 | Parallel straight | the coordinate difference between the two facing edges | a slot, a gap between two stems |
 
+Measure the negative space, not the ink. For the ring below, `96 − 64 = 32` is the *thickness of the ring* — that is its stroke weight. Its counter is the hole, `2 × 64 = 128`.
+
 Anything outside these two — an irregular aperture, a curve closing on a straight at an angle — has no closed-form narrowest point at this stage. **Rebuild it into one of the two families, or record in `LOGO.md` that the counter was not computed** and let the 16 px row of the contact sheet decide. Recording it is an acceptable outcome; guessing a number is not.
+
+**Where edge alignment matters, and where it does not.** Alignment is a property of the floor, not of counters generally, and reading it as a blanket rule makes it unsatisfiable for any curved counter. The threshold is explicit:
+
+| Counter width | Edges on full units? | Why |
+|---|---|---|
+| 16 … 31.99 | **Required** | At 16 units the counter is 1 px at favicon size, so half a unit of misalignment is half the gap and it greys out. |
+| 32 and above | Not required | At 32 units the counter is 2 px, the same half-unit is a quarter of it, and anti-aliasing absorbs it. |
+
+So a curved counter's extrema may sit wherever correction 4's curved-stroke rider puts them, provided the counter clears 32. The ring corrected under that rider has counter edges at `128 ± 65.28` = **62.72 and 193.28**, on a counter whose narrowest dimension is 128 units — far above the threshold. Those edges are off the grid and correct. They are not a violation and need no flag beyond the one correction 4 already requires.
+
+This is also why a 24-unit weight forfeits the floor: it cannot put both counter edges on full units, so it cannot use the 16 … 32 band at all and must clear 32, where alignment stops mattering.
 
 Verify with arithmetic before rendering, not by looking at the 256 px preview:
 
@@ -489,10 +517,10 @@ Run this list against every candidate before it reaches the contact sheet. Every
 - [ ] `viewBox="0 0 256 256"`; no `width` or `height`; `role` and `aria-label` present.
 - [ ] All geometry within `16 … 240` on both axes, curves bounded by their control points. Two exemptions only: a container that is itself the mark, and overshoot spilling outward from a nominal edge.
 - [ ] Every painted edge is on a permitted value — a multiple of 16, or a multiple of 8 where the stroke weight producing it is not a multiple of 16 — or carries an `OPTICAL:` flag on the line above it. Centrelines and Bézier control points are not painted edges and are not checked.
-- [ ] Every flag names the rule and shows the arithmetic.
+- [ ] Every flag names its reason — an optical correction *or* a construction it was derived from — and shows the arithmetic.
 - [ ] No coordinate has more than 2 decimal places.
 - [ ] No surviving exception sits within 0.5 of its permitted value (16, or 8 for a stroke weight and for a painted edge produced by a weight not divisible by 16) — those should have been snapped.
-- [ ] **Six or fewer surviving flags.** More means redraw, not more comments.
+- [ ] **Six or fewer surviving flags**, counting distinct reasons rather than annotated numbers. More means redraw, not more comments.
 
 **The nine corrections**
 
@@ -501,15 +529,15 @@ Run this list against every candidate before it reaches the contact sheet. Every
 - [ ] **3** — every triangle or single-apex form is centred on its centroid: bounding box shifted `h/6` toward the apex.
 - [ ] **4** — every horizontal stroke is 4% thinner than its vertical counterpart, including the horizontal tangents of a curved stroke, or a uniform ring is recorded as a decision.
 - [ ] **5** — every diagonal drawn as a filled outline uses `w / cos θ` for its offset.
-- [ ] **6** — anything inside a container is split 45:55, above:below.
+- [ ] **6** — anything inside a *drawn* container is split 45:55, above:below. A mark free on the artboard is exactly centred; the artboard is not a container.
 - [ ] **7** — no interior join tighter than 60°; on rounded corners, `inner radius = outer radius − w`.
 - [ ] **8** — every rotated form holds its area, not its bounding box, and corrections 1 and 4 are re-derived from the final orientation.
 - [ ] **9** — where you position letterforms yourself, sidebearings are scaled by terminal shape (1.00 / 0.94 / 0.88). Not applicable to a `<text>` wordmark.
 
 **Strokes, counters, constructs, colour**
 
-- [ ] One stroke weight, or two in a named ratio, all multiples of 8, all within 16 … 32; `stroke-linecap` and `stroke-linejoin` declared on every stroked element.
-- [ ] Narrowest counter ≥ `max(stroke × 1.25, 32)`; nothing under 16; at most three counters. On a 16- or 32-unit weight, every counter edge on a full unit; on a 24-unit weight, the 32-unit target met rather than the floor.
+- [ ] One stroke weight, or two in a named ratio, all multiples of 8, all within 16 … 32, measured at the **narrowest ink** where the form's thickness varies; `stroke-linecap` and `stroke-linejoin` declared on every stroked element.
+- [ ] Narrowest counter ≥ `max(stroke × 1.25, 32)`; nothing under 16; at most three counters. Counter edges on full units **only while the counter is under 32 units** — at 32 and above, alignment is not required and curved extrema may sit off the grid. A 24-unit weight cannot align counter edges at all, so it must clear 32 rather than use the floor.
 - [ ] Every counter is concentric-round or parallel-straight so its gap is computable — or `LOGO.md` records that it was not computed.
 - [ ] Every knockout is two subpaths in one `<path>` with `fill-rule="evenodd"` — never left to the default `nonzero`.
 - [ ] No `filter`, gradient, `transform`, `mask`, `clipPath`, `image`, `style`, or `vector-effect`. No `<text>` except in a wordmark master, where the webfont is declared and the un-performed outline conversion is recorded in `LOGO.md`.
