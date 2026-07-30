@@ -23,8 +23,18 @@ So one grid unit (16 artboard units) is `render size / 16` device pixels, which 
 |---|---|---|
 | Ink — any painted band, stroke or filled stem | 1 | Below one pixel the band can land entirely inside a single pixel's coverage and disappear. At one pixel, worst case it is two rows at 50% — soft, present. |
 | Counter — enclosed or open negative space | 2 | construction.md's design target says it directly: "At a 16 px render, 32 units is 2 px — enough for the hole to survive anti-aliasing wherever it falls." Two pixels is the width at which an arbitrary half-pixel offset still leaves one fully covered pixel of hole. |
-| Counter, both edges on full grid units | 1 | construction.md's hard floor. One clean pixel, conditional on the alignment surviving to the raster — see below. |
+| Counter, both edges on full grid units | 1 | construction.md's hard floor. One clean pixel — **conditional on the alignment surviving to the raster**, which is a separate question and usually answers no. See the next two sections. |
 | Anything that came from a font | 2 | A glyph's edges are font metrics, not grid values, so the aligned exemption can never apply to them. |
+
+### One unit of measure, twice
+
+The table above mixes two quantities and it is worth naming the seam, because everything downstream depends on it holding.
+
+Rows 1 to 3 are **coverage** thresholds — how much of a pixel the rasteriser fills. The dark-inversion section further down uses the same unit for **apparent** width, which is a perceptual quantity: `15.52` units of counter on a dark ground is still `0.97` device px of coverage at a 16 px render, and no rasteriser can tell it from `1.00`.
+
+The substitution is deliberate and it is applied consistently — to the 32-unit target as well as to the 16-unit floor, and in the same direction. It is licensed by what the thresholds are *for*. A counter's job is to be seen as a hole, not to be measured as one. Coverage is the floor under that job, never the whole of it, and where the two disagree the perceptual number is the one a viewer experiences. This is the same precedence construction.md sets in its opening: "A mathematically clean coordinate that looks wrong is wrong."
+
+Say so out loud because this is the substitution that removes a sibling file's rule, and a rule removed by a silent change of units is a rule removed by accident.
 
 ### When grid alignment actually reaches the raster
 
@@ -40,7 +50,21 @@ The 1-pixel counter floor is conditional, and the condition is checkable. One gr
 
 A browser at a device pixel ratio of 1.25 rasterises a nominal 16 px favicon at 20 device px; at 1.5 it rasterises it at 24. **Both are common on Windows and Android, and neither is a multiple of 16.** So a mark that leans on the counter floor cannot rely on the floor anywhere it is rendered at a nominal CSS size — which is everywhere on the web.
 
+**The target does not have this problem, and that asymmetry is the point.** At the same 20 device px, a 32-unit counter measures `32 × 20 / 256` = **2.5 px** — two fully covered pixels remain whatever the subpixel offset. A 16-unit counter measures **1.25 px** and there is no offset at which one whole pixel of it survives. The target's guarantee is unconditional; the floor's is a precondition that has already failed.
+
 That does not contradict construction.md, it bounds it. The floor is real and it is exactly one clean pixel at exactly 16 px. It is simply not available to any variant whose render size you do not control.
+
+### The counter floor, in aggregate
+
+This page reaches the counter floor from four directions — minimum size, raster alignment, dark inversion, and the favicon — and it would be easy to read four separate hedges instead of one conclusion. **Here is the conclusion, once. Every other mention on this page points back here rather than restating it.**
+
+> After this file, construction.md's 16-unit counter floor survives only for a mark that carries a declared weight of **16 or 32**, ships **no dark variant**, has **no favicon**, and is rendered **either never below 32 px, or only at sizes you control that are integer multiples of 16 px**. Everything else meets the 32-unit target.
+
+That last condition has two branches because both are sufficient and they are reached differently. At 32 px a 16-unit counter is 2 device px and needs no alignment at all; at 16 px it is 1 device px and needs alignment, which only a controlled render size gives you. construction.md's [When the floor is actually available](construction.md#when-the-floor-is-actually-available) states the second branch; this page derives the first. **They agree — neither is a narrower reading of the other.**
+
+That section is the canonical list of the preconditions, and it already cites the derivations on this page. This paragraph exists so a future change to it touches one place here instead of four.
+
+The floor is not wrong and it is not dead. It is a special case, and the price of taking the 16 px branch is a doubled minimum render size — 32 px instead of 16 — everywhere the branch's precondition cannot be shown to hold.
 
 ## Minimum sizes
 
@@ -52,10 +76,12 @@ Solve the pixel rule for the render size at which the narrowest feature reaches 
 R = 256 × required device px / feature width in units
 ```
 
-| Mark built to | Narrowest counter | Arithmetic | Screen minimum |
-|---|---|---|---|
-| the counter **target** (≥ 32 units) | 32 | `256 × 2 / 32` | **16 px** |
-| the counter **floor** (16 … 31.99, grid-aligned) | 16 | `256 × 2 / 16` | **32 px** |
+| Mark built to | Narrowest counter | Device px demanded | Arithmetic | Screen minimum |
+|---|---|---|---|---|
+| the counter **target** (≥ 32 units) | 32 | 2 | `256 × 2 / 32` | **16 px** |
+| the counter **floor** (16 … 31.99, grid-aligned) | 16 | **2, not the 1 its alignment would allow** | `256 × 2 / 16` | **32 px** |
+
+**The floor row is deliberately taking the conservative branch, and this is the sentence that says so.** The pixel-rule table three rows up grants a grid-aligned counter one device pixel, and at exactly 16 px, exactly aligned, that is right. The row above demands two anyway, because the alignment that licenses the exemption does not reach the raster at a device pixel ratio of 1.25 or 1.5 — at 20 device px the same counter is 1.25 px and no whole pixel of it survives, while the target row's counter is 2.5 px and two do. **The exemption is not being denied; its precondition is being checked and found absent.** A mark whose render size you genuinely control, at a multiple of 16 px, may use the 1 px branch and state a 16 px minimum — see [The counter floor, in aggregate](#the-counter-floor-in-aggregate) for the full set of conditions.
 
 Check the ink side against both: at the bottom of construction.md's weight band a 16-unit stroke needs `256 × 1 / 16` = 16 px for its one pixel, which the target row already clears and the floor row clears twice over. The counter is the binding term in every case, which is why construction.md spends its arithmetic there.
 
@@ -63,7 +89,9 @@ Check the ink side against both: at the bottom of construction.md's weight band 
 
 ### Full lockup — `logo-full`, `logo-stacked`, `logo-wordmark`
 
-The binding feature is the type, and the skill has no font metrics — the same limit mark-types.md states for the wordmark recipe. So the lockup's minimum is **measured, not computed**, and it is the one threshold on this page that works that way.
+The binding feature is the type, and the skill has no font metrics — the same limit mark-types.md states for the wordmark recipe. So the lockup's minimum is **measured, not computed**: it is the only *minimum size* on this page that is, though M3 and M4 below also need a render.
+
+The render comes from `logo-concept`'s contact sheet, which is where every measurement and every render check on this page is actually taken. Without it — Playwright MCP absent — these items are **unrun, and recorded as unrun**. That is honest; reporting them as passed is not.
 
 Two constraints, both must clear.
 
@@ -129,46 +157,45 @@ At the worst legal construction — `u_ink = 16` (bottom of the weight band) and
 | Foil stamp, emboss, deboss | 0.50 | 0.15 | 8.00 | 6.40 | **8 mm** |
 | Embroidery, flat stitch | 1.00 | 0.30 | 16.00 | 12.80 | **16 mm** |
 
-The `L` and `g` columns are trade defaults, not derived — they are the inputs, and a real vendor spec replaces them. The `Minimum` column is derived from them and recomputes when they change. Uncoated stock is the only row where the counter binds rather than the ink; that is dot gain doing exactly what the `2g` term is there to model.
+The `L` and `g` columns are trade defaults, not derived — they are the inputs, and a real vendor spec replaces them. The `Minimum` column is derived from them and recomputes when they change.
+
+**Uncoated stock is the only row where the counter binds rather than the ink** — 4.40 against 4.00 — which is dot gain doing exactly what the `2g` term is there to model. Flexo is an exact tie at 6.40, so it is not a second such row; recompute it with a vendor's own `g` and it will fall to one side or the other.
 
 **Embroidery at 16 mm is the row that kills marks.** If the brief said "it has to embroider", that number is a constraint on the drawing, not a footnote after it — a 16-unit stroke needs a 16 mm mark before a single stitch is placed. Raise the stroke weight or lose the counter, and decide it before drawing, per mark-types.md's type selection.
 
-### The variant table
-
-| Variant | Binding feature | Screen minimum | Print minimum |
-|---|---|---|---|
-| `logo-mark` | narrowest counter | 16 px at target, 32 px at floor | from the table above |
-| `logo-full` | the set type | measured cap height, and width from the aspect | measured, same two formulas in mm |
-| `logo-stacked` | the set type | same cap height as `logo-full`; the width minimum is lower because the aspect is | as `logo-full` |
-| `logo-wordmark` | the set type | as `logo-full`, mark side does not apply | as `logo-full` |
-| `logo-mono-black`, `logo-mono-white` | identical geometry to their source | identical to their source | identical to their source |
-| `favicon.svg` | its single counter | **16 px** — see the redraw section | screen only, no print minimum |
-
-The mono variants inherit their source's minimums exactly, because construction.md's `currentColor` binding guarantees they are the same geometry. If a mono variant has a different minimum, it is not a mono variant — it is a second drawing, and the dark-inversion section below is where that gets decided.
+**The mono variants inherit their source's minimums exactly**, because construction.md's `currentColor` binding guarantees they are the same geometry. If a mono variant has a different minimum, it is not a mono variant — it is a second drawing, and the dark-inversion section below is where that gets decided.
 
 ## Clearspace
 
 **Clearspace is a ratio of the mark's own geometry, never a pixel value.** A pixel value is correct at exactly one size and silently wrong at every other, which is the failure the rule exists to prevent.
 
-**The value.** Take the mark's **largest counter**, round it up to the next whole grid unit, and take 64 units as the floor:
+**The value.** Take the mark's **largest enclosed counter, measured on the axis where it is widest**, round it up to the next whole grid unit, and take 64 units as the floor:
 
 ```text
-clearspace units = max( 64 , ceil( largest counter / 16 ) × 16 )
+clearspace units = max( 64 , ceil( widest dimension of the largest enclosed counter / 16 ) × 16 )
 clearspace as a fraction of the mark's rendered size = clearspace units / 256
 ```
 
-**Why the largest counter.** construction.md establishes that negative space narrower than the mark's own ink is read as part of the form: "Any negative space narrower than the stroke closes the same way whether or not it is enclosed." Extend that outward. A gap beside the mark that is smaller than the biggest hole *inside* the mark gets recruited into the form rather than separating it from what sits next to it. The mark's largest counter is the width at which the eye has already agreed to read negative space as interior, so clearspace has to exceed it.
+Two words in that sentence are doing work and both are there because the looser version is undecidable.
 
-**The 64-unit floor** is a stated convention, not a derivation, and it exists for marks whose largest counter is small or absent — an abstract union mark under mark-types.md's rule 5 has no enclosed counter at all. 64 is 4 grid units, 25% of the artboard, and the third step of the `256 → 128 → 64` half-step chain mark-types.md names, so it is a number the mark's own construction already contains.
+**"Enclosed."** The pixel-rule table above defines a counter as enclosed *or open*, matching construction.md, and that definition is right everywhere else on this page. It is wrong here. An open gap is already continuous with the space outside the mark — it is part of what clearspace is measuring, not a separate thing to measure against — so counting it would have the mark set its own clearance from a gap that clearance already contains. Only enclosed counters qualify. mark-types.md's pinwheel, whose four notches open outward, therefore has **no** qualifying counter and takes the floor.
+
+**"On the axis where it is widest."** A non-circular counter has more than one dimension and the rule has to name which. Take the widest, because clearspace is about the largest hole the eye has already accepted as interior. The monogram's `O` counter is 67.84 × 69.12; the widest is 69.12, and both round to the same 80 units, so nothing in the worked set depends on the choice — which is exactly why it has to be stated before a mark arrives where it does.
+
+**Why the largest counter at all.** construction.md establishes that negative space narrower than the mark's own ink is read as part of the form: "Any negative space narrower than the stroke closes the same way whether or not it is enclosed." Extend that outward. A gap beside the mark that is smaller than the biggest hole *inside* the mark gets recruited into the form rather than separating it from what sits next to it. The mark's largest counter is the width at which the eye has already agreed to read negative space as interior, so clearspace has to exceed it.
+
+**The 64-unit floor** is a stated convention, not a derivation, and it exists for marks whose largest enclosed counter is small or absent — an abstract union mark under mark-types.md's rule 5 has none at all. 64 is 4 grid units, 25% of the artboard, and the third step of the `256 → 128 → 64` half-step chain mark-types.md names, so it is a number the mark's own construction already contains.
 
 **The datum is the artboard edge.** construction.md fixes this: the 224-unit live area is "breathing room inside the file, not clearspace." Measure clearspace outward from the `0 0 256 256` box, not from the ink. The live area's own 16 units of margin is headroom you already have; it is not part of the number and must not be counted toward it.
 
 Worked, against the fragments in the other two files:
 
 ```text
-mark-types.md monogram   largest counter 67.84 (the O)  →  ceil to 80 units  →  31.25%
-mark-types.md vesica     largest counter 64 (the hole)  →  64 units, = floor →  25%
-mark-types.md pinwheel   no enclosed counter            →  floor, 64 units  →  25%
+mark-types.md monogram   O counter 67.84 × 69.12, widest 69.12  →  ceil to 80  →  31.25%
+                         (the two H slots are 32 wide and are not the largest)
+mark-types.md vesica     the r-32 hole, 64 × 64                 →  64, = floor →  25%
+mark-types.md pinwheel   no *enclosed* counter — the four
+                         notches open outward and do not count  →  floor, 64  →  25%
 ```
 
 **For a lockup**, compute the value from the mark's geometry, then apply it at the size the mark renders at *inside the lockup*. If the mark sits at height `H` in the lockup, clearspace is `(clearspace units / 256) × H` on all four sides of the lockup's bounding box — not of the mark's box.
@@ -183,18 +210,30 @@ Every variant must survive being flattened to a single value. construction.md's 
 
 **M1 — source.** Every `fill` and `stroke` in the master is `currentColor`. Any literal colour value, any `fill-opacity` or `opacity` below 1, any `mix-blend-mode`, any `linearGradient` or `radialGradient` reference: fail. Most of these are already banned by construction.md's forbidden-constructs table; mono collapse is where the ban has teeth, because each of them carries structure that a single value cannot express.
 
-**M2 — source, enclosure.** No painted element's geometry may be wholly enclosed by another painted element's geometry. Two separate elements taking the same value merge into one silhouette on collapse and the inner one stops existing. Test conservatively on bounding boxes: for every pair of painted elements A and B, if `bbox(B)` sits inside `bbox(A)`, fail.
+**M2 — source, enclosure.** The failure is an element that stops existing when the colours merge. That is not the same as an element that overlaps another one, and the difference has to be mechanical because a legitimate construction sits on the wrong side of the naive test.
 
-There is exactly one legal form of an enclosed shape, and it is not two elements: it is **two subpaths in one `path` with `fill-rule="evenodd"`**, which is construction.md's knockout. That passes M2 because it is one element.
+Run it in two stages.
 
-**M3 — render, inversion identity.** Render at 256 px with `color: #000` on white, then with `color: #fff` on black. Invert the second image. The two must be identical within anti-aliasing tolerance. Any difference is something in the file that is not colour-neutral, and it will be exactly the thing that vanishes in one-colour print.
+- **M2a — the screen, cheap.** For every pair of painted elements A and B, does `bbox(B)` sit inside `bbox(A)`? If no pair does, M2 passes and you are done.
+- **M2b — the verdict, on geometry not boxes.** For each pair the screen caught: does **B's geometry lie wholly inside A's geometry?** If yes, **fail** — flattening deletes B and the mark loses it at every size, in every colour mode, with no error. If B's ink extends beyond A's anywhere, **pass**: B is an additive overlay, merging is what it is for, and the merged silhouette is the shape that was drawn.
 
-**M4 — render, structure.** Render the flattened mark at 256 px. Compute the ink area and the area of the silhouette's convex hull.
+That second stage is what admits mark-types.md's wordmark detail — drawn geometry anchored to one letter, in the same paint, at the mark's declared weight. Its bounding box may well nest inside the type's; its ink is not contained by the type's, so it survives collapse intact. **The sanctioned wordmark overlay passes M2 by construction and must not be reported as a failure.**
+
+There is exactly one legal form of a genuinely enclosed shape, and it is not two elements: it is **two subpaths in one `path` with `fill-rule="evenodd"`**, which is construction.md's knockout. One element never enters the pairwise test at all.
+
+**M3 — render, inversion identity.** Render at 256 px with `color: #000` on white, then with `color: #fff` on black. Invert the second image and compare pixel by pixel. **Maximum per-channel difference ≤ 2/255**, which is anti-aliasing and rounding; anything above it is something in the file that is not colour-neutral, and it will be exactly the thing that vanishes in one-colour print.
+
+**M4 — computed, structure.** Compute the ink area and the area of the silhouette's convex hull **analytically, from the geometry**. This is the primary route and the only one a markdown-only skill can actually run — there is no image-analysis path from a PNG to an area, and both worked examples below were computed this way rather than measured.
+
+- **Ink area:** shoelace over the node set for straight-sided forms; the closed form for a circle, ellipse, ring, sector or lens; sum the pieces and subtract the counters.
+- **Hull area:** monotone chain over the node set, **plus each arc's axis extrema**, which are on the hull and are not nodes. Where the silhouette is already convex — a lens, a disc, a regular polygon — the hull *is* the silhouette and no chain is needed.
+
+A render is a **cross-check**, not the measurement: if the contact sheet at 256 px disagrees with the arithmetic, the arithmetic missed a piece of geometry and both need looking at.
 
 ```text
 ink area / convex hull area ≤ 0.85        pass
-                            >  0.85        pass only if LOGO.md's Construction section
-                                           names the silhouette as a deliberate primitive
+                            >  0.85       pass only if LOGO.md's Construction section
+                                          names the silhouette as a deliberate primitive
 ```
 
 This is the "does it still have structure" test made countable. A mark whose ink fills its own convex hull has no interior and no concavity — it is a blob, and everything that distinguished it was carried by colour. The escape hatch is real and it is narrow: a solid disc or a solid triangle is a legitimate mark, and `LOGO.md` saying so is the difference between a decision and a collapse.
@@ -213,7 +252,7 @@ pinwheel  ink 12042 (shoelace over its 12 nodes)
 
 A light mark on a dark ground reads optically heavier than the same mark dark on light. The ink appears to grow and the counters appear to shrink, by the same absolute amount — this is irradiation, and it is the reason type designers cut reversed weights lighter than the ones they invert from.
 
-**The model, stated once so everything below is one substitution.** Let the light region expand by `ε` on every edge, and let `r` be the compensation rate that type practice applies to a reversed stem — **2% to 4% of the stem width, a stated convention from type, not a derivation.** Then:
+**The model, stated once so everything below is one substitution.** Let the light region expand by `ε` on every edge, and let `r` be the compensation rate that type practice applies to a reversed stem — 2% to 4% of the stem width, a stated convention from type, not a derivation. Then:
 
 ```text
 ink grows by      2ε = r · w
@@ -221,6 +260,14 @@ counter shrinks by 2ε = r · w
 ```
 
 The same absolute number, in opposite directions. Everything below falls out of `r · w`.
+
+### `r` is pinned at 3%
+
+A 2%-to-4% band is fine for prose and useless for a gate: D2 below returns pass at `r` = 2% and fail at `r` = 4% for any counter between 32.32 and 32.64, so an unpinned `r` makes the whole section unreproducible.
+
+> **The gate runs at `r = 3%`**, the midpoint of the type-practice band, unless `LOGO.md` records a different value inside 2% … 4%. Where it does, every threshold below recomputes from the recorded value and D2 grades against that. Outside the band is not a recorded choice, it is a different model, and it needs its own justification.
+
+Every worked number on this page uses 3%.
 
 ### Does the compensation survive construction.md's snap rule?
 
@@ -250,13 +297,15 @@ the compensation is worth one device pixel when   r · w × R / 256 ≥ 1
                                                   R ≥ 256 / (r · w)
 ```
 
-At `r = 3%`:
+At `r = 3%`, taking the ceiling — the threshold is the first *whole* pixel size at which the compensation is worth a pixel, so `256 / (r · w)` rounds **up**, never to nearest:
 
-| `w` | `r · w` units | `R` at which it reaches 1 device px |
-|---|---|---|
-| 16 | 0.48 | 533 px |
-| 24 | 0.72 | 356 px |
-| 32 | 0.96 | 267 px |
+| `w` | `r · w` units | `256 / (r · w)` | Threshold | Compensation at the threshold |
+|---|---|---|---|---|
+| 16 | 0.48 | 533.33 | **534 px** | `0.48 × 534 / 256` = 1.00125 px |
+| 24 | 0.72 | 355.56 | **356 px** | `0.72 × 356 / 256` = 1.00125 px |
+| 32 | 0.96 | 266.67 | **267 px** | `0.96 × 267 / 256` = 1.00125 px |
+
+At 533 px the `w = 16` compensation is 0.99937 px — under a pixel, and so under the threshold that row exists to define. 534 is the first size that clears it.
 
 **Below that size, do not fork.** The dark variant is the master with `color` resolved, exactly as construction.md says, and the discrepancy is under a pixel. **At or above it**, the compensation is a visible drawing difference and one of two things has to be recorded in `LOGO.md`:
 
@@ -273,18 +322,26 @@ Compensation or no compensation, the counters on a dark ground are narrower by `
 effective counter on dark = drawn counter − r · w
 ```
 
-At `r = 3%`, a counter drawn at exactly the 32-unit target measures 31.52 on dark at `w = 16`, and 31.04 at `w = 32`. Both fall under the target. So:
+At `r = 3%`, a counter drawn at exactly its target measures under that target on dark, at every legal weight — note the `w = 32` row uses a target of 40, because `max(1.25 × 32, 32)` is 40 and a 32-unit counter is not legal there at all:
 
-> **A mark that ships a dark variant draws its counters at `32 + r · w` units, not at 32.**
+```text
+w 16   target max(20, 32) = 32   →  32 − 0.48 = 31.52   under
+w 24   target max(30, 32) = 32   →  32 − 0.72 = 31.28   under
+w 32   target max(40, 32) = 40   →  40 − 0.96 = 39.04   under
+```
+
+So:
+
+> **A mark that ships a dark variant draws its counters at `max(1.25 w, 32) + r · w` units — the target plus the compensation, never the bare 32.**
 
 At `r = 3%`: 32.48 at `w` 16, 32.72 at `w` 24, and 40.96 at `w` 32 (whose target was already 40). None of these needs grid alignment — construction.md's counter table frees any counter of 32 or more from it — so this costs nothing but the two decimal places.
 
-**And the 16-unit counter floor is not available to a mark that ships a dark variant at all.** At `r = 3%` a 16-unit counter measures 15.52 on dark, which is below the floor, and the floor was the last thing standing between it and closing. This is the same conclusion the favicon reaches by a different route.
+**And the 16-unit counter floor is not available to a mark that ships a dark variant at all.** At `r = 3%` a 16-unit counter measures 15.52 on dark, below the floor, and the floor was the last thing standing between it and closing. That 15.52 is an *apparent* width, not a coverage width — see [One unit of measure, twice](#one-unit-of-measure-twice) for why apparent width is allowed to fail a threshold the rasteriser would pass. This is one of the four routes collected in [The counter floor, in aggregate](#the-counter-floor-in-aggregate).
 
 ### The two tests
 
 - **D1 — source.** If a separate dark master exists, `LOGO.md` records why, at what size, and its own flag count. If none exists, `logo-mono-white` is byte-identical to `logo-mono-black` apart from the resolved `color`.
-- **D2 — computed.** Every counter, reduced by `r · w`, still clears construction.md's target. No counter relies on the 16-unit floor.
+- **D2 — computed, at the recorded `r` (3% unless `LOGO.md` says otherwise).** Every counter, reduced by `r · w`, still clears `max(1.25 w, 32)`. No counter relies on the 16-unit floor.
 
 ## The favicon redraw
 
@@ -294,9 +351,9 @@ At `r = 3%`: 32.48 at `w` 16, 32.72 at `w` 24, and 40.96 at `w` 32 (whose target
 
 A scaled favicon and its master have identical topology. Three binary tests catch it:
 
-- **F1.** The favicon's path data is not identical to, and does not contain, any of the master's path data.
-- **F2.** `nodes(favicon) < nodes(master)`. A redraw that did not lose a node did not simplify anything.
-- **F3.** `counters(favicon) ≤ max(1, counters(master) − 1)`. Detail was dropped, and the cap below is the ceiling.
+- **F1.** No **complete subpath** of the favicon appears as a complete subpath of the master. Subpath is the granularity: a whole `d` attribute is too coarse (change one number and it passes) and a command is too fine (`A96 96 0 1 0` is a legitimate coincidence between two marks that share a radius, and construction.md's derivation rules make shared radii *likely*).
+- **F2.** `nodes(favicon) < nodes(master)`, counted by the rule under [Path complexity](#path-complexity). A redraw that did not lose a node did not simplify anything.
+- **F3.** `counters(favicon) ≤ 1`, **and** `counters(favicon) < counters(master)` unless `counters(master) = 1`. Both clauses: the first is the cap below, the second is the evidence that detail was dropped. The earlier single-expression form — `≤ max(1, counters(master) − 1)` — returned 2 for a three-counter master and contradicted the cap.
 
 `LOGO.md`'s **Variants** section names every feature removed and why. "Simplified for small sizes" is not a reason; "the crossbar counter measured 24 units, which is 1.5 px at 16 and greys at any device pixel ratio that is not 1 or 2" is.
 
@@ -316,7 +373,7 @@ Two counters spend four fifths of the favicon on the alternation of hole and wal
 
 The 40-unit figure is the light-ground target. A favicon that also ships on a dark tab bar takes the dark-inversion increment on top of it — `40 + r · w` = 40.96 at `r` 3% and the mandated `w` 32 — for the reason the dark-inversion section gives. The 104-unit budget line becomes 104.96, which changes nothing about the cap.
 
-**No counter may use the 16-unit floor.** Two independent routes reach this and they agree: a floor-using counter's minimum size is 32 px, and the favicon renders at 16; and grid alignment — the floor's precondition — does not reach the raster at device pixel ratios of 1.25 or 1.5, which turn a nominal 16 px favicon into 20 or 24 device px. Every favicon counter meets the target.
+**No counter may use the 16-unit floor.** Two independent routes reach this and they agree: a floor-using counter's minimum size is 32 px, and the favicon renders at 16; and grid alignment — the floor's precondition — does not reach the raster at device pixel ratios of 1.25 or 1.5, which turn a nominal 16 px favicon into 20 or 24 device px. Every favicon counter meets the target. This is one of the four routes collected in [The counter floor, in aggregate](#the-counter-floor-in-aggregate).
 
 **The ink fills the live area.** The master may sit small on its artboard because it will be placed inside a lockup. The favicon has 14 px and no lockup, so its ink bounding box reaches the live-area bounds — 16 and 240 — on its longer axis, overshoot excepted. Anything less throws away pixels there is no way to get back.
 
@@ -340,7 +397,13 @@ A ring at the favicon's own spec, audited against construction.md coordinate by 
        size this variant renders at. Recorded in LOGO.md.
        Both subpaths wind the same way (sweep-flag 0), which nonzero would fill solid;
        fill-rule="evenodd" is what makes the hole a hole.
-       4 nodes, no OPTICAL flags, every painted edge on a multiple of 16. -->
+       Corrections 1, 2, 3, 5, 6, 7, 8 and 9 do not bind: nothing flat shares an edge
+       with the curve, nothing has to read as the same size as anything else, there is
+       no apex, no diagonal outline, no drawn container (the ring is the mark, and it
+       encloses nothing), no corner or join, no rotation, and no letterform.
+       Correction 4 binds and is answered above.
+       4 nodes, no OPTICAL flags, every painted edge on a multiple of 16.
+       Reuse ratio 7 distinct / 20 written = 0.35, well under the 0.75 tracing signal. -->
   <path fill="currentColor" fill-rule="evenodd"
         d="M128 16A112 112 0 1 0 128 240A112 112 0 1 0 128 16Z
            M128 48A80 80 0 1 0 128 208A80 80 0 1 0 128 48Z"/>
@@ -363,10 +426,28 @@ nodes per contour = 896 / 32 = 28
 |---|---|---|
 | Nodes on any one closed contour | **28** | derived above |
 | Nodes in the file | **56** | stated — two full contours' worth. A mark is a silhouette plus what is inside it, and construction.md's counter target means each counter after the first eats the room the next one needs. |
-| Redraw signal | **24** | stated. The richest fragment in construction.md and mark-types.md is the two-letter monogram at 16 nodes. 24 is 50% headroom over the busiest thing this skill actually draws. |
-| Favicon | 28 per contour, at most 2 contours, and `nodes(favicon) < nodes(master)` | from F2 and the one-counter cap |
+| Redraw signal | **24** | stated. The richest fragment in construction.md and mark-types.md is the two-letter monogram at 16 nodes under the rule below. 24 is 50% headroom over the busiest thing this skill actually draws. |
+| Favicon | 28 per contour, at most one counter, and `nodes(favicon) < nodes(master)` | from F2 and F3 |
 
-Count a node as any point the path data lands on: every `M`, `L`, `H`, `V`, `A` endpoint and every cubic endpoint. **Bézier control points are not nodes** — construction.md exempts them from the grid for the same reason they are exempt here: they locate ink without being ink.
+### Counting a node
+
+The count feeds a binary test and three ceilings, so it has to give one answer. Ambiguity here is worth a 50% swing on any curve-heavy mark.
+
+- **Count each distinct point the geometry lands on.** Every `M`, `L`, `H`, `V`, `A`, `C`, `S`, `Q` and `T` endpoint.
+- **A closing point coincident with its subpath's `M` counts once, not twice.** `Z` returns to a point that is already counted; counting it again inflates every closed contour by one per subpath.
+- **Primitives have nodes too**, and this is the clause that matters most, because construction.md actively prefers them — "Prefer `circle` and `ellipse` when the shape is one." A mark built entirely from primitives would otherwise score zero and clear every ceiling by default. Count `circle`, `ellipse` and `rect` as **4** (their four axis extrema, which is what an equivalent path would carry); `line` as **2**; `polygon` and `polyline` as one per listed point.
+- **Bézier control points are not nodes** — construction.md exempts them from the grid for the same reason they are exempt here: they locate ink without being ink. Note they *do* count for the reuse ratio below, which is measuring something else.
+
+Worked, so the rule is not re-derivable two ways:
+
+```text
+favicon ring above     M128 16 · A→128 240 · A→128 16 (= the M, counts once)   2 per subpath
+                       × 2 subpaths                                             = 4 nodes
+mark-types.md H        M + 11 H/V endpoints, Z returns to the M                = 12 nodes
+mark-types.md O        2 arc endpoints per subpath × 2 subpaths                =  4 nodes
+mark-types.md monogram 12 + 4                                                  = 16 nodes
+mark-types.md pinwheel M + 11 H/V endpoints, Z returns to the M                = 12 nodes
+```
 
 ### Two tracing signatures, both readable from the source
 
@@ -376,12 +457,23 @@ Count a node as any point the path data lands on: every `M`, `L`, `H`, `V`, `A` 
 reuse ratio = distinct coordinate values / total coordinate values
 ```
 
-Compute it per `path`, and only on paths carrying **12 or more** coordinate values — below that the ratio is noise. Above **0.75** is a tracing signal. Measured against the fragments in the other two files:
+**Which numbers count**, because the ratio moves by 20 points depending on the answer:
+
+- **Count every coordinate value as written in the path data.** `H48` contributes one value, not two — the implied `y` was never written and a constructed mark's economy of notation is part of what is being measured.
+- **Count arc `rx` and `ry`.** They are the construction: a shared radius is the clearest evidence of derivation on the page.
+- **Do not count the arc rotation or either flag.** They are not coordinates, they take three values between them, and including them dilutes the ratio toward pass on every arc-heavy mark.
+- **Count Bézier control-point values.** They are excluded from the node count and included here, and the asymmetry is the point: a traced outline is nothing but control points, so excluding them would blind the check to exactly the thing it exists to catch.
+
+Compute per `path`, and only on paths carrying **12 or more** counted values — below that the ratio is noise. Above **0.75** is a tracing signal. Measured against the fragments in the other two files and the favicon above:
 
 ```text
-mark-types.md pinwheel   7 distinct / 13 total  = 0.54    pass
-mark-types.md monogram H 7 distinct / 15 total  = 0.47    pass
+mark-types.md pinwheel   7 distinct / 13 counted  = 0.54    pass
+mark-types.md monogram H 7 distinct / 13 counted  = 0.54    pass
+mark-types.md monogram O 8 distinct / 20 counted  = 0.40    pass
+favicon ring above       7 distinct / 20 counted  = 0.35    pass
 ```
+
+The two polygon paths land on the identical ratio, which is not a coincidence worth hiding: both are `MHVHVHVHVHVHZ`, both write 13 values, and both reuse 6 of them. **A rule that gave those two different totals would be the wrong rule**, and an earlier draft of this page did exactly that.
 
 **Curve runs.** A long run of `C` or `c` commands with no repeated radius and no repeated handle length is a sampled outline. A constructed curve uses `circle`, `ellipse`, or `A` arcs at a radius that appears elsewhere in the file — construction.md's curve-authoring section says to prefer exactly those, and this is the check that notices when you did not.
 
@@ -400,46 +492,47 @@ construction.md's self-check covers a single file. These are the items that only
 
 ## The binary checklist
 
-Every item is answerable from the file or from one render. This is the criteria list; `logo-review` supplies the grading.
+Every item is answerable from the file, from the analytic geometry, or from `logo-concept`'s contact-sheet render. This is the criteria list; `logo-review` supplies the grading. Where the render is unavailable, the items that need one are recorded **unrun**, not passed.
 
 **Minimum sizes**
 
-- [ ] `logo-mark`'s narrowest counter clears the target, or `LOGO.md` states the 32 px minimum that the floor costs.
+- [ ] `logo-mark`'s narrowest counter clears `max(1.25 w, 32)`, or `LOGO.md` records all four floor conditions as met and states the 32 px minimum the floor costs.
 - [ ] The lockup's `φ_ink` and `φ_ctr` were measured off a 256 px render, and the cap-height and width minimums are recorded in `LOGO.md`.
 - [ ] Print minimums computed for each process the brief named, from the vendor's `L` and `g` where one was available.
-- [ ] Every minimum in `LOGO.md`'s **Variants** table is a computed or measured number, not a round one someone liked.
+- [ ] Every minimum in `LOGO.md`'s **Variants** table cites the formula or the measurement it came from.
 
 **Clearspace**
 
-- [ ] The value is `max(64, ceil(largest counter / 16) × 16)` units, expressed as a fraction of the rendered size.
+- [ ] The value is `max(64, ceil(widest dimension of the largest enclosed counter / 16) × 16)` units, expressed as a fraction of the rendered size. Open gaps excluded.
 - [ ] It is measured outward from the artboard edge, not from the ink.
 - [ ] The lockup's clearspace is derived from the mark's geometry at the size the mark renders inside it.
 
 **Mono collapse**
 
 - [ ] M1 — every paint is `currentColor`; no literal colour, no alpha, no blend mode, no gradient.
-- [ ] M2 — no painted element's bounding box sits inside another's. Knockouts are one `path`, two subpaths, `fill-rule="evenodd"`.
-- [ ] M3 — the black-on-white and inverted white-on-black renders are identical.
-- [ ] M4 — ink area over convex hull area is at or below 0.85, or `LOGO.md` names the silhouette as a deliberate primitive.
+- [ ] M2a — any pair whose bounding boxes nest is identified. M2b — none of those pairs has the inner element's *geometry* wholly inside the outer's. Knockouts are one `path`, two subpaths, `fill-rule="evenodd"`, and do not enter the test.
+- [ ] M3 — black-on-white and inverted white-on-black differ by at most 2/255 per channel.
+- [ ] M4 — ink area over convex hull area, computed analytically, is at or below 0.85, or `LOGO.md` names the silhouette as a deliberate primitive.
 
 **Dark inversion**
 
+- [ ] `LOGO.md` records `r`, or the gate runs at 3%.
 - [ ] D1 — `logo-mono-white` is byte-identical to `logo-mono-black` apart from the resolved `color`, or `LOGO.md` records the fork, its size threshold, and its own flag count.
-- [ ] D2 — every counter, reduced by `r · w`, still clears construction.md's target. Nothing relies on the 16-unit floor.
+- [ ] D2 — every counter, reduced by `r · w`, still clears `max(1.25 w, 32)`. Nothing relies on the 16-unit floor.
 
 **Favicon**
 
-- [ ] F1 — no path data shared with the master.
-- [ ] F2 — strictly fewer nodes than the master.
-- [ ] F3 — at most one counter, and at least one fewer than the master unless the master had one.
+- [ ] F1 — no complete subpath shared with the master.
+- [ ] F2 — strictly fewer nodes than the master, counted by the node rule.
+- [ ] F3 — at most one counter, and fewer than the master unless the master had one.
 - [ ] Stroke weight 32 units; no counter on the floor; ink reaches the live-area bounds on its longer axis.
 - [ ] The uniform weight is recorded as a decision with the sub-resolution reason.
 - [ ] `LOGO.md` names every dropped feature and why, in reproduction terms.
 
 **Path complexity**
 
-- [ ] No contour above 28 nodes; no file above 56; anything above 24 was looked at again.
-- [ ] Reuse ratio at or below 0.75 on every `path` carrying 12 or more coordinate values.
+- [ ] No contour above 28 nodes; no file above 56; anything above 24 was looked at again. Primitives counted at 4 / 4 / 4 / 2.
+- [ ] Reuse ratio at or below 0.75 on every `path` carrying 12 or more counted values.
 - [ ] No long `C` run without a repeated radius or handle length.
 
 **Artboard hygiene**
