@@ -25,14 +25,15 @@ Non-square artboards (a wide lockup, a stacked lockup) are legitimate **variants
 
 ### The grid
 
-The unit is **16**. The artboard is therefore a 16 × 16 cell grid. Every structural coordinate — the edges of shapes, the ends of strokes, the corners of counters — is a multiple of 16.
+The unit is **16**. The artboard is therefore a 16 × 16 cell grid. The rule binds **painted edges** — the boundaries of ink, which are the only thing a rasteriser resolves:
 
-Two coordinates are **derived from a stroke weight** rather than placed, and both may sit on a half-unit (a multiple of 8), because stroke weights are themselves multiples of 8:
+> A painted edge sits on a multiple of **16**; or on a multiple of **8** when the stroke weight that produced it is not a multiple of 16. Stroke weights themselves are multiples of **8**.
 
-- a stroke centreline;
-- the second painted edge of a filled stroke whose weight is not a multiple of 16 — a 24-wide stem starting at 128 ends at 152.
+Call any of those a **permitted value**. Everywhere else in this file the rule is referenced by that term rather than restated, so there is one definition and nothing to drift out of sync with it.
 
-Neither is an optical exception and neither is flagged. Both follow mechanically from a legal stroke weight, and the cost is stated in [Stroke discipline](#stroke-discipline).
+The second clause exists because 16 does not divide 24. A 24-wide stem starting at 128 ends at 152, and no 24-wide stem can put both edges on multiples of 16. The cost of that is priced in [Stroke discipline](#stroke-discipline). Neither clause is an optical exception and neither is flagged; both follow mechanically from a legal stroke weight.
+
+**A centreline is not a painted edge, and is not checked.** It paints nothing — it is bookkeeping that locates two edges. At `w = 24` a centreline sits at `edge + 12`, a multiple of 4, permitted by nothing on this page. That is fine and needs no flag. Check the two edges it implies; never the centreline itself. The same exemption covers Bézier control points (see [Curve authoring](#curve-authoring)) and any construction geometry deleted before shipping.
 
 16 is not arbitrary. It is the number that makes the grid land on whole pixels at every size the mark will actually be rendered at:
 
@@ -50,10 +51,11 @@ A straight edge on the grid maps to a pixel boundary at 16, 32, 48, 64 and 256 p
 
 Geometry occupies `16 … 240` on both axes — a 224-unit live area with one grid unit of artboard margin on all sides. This is breathing room inside the file, **not** clearspace; clearspace is measured outside the artboard and is defined in [reproduction.md](reproduction.md).
 
-Two riders:
+Three riders:
 
 - When the container *is* the mark (an app-icon tile, a filled roundel), the container may run to the artboard edge and the 224 live area then applies to everything inside it.
 - The live area bounds the **nominal** extents. Overshoot (correction 1 below) is measured outward from the nominal edge and is allowed to spill past the live area by its own amount — spilling is what overshoot is. Nothing else may.
+- **Bound a curve by its control points, not by sampling it.** A Bézier is always contained by the convex hull of its control points, so testing the control points is conservative, always safe, and one comparison per point. Sampling can miss an extremum between samples; the hull cannot.
 
 ## Precedence when the grid and the optics disagree
 
@@ -61,7 +63,7 @@ The grid rule says every coordinate is a multiple of 16. The optical rules below
 
 1. **Optical correction wins.** A mathematically clean coordinate that looks wrong is wrong. The grid is a tool for crispness, not an aesthetic authority.
 2. **Spend the deviation on curves and points, not on straight edges.** Almost every optical correction moves a curve's extremum or a shape's apex — precisely the places a rasteriser anti-aliases anyway, where leaving the grid costs nothing. When a correction must move a straight axis-aligned edge (stroke thinning is the common case), move the *free* edge and keep the edge that aligns with another form on the grid.
-3. **Snap back if the residual is under 0.5 units.** Compute the corrected value exactly, then compare it to the nearest **permitted grid value** — a multiple of **16** for a structural edge, a multiple of **8** for a stroke weight or any coordinate derived from one. Note that this is the distance to the nearest *permitted* value, not to the uncorrected value you started from; the two coincide only when the starting value was itself on the grid. If they are within 0.5 units, use the grid value and drop the flag. Grid alignment buys a crisp edge at every reproduction size; 0.5 units of size accuracy buys nothing.
+3. **Snap back if the residual is under 0.5 units.** Compute the corrected value exactly, then compare it to the nearest **permitted value** as defined under [The grid](#the-grid) — a multiple of 16, or a multiple of 8 for a stroke weight and for a painted edge produced by a stroke weight that is not a multiple of 16. Note that this is the distance to the nearest *permitted* value, not to the uncorrected value you started from; the two coincide only when the starting value was itself permitted. If they are within 0.5 units, use the permitted value and drop the flag. Grid alignment buys a crisp edge at every reproduction size; 0.5 units of size accuracy buys nothing.
 4. **Two decimal places, never more.** `22.63`, not `22.6274`. One hundredth of a unit is 0.01 px at a 256 px render and 1/1600 px at favicon size — below any rasteriser's resolution. Trailing precision is noise that makes the file look machine-generated, which it is, and you are trying to hide that.
 5. **Flag every surviving exception inline**, on the line above the geometry, in this format:
 
@@ -70,7 +72,9 @@ The grid rule says every coordinate is a multiple of 16. The optical rules below
 <circle cx="128" cy="128" r="66.56" fill="currentColor"/>
 ```
 
-An unflagged non-grid number is a bug until proven otherwise. Every flag is copied into the **Construction** section of `docs/design/LOGO.md`, so the exception list is auditable after the fact by someone who was not there when it was drawn.
+An unflagged non-permitted number is a bug until proven otherwise. Every flag is copied into the **Construction** section of `docs/design/LOGO.md`, so the exception list is auditable after the fact by someone who was not there when it was drawn.
+
+**Ceiling: about six surviving flags in one mark.** Past six, the form is fighting the grid rather than being corrected against it, and the audit trail stops being readable — twenty flags is not a well-documented mark, it is an undocumented one with twenty comments in it. Six is a redraw signal, not a budget to spend down. If a mark needs more, the geometry underneath is wrong.
 
 ## Optical correction
 
@@ -78,9 +82,25 @@ This is the section that matters. Mathematically centred is not visually centred
 
 Nine corrections. Each states the rule, the reason it has that value, and the arithmetic on the 256 artboard.
 
+**The nine are numbered for reference, not for sequence.** They are presented in the order that makes them easiest to understand and applied in close to the reverse order — correction 1 is first to read and last to apply, because it only touches extrema. Read the procedure below before you draw; working top-down through 1 → 9 applies overshoot to uncorrected extents and then thins the horizontals underneath it.
+
+### Order of application
+
+Corrections compound, and applying them out of order produces a shape that is corrected twice on one axis and not at all on another. Always:
+
+1. Lay the composition out on the grid, uncorrected.
+2. Size the shapes against each other by area (correction 2).
+3. Place them: container split (correction 6), apex centring (correction 3), rotation (correction 8).
+4. Set stroke weights, then the axis corrections (corrections 4, 5) and the joins (correction 7).
+5. Apply shared-edge overshoot last (correction 1) — it only touches extrema, so nothing downstream depends on it.
+6. Sidebearings, for letterforms you position yourself (correction 9).
+7. Round to 2 dp, snap anything within 0.5 of its permitted value, flag what survives, and count the flags against the ceiling of six.
+
 ### 1. Overshoot at a shared edge
 
 **Rule.** When a curved or pointed form shares an alignment edge with a flat one, the curved form must extend past it. Round forms overshoot by **2%** of the flat form's height at each end. Pointed forms (a triangle apex, a diamond vertex) overshoot by **3%**.
+
+**The base is the corrected height, not the nominal one.** Overshoot is applied last, so by the time you reach it the flat form has already been through corrections 2–8. Take the percentage on the extent it has *then*. Taking it on the nominal extent double-counts whatever correction 4 already removed.
 
 **Why.** The eye measures a shape by how much of it sits near the alignment line. A flat edge presents its full width there; a circle presents a tangent point and a pointed form presents almost nothing. Matched exactly, the round shape reads short and the point reads clipped. 2% and 3% are the typographic values — the same reason a lowercase `o` is drawn taller than an `x` in every serious typeface.
 
@@ -111,7 +131,7 @@ The centre stays at `128` — on grid. Only the radius leaves it. For a pointed 
 
 **Why.** A square fills its bounding box completely; a circle fills 78.5% of it. Given equal bounding boxes the circle loses a fifth of its mass and reads noticeably smaller. Equal-area is the correction: `πr² = s²` gives `d = 2s/√π = 1.1284s`.
 
-Do not confuse this with rule 1. Rule 1 is a ~2% nudge applied when two shapes **share an edge**. Rule 2 is a ~12% resize applied when two shapes must **read as equally big** in separate positions. Applying rule 1's number to rule 2's problem produces a circle that is visibly too small.
+Do not confuse this with correction 1. Correction 1 is a ~2% nudge applied when two shapes **share an edge**. Correction 2 is a ~12% resize applied when two shapes must **read as equally big** in separate positions. Applying correction 1's number to correction 2's problem produces a circle that is visibly too small.
 
 **Worked.** Matching a 128 square:
 
@@ -121,7 +141,7 @@ residual against the nearest grid multiple (144 = 9 × 16) = 0.43  →  under 0.
 diameter = 144, radius = 72                                        (on grid, no flag)
 ```
 
-That is precedence rule 3 doing its job: the correction is large enough to matter and lands close enough to the grid to keep it.
+That is precedence rule 3 doing its job: the correction is large enough to matter and lands close enough to a permitted value to keep it.
 
 Same treatment for other primitives. Every value in the last column is derived from the exact area match to a 128 square and then rounded to 2 dp — never from an already-rounded intermediate, which is how a table like this drifts:
 
@@ -132,7 +152,7 @@ Same treatment for other primitives. Every value in the last column is derived f
 | Diamond (square at 45°) | `a²` | `1.4142 s` diagonal | side 128, diagonal 181.02 |
 | Hexagon (regular) | `(3√3/2)a²` | `1.2408 s` across corners | 158.82 across corners, 137.55 across flats |
 
-Only the circle lands within 0.5 of a grid multiple. Every other value stays as a flagged exception under precedence rule 3.
+Only the circle lands within 0.5 of a permitted value. Every other value stays as a flagged exception under precedence rule 3.
 
 **The triangle row does not survive contact with correction 3.** At 168.46 tall, a bounding-box-centred apex sits at `128 − 84.23 = 43.77`; the `h/6` centroid shift of 28.08 puts it at **15.69**, outside the live area. The ceiling for a triangle taking the full shift is:
 
@@ -183,6 +203,17 @@ Every legal weight — 16, 24, 32 — produces a delta that clears the snap tole
 
 The correction is invisible below about a 64 px render. It is not wasted work — it is what makes the mark hold together on a billboard and in a slide deck, which is where marks are actually looked at closely.
 
+**A curved stroke is a horizontal stroke wherever its tangent is horizontal.** Two concentric circles give a ring of uniform thickness, which reads bottom-heavy for exactly the reason above — the same failure, hidden in a shape that looks symmetrical. Either thin the ring where the tangent runs horizontal by differing the vertical radii, or accept the uniform ring and record the choice:
+
+```text
+outer r 96, inner r 64          thickness 32 everywhere, uniform
+thin the top and bottom:        32 × 0.96 = 30.72
+inner ry = 96 − 30.72 = 65.28   (inner becomes an ellipse: rx 64, ry 65.28)
+result: 30.72 thick at the horizontal tangents, 32 at the vertical ones
+```
+
+A uniform ring is a legitimate decision. An unnoticed one is not — if you keep it uniform, say so in `LOGO.md`.
+
 ### 5. Stroke width is measured perpendicular to the stroke
 
 **Rule.** A diagonal drawn as a filled outline by offsetting `x` is thinner than it looks in the numbers. For a bar at angle `θ` from vertical, the horizontal offset needed for a perpendicular width `w` is `w / cos θ`.
@@ -226,20 +257,19 @@ Two riders. First, the same correction does **not** apply horizontally — there
 
 ### 7. Corners and joins
 
-**Rule.** Where two strokes of width `w` meet, the join accumulates ink and reads heavier than either straight run. Three consequences, all checkable:
+**Rule.** Where two strokes of width `w` meet, the join accumulates ink and reads heavier than either straight run. Two consequences, both checkable:
 
 - **Rounded corners:** `inner radius = outer radius − w`. If `outer < w`, the inner corner is sharp (`r = 0`). Equal radii on both sides is the tell of a machine-drawn corner: the stroke visibly bulges at the bend.
 - **Angles:** no interior join tighter than **60°**. Below that the ink build-up cannot be relieved without redrawing, and at favicon size the join fills solid and swallows whatever the angle was supposed to express.
-- **Relief:** at a 90° join in a stroke of 24 units or heavier, pull the inner corner back by `0.1 w` along both arms. At `w = 32` that is 3.2 units. Below 24 units the build-up is not visible at any reproduction size — skip the relief and keep the corner on the grid.
 
 **Worked.** A 32-unit stroke turning a corner with a 48-unit outer radius:
 
 ```text
-outer radius = 48   (grid, 3 units)
-inner radius = 48 − 32 = 16   (grid, 1 unit)
+outer radius = 48        (multiple of 16)
+inner radius = 48 − 32 = 16   (multiple of 16)
 ```
 
-Choosing outer radii that are `w` plus a grid multiple keeps both radii on the grid for free. Prefer those values.
+Choosing outer radii of `w` plus a multiple of 16 puts both radii on a permitted value for free — a multiple of 16 at `w = 16` or `w = 32`, and a multiple of 8 at `w = 24`, where outer 40 gives inner 16. Prefer those values.
 
 ### 8. Rotation
 
@@ -259,10 +289,12 @@ So: keep the side, accept the 181.02 extent, and confirm it fits `16 … 240`. I
 
 **Rotation does not carry corrections with it.** Re-derive them from the final orientation, both ways:
 
-- Rule 4 follows the axis, not the shape. A stem that rotates into a bar now needs the 4% thinning; a bar that rotates into a stem needs it taken out. Rotating a corrected shape and leaving the numbers alone gives you a form that is corrected on the wrong axis — worse than no correction at all.
-- Rule 1 follows the final alignment edge. A square rotated to a diamond presents vertices where it presented flats, so any shared-edge overshoot goes from 2% to 3%.
+- Correction 4 follows the axis, not the shape. A stem that rotates into a bar now needs the 4% thinning; a bar that rotates into a stem needs it taken out. Rotating a corrected shape and leaving the numbers alone gives you a form that is corrected on the wrong axis — worse than no correction at all.
+- Correction 1 follows the final alignment edge. A square rotated to a diamond presents vertices where it presented flats, so any shared-edge overshoot goes from 2% to 3%.
 
-### 9. Optical sidebearings in a wordmark
+### 9. Optical sidebearings between letterforms
+
+**Scope.** This correction applies **only where you are positioning the letterforms yourself** — a monogram, or a wordmark drawn as paths after outline conversion has happened somewhere else. A wordmark shipped as `<text>` against a declared webfont (see [Forbidden constructs](#forbidden-constructs)) takes its sidebearings from the font's own metrics, and the only lever SVG gives you is `letter-spacing`, which is global tracking and cannot fix a per-pair gap. If a mark needs this correction, it needs per-glyph placement — and that is a decision to take deliberately, not to discover halfway through.
 
 **Rule.** Letters are spaced by the area between them, not the distance between their bounding boxes. Take a base sidebearing `s` from the flat-sided letters and scale it by shape:
 
@@ -272,21 +304,11 @@ So: keep the side, accept the 181.02 extent, and confirm it fits `16 … 240`. I
 | Round | O C G S Q | `0.94 s` | 30.08 |
 | Diagonal or pointed | A V W X Y | `0.88 s` | 28.16 |
 
-**Why.** The same logic as rule 1, applied sideways. A round letter touches its sidebearing at a single tangent and a diagonal at a vertex, so equal measured gaps produce visibly larger holes next to `O` and `A` than next to `H`. Tracking a wordmark uniformly and stopping there is what makes set type look set rather than drawn.
+**Why.** The same logic as correction 1, applied sideways. A round letter touches its sidebearing at a single tangent and a diagonal at a vertex, so equal measured gaps produce visibly larger holes next to `O` and `A` than next to `H`. Tracking uniformly and stopping there is what makes set type look set rather than drawn.
 
 Correct sidebearings before tracking, not after — tracking is a single global number and cannot fix a per-pair problem. The wordmark recipe itself is in [mark-types.md](mark-types.md).
 
-### Order of application
-
-Corrections compound, and applying them out of order produces a shape that is corrected twice on one axis and not at all on another. Always:
-
-1. Lay the composition out on the grid, uncorrected.
-2. Size the shapes against each other by area (rule 2).
-3. Place them: container split (rule 6), apex centring (rule 3), rotation (rule 8).
-4. Set stroke weights, then the axis corrections (rules 4, 5) and the joins (rule 7).
-5. Apply shared-edge overshoot last (rule 1) — it only touches extrema, so nothing downstream depends on it.
-6. Sidebearings, for wordmarks only (rule 9).
-7. Round to 2 dp, snap anything within 0.5 of its permitted grid value (16 for a structural edge, 8 for a stroke weight or a coordinate derived from one), flag what survives.
+These nine are applied in the sequence given under [Order of application](#order-of-application) at the top of this section, which is close to the reverse of the order they are presented in. Do not work through them 1 → 9.
 
 ## Stroke discipline
 
@@ -305,21 +327,49 @@ Both weights are multiples of 8. Three weights is not a system, it is an acciden
 
 **What a 24-unit weight costs.** 16 and 32 are multiples of the grid unit, so both painted edges of a 16- or 32-wide filled stroke land on full units. 24 is not: a 24-wide stem starting at 128 ends at 152, putting one edge on the half-unit. Read that off the render table above — a half-unit is a whole pixel at 32, 64, 128 and 256 px, and half a pixel at 16 and 48 px. So a 24-unit weight softens one edge at exactly two reproduction sizes, one of which (16 px) is redrawn from scratch anyway — see [reproduction.md](reproduction.md).
 
-That is an acceptable price for keeping two of the three ratios available, but it is a price. **A single weight of 16 or 32 puts every painted edge on a full unit and is the safer default.** Reach for 24 when the mark needs it, not by habit.
+It costs a second thing, and this is the paragraph to learn it in rather than twenty lines further down: **a 24-unit weight forfeits the counter hard floor.** The floor requires both counter edges on full units, which only weights divisible by 16 deliver. A 24-unit mark must meet the 32-unit counter target instead — which is its target anyway under `max(24 × 1.25, 32)`, so it costs nothing in practice, but it removes the fallback.
+
+That is an acceptable price for keeping two of the three ratios available, but it is a price. **A single weight of 16 or 32 puts every painted edge on a full unit and keeps the floor available, and is the safer default.** Reach for 24 when the mark needs it, not by habit.
 
 **Stroke or fill, not both.** Decide once per mark:
 
 - **Filled paths** are the safer final form: no `stroke-width` to be scaled or dropped by a downstream tool, and knockouts work with `fill-rule`.
 - **Stroked paths** are more auditable while drawing, because the weight is one number rather than a pair of parallel edges.
 
-If you stroke, remember the stroke **straddles** the path. A 16-unit stroke centred on `y="64"` paints from 56 to 72 — neither on the grid. Put the centreline at `grid + w/2`:
+If you stroke, remember the stroke **straddles** the path. A 16-unit stroke centred on `y="64"` paints from 56 to 72 — and with `w = 16` the edges must be multiples of 16, so neither is permitted. **Place the centreline by choosing the edges you want, then solving back: `centreline = edge + w/2`.** Never place the centreline first and hope.
 
 ```svg
-<!-- centreline 120 = 112 + 16/2, so the painted edges land on 112 and 128 -->
+<!-- w 16: edges 112 and 128, both multiples of 16 → centreline 112 + 8 = 120 -->
 <path d="M120 48V208" fill="none" stroke="currentColor" stroke-width="16" stroke-linecap="butt" stroke-linejoin="miter"/>
 ```
 
+At `w = 24` the centreline lands on a quarter-unit, and that is not a defect — it is the case the "centreline is not a painted edge" rule exists for:
+
+```svg
+<!-- w 24: edges 112 (×16) and 136 (×8, permitted because 16 does not divide 24)
+     → centreline 112 + 12 = 124, a multiple of 4. Not checked, not flagged.
+     No 24-wide stroke can put both edges on multiples of 16. -->
+<path d="M124 48V208" fill="none" stroke="currentColor" stroke-width="24" stroke-linecap="butt" stroke-linejoin="miter"/>
+```
+
 Declare `stroke-linecap` and `stroke-linejoin` explicitly on every stroked element. The defaults (`butt`, `miter`) are rarely what you want and never what you checked. `vector-effect="non-scaling-stroke"` is forbidden: it makes the mark a different shape at every size, which is the opposite of a logo.
+
+## Curve authoring
+
+**Prefer `<circle>` and `<ellipse>` when the shape is one.** They have no handles to get wrong, and they read against the grid directly. Reach for path data only when you need something a primitive cannot express — a knockout via `fill-rule`, a partial arc, a curve that is not circular.
+
+**When you do author a curve, use kappa.** A circular arc of 90° is approximated by a cubic Bézier whose control handles sit at
+
+```text
+k = 0.5523          (4/3 × (√2 − 1), the standard circular kappa)
+handle length = 0.5523 × r, measured from each endpoint along the tangent
+```
+
+At `r = 96` the handles are `0.5523 × 96 = 53.02` long. A circle is four such cubics: handles run horizontal at the vertical extrema and vertical at the horizontal extrema. Guessing handle lengths instead is what produces the lumpy not-quite-oval that passes every numeric check in this file and still looks wrong — the error is largest at 45°, exactly where the eye reads a circle's roundness.
+
+**Handle coordinates are not painted edges.** They are not checked against permitted values and are not flagged, for the same reason a centreline is not: they locate ink without being ink. `53.02` needs no justification. The endpoints, which *are* on the ink, do.
+
+For arcs other than 90°, subdivide into 90° segments rather than stretching one cubic — a single Bézier's error grows sharply past a quarter turn.
 
 ## Counter discipline
 
@@ -329,9 +379,17 @@ The rules:
 
 - **Design target: narrowest counter ≥ `max(stroke width × 1.25, 32 units)`.** At a 16 px render, 32 units is 2 px — enough for the hole to survive anti-aliasing wherever it falls. With a 32-unit stroke the binding term is `40`.
 - **Hard floor: 16 units, and grid-aligned.** 16 units is exactly one pixel at 16 px, and it only stays one *clean* pixel if both edges are on the grid; half a unit off, it splits across two pixels and greys out. This makes the floor conditional on the stroke weight: only weights that are multiples of 16 leave both counter edges on full units, so **a mark built on a 24-unit weight forfeits the floor** and must meet the 32-unit target instead. Its target is 32 regardless (`max(24 × 1.25, 32)`), so in practice this costs nothing — but do not read the floor as available to a 24-unit mark. Between 16 and the target you are trading margin for detail deliberately and should say so in `LOGO.md`. Below 16 the counter does not exist at favicon size, and no amount of care at 256 px changes that. This is the one place the grid is load-bearing for legibility rather than crispness.
-- **The rule covers open gaps too.** Any negative space narrower than the stroke closes the same way whether or not it is enclosed. Measure the narrowest point, not the average.
-- **Measure at the narrowest point of the aperture**, including where a curve approaches a straight — that is where two anti-aliased edges meet and the gap goes first.
+- **The rule covers open gaps too.** Any negative space narrower than the stroke closes the same way whether or not it is enclosed.
 - **At most three distinct counters** at 256. More than three and you are relying on detail that no reproduction below 64 px will carry.
+
+**Build counters so the gap is computable.** "Measure the narrowest point of the aperture" is not a usable instruction without eyes — for a curved bowl meeting a stem it is a nontrivial minimisation, and an agent asked to eyeball it will guess, optimistically. So constrain the construction instead of the measurement. Two families:
+
+| Family | Narrowest gap | Example |
+|---|---|---|
+| Concentric round | `outer r − inner r` | a ring, a bowl inside a bowl |
+| Parallel straight | the coordinate difference between the two facing edges | a slot, a gap between two stems |
+
+Anything outside these two — an irregular aperture, a curve closing on a straight at an angle — has no closed-form narrowest point at this stage. **Rebuild it into one of the two families, or record in `LOGO.md` that the counter was not computed** and let the 16 px row of the contact sheet decide. Recording it is an acceptable outcome; guessing a number is not.
 
 Verify with arithmetic before rendering, not by looking at the 256 px preview:
 
@@ -339,6 +397,24 @@ Verify with arithmetic before rendering, not by looking at the 256 px preview:
 counter width at 16 px = units / 16
 32 units → 2.0 px    24 units → 1.5 px    16 units → 1.0 px    12 units → 0.75 px (gone)
 ```
+
+### The knockout, and the way it fails silently
+
+A counter in a filled mark is a hole in a path, and there is exactly one safe way to cut one: **two subpaths in a single `<path>`, with `fill-rule="evenodd"`.**
+
+SVG's initial fill rule is `nonzero`. Under `nonzero`, two subpaths wound in the *same* direction fill solid — so a ring becomes a disc. There is no error, no warning, and no size at which it looks different: it is simply the wrong shape, everywhere, and a mark whose counter has vanished still passes every numeric check in this file. This is the most common way a geometric mark is silently wrong.
+
+```svg
+<!-- Ring: outer r 96, inner r 64 → 32 of thickness, 128 of counter.
+     Both subpaths are wound the same way (sweep-flag 0). Under the default
+     nonzero rule that fills a solid disc; evenodd is what makes it a ring.
+     Weight is uniform by choice — see correction 4's curved-stroke rider. -->
+<path fill="currentColor" fill-rule="evenodd"
+      d="M128 32A96 96 0 1 0 128 224A96 96 0 1 0 128 32Z
+         M128 64A64 64 0 1 0 128 192A64 64 0 1 0 128 64Z"/>
+```
+
+Do not reach for `<mask>` or `<clipPath>` instead — those fail differently and worse, under mono collapse. See [Forbidden constructs](#forbidden-constructs).
 
 Minimum sizes per variant and the favicon redraw rules are in [reproduction.md](reproduction.md). The counter floor here is what makes those thresholds achievable in the first place.
 
@@ -350,13 +426,23 @@ Each of these is banned for a specific failure, not on taste. If you believe you
 |---|---|---|
 | `<filter>`, `<feGaussianBlur>`, `<feDropShadow>` | Rasterises differently in every renderer, is dropped outright by PDF/X, embroidery digitisers, and most email clients, and has no meaning at all in one-colour print. A mark whose form depends on a filter has no form. | Draw the shape. If the effect is the idea, the idea is not a logo. |
 | `<linearGradient>`, `<radialGradient>` | The mark must survive being flattened to a single value. A gradient carries structure that vanishes on collapse, and the flattened result is a silhouette with the interior missing. | Solid fills. A gradient may exist only in a derived colour variant that is never the master. |
-| `<text>` in a final asset | Resolves against whatever fonts the rendering machine has. The same file renders correctly on the machine that drew it and wrong on the build server. | Draw with it while exploring; convert to outlines before shipping. The handoff is recorded in the **Production handoff** section of `LOGO.md`. |
+| `<text>` in a geometric, monogram, or abstract mark | Resolves against whatever fonts the rendering machine has, so the same file renders correctly where it was drawn and wrong on a build server. In these three types the letterform is geometry you are drawing anyway, so there is no reason to reach for it. | Draw the letterform as paths. Wordmarks are the one exception — see below. |
 | `transform` on final geometry | A coordinate that only means something after a matrix cannot be checked against the grid, and the exception flags become unverifiable. Nested `<g transform>` chains make it worse. | Use transforms while constructing; flatten every one into the path data before shipping. Every number in the final file reads directly against the grid. |
 | `<mask>`, `<clipPath>` for knockouts | A mask needs two colours to exist. Under mono collapse the masked region takes the same value as the mask and the knockout disappears. | `fill-rule="evenodd"` on a single path. One element, one fill, correct in every colour mode. |
 | Unrounded or sub-grid coordinates | `133.1199999` is not more accurate than `133.12`, and a straight edge at `x="70"` blurs at every size. Precision noise also makes it obvious the file was generated rather than drawn. | 2 dp; structural straight edges on the grid; exceptions flagged (see [Precedence](#precedence-when-the-grid-and-the-optics-disagree)). |
 | `width` / `height` on the root `svg` | Pins the asset to one size and overrides the call site. | `viewBox` only. |
 | `<image>`, embedded raster, data URIs | Not vector. Does not scale, does not collapse to mono, does not survive a redraw. | Draw it. |
 | `<style>` blocks and CSS classes carrying geometry | Splits the definition of the shape across two places, one of which is stripped when the SVG is inlined. | Presentation attributes on the element. |
+
+### The wordmark exception
+
+A wordmark is type, and **this skill has no font engine and does not convert type to outlines.** That is an explicit non-goal, not an oversight. So:
+
+- A wordmark master ships as `<text>` against a **declared** webfont. Record the family, the weight, and any `letter-spacing` in `LOGO.md` — a wordmark whose typeface is not written down is not reproducible.
+- Outline conversion is recorded in `LOGO.md`'s **Production handoff** section as a step that was **not** performed, and that must happen before the mark is used anywhere the webfont is not guaranteed — print, embroidery, a third party's site, an email client.
+- **Do not describe a `<text>`-bearing wordmark as a finished asset**, and do not attempt the conversion here. Shipping it while calling it done is the failure this section exists to prevent; so is concluding that wordmarks cannot be built.
+
+Correction 9 does not apply to a wordmark in this form — see its scope note.
 
 ## Colour binding
 
@@ -368,11 +454,7 @@ Each of these is banned for a specific failure, not on taste. If you believe you
 
 Every geometry element carries `fill="currentColor"` (or `stroke="currentColor"`) explicitly. Omitting `fill` does not inherit — SVG's initial fill is black, which silently defeats the whole arrangement.
 
-What this buys, for free and without a second file:
-
-- **Mono collapse is automatic.** The mark is already single-value; nothing to flatten.
-- **Dark inversion is a CSS property.** `color: #fff` on the container, no new asset.
-- **The colour variants are derived, not authored.** `logo-mono-black` and `logo-mono-white` are the same geometry with `color` resolved. Generating them cannot introduce a drawing difference, because there is no drawing step.
+That single binding is what makes the mono and dark variants *derivable* rather than redrawn: `logo-mono-black` and `logo-mono-white` are the same geometry with `color` resolved, so producing them cannot introduce a drawing difference. What those variants then have to survive is [reproduction.md](reproduction.md)'s subject, not this file's.
 
 **Two-colour marks.** If the mark genuinely needs a second value, the second element binds to a custom property with `currentColor` as the fallback:
 
@@ -400,22 +482,39 @@ Two prohibitions:
 
 ## Self-check before rendering
 
-Run this list against every candidate before it reaches the contact sheet. Every item is answerable from the file itself — none of it needs eyes.
+Run this list against every candidate before it reaches the contact sheet. Every item is answerable from the file itself — none of it needs eyes. There is one item per rule in this document, including one per correction; a gate that checks half the rules is the wrong gate.
+
+**Artboard and grid**
 
 - [ ] `viewBox="0 0 256 256"`; no `width` or `height`; `role` and `aria-label` present.
-- [ ] All geometry within `16 … 240` on both axes. Two exemptions only: a container that is itself the mark, and overshoot spilling outward from a nominal edge.
-- [ ] Every coordinate is a multiple of 16 — or a multiple of 8 where it is derived from a stroke weight (a centreline, or the second painted edge of a filled stroke) — or carries an `OPTICAL:` flag on the line above it.
+- [ ] All geometry within `16 … 240` on both axes, curves bounded by their control points. Two exemptions only: a container that is itself the mark, and overshoot spilling outward from a nominal edge.
+- [ ] Every painted edge is on a permitted value — a multiple of 16, or a multiple of 8 where the stroke weight producing it is not a multiple of 16 — or carries an `OPTICAL:` flag on the line above it. Centrelines and Bézier control points are not painted edges and are not checked.
 - [ ] Every flag names the rule and shows the arithmetic.
 - [ ] No coordinate has more than 2 decimal places.
-- [ ] No surviving exception sits within 0.5 of its permitted grid value (16 for an edge, 8 for a stroke) — those should have been snapped.
-- [ ] One stroke weight, or two in a named ratio, all multiples of 8, all within 16 … 32.
+- [ ] No surviving exception sits within 0.5 of its permitted value (16, or 8 for a stroke weight and for a painted edge produced by a weight not divisible by 16) — those should have been snapped.
+- [ ] **Six or fewer surviving flags.** More means redraw, not more comments.
+
+**The nine corrections**
+
+- [ ] **1** — wherever a curved or pointed form shares an alignment edge with a flat one, the *curved or pointed* form extends past it, by 2% (round) or 3% (pointed) of the flat form's **corrected** height, per side. The flat form stays on its permitted value.
+- [ ] **2** — shapes meant to read as the same size are matched by area, not bounding box (a circle standing in for side `s` has `d = 1.1284 s`).
+- [ ] **3** — every triangle or single-apex form is centred on its centroid: bounding box shifted `h/6` toward the apex.
+- [ ] **4** — every horizontal stroke is 4% thinner than its vertical counterpart, including the horizontal tangents of a curved stroke, or a uniform ring is recorded as a decision.
+- [ ] **5** — every diagonal drawn as a filled outline uses `w / cos θ` for its offset.
+- [ ] **6** — anything inside a container is split 45:55, above:below.
+- [ ] **7** — no interior join tighter than 60°; on rounded corners, `inner radius = outer radius − w`.
+- [ ] **8** — every rotated form holds its area, not its bounding box, and corrections 1 and 4 are re-derived from the final orientation.
+- [ ] **9** — where you position letterforms yourself, sidebearings are scaled by terminal shape (1.00 / 0.94 / 0.88). Not applicable to a `<text>` wordmark.
+
+**Strokes, counters, constructs, colour**
+
+- [ ] One stroke weight, or two in a named ratio, all multiples of 8, all within 16 … 32; `stroke-linecap` and `stroke-linejoin` declared on every stroked element.
 - [ ] Narrowest counter ≥ `max(stroke × 1.25, 32)`; nothing under 16; at most three counters. On a 16- or 32-unit weight, every counter edge on a full unit; on a 24-unit weight, the 32-unit target met rather than the floor.
-- [ ] No `filter`, gradient, `text`, `transform`, `mask`, `clipPath`, `image`, `style`, or `vector-effect`.
+- [ ] Every counter is concentric-round or parallel-straight so its gap is computable — or `LOGO.md` records that it was not computed.
+- [ ] Every knockout is two subpaths in one `<path>` with `fill-rule="evenodd"` — never left to the default `nonzero`.
+- [ ] No `filter`, gradient, `transform`, `mask`, `clipPath`, `image`, `style`, or `vector-effect`. No `<text>` except in a wordmark master, where the webfont is declared and the un-performed outline conversion is recorded in `LOGO.md`.
 - [ ] Every fill and stroke is `currentColor`, or a `var(--…, currentColor)` in a derived variant only.
-- [ ] Every shape sharing an edge with a curve or a point has the overshoot applied.
-- [ ] Every horizontal stroke is 4% thinner than its vertical counterpart.
-- [ ] Every diagonal drawn as a filled outline uses `w / cos θ` for its offset.
-- [ ] Anything inside a container is split 45:55, above:below.
+- [ ] The mark clears 3:1 against every background it is specified for.
 
 A candidate that fails any item is fixed before rendering, not after. The contact sheet is for judging ideas; it is not where construction errors get caught, because at 256 px most of them are invisible and at 16 px all of them look like the same problem.
 
