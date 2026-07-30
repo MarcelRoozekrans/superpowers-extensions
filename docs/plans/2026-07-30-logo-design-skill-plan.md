@@ -462,6 +462,26 @@ git commit -m "feat(logo-design): add the router and the pictorial-mark refusal 
 
 - Modify: `plugins/logo-design/skills/logo-design/SKILL.md`
 
+### Open design question — resolve before writing Step 0
+
+**Raised by the Task 1 code-quality review. Do not skip it.**
+
+The Step 0 guard routes any project with an existing logo to `logo-review`. But "make us a favicon" and "we need a dark-mode version of our logo" are common requests from projects that already have a mark — and under the guard as designed, every one of them receives an audit report instead of the asset they asked for.
+
+The trigger phrase `"make a favicon"` was removed from the skill description in `fix(logo-design): correct the trigger surface…` precisely because it advertised a path the flow does not serve. That removed the false promise; it did not solve the underlying gap.
+
+Decide one of:
+
+| Option | Shape | Cost |
+|---|---|---|
+| **A — variants-only entry path** | A third entry point: take an existing mark, skip concepts, run Step 6 (variant set) plus the Step 4 critique | New path to write and verify; the honest fix |
+| **B — `logo-review` offers the handoff** | Audit runs first as designed; if it passes, offer to generate the missing variants | Cheaper; makes the audit a toll booth on a simple request |
+| **C — leave the gap** | Existing-mark projects get an audit and must ask again | Free; the request the user actually made is never served |
+
+Recommendation: **A**, scoped tightly to reusing Step 6 and Step 4 with no concept generation. It is the case the guard currently mishandles, and B makes users pay for an audit they did not ask for.
+
+Whichever is chosen, record it in the design doc as an amendment — this changes the flow the design describes.
+
 **Step 1: Write the seven steps**
 
 Per the design doc, as numbered procedure with explicit tool calls:
