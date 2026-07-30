@@ -27,11 +27,26 @@ Non-square artboards (a wide lockup, a stacked lockup) are legitimate **variants
 
 The unit is **16**. The artboard is therefore a 16 × 16 cell grid. The rule binds **painted edges** — the boundaries of ink, which are the only thing a rasteriser resolves:
 
-> A painted edge sits on a multiple of **16**; or on a multiple of **8** when the stroke weight that produced it is not a multiple of 16. Stroke weights themselves are multiples of **8**.
+> A painted edge sits on a multiple of **16**; or on a multiple of **8** when the **declared** stroke weight that produced it is not a multiple of 16. Declared stroke weights are themselves multiples of **8**.
 
 Call any of those a **permitted value**. Everywhere else in this file the rule is referenced by that term rather than restated, so there is one definition and nothing to drift out of sync with it.
 
 The second clause exists because 16 does not divide 24. A 24-wide stem starting at 128 ends at 152, and no 24-wide stem can put both edges on multiples of 16. The cost of that is priced in [Stroke discipline](#stroke-discipline). Neither clause is an optical exception and neither is flagged; both follow mechanically from a legal stroke weight.
+
+**"Declared" means the weight before optical correction — the number in your stroke table, not what a correction left behind.** This distinction only bites in one place, and there it decides the outcome. Take a crossbar declared at 16 and thinned to 15.36 by correction 4, centred at 128:
+
+```text
+declared weight 16 → a multiple of 16 → edges tested against multiples of 16
+  edge 120.32   nearest multiple of 16 = 128   residual 7.68   → survives, flagged
+  edge 135.68   nearest multiple of 16 = 128   residual 7.68   → survives, flagged
+
+read it as the CORRECTED weight 15.36 → not a multiple of 16 → multiples of 8 admitted
+  edge 120.32   nearest multiple of 8 = 120    residual 0.32   → snapped
+  edge 135.68   nearest multiple of 8 = 136    residual 0.32   → snapped
+  result: a 16-unit bar. Correction 4 silently undone by the rule meant to preserve it.
+```
+
+The corrected weight is a *consequence* of the declared one and never redefines what is permitted. If it did, every correction that leaves the grid would widen the tolerance that is supposed to protect it, and precedence rule 3 would quietly reverse each one.
 
 **A centreline is not a painted edge, and is not checked.** It paints nothing — it is bookkeeping that locates two edges. At `w = 24` a centreline sits at `edge + 12`, a multiple of 4, permitted by nothing on this page. That is fine and needs no flag. Check the two edges it implies; never the centreline itself. The same exemption covers Bézier control points (see [Curve authoring](#curve-authoring)) and any construction geometry deleted before shipping.
 
@@ -63,7 +78,7 @@ The grid rule says every coordinate is a multiple of 16. The optical rules below
 
 1. **Optical correction wins.** A mathematically clean coordinate that looks wrong is wrong. The grid is a tool for crispness, not an aesthetic authority.
 2. **Spend the deviation on curves and points, not on straight edges.** Almost every optical correction moves a curve's extremum or a shape's apex — precisely the places a rasteriser anti-aliases anyway, where leaving the grid costs nothing. When a correction must move a straight axis-aligned edge (stroke thinning is the common case), move the *free* edge and keep the edge that aligns with another form on the grid.
-3. **Snap back if the residual is under 0.5 units.** Compute the corrected value exactly, then compare it to the nearest **permitted value** as defined under [The grid](#the-grid) — a multiple of 16, or a multiple of 8 for a stroke weight and for a painted edge produced by a stroke weight that is not a multiple of 16. Note that this is the distance to the nearest *permitted* value, not to the uncorrected value you started from; the two coincide only when the starting value was itself permitted. If they are within 0.5 units, use the permitted value and drop the flag. Grid alignment buys a crisp edge at every reproduction size; 0.5 units of size accuracy buys nothing.
+3. **Snap back if the residual is under 0.5 units.** Compute the corrected value exactly, then compare it to the nearest **permitted value** as defined under [The grid](#the-grid) — a multiple of 16, or a multiple of 8 for a declared stroke weight and for a painted edge produced by a **declared** weight that is not a multiple of 16. The correction you just computed never widens its own tolerance. Note that this is the distance to the nearest *permitted* value, not to the uncorrected value you started from; the two coincide only when the starting value was itself permitted. If they are within 0.5 units, use the permitted value and drop the flag. Grid alignment buys a crisp edge at every reproduction size; 0.5 units of size accuracy buys nothing.
 4. **Two decimal places, never more.** `22.63`, not `22.6274`. One hundredth of a unit is 0.01 px at a 256 px render and 1/1600 px at favicon size — below any rasteriser's resolution. Trailing precision is noise that makes the file look machine-generated, which it is, and you are trying to hide that.
 5. **Flag every surviving exception inline**, on the line above the geometry, in this format:
 
@@ -189,7 +204,11 @@ This is the largest single correction in this file and the only one where over-a
 
 ### 4. Horizontal strokes read heavier than vertical
 
-**Rule.** At equal measured width, a horizontal stroke looks fatter than a vertical one. Thin horizontals by **4%**.
+**Rule.** A horizontal stroke reads heavier than a vertical one of the same measured width. Thin every horizontal by **4%** of its declared weight.
+
+**This is unconditional.** It does not require a vertical stroke anywhere in the mark to measure against. The effect is a property of how the eye resolves a horizontal edge, not of a comparison — a lone horizontal bar in a mark containing no verticals at all still reads heavier than the weight you declared for it, and thinning is what makes it look like the weight it is. A horizontal with no counterpart is thinned exactly like one with a counterpart. "There is nothing to compare it to" is not an exemption; there is nothing to compare it to and it still looks too fat.
+
+Unconditional means it does not depend on a counterpart. It does **not** mean it reaches things that are not strokes. Correction 4 governs the *thickness of a linear element* — a stem, a bar, an arm, the wall of a ring. A square, a disc, or any form whose horizontal extent is its **size** rather than its **thickness** has no stroke weight to thin, and is sized by correction 2 instead. The filled squares in this file are not under-corrected; they are not strokes.
 
 **Why.** Human vision resolves vertical edges better than horizontal ones, so a horizontal band bleeds outward more. Every text typeface ever cut applies this correction; a mark that skips it looks squat in exactly the way an untuned typeface does.
 
@@ -221,7 +240,7 @@ inner ry = 96 − 30.72 = 65.28   (inner becomes an ellipse: rx 64, ry 65.28)
 result: 30.72 thick at the horizontal tangents, 32 at the vertical ones
 ```
 
-A uniform ring is a legitimate decision. An unnoticed one is not — if you keep it uniform, say so in `LOGO.md`.
+A uniform ring is a legitimate decision. An unnoticed one is not — if you keep it uniform, say so in `LOGO.md`. Declining the thinning is a **recorded deviation from an unconditional rule**, not a case the rule never covered.
 
 ### 5. Stroke width is measured perpendicular to the stroke
 
@@ -386,6 +405,47 @@ At `r = 96` the handles are `0.5523 × 96 = 53.02` long. A circle is four such c
 
 For arcs other than 90°, subdivide into 90° segments rather than stretching one cubic — a single Bézier's error grows sharply past a quarter turn.
 
+### Arc flags
+
+```text
+A  rx  ry  x-axis-rotation  large-arc  sweep  x  y
+```
+
+The two flags are where hand-authored arcs go wrong, and they go wrong **silently**: a mistaken flag still parses, still renders, and draws a different arc. Nothing errors. This matters more here than in most SVG work, because constructing a form from circle intersections — the geometric recipe's first move — is all arcs.
+
+**There are always four candidates.** Given a start point, an end point, and a radius big enough to span them, two distinct circles pass through both points, and each offers two ways round — the short way and the long way. Four arcs. The flags pick one:
+
+| `large-arc` | `sweep` | You get |
+|---|---|---|
+| 0 | 0 | the shorter arc (≤ 180°), travelling anti-clockwise as displayed |
+| 0 | 1 | the shorter arc (≤ 180°), travelling clockwise as displayed |
+| 1 | 0 | the longer arc (≥ 180°), travelling anti-clockwise as displayed |
+| 1 | 1 | the longer arc (≥ 180°), travelling clockwise as displayed |
+
+`large-arc` chooses minor or major. `sweep` chooses the direction of travel, which is also what decides **which side of the chord the arc bulges toward**. SVG's y-axis points down, so `sweep = 1` is clockwise *on screen* — the opposite of the maths convention, and the usual source of a mirrored arc.
+
+**Choose them in this order, never by trial:**
+
+1. Which side of the straight line between the endpoints should the arc bulge toward? That fixes `sweep`.
+2. Is the arc more or less than a half turn? That fixes `large-arc`.
+
+**Verify the centre, not the picture.** For a circular arc the implied centre must sit at exactly `r` from both endpoints. That is a two-line check and it is decisive:
+
+```text
+ring, outer subpath:  centre (128, 128), r 96
+  |start − centre| = |(128,32) − (128,128)|  = 96   ✓
+  |end   − centre| = |(128,224) − (128,128)| = 96   ✓
+```
+
+If the distances disagree, the arc is not the one you meant — whatever the flags say.
+
+**Two degenerate cases worth knowing:**
+
+- **Chord exactly `2r`.** The two candidate circles coincide, the arc is a semicircle, and `large-arc` has no effect at all. The ring in [Counter discipline](#counter-discipline) is this case, which is why its `1 0` and a `0 0` draw the same thing. Its sweep choice is likewise harmless by symmetry. **Do not generalise from it** — on any less symmetric construction both flags bite.
+- **Radii too small to span the endpoints.** SVG does not error. It scales `rx` and `ry` up uniformly until they fit, handing you a valid arc of the wrong radius. In a constructed mark the radius is always load-bearing, so check `chord ≤ 2r` before you rely on it.
+
+`sweep` also sets the winding direction of the subpath, which is what makes `fill-rule="evenodd"` necessary for knockouts — see [Counter discipline](#counter-discipline).
+
 ## Counter discipline
 
 A counter is enclosed negative space — the hole in an `o`, the gap inside a ring, the slot between two strokes. **Counters closing is the most common way a mark dies as a favicon**, and it happens silently: the 256 px version looks fine and the 16 px version is a blob.
@@ -516,10 +576,10 @@ Run this list against every candidate before it reaches the contact sheet. Every
 
 - [ ] `viewBox="0 0 256 256"`; no `width` or `height`; `role` and `aria-label` present.
 - [ ] All geometry within `16 … 240` on both axes, curves bounded by their control points. Two exemptions only: a container that is itself the mark, and overshoot spilling outward from a nominal edge.
-- [ ] Every painted edge is on a permitted value — a multiple of 16, or a multiple of 8 where the stroke weight producing it is not a multiple of 16 — or carries an `OPTICAL:` flag on the line above it. Centrelines and Bézier control points are not painted edges and are not checked.
+- [ ] Every painted edge is on a permitted value — a multiple of 16, or a multiple of 8 where the **declared** stroke weight producing it is not a multiple of 16 — or carries an `OPTICAL:` flag on the line above it. Centrelines and Bézier control points are not painted edges and are not checked.
 - [ ] Every flag names its reason — an optical correction *or* a construction it was derived from — and shows the arithmetic.
 - [ ] No coordinate has more than 2 decimal places.
-- [ ] No surviving exception sits within 0.5 of its permitted value (16, or 8 for a stroke weight and for a painted edge produced by a weight not divisible by 16) — those should have been snapped.
+- [ ] No surviving exception sits within 0.5 of its permitted value (16, or 8 for a declared stroke weight and for a painted edge produced by a **declared** weight not divisible by 16) — those should have been snapped.
 - [ ] **Six or fewer surviving flags**, counting distinct reasons rather than annotated numbers. More means redraw, not more comments.
 
 **The nine corrections**
@@ -527,7 +587,7 @@ Run this list against every candidate before it reaches the contact sheet. Every
 - [ ] **1** — wherever a curved or pointed form shares an alignment edge with a flat one, the *curved or pointed* form extends past it, by 2% (round) or 3% (pointed) of the flat form's **corrected** height, per side. The flat form stays on its permitted value.
 - [ ] **2** — shapes meant to read as the same size are matched by area, not bounding box (a circle standing in for side `s` has `d = 1.1284 s`).
 - [ ] **3** — every triangle or single-apex form is centred on its centroid: bounding box shifted `h/6` toward the apex.
-- [ ] **4** — every horizontal stroke is 4% thinner than its vertical counterpart, including the horizontal tangents of a curved stroke, or a uniform ring is recorded as a decision.
+- [ ] **4** — every horizontal stroke carries the 4% thinning off its declared weight, including the horizontal tangents of a curved stroke. Unconditional: a horizontal with no vertical counterpart anywhere in the mark is thinned too. A uniform ring is a recorded deviation, not an exemption.
 - [ ] **5** — every diagonal drawn as a filled outline uses `w / cos θ` for its offset.
 - [ ] **6** — anything inside a *drawn* container is split 45:55, above:below. A mark free on the artboard is exactly centred; the artboard is not a container.
 - [ ] **7** — no interior join tighter than 60°; on rounded corners, `inner radius = outer radius − w`.
