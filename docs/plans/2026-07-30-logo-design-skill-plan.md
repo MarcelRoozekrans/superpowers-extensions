@@ -496,6 +496,24 @@ Recommendation: **A**, scoped tightly to reusing Step 6 and Step 4 with no conce
 
 Whichever is chosen, record it in the design doc as an amendment — this changes the flow the design describes.
 
+### Second open question — the non-square variants have no contact-sheet pass
+
+**Raised by Task 5, which built the harness and ran it.**
+
+Step 6 produces seven variants. Two of them — `logo-full` and `logo-stacked` — are lockups that declare their own **non-square** `viewBox`. The contact sheet assumes `0 0 256 256` throughout: the live-area bounds, the artboard-unit conversion, and the square cells all depend on it. The harness warns when the `viewBox` differs and then has nothing further to say.
+
+So five of the seven variants can be rendered and critiqued, and two cannot. That is not a harness defect — nothing in any reference file defines what a lockup's contact-sheet pass should be.
+
+Decide before writing step 6:
+
+| Option | Shape |
+|---|---|
+| **A — a second sheet** | A lockup-specific template with its own cells and its own live-area rule, sized to the lockup's aspect |
+| **B — normalise into the square** | Render the lockup letterboxed inside 256×256, accepting that its effective size is smaller than the mark-only variants at the same nominal px |
+| **C — critique the components only** | Grade `logo-mark` and `logo-wordmark` on the sheet; the lockup is checked for composition and clearspace only, and that check is recorded as not size-tested |
+
+`reproduction.md` computes lockup minimums by a different route already (mark side computed, type side measured), which is weak evidence for **C** — the file's own arithmetic treats the lockup as a composition problem rather than a rendering one. But whichever is chosen, the answer has to be written down, because step 6's self-verification currently implies all seven variants get the same treatment and they cannot.
+
 **Step 1: Write the seven steps**
 
 Per the design doc, as numbered procedure with explicit tool calls:
