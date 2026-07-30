@@ -453,7 +453,7 @@ A counter is enclosed negative space — the hole in an `o`, the gap inside a ri
 The rules:
 
 - **Design target: narrowest counter ≥ `max(stroke width × 1.25, 32 units)`.** At a 16 px render, 32 units is 2 px — enough for the hole to survive anti-aliasing wherever it falls. With a 32-unit stroke the binding term is `40`.
-- **Hard floor: 16 units, and grid-aligned.** 16 units is exactly one pixel at 16 px, and it only stays one *clean* pixel if both edges are on the grid; half a unit off, it splits across two pixels and greys out. This makes the floor conditional on the stroke weight: only weights that are multiples of 16 leave both counter edges on full units, so **a mark built on a 24-unit weight forfeits the floor** and must meet the 32-unit target instead. Its target is 32 regardless (`max(24 × 1.25, 32)`), so in practice this costs nothing — but do not read the floor as available to a 24-unit mark. Between 16 and the target you are trading margin for detail deliberately and should say so in `LOGO.md`. Below 16 the counter does not exist at favicon size, and no amount of care at 256 px changes that. This is the one place the grid is load-bearing for legibility rather than crispness.
+- **Hard floor: 16 units, and grid-aligned.** 16 units is exactly one pixel at 16 px, and it only stays one *clean* pixel if both edges are on the grid; half a unit off, it splits across two pixels and greys out. This is the one place the grid is load-bearing for legibility rather than crispness. Below 16 the counter does not exist at favicon size, and no amount of care at 256 px changes that. **Build to the target; the floor is an exception with three preconditions and a price — see [When the floor is actually available](#when-the-floor-is-actually-available).**
 - **The rule covers open gaps too.** Any negative space narrower than the stroke closes the same way whether or not it is enclosed.
 - **At most three distinct counters** at 256. More than three and you are relying on detail that no reproduction below 64 px will carry.
 
@@ -477,7 +477,23 @@ Anything outside these two — an irregular aperture, a curve closing on a strai
 
 So a curved counter's extrema may sit wherever correction 4's curved-stroke rider puts them, provided the counter clears 32. The ring corrected under that rider has counter edges at `128 ± 65.28` = **62.72 and 193.28**, on a counter whose narrowest dimension is 128 units — far above the threshold. Those edges are off the grid and correct. They are not a violation and need no flag beyond the one correction 4 already requires.
 
-This is also why a 24-unit weight forfeits the floor: it cannot put both counter edges on full units, so it cannot use the 16 … 32 band at all and must clear 32, where alignment stops mattering.
+This is also why a 24-unit weight forfeits the floor: it cannot put both counter edges on full units, so it cannot use the 16 … 32 band at all and must clear 32, where alignment stops mattering. The 32-unit boundary itself is fixed by the arithmetic above; what varies is whether the **Required** row is reachable at all, which is the next section.
+
+### When the floor is actually available
+
+The floor is not wrong. It is exactly one clean pixel at exactly 16 px, which is what the arithmetic says. But it assumes a pixel-aligned raster, and three independent conditions have to hold at once for that raster to exist. A mark satisfying all three is a special case, not a default:
+
+| Condition | Fails when | Source |
+|---|---|---|
+| Declared weight is 16 or 32 | `w = 24` — no 24-wide stroke puts both counter edges on full units | this file, [Stroke discipline](#stroke-discipline) |
+| The render size is one you control, and is an integer multiple of 16 px | a device pixel ratio of 1.25 or 1.5 turns a nominal 16 px favicon into 20 or 24 device px, and one grid unit stops landing on a whole pixel | [reproduction.md](reproduction.md), *When grid alignment actually reaches the raster* |
+| The mark ships no dark variant | a 16-unit counter measures `16 − r · w` on dark — **15.52** at `r` 3% — which is under the floor | [reproduction.md](reproduction.md), *Dark inversion* |
+
+The second condition is the one that removes the floor from most real work: any variant rendered at a size the browser chooses is out, which is every favicon on the web.
+
+**And the floor is not free.** `reproduction.md` prices it: a mark built to the floor has a minimum render size of **32 px**, against **16 px** for one built to the target. Spending counter width down to the floor buys interior detail with a doubling of the smallest size the mark works at. That is a legitimate trade — it is also a trade, and the cost was missing from this file until `reproduction.md` computed it. Record the choice *and* the 32 px in `LOGO.md`.
+
+**So: build to the 32-unit target.** It is the normal case. Reach for the floor only when all three conditions hold, the detail genuinely needs it, and the doubled minimum is acceptable.
 
 Verify with arithmetic before rendering, not by looking at the 256 px preview:
 
@@ -542,7 +558,22 @@ Correction 9 does not apply to a wordmark in this form — see its scope note.
 
 Every geometry element carries `fill="currentColor"` (or `stroke="currentColor"`) explicitly. Omitting `fill` does not inherit — SVG's initial fill is black, which silently defeats the whole arrangement.
 
-That single binding is what makes the mono and dark variants *derivable* rather than redrawn: `logo-mono-black` and `logo-mono-white` are the same geometry with `color` resolved, so producing them cannot introduce a drawing difference. What those variants then have to survive is [reproduction.md](reproduction.md)'s subject, not this file's.
+That single binding is what makes the mono and dark variants *derivable* rather than redrawn: `logo-mono-black` and `logo-mono-white` are the same geometry with `color` resolved.
+
+**That promise is conditional, and the condition is a size.** A light mark on a dark ground reads optically heavier — ink grows and counters shrink by the same absolute amount `r · w`, where `r` is type practice's 2–4% reversed-weight compensation. Applying that compensation *is* a drawing difference, so the guarantee cannot hold unconditionally. [reproduction.md](reproduction.md) derives the fork threshold; take it from there rather than re-deriving it here:
+
+```text
+R ≥ 256 / (r · w)        at r = 3%:   533 px at w 16,  356 px at w 24,  267 px at w 32
+```
+
+- **Below the threshold** the compensation is under one device pixel. It cannot be seen, it is not applied, and the promise holds exactly: the dark variant is the master with `color` resolved and nothing else.
+- **At or above it** the compensation is visible, and one of two things goes in `LOGO.md` — either the compensation was not taken and the dark variant is nominally heavy by `r · w`, or a **separate dark master** exists carrying its own flags against its own ceiling of six, and this guarantee does not cover that file.
+
+Either branch is fine once it is written down. Shipping a forked geometry as though it were derived is the failure.
+
+One consequence lands back on the stroke table. At `w = 16` and `r = 3%` the compensation is `0.48` — **below the 0.5 snap tolerance** — so precedence rule 3 rounds it away and a 16-unit mark has no expressible dark compensation at any size. It therefore never forks, and its derivability guarantee is unconditional. That is not a defect in either file; it is the tolerance doing its job, and one more reason a single 16-unit weight is the safer default. The optical effect still happens whether or not you can draw the compensation, which is why a dark variant still removes the counter floor — the third condition under [When the floor is actually available](#when-the-floor-is-actually-available).
+
+What those variants then have to survive is [reproduction.md](reproduction.md)'s subject, not this file's.
 
 **Two-colour marks.** If the mark genuinely needs a second value, the second element binds to a custom property with `currentColor` as the fallback:
 
@@ -597,11 +628,13 @@ Run this list against every candidate before it reaches the contact sheet. Every
 **Strokes, counters, constructs, colour**
 
 - [ ] One stroke weight, or two in a named ratio, all multiples of 8, all within 16 … 32, measured at the **narrowest ink** where the form's thickness varies; `stroke-linecap` and `stroke-linejoin` declared on every stroked element.
-- [ ] Narrowest counter ≥ `max(stroke × 1.25, 32)`; nothing under 16; at most three counters. Counter edges on full units **only while the counter is under 32 units** — at 32 and above, alignment is not required and curved extrema may sit off the grid. A 24-unit weight cannot align counter edges at all, so it must clear 32 rather than use the floor.
+- [ ] Narrowest counter ≥ `max(stroke × 1.25, 32)`; nothing under 16; at most three counters. Counter edges on full units **only while the counter is under 32 units** — at 32 and above, alignment is not required and curved extrema may sit off the grid.
+- [ ] Any counter under 32 units satisfies all three floor conditions — declared weight 16 or 32, a render size you control that is a multiple of 16 px, and no dark variant — and `LOGO.md` records the 32 px minimum it costs. Otherwise it clears the target.
 - [ ] Every counter is concentric-round or parallel-straight so its gap is computable — or `LOGO.md` records that it was not computed.
 - [ ] Every knockout is two subpaths in one `<path>` with `fill-rule="evenodd"` — never left to the default `nonzero`.
 - [ ] No `filter`, gradient, `transform`, `mask`, `clipPath`, `image`, `style`, or `vector-effect`. No `<text>` except in a wordmark master, where the webfont is declared and the un-performed outline conversion is recorded in `LOGO.md`.
 - [ ] Every fill and stroke is `currentColor`, or a `var(--…, currentColor)` in a derived variant only.
+- [ ] If a dark variant ships at or above `256 / (r · w)` px, `LOGO.md` records either the un-taken compensation or a separate dark master with its own flag count. Below that size the derived variant needs nothing.
 - [ ] The mark clears 3:1 against every background it is specified for.
 
 A candidate that fails any item is fixed before rendering, not after. The contact sheet is for judging ideas; it is not where construction errors get caught, because at 256 px most of them are invisible and at 16 px all of them look like the same problem.
