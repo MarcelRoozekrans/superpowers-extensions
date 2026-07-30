@@ -375,7 +375,9 @@ The 40-unit figure is the light-ground target. A favicon that also ships on a da
 
 **No counter may use the 16-unit floor.** Two independent routes reach this and they agree: a floor-using counter's minimum size is 32 px, and the favicon renders at 16; and grid alignment — the floor's precondition — does not reach the raster at device pixel ratios of 1.25 or 1.5, which turn a nominal 16 px favicon into 20 or 24 device px. Every favicon counter meets the target. This is one of the four routes collected in [The counter floor, in aggregate](#the-counter-floor-in-aggregate).
 
-**The ink fills the live area.** The master may sit small on its artboard because it will be placed inside a lockup. The favicon has 14 px and no lockup, so its ink bounding box reaches the live-area bounds — 16 and 240 — on its longer axis, overshoot excepted. Anything less throws away pixels there is no way to get back.
+**The ink fills the live area.** The master may sit small on its artboard because it will be placed inside a lockup. The favicon has 14 px and no lockup, so its ink reaches the live-area bounds — 16 and 240 — on its longer axis, overshoot excepted. Anything less throws away pixels there is no way to get back.
+
+This is a **coverage** check, not a containment one, so it reads the opposite end of the bracket: a stroked favicon passes it on the **geometry** box and fails it on `ink bbox`. See [What a bounding box can and cannot tell you](#what-a-bounding-box-can-and-cannot-tell-you) — the boxes coincide on a filled favicon and the item is simply decidable.
 
 **Correction 4 does not bind, and that is the point.** construction.md says the 4% horizontal thinning "is invisible below about a 64 px render." The favicon renders at 16. Thinning a 32-unit ring to 30.72 changes it from 2.00 px to 1.92 px and buys a flag against the ceiling of six for a difference no rasteriser resolves. **Record the uniform weight as a decision in `LOGO.md`, with this as the reason** — construction.md requires a uniform ring to be recorded, and "the correction is below the resolution of every size this variant renders at" is the reason that only exists here.
 
@@ -385,9 +387,15 @@ A ring at the favicon's own spec, audited against construction.md coordinate by 
 
 ```svg
 <svg viewBox="0 0 256 256" role="img" aria-label="Example favicon">
-  <!-- Favicon spec. Stroke weight 32 (2 px at a 16 px render).
+  <!-- Favicon spec. Declared weight 32 (2 px at a 16 px render) — this is a FILLED
+       annulus, not a stroked circle: there is no stroke attribute anywhere in it, and
+       the 32 is construction.md's "distance between its two edges" for a filled form.
+       Two consequences. The geometry box and the ink bbox coincide, so every extent
+       below is tight ink and the bracketing rules under "What a bounding box can and
+       cannot tell you" do not apply. And there is no cap and no join, so neither the
+       butt-cap nor the miter rider arises.
        Outer r 112: edges 128 ± 112 = 16 and 240, both ×16, and exactly the live-area
-       bounds — the favicon fills them by rule.
+       bounds — the favicon fills them by rule, measured on the tight box.
        Inner r 80:  edges 128 ± 80 = 48 and 208, both ×16.
        Ring thickness 112 − 80 = 32, the declared weight, uniform everywhere.
        One counter, 2 × 80 = 160 units across = 10 px at 16 px, far above the
@@ -479,6 +487,93 @@ The two polygon paths land on the identical ratio, which is not a coincidence wo
 
 Precision noise is already caught upstream: construction.md forbids more than two decimal places, and a traced path is full of them.
 
+## What a bounding box can and cannot tell you
+
+Every extent check on this page and in construction.md's self-check — the live area, the favicon's fill of it, the lockup's aspect — is a question about **painted ink**. The DOM does not answer that question. It answers two nearby ones, and the true ink lies between them.
+
+`logo-concept`'s contact-sheet harness (`templates/contact-sheet.template.html`) prints both, per candidate:
+
+| Readout field | What it is | Relation to ink |
+|---|---|---|
+| geometry box, from `getBBox()` | fill geometry only; the stroke is excluded | **lower bound** — a stroked region always contains the path that generated it |
+| `ink bbox` | that box widened by `w/2` per side wherever a stroke is actually painted | **upper bound**, subject to the miter rider below |
+
+**For a filled element the two coincide and the box is tight.** The harness says so directly: a filled mark has no gap between them. Every extent check on a filled mark is decidable, and the rest of this section does not apply to it. construction.md already calls filled paths "the safer final form"; this is one more reason.
+
+For a stroked element they do not coincide, and neither one is the answer. construction.md's own 16-wide stem on centreline 120, butt caps:
+
+```text
+geometry box   x 120 … 120   y  48 … 208     under-reports x by w/2 = 8 per side
+ink bbox       x 112 … 128   y  40 … 216     over-reports  y by w/2 = 8 per end
+true ink       x 112 … 128   y  48 … 208
+```
+
+The widening is exact laterally and up to `w/2` too long at a **butt-capped open end**, because a butt cap stops dead at its endpoint. There is no correction that is right in general and no DOM call that returns the tight box — `getBoundingClientRect` uses the same conservative box in Chrome.
+
+### Grade against the bracket, not against one box
+
+The two boxes bound the ink, so read whichever end of the bracket makes the answer sound. **Containment and coverage read opposite ends**, and getting that backwards is how this produces a wrong verdict in either direction.
+
+For a **containment** check — "all geometry within 16 … 240", the live-area item:
+
+- **Geometry box escapes the bounds → FAIL.** It is a lower bound; if the lower bound is already outside, the ink is outside. Sound.
+- **`ink bbox` sits inside the bounds → PASS.** It is an upper bound; if the upper bound is inside, the ink is inside. Sound.
+- **Geometry box inside, `ink bbox` outside → INDETERMINATE. Record it unrun, with both boxes and the gap. Do not FAIL.**
+
+That third case is the one this section exists for, because the naive check gets it wrong in the expensive direction:
+
+```text
+a 16-wide stem, butt caps, sitting exactly on the live-area edge:  M120 16V240
+  geometry box   y  16 … 240      inside      → lower bound passes
+  ink bbox       y   8 … 248      outside     → naive check FAILs
+  true ink       y  16 … 240      conformant  → the mark is correct
+```
+
+A false FAIL in the binary layer is worse than a false pass: it sends an agent to redraw a mark that was already right, and the redraw has nowhere to go.
+
+For a **coverage** check — the favicon's "ink reaches the live-area bounds", where the ink must be big *enough* — the ends swap:
+
+- **Geometry box already spans the bounds → PASS.** The ink contains it, so the ink spans them too. Sound.
+- **`ink bbox` fails to span the bounds → FAIL.** The ink is inside it, so the ink cannot span them either. Sound.
+- Anything between → **INDETERMINATE, recorded unrun.**
+
+### Making it decidable
+
+An indeterminate extent is a fact about the drawing, not about the check, and two things already available in construction.md remove it:
+
+- **Round or square caps.** With `stroke-linecap="round"` or `"square"` the widening is exact and `ink bbox` *is* the tight box. construction.md already requires the linecap declared explicitly on every stroked element, so this is a keyword you are writing anyway — but note it is not free, because those caps genuinely extend the ink by `w/2` where a butt cap does not. Choose the cap for the drawing, then read the box the cap gives you.
+- **Convert the stroke to a filled outline.** The boxes coincide and every extent becomes tight.
+
+### The miter rider
+
+`w/2` is the outward offset along a smooth run and at a round or bevel join. **At a miter join it is not**, and the gap is the same size as the problem this section started with. The miter tip sits `(w/2) / sin(θ/2)` from the vertex, where `θ` is the interior angle:
+
+```text
+θ 180°  →  0.500 w     θ 120°  →  0.577 w     θ 90°  →  0.707 w     θ 60°  →  1.000 w
+```
+
+construction.md floors `θ` at 60°. **At the tightest join it permits, the ink reaches `w` beyond the vertex — double the `w/2` the widened box assumes.** At `w` 16 that is an 8-unit understatement per corner, exactly the magnitude of the butt-cap error in the other direction.
+
+SVG's default `stroke-miterlimit` of 4 replaces a miter with a bevel only below `θ` ≈ 28.96°, so it never rescues a conformant mark — construction.md has already rejected that geometry on its own 60° floor.
+
+> **For any stroked element carrying a miter join, widen by `w` per side, not `w/2`, before granting a PASS on a containment check.** The `ink bbox` field is not an upper bound until you have.
+
+Nothing changes for the FAIL side: the geometry box is a lower bound regardless of joins.
+
+### `text` is a third case, and mostly it is unrun
+
+A `text` element's `getBBox()` is its **layout** box: vertically it runs from the font's ascent to its descent, not from cap height to baseline. It is not ink, no widening turns it into ink, and the relationship between the two is a property of the face. So a wordmark's extents cannot be graded the way a path's can.
+
+| Extent of a `text` element | Status |
+|---|---|
+| Top and bottom | **Not computable. Record unrun.** Ascent and descent are font metrics with no fixed relation to the painted extent, and glyphs may exceed them. |
+| Right | Grade against the harness's **`ink edge`**, never `advance edge`. `advance edge` is the raw `getBBox()` right edge and carries the trailing letter-spacing step; `ink edge` has it removed, and whether this renderer applies one is **measured** — the harness re-runs the same string at zero tracking and counts the steps in the difference — rather than assumed. |
+| Left | The anchor `x`, not the first glyph's ink. A negative left sidebearing puts ink to the left of it. **Record unrun.** |
+
+What *is* checkable is exactly what mark-types.md already says is checkable: the anchor `x` and the baseline `y` are values you chose, so they sit on the grid and they are graded like any other chosen number. The type's ink extents are recorded from the render, not asserted.
+
+**An extent recorded as unrun is honest. An extent reported as passed because a number was available is not** — and this is the same posture the render-dependent items on this page already take.
+
 ## Artboard hygiene across the variant set
 
 construction.md's self-check covers a single file. These are the items that only exist because there is a *set* of files, and each is binary.
@@ -489,6 +584,7 @@ construction.md's self-check covers a single file. These are the items that only
 - Every variant carries `role="img"` and an `aria-label` naming the product. The favicon included.
 - No empty `g` element, no unreferenced `defs`, no leftover construction geometry. Anything invisible in the file is either a bug or something that was meant to be deleted.
 - The mono variants differ from their source only in the resolved `color`. Diff them.
+- Every variant's ink sits inside `16 … 240`, graded per [What a bounding box can and cannot tell you](#what-a-bounding-box-can-and-cannot-tell-you). Decidable on a filled variant. On a stroked one it is a bracket, and the middle of the bracket is **unrun, not failed**. On a wordmark's `text` element the vertical extents are **unrun** and the right edge is graded on `ink edge`.
 
 ## The binary checklist
 
@@ -525,7 +621,7 @@ Every item is answerable from the file, from the analytic geometry, or from `log
 - [ ] F1 — no complete subpath shared with the master.
 - [ ] F2 — strictly fewer nodes than the master, counted by the node rule.
 - [ ] F3 — at most one counter, and fewer than the master unless the master had one.
-- [ ] Stroke weight 32 units; no counter on the floor; ink reaches the live-area bounds on its longer axis.
+- [ ] Stroke weight 32 units; no counter on the floor; ink reaches the live-area bounds on its longer axis — a **coverage** check, graded on the geometry box where the two boxes differ.
 - [ ] The uniform weight is recorded as a decision with the sub-resolution reason.
 - [ ] `LOGO.md` names every dropped feature and why, in reproduction terms.
 
@@ -535,11 +631,19 @@ Every item is answerable from the file, from the analytic geometry, or from `log
 - [ ] Reuse ratio at or below 0.75 on every `path` carrying 12 or more counted values.
 - [ ] No long `C` run without a repeated radius or handle length.
 
+**Extents**
+
+- [ ] Each extent item names which box it was graded against, and says whether the two coincided.
+- [ ] Containment graded FAIL on the geometry box escaping, PASS on `ink bbox` inside, **unrun** in between. Coverage graded the other way round.
+- [ ] Any stroked element with a miter join was widened by `w`, not `w/2`, before a containment PASS.
+- [ ] A `text` element's vertical extents are recorded **unrun**; its right edge is graded on `ink edge`, not `advance edge`.
+
 **Artboard hygiene**
 
 - [ ] Identical `viewBox` across square variants; declared `viewBox` and recorded aspect on the lockups.
 - [ ] No `width` or `height`; `role` and `aria-label` on every variant.
 - [ ] No empty groups, unreferenced `defs`, or surviving construction geometry.
+- [ ] Every variant's ink sits inside `16 … 240` by the grading above.
 
 ## Related references
 
