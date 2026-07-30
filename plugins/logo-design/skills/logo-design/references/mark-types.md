@@ -203,12 +203,20 @@ The alternative model — individually placed glyphs — buys the per-glyph deta
 ### Recipe
 
 1. **Declare the font before setting anything.** Family, weight, fallback. A wordmark whose typeface is not written down is not reproducible, and the file will render correctly on the machine that drew it and wrong on a build server.
-2. **Anchor the row on the grid.** `text-anchor="start"` with `x` on a grid line and the baseline `y` on a grid line. Both are choices you make, so both are checkable. `text-anchor="middle"` centres the run without knowing its width, which is genuinely useful — but it makes every subsequent position depend on a measurement, and most renderers apply `letter-spacing` after the final glyph too, so a middle-anchored run sits half a tracking step left of where you asked.
-3. **Treat `font-size` as a starting value, and record the fit as unmeasured until it has been measured.** The row is fitted to the live area by reading the right-hand ink edge off a render and adjusting `font-size` until it lands on the far grid line; adjust `letter-spacing` only after `font-size`, or you are tuning two variables against one measurement. **This file has no measurement mechanism of its own.** The render is the contact-sheet pass in `logo-concept`, and until that pass has run there is no measured edge — so `LOGO.md` records the fit as *not yet measured* and the size as what it is, a starting value. Writing a starting value down as a measured result is the same failure as calling a `text`-bearing wordmark finished.
-4. **Track deliberately, and say what the number means.** Express tracking relative to the size: `letter-spacing = font-size × t`. For a name set in caps, `t` between 0.05 and 0.12 — below 0.05 it reads as the font's default and buys nothing, above 0.12 the word stops being a word. At `font-size 64`, `t = 0.1` gives `letter-spacing = 6.4`.
-5. **Draw exactly one custom detail.** Drawn geometry, on the grid, at the mark's declared stroke weight. One is the whole budget. Prefer a position that shares the run's own anchor: a detail starting at the run's `x` is the only position that needs no measurement at all. Anything keyed to a glyph further along the row — and every overlay — needs that glyph's ink position from the same render as step 3, and is recorded as unmeasured until then.
-6. **Corrections.** For a single-run wordmark with one drawn detail, corrections 1, 2, 3, 5, 8 and 9 do not bind — there is no drawn curve sharing an edge, no area match, no apex, no diagonal outline, no rotation, and no letterform you positioned. **Correction 4 binds unconditionally.** It is not a relational rule: a lone horizontal bar reads heavier than its measured width whether or not the mark contains a vertical to compare it against, and the 4% is what makes it look like the weight you declared. A horizontal detail at a declared 16 is drawn at 15.36. Correction 6 binds only if you draw a container. Record either decision in `LOGO.md` rather than leaving it inferred.
-7. **Record what could not be checked.** The self-check items about painted edges cannot be run against the `text` element. Say so in `LOGO.md` alongside the un-performed outline conversion. An unrunnable check recorded as unrun is honest; an unrunnable check reported as passed is not.
+2. **Anchor the row on the grid.** `text-anchor="start"` with `x` on a grid line and the baseline `y` on a grid line. Both are choices you make, so both are checkable. `text-anchor="middle"` centres the run without knowing its width, which is genuinely useful — but it makes every subsequent position depend on a measurement, and the renderer's trailing tracking step (see step 3 — measured by the contact sheet, not assumed) puts a middle-anchored run half a step left of where you asked. Note what the anchor *is*: an origin the glyphs are laid out from, not a painted edge — the same category as a centreline. Putting it on a grid line is a checkable convention, not an alignment, because the first glyph's ink starts one left sidebearing further in.
+3. **Fit on the `ink edge`, never the `advance edge`.** There are two right-hand edges and they differ by a whole tracking step. The contact sheet reports both under those labels, next to a `fit ×` multiplier, so the number is available where the recipe needs it. **Take the `ink edge`**: `construction.md` defines the grid on painted edges — "the boundaries of ink" — and the trailing `letter-spacing` step a renderer appends after the last glyph paints nothing, so fitting to the advance edge pads the mark with a tracking step of whitespace that will never show. Whether the renderer appends that step at all is measured by the harness rather than assumed. Measured in Chromium on the fragment below, at `font-size 64`:
+
+   ```text
+   ink edge      231.37   →  fitting it to 224 gives font-size 61.64
+   advance edge  237.77   →  fitting it to 224 gives font-size 59.72
+   ```
+
+   Both are defensible readings of "the right-hand edge" and they are visibly different wordmarks, which is why the recipe names one.
+4. **Treat `font-size` as a starting value, and record the fit as unmeasured until it has been.** Adjust `font-size` first and `letter-spacing` only after, or you are tuning two variables against one measurement. **This file has no measurement mechanism of its own** — the render is the contact-sheet pass in `logo-concept`, so until it has run there is no measured edge and `LOGO.md` records the fit as *not yet measured*, with the size recorded as what it is. Writing a starting value down as a measured result is the same failure as calling a `text`-bearing wordmark finished. Record one asymmetry rather than trying to fix it: fitting the right ink edge to 224 does not put the left ink edge on 32, because the anchor is an origin and the first glyph's ink starts a sidebearing inside it. The row's ink is not symmetric about 128, and `LOGO.md` should say so.
+5. **Track deliberately, and say what the number means.** Express tracking relative to the size: `letter-spacing = font-size × t`. For a name set in caps, `t` between 0.05 and 0.12 — below 0.05 it reads as the font's default and buys nothing, above 0.12 the word stops being a word. At `font-size 64`, `t = 0.1` gives `letter-spacing = 6.4`.
+6. **Draw exactly one custom detail.** Drawn geometry, on the grid, at the mark's declared stroke weight. One is the whole budget. Prefer a position that shares the run's own anchor: a detail starting at the run's `x` is the only position that needs no measurement at all — at the cost that it aligns with the *origin*, so it sits one left sidebearing outside the first glyph's ink. That is a tolerable trade for the leading detail and a bad one for a trailing detail, where the same slack is a whole tracking step. Anything keyed to a glyph further along the row — and every overlay — takes its position from the same `ink edge` family of readouts as step 3, and is recorded as unmeasured until that render has run.
+7. **Corrections.** For a single-run wordmark with one drawn detail, corrections 1, 2, 3, 5, 8 and 9 do not bind — there is no drawn curve sharing an edge, no area match, no apex, no diagonal outline, no rotation, and no letterform you positioned. **Correction 4 binds unconditionally.** It is not a relational rule: a lone horizontal bar reads heavier than its measured width whether or not the mark contains a vertical to compare it against, and the 4% is what makes it look like the weight you declared. A horizontal detail at a declared 16 is drawn at 15.36. Correction 6 binds only if you draw a container. Record either decision in `LOGO.md` rather than leaving it inferred.
+8. **Record what could not be checked.** The self-check items about painted edges cannot be run against the `text` element. Say so in `LOGO.md` alongside the un-performed outline conversion. An unrunnable check recorded as unrun is honest; an unrunnable check reported as passed is not. One specific limit worth writing down, because it is easy to assume otherwise: a `text` element's `getBBox()` returns the **layout** box — ascent to descent — not tight ink. So the horizontal readings above have no vertical counterpart, a wordmark's vertical extents are not comparable to a path's, and the live-area check on them belongs to [reproduction.md](reproduction.md) rather than to any arithmetic available here.
 
 ### Worked fragment
 
@@ -219,14 +227,18 @@ The alternative model — individually placed glyphs — buys the per-glyph deta
        asset anywhere the webfont is absent.
        text-anchor start, x 32 and baseline y 144 are on the grid because all three are
        chosen rather than measured.
-       font-size 64 with letter-spacing 6.4 (t = 0.1) is a STARTING value. Whether the
-       right-hand ink edge lands on 224 is read off the contact-sheet render in
-       logo-concept, which has not run here — so LOGO.md records the fit as not yet
-       measured. Changing the family restarts that measurement.
+       font-size 64 with letter-spacing 6.4 (t = 0.1) is a STARTING value, and the fit has
+       NOT been taken here. Measured in Chromium at this size the ink edge reads 231.37
+       and the advance edge 237.77; the recipe fits on the ink edge, which puts the fitted
+       size at 61.64. 231.37 is inside the live area, so the fragment renders correctly —
+       it simply does not land on 224 yet. Changing the family restarts that measurement.
        The type's ink extents are font metrics, so the painted-edge checks cannot be run
-       against the text element; LOGO.md records them as unrun, not as passed.
-       The one custom detail is the bar. It starts at the run's own anchor, 32, the one
-       position that needs no measurement. Correction 4 applies to it unconditionally:
+       against the text element; LOGO.md records them as unrun, not as passed. getBBox on
+       a text element returns the layout box, so there is no vertical equivalent of the
+       two readings above.
+       The one custom detail is the bar. It starts at the run's own anchor, 32 — the one
+       position that needs no measurement, at the cost of sitting a left sidebearing
+       outside the N's ink. Correction 4 applies to it unconditionally:
        the top edge is held on 176, where it sets the 32-unit gap below the baseline, and
        the thinning is spent on the free lower edge. -->
   <text x="32" y="144" text-anchor="start" font-family="Inter, sans-serif" font-size="64"
