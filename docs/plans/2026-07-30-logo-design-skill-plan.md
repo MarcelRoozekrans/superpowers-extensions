@@ -213,7 +213,19 @@ One section per type. Each section carries: what it is, when it is the right cho
 | Wordmark | Type with deliberate tracking plus exactly one custom detail | The custom detail is applied to every letter instead of one |
 | Abstract | A rule applied consistently — rotation, offset, subdivision | The rule is invisible, so it reads as an arbitrary blob |
 
-Each SVG fragment must obey the construction rules from Task 3: fixed `viewBox`, no `<filter>`, no gradients, `currentColor` for fills.
+Each SVG fragment must obey the construction rules from Task 3: fixed `viewBox`, no `filter` elements, no gradients, `currentColor` for fills.
+
+**Task 3 is written first** — the plan numbers these 2 then 3, but the dependency runs the other way and the execution order was swapped. Read the finished `construction.md` before writing a single fragment here; it is the contract these examples demonstrate. An example that violates it destroys the authority of both files.
+
+### Three findings from Task 3's review that land directly on this file
+
+**1. The wordmark recipe must not promise outline conversion.** The design doc lists type-to-outlines as a non-goal — there is no font engine. A wordmark master ships with a `text` element referencing a declared webfont, and the conversion is recorded in `LOGO.md`'s Production handoff as a step that was *not* performed. Task 3's file said "convert to outlines before shipping" and had to be corrected; do not reintroduce it here.
+
+Consequence for the recipe: "type with deliberate tracking plus exactly one custom detail" is only literally achievable when the glyphs are placed individually. A single `text` run inherits the font's sidebearings, and `letter-spacing` is global tracking that cannot express a per-pair correction. State which of the two the recipe assumes.
+
+**2. Any knockout needs `fill-rule="evenodd"`, stated explicitly.** SVG's initial fill-rule is `nonzero`, under which two same-wound subpaths fill solid — a ring silently becomes a disc at every size with no error. This is a predictable agent failure and the geometric and abstract recipes both hit it.
+
+**3. Prefer `circle`, `rect`, and `A` arcs over hand-authored cubics.** Where a cubic is unavoidable, control handles sit at `0.5523 × r` from the endpoints along the tangents. Four cubics without the kappa constant produce a visibly lumpy oval that passes every mechanical check in `construction.md`.
 
 **Step 2: Verify it lints**
 
