@@ -58,13 +58,29 @@ That does not contradict construction.md, it bounds it. The floor is real and it
 
 This page reaches the counter floor from four directions — minimum size, raster alignment, dark inversion, and the favicon — and it would be easy to read four separate hedges instead of one conclusion. **Here is the conclusion, once. Every other mention on this page points back here rather than restating it.**
 
-> After this file, construction.md's 16-unit counter floor survives only for a mark that carries a declared weight of **16 or 32**, ships **no dark variant**, has **no favicon**, and is rendered **either never below 32 px, or only at sizes you control that are integer multiples of 16 px**. Everything else meets the 32-unit target.
+**This list is canonical.** construction.md's [When the floor is actually available](construction.md#when-the-floor-is-actually-available) points here rather than enumerating; do not work from a copy anywhere else. There are **four** conditions and all four must hold at once:
 
-That last condition has two branches because both are sufficient and they are reached differently. At 32 px a 16-unit counter is 2 device px and needs no alignment at all; at 16 px it is 1 device px and needs alignment, which only a controlled render size gives you. construction.md's [When the floor is actually available](construction.md#when-the-floor-is-actually-available) states the second branch; this page derives the first. **They agree — neither is a narrower reading of the other.**
+> construction.md's 16-unit counter floor survives only for a mark that
+>
+> 1. carries a **declared weight of 16 or 32** — construction.md's own derivation, from its grid rule: no 24-wide stroke can put both counter edges on full units, so a 24-unit mark forfeits the floor outright. This is the one condition that is grid arithmetic rather than raster arithmetic, and it is [Stroke discipline](construction.md#stroke-discipline)'s to change, not this page's;
+> 2. ships **no dark variant** — *Dark inversion* below;
+> 3. has **no favicon** — *The favicon redraw* below;
+> 4. is rendered on **one of the two size branches** in the next paragraph — *When grid alignment actually reaches the raster* above.
+>
+> A mark failing any one of the four meets the 32-unit target instead.
 
-That section is the canonical list of the preconditions, and it already cites the derivations on this page. This paragraph exists so a future change to it touches one place here instead of four.
+### The two size branches, and what each costs
 
-The floor is not wrong and it is not dead. It is a special case, and the price of taking the 16 px branch is a doubled minimum render size — 32 px instead of 16 — everywhere the branch's precondition cannot be shown to hold.
+Condition 4 has two branches because both are sufficient and they are reached differently. Both numbers are derived on this page; construction.md takes them from here.
+
+| Branch | Why it works | Minimum render size | Cost against a target-built mark |
+|---|---|---|---|
+| **A — never rendered below 32 px** | At 32 px a 16-unit counter is 2 device px, which survives any subpixel offset. Alignment is irrelevant. | **32 px** | **A doubled minimum.** A target-built mark works at 16 px; this one does not. |
+| **B — rendered only at sizes you control that are integer multiples of 16 px** | At 16 px a grid-aligned 16-unit counter is exactly 1 clean device px. This is construction.md's floor arithmetic, holding exactly. | **16 px** | **Nothing** — the same minimum a target-built mark has. The price is the constraint itself: every render size must be one you control and can show to be a multiple of 16 px. |
+
+Branch B is narrower than it looks. A device pixel ratio of 1.25 or 1.5 turns a nominal 16 px favicon into 20 or 24 device px, so *any* variant sized by the browser is on branch A whether or not you meant it to be. **Name the branch in `LOGO.md` and state its number**; a floor-built mark with no branch recorded is on neither and is not documented.
+
+The floor is not wrong and it is not dead. It is a special case with four conditions and a branch, and this paragraph exists so a future change touches one place instead of four.
 
 ## Minimum sizes
 
@@ -271,10 +287,12 @@ Every worked number on this page uses 3%.
 
 ### Does the compensation survive construction.md's snap rule?
 
-Precedence rule 3 snaps any correction landing within 0.5 units of a permitted value and drops the flag. So a compensation only exists at all when `r · w ≥ 0.5`:
+construction.md's precedence rule 3 snaps any correction landing within its snap tolerance of a permitted value and drops the flag. **That tolerance is construction.md's number, currently 0.5 units, and it is the only borrowed literal in this section** — call it `t`. Every value below is derived from it, so if construction.md moves `t`, this table is what recomputes. construction.md points here for the result rather than carrying its own copy.
+
+A compensation exists at all only when `r · w ≥ t`:
 
 ```text
-r · w ≥ 0.5   →   r ≥ 0.5 / w
+r · w ≥ t   →   r ≥ t / w        with t = 0.5:
 w 16  →  r ≥ 3.13%
 w 24  →  r ≥ 2.08%
 w 32  →  r ≥ 1.56%
@@ -307,12 +325,19 @@ At `r = 3%`, taking the ceiling — the threshold is the first *whole* pixel siz
 
 At 533 px the `w = 16` compensation is 0.99937 px — under a pixel, and so under the threshold that row exists to define. 534 is the first size that clears it.
 
-**Below that size, do not fork.** The dark variant is the master with `color` resolved, exactly as construction.md says, and the discrepancy is under a pixel. **At or above it**, the compensation is a visible drawing difference and one of two things has to be recorded in `LOGO.md`:
+### Three states, not two
 
-- the compensation was **not** taken, and the dark variant is nominally heavy by `r · w` units at that size; or
-- a **separate dark master** exists, carrying its own `OPTICAL:` flags against its own ceiling of six, and construction.md's derivability guarantee does not cover it.
+It is tempting to read this as fork or do-not-fork. Across all sizes there are **three** legal states, and the middle one is the whole reason this section is graded rather than assumed — it looks exactly like the first and carries the obligations of the third.
 
-Both are acceptable. Silently shipping a forked geometry as though it were derived is not.
+| # | Size against the threshold | Compensation | Geometry | What `LOGO.md` must record |
+|---|---|---|---|---|
+| **1** | below | cannot be expressed — it is under a device pixel | byte-identical, derived | **nothing.** construction.md's guarantee holds exactly. |
+| **2** | at or above | **not taken** | **byte-identical, derived** | **that the compensation was not taken, and that the dark variant is nominally heavy by `r · w` units at that size.** |
+| **3** | at or above | taken | a **separate dark master**, carrying its own `OPTICAL:` flags against construction.md's ceiling of six | the fork, the size that justified it, and that file's own flag count. construction.md's derivability guarantee does not cover it. |
+
+All three are acceptable. **State 2 is the one that fails open**, because byte-identity is true of it and of state 1, so any gate phrased as "byte-identical *or* records a fork" waves it through with nothing written down — while it is precisely the state whose discrepancy is visible and undocumented. Silently shipping a forked geometry as though it were derived is the other failure; state 2 is the quieter one.
+
+**So the state is determined first, from the size, and the obligation follows from the state.** Byte-identity is never on its own sufficient at or above the threshold.
 
 ### The counter consequence, which binds regardless
 
@@ -340,7 +365,10 @@ At `r = 3%`: 32.48 at `w` 16, 32.72 at `w` 24, and 40.96 at `w` 32 (whose target
 
 ### The two tests
 
-- **D1 — source.** If a separate dark master exists, `LOGO.md` records why, at what size, and its own flag count. If none exists, `logo-mono-white` is byte-identical to `logo-mono-black` apart from the resolved `color`.
+- **D1 — source, in three states.** Determine the state first, from the dark variant's largest specified size against the threshold table; then check that state's obligation. **Byte-identity alone never passes state 2.**
+  - **State 1** — below the threshold. `logo-mono-white` is byte-identical to `logo-mono-black` apart from the resolved `color`, and `LOGO.md` records nothing.
+  - **State 2** — at or above, compensation not taken. Also byte-identical, **and `LOGO.md` records that the compensation was not taken and that the variant is nominally heavy by `r · w` at that size.** Byte-identical with nothing recorded is a **fail** here, not a pass.
+  - **State 3** — at or above, compensation taken. A separate dark master exists and `LOGO.md` records why, at what size, and its own flag count.
 - **D2 — computed, at the recorded `r` (3% unless `LOGO.md` says otherwise).** Every counter, reduced by `r · w`, still clears `max(1.25 w, 32)`. No counter relies on the 16-unit floor.
 
 ## The favicon redraw
@@ -422,7 +450,7 @@ A ring at the favicon's own spec, audited against construction.md coordinate by 
 
 **A mark with hundreds of nodes was traced, not constructed.** The ceiling is derived from the same pixel rule as everything else.
 
-Two nodes are distinguishable only if they are at least 2 device px apart at the variant's minimum size. At 16 px, 2 device px is 32 artboard units. The longest closed contour the live area permits is the perimeter of the 224-unit square:
+Two nodes are distinguishable only if they are at least 2 device px apart at the variant's minimum size. At 16 px, 2 device px is 32 artboard units. The longest closed contour available is the perimeter of **construction.md's live area** — 224 units square, its number not this page's, so this ceiling recomputes if it moves:
 
 ```text
 perimeter        = 4 × 224 = 896 units
@@ -552,11 +580,11 @@ An indeterminate extent is a fact about the drawing, not about the check, and tw
 θ 180°  →  0.500 w     θ 120°  →  0.577 w     θ 90°  →  0.707 w     θ 60°  →  1.000 w
 ```
 
-construction.md floors `θ` at 60°. **At the tightest join it permits, the ink reaches `w` beyond the vertex — double the `w/2` the widened box assumes.** At `w` 16 that is an 8-unit understatement per corner, exactly the magnitude of the butt-cap error in the other direction.
+**The rule is `(w/2) / sin(θ_min/2)`, where `θ_min` is construction.md's interior-join floor — not a literal copied from it.** At its current floor of 60° that evaluates to exactly `w`: **the ink reaches `w` beyond the vertex, double the `w/2` the widened box assumes.** At `w` 16 that is an 8-unit understatement per corner, exactly the magnitude of the butt-cap error in the other direction. If construction.md ever moves the floor, re-evaluate the expression rather than reusing the `w` — at 45° it would be `1.307 w`.
 
 SVG's default `stroke-miterlimit` of 4 replaces a miter with a bevel only below `θ` ≈ 28.96°, so it never rescues a conformant mark — construction.md has already rejected that geometry on its own 60° floor.
 
-> **For any stroked element carrying a miter join, widen by `w` per side, not `w/2`, before granting a PASS on a containment check.** The `ink bbox` field is not an upper bound until you have.
+> **For any stroked element carrying a miter join, widen by `(w/2) / sin(θ_min/2)` per side — `w` at construction.md's current 60° floor — not `w/2`, before granting a PASS on a containment check.** The `ink bbox` field is not an upper bound until you have.
 
 Nothing changes for the FAIL side: the geometry box is a lower bound regardless of joins.
 
@@ -592,7 +620,8 @@ Every item is answerable from the file, from the analytic geometry, or from `log
 
 **Minimum sizes**
 
-- [ ] `logo-mark`'s narrowest counter clears `max(1.25 w, 32)`, or `LOGO.md` records all four floor conditions as met and states the 32 px minimum the floor costs.
+- [ ] `logo-mark`'s narrowest counter clears `max(1.25 w, 32)`, **or** all four conditions in [The counter floor, in aggregate](#the-counter-floor-in-aggregate) are shown to hold — checked against that list, not against a remembered count.
+- [ ] A floor-built mark names its size **branch** in `LOGO.md` and states that branch's minimum: **32 px on branch A, 16 px on branch B.** A branch not named is not a branch shown to hold.
 - [ ] The lockup's `φ_ink` and `φ_ctr` were measured off a 256 px render, and the cap-height and width minimums are recorded in `LOGO.md`.
 - [ ] Print minimums computed for each process the brief named, from the vendor's `L` and `g` where one was available.
 - [ ] Every minimum in `LOGO.md`'s **Variants** table cites the formula or the measurement it came from.
@@ -613,7 +642,8 @@ Every item is answerable from the file, from the analytic geometry, or from `log
 **Dark inversion**
 
 - [ ] `LOGO.md` records `r`, or the gate runs at 3%.
-- [ ] D1 — `logo-mono-white` is byte-identical to `logo-mono-black` apart from the resolved `color`, or `LOGO.md` records the fork, its size threshold, and its own flag count.
+- [ ] D1 — the state (1, 2 or 3) is named in `LOGO.md`, determined from the dark variant's largest specified size against the threshold table.
+- [ ] D1 — that state's obligation is met. **State 2 is byte-identical *and* must record the un-taken compensation and the `r · w` it is heavy by; byte-identity on its own does not pass it.**
 - [ ] D2 — every counter, reduced by `r · w`, still clears `max(1.25 w, 32)`. Nothing relies on the 16-unit floor.
 
 **Favicon**
