@@ -486,9 +486,20 @@
            bboxGeom  the geometry box, exact, an under-estimate when stroked
            bbox      that box widened by stroke-width/2 per side
 
-         The widening is exact at a round or square cap and at a miter join, and
-         over-long by w/2 at a BUTT-capped open end, which does not extend past
-         its endpoint. construction.md's own 16-wide stem on centreline 120 is
+         The widening is exact at a round or square cap, and over-long by w/2 at
+         a BUTT-capped open end, which does not extend past its endpoint.
+
+         It is NOT exact at a miter join — it is an UNDER-estimate there. A miter
+         tip sits (w/2)/sin(theta/2) from the vertex: 0.707w at 90 degrees and a
+         full 1.000w at 60, which is construction.md's own interior-join floor.
+         So at the tightest join a conformant mark may carry, ink reaches w past
+         the vertex, double the w/2 this widening assumes — 8 units per corner at
+         w 16. SVG's default stroke-miterlimit of 4 only bevels below theta 28.96
+         degrees, so it never rescues a conformant mark. Treat `bbox` as an upper
+         bound only for cap geometry; for a mitred path widen by w per side before
+         granting a containment PASS. reproduction.md carries the same rider.
+
+         construction.md's own 16-wide stem on centreline 120 is
          the case: the true painted box is y 48 … 208 and the widened one says
          40 … 216. Chrome's getBoundingClientRect uses the same conservative
          stroke box, so there is nothing more exact to reach for without
