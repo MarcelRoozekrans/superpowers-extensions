@@ -25,7 +25,14 @@ Non-square artboards (a wide lockup, a stacked lockup) are legitimate **variants
 
 ### The grid
 
-The unit is **16**. The artboard is therefore a 16 × 16 cell grid. Every structural coordinate — the edges of shapes, the ends of strokes, the corners of counters — is a multiple of 16. Stroke centrelines may sit on a half-unit (a multiple of 8); see [Stroke discipline](#stroke-discipline).
+The unit is **16**. The artboard is therefore a 16 × 16 cell grid. Every structural coordinate — the edges of shapes, the ends of strokes, the corners of counters — is a multiple of 16.
+
+Two coordinates are **derived from a stroke weight** rather than placed, and both may sit on a half-unit (a multiple of 8), because stroke weights are themselves multiples of 8:
+
+- a stroke centreline;
+- the second painted edge of a filled stroke whose weight is not a multiple of 16 — a 24-wide stem starting at 128 ends at 152.
+
+Neither is an optical exception and neither is flagged. Both follow mechanically from a legal stroke weight, and the cost is stated in [Stroke discipline](#stroke-discipline).
 
 16 is not arbitrary. It is the number that makes the grid land on whole pixels at every size the mark will actually be rendered at:
 
@@ -54,7 +61,7 @@ The grid rule says every coordinate is a multiple of 16. The optical rules below
 
 1. **Optical correction wins.** A mathematically clean coordinate that looks wrong is wrong. The grid is a tool for crispness, not an aesthetic authority.
 2. **Spend the deviation on curves and points, not on straight edges.** Almost every optical correction moves a curve's extremum or a shape's apex — precisely the places a rasteriser anti-aliases anyway, where leaving the grid costs nothing. When a correction must move a straight axis-aligned edge (stroke thinning is the common case), move the *free* edge and keep the edge that aligns with another form on the grid.
-3. **Snap back if the residual is under 0.5 units.** Compute the corrected value exactly, then compare it to the nearest permitted grid value — a multiple of **16** for a structural edge, a multiple of **8** for a stroke width or centreline. If they are within 0.5 units, use the grid value and drop the flag. Grid alignment buys a crisp edge at every reproduction size; 0.5 units of size accuracy buys nothing.
+3. **Snap back if the residual is under 0.5 units.** Compute the corrected value exactly, then compare it to the nearest **permitted grid value** — a multiple of **16** for a structural edge, a multiple of **8** for a stroke weight or any coordinate derived from one. Note that this is the distance to the nearest *permitted* value, not to the uncorrected value you started from; the two coincide only when the starting value was itself on the grid. If they are within 0.5 units, use the grid value and drop the flag. Grid alignment buys a crisp edge at every reproduction size; 0.5 units of size accuracy buys nothing.
 4. **Two decimal places, never more.** `22.63`, not `22.6274`. One hundredth of a unit is 0.01 px at a 256 px render and 1/1600 px at favicon size — below any rasteriser's resolution. Trailing precision is noise that makes the file look machine-generated, which it is, and you are trying to hide that.
 5. **Flag every surviving exception inline**, on the line above the geometry, in this format:
 
@@ -109,21 +116,31 @@ Do not confuse this with rule 1. Rule 1 is a ~2% nudge applied when two shapes *
 **Worked.** Matching a 128 square:
 
 ```text
-diameter = 128 × 1.1284 = 144.43
+diameter = 128 × 2/√π = 128 × 1.128379 = 144.43
 residual against the nearest grid multiple (144 = 9 × 16) = 0.43  →  under 0.5, snap
 diameter = 144, radius = 72                                        (on grid, no flag)
 ```
 
 That is precedence rule 3 doing its job: the correction is large enough to matter and lands close enough to the grid to keep it.
 
-Same treatment for other primitives, matching a 128 square:
+Same treatment for other primitives. Every value in the last column is derived from the exact area match to a 128 square and then rounded to 2 dp — never from an already-rounded intermediate, which is how a table like this drifts:
 
-| Shape | Area formula | Extent | On the 256 artboard |
+| Shape | Area formula | Extent | Matching a 128 square |
 |---|---|---|---|
-| Circle | `πr²` | `1.128 s` | 144 |
-| Equilateral triangle | `(√3/4)a²` | `1.52 s` side | 195 side, 169 tall |
-| Diamond (square at 45°) | `a²` | `1.414 s` diagonal | 128 side, 181.02 diagonal |
-| Hexagon (regular) | `(3√3/2)a²` | `1.24 s` across corners | 159 across corners |
+| Circle | `πr²` | `1.1284 s` | d 144.43 → **snaps to 144** |
+| Equilateral triangle | `(√3/4)a²` | `1.5197 s` side | side 194.52, height 168.46 |
+| Diamond (square at 45°) | `a²` | `1.4142 s` diagonal | side 128, diagonal 181.02 |
+| Hexagon (regular) | `(3√3/2)a²` | `1.2408 s` across corners | 158.82 across corners, 137.55 across flats |
+
+Only the circle lands within 0.5 of a grid multiple. Every other value stays as a flagged exception under precedence rule 3.
+
+**The triangle row does not survive contact with correction 3.** At 168.46 tall, a bounding-box-centred apex sits at `128 − 84.23 = 43.77`; the `h/6` centroid shift of 28.08 puts it at **15.69**, outside the live area. The ceiling for a triangle taking the full shift is:
+
+```text
+128 − h/2 − h/6 ≥ 16   →   2h/3 ≤ 112   →   h ≤ 168
+```
+
+So an equilateral triangle cannot be area-matched to a 128 square *and* take the full centroid shift. Shrink the triangle, per correction 3 — `h = 160` gives an apex at `128 − 80 − 26.67 = 21.33` and a base at `181.33`, both comfortably inside — and record that the mark is area-matched to a 121.6 square rather than a 128 one. Do not reduce the shift to make the number fit.
 
 ### 3. Apex centring
 
@@ -149,14 +166,14 @@ This is the largest single correction in this file and the only one where over-a
 
 **Worked.**
 
-| Vertical stem | Horizontal bar | Delta |
+| Vertical stem | Horizontal bar | Delta to the nearest permitted value |
 |---|---|---|
 | 16 | 15.36 | 0.64 |
 | 24 | 23.04 | 0.96 |
 | 32 | 30.72 | 1.28 |
-| 8 | 7.68 → **snap back to 8** | 0.32, under the 0.5 tolerance |
+| 8 (below the legal weight band — shown for the snap mechanism) | 7.68 → **snap back to 8** | 0.32, under the 0.5 tolerance |
 
-At 12 units and under, the correction rounds away under precedence rule 3 (`12 × 0.04 = 0.48`, inside the 0.5 tolerance). Above it, apply the correction by moving the edge that is not shared:
+Every legal weight — 16, 24, 32 — produces a delta that clears the snap tolerance, so on a legal mark this correction always survives. Apply it by moving the edge that is not shared:
 
 ```svg
 <!-- An "L": 32-unit stem, 30.72-unit foot. The baseline (192) stays on grid. -->
@@ -172,6 +189,8 @@ The correction is invisible below about a 64 px render. It is not wasted work �
 
 **Why.** Offsetting horizontally measures across the bar at a slant, and the perpendicular distance is shorter by `cos θ`. At 45° that is a 29% shortfall — a diagonal that should match a 32-unit stem arrives at 22.6 and the mark visibly falls apart along its diagonals. This is not a perceptual correction, it is a geometry error, and it is the most common one in agent-authored path data.
 
+**Do not cut this correction for length.** Everything else in this section tunes a shape that is already right; this one is the difference between a correct shape and a broken one, and it is the only correction here whose absence is visible at every size.
+
 **Worked.** A 45° bar with a true perpendicular width of 32:
 
 ```text
@@ -179,7 +198,7 @@ horizontal offset = 32 / cos 45° = 32 × 1.41421 = 45.25
 ```
 
 ```svg
-<!-- OPTICAL: horizontal run 32 → 45.25 · perpendicular width · 32 / cos 45° -->
+<!-- OPTICAL: horizontal run 32 → 45.25 (x 205.25 and 77.25) · perpendicular width · 32 / cos 45° -->
 <path d="M32 192L160 64H205.25L77.25 192Z" fill="currentColor"/>
 ```
 
@@ -267,7 +286,7 @@ Corrections compound, and applying them out of order produces a shape that is co
 4. Set stroke weights, then the axis corrections (rules 4, 5) and the joins (rule 7).
 5. Apply shared-edge overshoot last (rule 1) — it only touches extrema, so nothing downstream depends on it.
 6. Sidebearings, for wordmarks only (rule 9).
-7. Round to 2 dp, snap anything within 0.5 of a half-unit, flag what survives.
+7. Round to 2 dp, snap anything within 0.5 of its permitted grid value (16 for a structural edge, 8 for a stroke weight or a coordinate derived from one), flag what survives.
 
 ## Stroke discipline
 
@@ -284,6 +303,10 @@ Both weights are multiples of 8. Three weights is not a system, it is an acciden
 
 **Weight band.** Keep stroke weights between **16 and 32 units** (1 to 2 px at favicon size). Under 16 the stroke renders below a pixel at 16 px and anti-aliases to grey. Over 32 the counters start closing, which is the failure in the next section.
 
+**What a 24-unit weight costs.** 16 and 32 are multiples of the grid unit, so both painted edges of a 16- or 32-wide filled stroke land on full units. 24 is not: a 24-wide stem starting at 128 ends at 152, putting one edge on the half-unit. Read that off the render table above — a half-unit is a whole pixel at 32, 64, 128 and 256 px, and half a pixel at 16 and 48 px. So a 24-unit weight softens one edge at exactly two reproduction sizes, one of which (16 px) is redrawn from scratch anyway — see [reproduction.md](reproduction.md).
+
+That is an acceptable price for keeping two of the three ratios available, but it is a price. **A single weight of 16 or 32 puts every painted edge on a full unit and is the safer default.** Reach for 24 when the mark needs it, not by habit.
+
 **Stroke or fill, not both.** Decide once per mark:
 
 - **Filled paths** are the safer final form: no `stroke-width` to be scaled or dropped by a downstream tool, and knockouts work with `fill-rule`.
@@ -293,7 +316,7 @@ If you stroke, remember the stroke **straddles** the path. A 16-unit stroke cent
 
 ```svg
 <!-- centreline 120 = 112 + 16/2, so the painted edges land on 112 and 128 -->
-<path d="M120 48V208" fill="none" stroke="currentColor" stroke-width="16" stroke-linecap="butt"/>
+<path d="M120 48V208" fill="none" stroke="currentColor" stroke-width="16" stroke-linecap="butt" stroke-linejoin="miter"/>
 ```
 
 Declare `stroke-linecap` and `stroke-linejoin` explicitly on every stroked element. The defaults (`butt`, `miter`) are rarely what you want and never what you checked. `vector-effect="non-scaling-stroke"` is forbidden: it makes the mark a different shape at every size, which is the opposite of a logo.
@@ -305,7 +328,7 @@ A counter is enclosed negative space — the hole in an `o`, the gap inside a ri
 The rules:
 
 - **Design target: narrowest counter ≥ `max(stroke width × 1.25, 32 units)`.** At a 16 px render, 32 units is 2 px — enough for the hole to survive anti-aliasing wherever it falls. With a 32-unit stroke the binding term is `40`.
-- **Hard floor: 16 units, and grid-aligned.** 16 units is exactly one pixel at 16 px, and it only stays one *clean* pixel if both edges are on the grid; half a unit off, it splits across two pixels and greys out. Between 16 and the target you are trading margin for detail deliberately and should say so in `LOGO.md`. Below 16 the counter does not exist at favicon size, and no amount of care at 256 px changes that. This is the one place the grid is load-bearing for legibility rather than crispness.
+- **Hard floor: 16 units, and grid-aligned.** 16 units is exactly one pixel at 16 px, and it only stays one *clean* pixel if both edges are on the grid; half a unit off, it splits across two pixels and greys out. This makes the floor conditional on the stroke weight: only weights that are multiples of 16 leave both counter edges on full units, so **a mark built on a 24-unit weight forfeits the floor** and must meet the 32-unit target instead. Its target is 32 regardless (`max(24 × 1.25, 32)`), so in practice this costs nothing — but do not read the floor as available to a 24-unit mark. Between 16 and the target you are trading margin for detail deliberately and should say so in `LOGO.md`. Below 16 the counter does not exist at favicon size, and no amount of care at 256 px changes that. This is the one place the grid is load-bearing for legibility rather than crispness.
 - **The rule covers open gaps too.** Any negative space narrower than the stroke closes the same way whether or not it is enclosed. Measure the narrowest point, not the average.
 - **Measure at the narrowest point of the aperture**, including where a curve approaches a straight — that is where two anti-aliased edges meet and the gap goes first.
 - **At most three distinct counters** at 256. More than three and you are relying on detail that no reproduction below 64 px will carry.
@@ -380,17 +403,17 @@ Two prohibitions:
 Run this list against every candidate before it reaches the contact sheet. Every item is answerable from the file itself — none of it needs eyes.
 
 - [ ] `viewBox="0 0 256 256"`; no `width` or `height`; `role` and `aria-label` present.
-- [ ] All geometry within `16 … 240` on both axes, unless the container is the mark.
-- [ ] Every coordinate is a multiple of 16 (or 8 for a stroke centreline), or carries an `OPTICAL:` flag on the line above it.
+- [ ] All geometry within `16 … 240` on both axes. Two exemptions only: a container that is itself the mark, and overshoot spilling outward from a nominal edge.
+- [ ] Every coordinate is a multiple of 16 — or a multiple of 8 where it is derived from a stroke weight (a centreline, or the second painted edge of a filled stroke) — or carries an `OPTICAL:` flag on the line above it.
 - [ ] Every flag names the rule and shows the arithmetic.
 - [ ] No coordinate has more than 2 decimal places.
 - [ ] No surviving exception sits within 0.5 of its permitted grid value (16 for an edge, 8 for a stroke) — those should have been snapped.
 - [ ] One stroke weight, or two in a named ratio, all multiples of 8, all within 16 … 32.
-- [ ] Narrowest counter ≥ `max(stroke × 1.25, 32)`; nothing under 16; every counter edge grid-aligned; at most three counters.
+- [ ] Narrowest counter ≥ `max(stroke × 1.25, 32)`; nothing under 16; at most three counters. On a 16- or 32-unit weight, every counter edge on a full unit; on a 24-unit weight, the 32-unit target met rather than the floor.
 - [ ] No `filter`, gradient, `text`, `transform`, `mask`, `clipPath`, `image`, `style`, or `vector-effect`.
 - [ ] Every fill and stroke is `currentColor`, or a `var(--…, currentColor)` in a derived variant only.
 - [ ] Every shape sharing an edge with a curve or a point has the overshoot applied.
-- [ ] Every horizontal stroke over 12 units is 4% thinner than its vertical counterpart.
+- [ ] Every horizontal stroke is 4% thinner than its vertical counterpart.
 - [ ] Every diagonal drawn as a filled outline uses `w / cos θ` for its offset.
 - [ ] Anything inside a container is split 45:55, above:below.
 
