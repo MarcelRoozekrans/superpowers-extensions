@@ -1,0 +1,7 @@
+{
+  "name": "logo-design",
+  "description": "Generates a brand mark: a docs/design/LOGO.md brief plus SVG variants, drawn from three candidates and self-critiqued with vision. Scoped to geometric, monogram, wordmark, and abstract marks. Also audits existing logos via logo-review.",
+  "author": {
+    "name": "Marcel Roozekrans"
+  }
+}

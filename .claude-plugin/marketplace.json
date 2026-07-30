@@ -122,6 +122,16 @@
       },
       "source": "./plugins/compress-memory",
       "category": "workflow"
+    },
+    {
+      "name": "logo-design",
+      "description": "Generates a brand mark from three drawn SVG candidates: a docs/design/LOGO.md brief plus full, stacked, mark-only, wordmark, mono, and favicon variants. Renders a contact sheet and self-critiques with vision before presenting. Scoped to geometric, monogram, wordmark, and abstract marks; refuses pictorial and mascot work. Includes logo-review for auditing existing marks.",
+      "version": "1.19.1",
+      "author": {
+        "name": "Marcel Roozekrans"
+      },
+      "source": "./plugins/logo-design",
+      "category": "workflow"
     }
   ]
 }

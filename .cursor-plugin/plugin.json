@@ -21,7 +21,8 @@
     "ui-workflow",
     "ui-design-system",
     "squad",
-    "compress-memory"
+    "compress-memory",
+    "logo-design"
   ],
   "skills": "./plugins/"
 }
