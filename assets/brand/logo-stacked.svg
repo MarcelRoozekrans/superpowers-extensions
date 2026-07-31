@@ -1,0 +1,22 @@
+<svg viewBox="0 0 256 384" role="img" aria-label="SPX">
+  <!-- SPX stacked lockup. Non-square by design: viewBox 0 0 256 384, aspect 2:3,
+       recorded in LOGO.md. NOT size-tested on the contact sheet, for the same
+       reason as logo-full.svg; its minimums are derived from its components.
+       The mark's path data is unchanged from logo-mark.svg and occupies the
+       lockup's first 256 units of height, so no transform is introduced.
+       The type is centred under the mark. text-anchor middle is taken
+       deliberately here rather than by accident: a stacked lockup's composition
+       is the centring, and mark-types.md notes the cost — the run's position now
+       depends on a measurement, and a middle-anchored run sits half a trailing
+       tracking step left of where it was asked for wherever the renderer applies
+       one. x 128 and baseline y 352 are on the grid. font-size 64,
+       letter-spacing 6.4, t = 0.1 — the same t as the other two type-bearing
+       variants. -->
+  <!-- OPTICAL: ring horizontal walls 32 -> 30.72 · horizontal strokes read heavier · 32 x 0.96; inner edges 46.72 / 113.28 on the seed ring and 142.72 / 209.28 on its translate, outer edges held on 16, 112, 144 and 240 -->
+  <path fill="currentColor" fill-rule="evenodd"
+        d="M16 16H144V112H240V240H112V144H16Z
+           M48 46.72H112V113.28H48Z
+           M144 142.72H208V209.28H144Z"/>
+  <text x="128" y="352" text-anchor="middle" font-family="Inter, sans-serif"
+        font-size="64" font-weight="700" letter-spacing="6.4" fill="currentColor">SPX</text>
+</svg>

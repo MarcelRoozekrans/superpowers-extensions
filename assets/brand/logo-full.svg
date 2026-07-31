@@ -1,0 +1,24 @@
+<svg viewBox="0 0 512 256" role="img" aria-label="SPX">
+  <!-- SPX horizontal lockup. Non-square by design, per reproduction.md's
+       artboard hygiene: viewBox 0 0 512 256, aspect 2:1, recorded in LOGO.md.
+       NOT size-tested on the contact sheet — the harness is built for the square
+       artboard and a lockup rendered there reports its letterboxing rather than
+       the lockup. Its minimums are DERIVED from its components: the mark side
+       from k, the type side from the wordmark's phi.
+       The mark's path data is unchanged from logo-mark.svg. It needs no
+       translation because it occupies the lockup's first 256 units, so no
+       transform is introduced on final geometry.
+       The type's anchor x 304 and baseline y 160 are on the grid; 304 leaves 64
+       units — a quarter of the mark's height — between the mark's ink edge at
+       240 and the type's origin. font-size 80, letter-spacing 8, t = 0.1, the
+       same values as logo-wordmark.svg so the two cannot drift.
+       Composition and clearspace are what this variant is checked for, and
+       LOGO.md records what was and was not checked. -->
+  <!-- OPTICAL: ring horizontal walls 32 -> 30.72 · horizontal strokes read heavier · 32 x 0.96; inner edges 46.72 / 113.28 on the seed ring and 142.72 / 209.28 on its translate, outer edges held on 16, 112, 144 and 240 -->
+  <path fill="currentColor" fill-rule="evenodd"
+        d="M16 16H144V112H240V240H112V144H16Z
+           M48 46.72H112V113.28H48Z
+           M144 142.72H208V209.28H144Z"/>
+  <text x="304" y="160" text-anchor="start" font-family="Inter, sans-serif"
+        font-size="80" font-weight="700" letter-spacing="8" fill="currentColor">SPX</text>
+</svg>

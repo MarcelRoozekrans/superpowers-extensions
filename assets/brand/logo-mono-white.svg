@@ -1,0 +1,16 @@
+<svg viewBox="0 0 256 256" role="img" aria-label="SPX" color="#ffffff">
+  <!-- Derived from logo-mark.svg by resolving `color`. Not redrawn: every paint
+       is still currentColor and the path data is byte-identical to the master's
+       and to logo-mono-black.svg's.
+       reproduction.md's D1 state 2: this variant is specified for large format,
+       which is above the 267 px threshold at w 32 and r 3%, and the
+       reversed-weight compensation was NOT taken. It is therefore nominally
+       heavy by r . w = 0.96 units at that size, and LOGO.md records it. The
+       counters were drawn at 64, which clears max(1.25 w, 32) = 40 even after
+       the 0.96 is subtracted — 63.04. -->
+  <!-- OPTICAL: ring horizontal walls 32 -> 30.72 · horizontal strokes read heavier · 32 x 0.96; inner edges 46.72 / 113.28 on the seed ring and 142.72 / 209.28 on its translate, outer edges held on 16, 112, 144 and 240 -->
+  <path fill="currentColor" fill-rule="evenodd"
+        d="M16 16H144V112H240V240H112V144H16Z
+           M48 46.72H112V113.28H48Z
+           M144 142.72H208V209.28H144Z"/>
+</svg>

@@ -1,0 +1,12 @@
+<svg viewBox="0 0 256 256" role="img" aria-label="SPX" color="#000000">
+  <!-- Derived from logo-mark.svg by resolving `color`. Not redrawn: every paint
+       is still currentColor and the path data is byte-identical to the master's.
+       reproduction.md's D1 state for this mark is state 2 — the dark variant
+       ships above the 267 px fork threshold and the reversed-weight compensation
+       was NOT taken, which LOGO.md records. See logo-mono-white.svg. -->
+  <!-- OPTICAL: ring horizontal walls 32 -> 30.72 · horizontal strokes read heavier · 32 x 0.96; inner edges 46.72 / 113.28 on the seed ring and 142.72 / 209.28 on its translate, outer edges held on 16, 112, 144 and 240 -->
+  <path fill="currentColor" fill-rule="evenodd"
+        d="M16 16H144V112H240V240H112V144H16Z
+           M48 46.72H112V113.28H48Z
+           M144 142.72H208V209.28H144Z"/>
+</svg>

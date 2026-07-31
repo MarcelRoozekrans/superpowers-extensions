@@ -1,0 +1,31 @@
+<svg viewBox="0 0 256 256" role="img" aria-label="SPX">
+  <!-- SPX master mark — geometric, "one step on".
+       Seed: a square ring, outer 16 … 144 (side 128), declared weight 32, so its
+       inner edges are 48 and 112 before correction 4.
+       Derived: the second ring is the seed translated by 96 — three quarters of
+       the seed's own side — on both axes. 96 is the only translation on the grid
+       that leaves the two rings sharing exactly one wall block, 32 x 32, and no
+       more: at 80 they overlap on two blocks, at 112 they only touch at a point.
+       Counters: two, each 64 wide by 66.56 tall, parallel-straight. 64 clears
+       max(32 x 1.25, 32) = 40 plus the dark increment r . w = 0.96, so 40.96.
+       Correction 4 binds on all four horizontal walls, two per ring; the outer
+       edges are held on the grid and the inner ones carry the thinning.
+       Corrections 1, 2, 3, 5, 6, 7, 8 and 9 do not bind: no curve or point
+       shares an alignment edge with a flat form; the two rings are congruent by
+       construction rather than area-matched, so there is nothing to area-match;
+       there is no apex; no diagonal is drawn as a filled outline; no container
+       is drawn — the two rings are the mark and nothing sits inside them as a
+       separate element; every join is 90 degrees or its 270 reflex, clear of the
+       60 floor, and no corner is rounded; nothing is rotated; there is no
+       letterform.
+       Filled, single weight 32, one evenodd knockout carrying both counters —
+       under the default nonzero rule the two holes would fill solid.
+       16 nodes (8 . 4 . 4), max contour 8.
+       Reuse 10 distinct / 19 written = 0.53.
+       Ink 23224.32 / convex hull 40960 = 0.567, under reproduction.md's 0.85. -->
+  <!-- OPTICAL: ring horizontal walls 32 -> 30.72 · horizontal strokes read heavier · 32 x 0.96; inner edges 46.72 / 113.28 on the seed ring and 142.72 / 209.28 on its translate, outer edges held on 16, 112, 144 and 240 -->
+  <path fill="currentColor" fill-rule="evenodd"
+        d="M16 16H144V112H240V240H112V144H16Z
+           M48 46.72H112V113.28H48Z
+           M144 142.72H208V209.28H144Z"/>
+</svg>
