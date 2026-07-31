@@ -33,6 +33,7 @@ Each sub-skill carries its own announce line in its own section.
 ## Prerequisites
 
 - **Playwright MCP — optional.** Every render-dependent check in this skill goes through it. Without it, both sub-skills still run and every such check is recorded **unrun**, never passed. See [Shared Protocol](#shared-protocol) item 3.
+- **The declared typeface has to be installed on the machine that renders the sheet — check it before the run, not after.** Every full `logo-concept` run sets type: the variant set at [Step 6](#step-6--the-variant-set) carries a wordmark and two lockups whatever type the mark itself turns out to be. Where the face does not resolve there, the harness detects it and says so at Step 4 — accurately, and too late to act on — and **seven `LOGO.md` slots go `UNRUN` behind that one fact**. [Step 0](#step-0--context-and-guard) item 7 names them and states the check. Like everything else here it degrades rather than blocks, which is exactly why nothing downstream will stop you.
 - Everything else — the drawing, the arithmetic, and the source-level anti-slop signatures — needs nothing beyond `Read`, `Write` and `Glob`.
 
 ## Mode Detection
@@ -185,6 +186,11 @@ The request that opened *this* run is still captured verbatim, per item 1 — it
 4. **Detect where assets go**, reusing `ui-design-system`'s stack detection: React, Next, Astro or Vue → `public/brand/`; Blazor → `wwwroot/brand/`; anything else → `assets/brand/`. The contact sheet is documentation rather than a shipped asset and goes to `docs/design/logo-contact-sheet.html` on every project.
 5. **Start `docs/design/LOGO.md` now**, from `templates/logo.template.md`. It is filled progressively as the flow runs and closed out at Step 7 — it is not written from memory at the end.
 6. **Capture the brief verbatim, at this point and not later.** [Shared Protocol](#shared-protocol) item 1. The invoking request goes into § Concept & rationale's *brief, in one line* row word for word, and is scanned against the eight-keyword list in `anti-slop.md` pattern 6 — cite that list, do not copy it — with the hits, or `none`, in the *keywords* row. Step 1's answers are appended verbatim as they arrive and the scan re-runs over the whole of it. Reconstructing a brief from the finished mark reconstructs the evidence, which is why this happens in Step 0 rather than as a Step 7 chore.
+7. **Establish the typeface, and check it resolves on this machine — now, before the run is spent.** Step 6 ships a wordmark and two lockups on every full run, so every full run sets type in a declared face; on the variants-only path the check binds wherever the request names the wordmark or a lockup. Take the family from `MASTER.md`'s typography where item 1 found one, and where it did not, choose it here rather than at Step 6 — from what is actually installed. Then **say out loud what an unavailable face costs**, because the user can still act on it at this point:
+
+   - **Seven `LOGO.md` slots go `UNRUN` behind one missing face**, and they are values on any machine where it resolves: `φ_ink` and `φ_ctr`, `k`, both cap-height minimums and the width minimum in § Variants → *Lockup measurements*, and the wordmark *Fit* in § Construction → *Type-specific records*. `reproduction.md` § Full lockup is why — the type side of the lockup minimum is the one constraint on that page that is measured rather than computed, and it is measured off a render of the declared face.
+   - **The remedy is to install the face where the sheet will run**, and there is no self-hosting route inside this plugin: a shipped master may not carry `style`, per `construction.md` § Forbidden constructs, and the sheet is filled by placeholder substitution only — adding a face to it is regenerating the instrument, which Step 4 forbids for the reason it gives there.
+   - **A missing face never blocks and never fails.** It degrades to `UNRUN` like any other unrun measurement — [Shared Protocol](#shared-protocol) item 3 — and the install step goes into § Production handoff → *Still to do* at Step 7. The warning is here so that a five-minute install can be decided on before the run rather than discovered as a cascade after it.
 
 ### Step 1 — the five questions
 
@@ -194,11 +200,26 @@ Ask them **one at a time — one question per message.** A batched list gets a b
 |---|---|---|---|
 | 1 | The exact string to be set in type. Capitalisation and spacing are design decisions, not typos. | asked if the one-liner does not carry it | § Concept & rationale *brief*; the `aria-label` on every variant |
 | 2 | What the product does, in one sentence. | asked if absent | § Concept & rationale *brief*; it is what Step 2's directions are about |
-| 3 | Mark type preference — geometric, monogram, wordmark, abstract, or "you choose". | defaults to "you choose" | § Concept & rationale *Type chosen because* |
+| 3 | Mark type preference — geometric, monogram, wordmark, abstract, or "you choose". | defaults to "you choose" | § Concept & rationale *Type chosen because* and *Mark–name relationship*; on "you choose" both are derived from answers 1 and 4, per the procedure below |
 | 4 | **Where it must survive** — favicon, app icon, one-colour print or embroidery, dark UI, large format. | **asked standalone, always** | more slots than any other answer; see below |
 | 5 | Must-avoid. | defaults to none | § Concept & rationale *brief*, verbatim with the rest |
 
-**"You choose" defaults to geometric**, per `mark-types.md` § Choosing the type, which also carries the signal-to-type table for every other answer.
+#### "You choose" is derived, not chosen
+
+**Question 3's "you choose" is not a blank cheque: the type is derived from the answers already on the table, and the derivation is written down.** The two signals are question 1's string and question 4's contexts — the same signals `mark-types.md` § Choosing the type's table is read with. Its "default to geometric" is the row reached when neither signal decides, not the row reached first. Count question 1's string in **characters**, ignoring spacing; "size-hostile" below means question 4 named a context the name itself cannot be set in — a favicon, an app icon, embroidery, a stamp.
+
+| Q1's string | Q4 size-hostile | Derived type |
+|---|---|---|
+| short — roughly four characters or fewer | yes | **Monogram**, on as many of those characters as `mark-types.md` § Monogram permits — that recipe sets the ceiling and says what three initials measure at a 16 px render, so a three-character string does not become a three-character monogram. A string this short *is* its own initials, and the lettermark is the construction that carries the name at the size that decides it. It is drawn as paths, so it takes no typeface dependency at all. |
+| short | no | **Monogram** still, for the same reason minus the urgency. A **wordmark** is the one defensible alternative here — at four characters it is the monogram plus the remaining letters — and it is available only once Step 0 item 7's face question is settled, because a wordmark master ships a `text` element and inherits both that dependency and the un-performed outline conversion `mark-types.md` § Wordmark records. |
+| long | yes | The name cannot be set at that size at all, so a **mark-alone variant is mandatory** and the type question is only about what that mark is: **monogram** where the initials are short and distinctive, **geometric** or **abstract** where they are not, on the remaining rows of that same table. |
+| long | no | **Wordmark**, per that table's name-led row — nothing has to survive without the name. Same face question, same place. |
+
+**Neither signal decides only where question 1's string is genuinely absent** — a mark for something with no settable name. That is the case `mark-types.md`'s "you choose" default is answering, and geometric is the answer there.
+
+**The derived type may be departed from exactly once, in writing.** A geometric or abstract mark for a short string is legitimate and is sometimes the better mark — but it has a consequence, and the consequence is that **the mark does not reference the name**. Record it in § Concept & rationale's *Mark–name relationship* row in those words, naming the type the derivation produced, the type taken instead, and why. **A mark that reaches that state with the row empty is not a decision, it is drift** — the first dogfood answered `SPX`, required a favicon, took geometric, and shipped competent geometry bearing no relationship to those three letters, and nothing in the flow noticed. The row is what makes the disconnect unreachable without writing it down.
+
+#### Question 4's consequences
 
 **Question 4 survives quick mode because it eliminates half the solution space before anything is drawn.** Never defaulted and never inferred from silence: an unanswered question 4 is asked as its own message even when every other answer was in the one-liner. Each context it names has a mechanical consequence, and all of them are taken before Step 3 rather than discovered after it:
 
@@ -223,7 +244,7 @@ Three directions, written out **before anything is drawn**, so the reasoning is 
 
 **Run `anti-slop.md` over the directions, not only over the drawings.** Its signatures need a source and there is none yet, but every pattern also carries a *tell* stated in prose, and a direction that already reads as pattern 1, 5, 6 or 8 does not get drawn to find out. Where Step 0's keyword row came back non-empty, a lens-shaped direction is on the strict Test A door before it exists: it names the number that produces its geometry, or it is replaced.
 
-Record § Concept & rationale *Type chosen because* here. *Why this candidate won* and *Candidates rejected* wait for Step 5.
+Record § Concept & rationale *Type chosen because* here, and *Mark–name relationship* with it — both are written off Step 1's derivation, and the second is the row that stops a mark drifting away from the string it is for. *Why this candidate won* and *Candidates rejected* wait for Step 5.
 
 ### Step 3 — draw
 
@@ -309,7 +330,7 @@ Seven files, written to the directory Step 0 detected. `logo.template.md` § Var
 Draw them in this order; each later one depends on an earlier:
 
 1. **`logo-mark.svg`** — Step 5's winner, unchanged.
-2. **`logo-wordmark.svg`** — the name set in type on the **square master artboard**, per `mark-types.md` § Wordmark and its worked fragment. Square is load-bearing here: this is the variant `φ_ink` and `φ_ctr` are measured off, and the harness renders a square artboard at full size. Its family, weight and tracking go to § Production handoff → *Typeface*; the un-performed outline conversion is already the template's fixed text and ships unedited.
+2. **`logo-wordmark.svg`** — the name set in type on the **square master artboard**, per `mark-types.md` § Wordmark and its worked fragment. **Declare the face Step 0 item 7 established, and if that check was skipped, run it before drawing rather than after** — this file and the two below it are what the seven slots named there hang off. Square is load-bearing here: this is the variant `φ_ink` and `φ_ctr` are measured off, and the harness renders a square artboard at full size. Its family, weight and tracking go to § Production handoff → *Typeface*; the un-performed outline conversion is already the template's fixed text and ships unedited.
 3. **`logo-full.svg`** and **`logo-stacked.svg`** — the lockups. Each declares its own non-square `viewBox` and records its aspect, per `reproduction.md` § Artboard hygiene. **They are not size-tested on the sheet.** The harness is built for the square artboard and would render them letterboxed at a fraction of the size the square variants get, so a measurement taken there describes the letterboxing rather than the lockup. They are checked for **composition and clearspace only** — `reproduction.md` § Clearspace's lockup rule — and their minimum sizes are **derived from their components**: the mark side from `k`, the type side from the wordmark's φ. `reproduction.md` § Full lockup carries that derivation; record the result *and* the derived status in § Variants → *Lockup measurements*.
 4. **`logo-mono-black.svg`** and **`logo-mono-white.svg`** — derived by resolving `color`, never redrawn. Determine the D1 **state first, from the size**, per `reproduction.md` § Three states, not two, then meet that state's obligation. Byte-identity on its own is not a pass at or above the threshold. Diff them against their source and record the result.
 5. **`logo-favicon.svg`** — **redrawn, not scaled.** Its own drawing on the same artboard, to `reproduction.md` § The favicon's own spec, satisfying F1, F2 and F3. Every dropped feature goes into § Variants → *Favicon* in reproduction terms: the measurement, the device pixels it works out to, and what that does to the raster. "Simplified for small sizes" is not a reason.
@@ -325,7 +346,7 @@ Also at this step: § Variants → *Print minimums*, one row per process questio
 1. **Close out `docs/design/LOGO.md`.** It was started at Step 0 and filled as the flow ran.
    - **Delete every block headed `Example —`.** The template says it: examples are not content.
    - Fill § Misuse with rows that each name a number from this file. A row that would be true of any logo is not doing work.
-   - Fill § Production handoff → *Still to do*. The outline-conversion and trademark-clearance paragraphs ship **unedited**; where no variant carries a `text` element, add the one-line `n/a` the template prescribes under the first of them.
+   - Fill § Production handoff → *Still to do*. The outline-conversion and trademark-clearance paragraphs ship **unedited**; where no variant carries a `text` element, add the one-line `n/a` the template prescribes under the first of them. **Where the declared face did not resolve on the render machine, *Still to do* carries the install step**, naming the face and the seven slots Step 0 item 7 lists — those rows are `UNRUN` for a reason somebody else can clear in five minutes, and a handoff that does not say so wastes it.
    - Fill § Asset manifest, one row per shipped file.
    - **Sweep for empty cells.** An empty slot is a finding, not a silence, and the four tokens in `logo.template.md` § Recording conventions are the only legal fills. Every one of them carries a reason after the dash.
 2. **Regenerate the sheet against the final assets.** The sheet has three candidate slots and the set has three distinct square drawings: `logo-mark.svg`, `logo-favicon.svg` and `logo-wordmark.svg`. The mono pair is the master with `color` resolved and is already rendered in the master's own mono columns; the lockups are not size-tested, per Step 6. Screenshot, read back, run the checklist once.
@@ -367,7 +388,7 @@ Stage by explicit pathspec — the asset directory, `docs/design/LOGO.md`, and `
 | `LOGO.md` section | Filled by |
 |---|---|
 | Header — product, mark type, generated, design system | Step 7, from Step 0's `MASTER.md` result and Step 5's winner |
-| Concept & rationale | Step 0 (brief, keywords), Step 2 (type chosen because), Step 5 (opening sentences, why it won, candidates rejected) |
+| Concept & rationale | Step 0 (brief, keywords), Step 2 (type chosen because, mark–name relationship), Step 5 (opening sentences, why it won, candidates rejected) |
 | Construction — chain, optical exceptions, nine corrections, stroke and counters, silhouette, anti-slop derivations, type-specific | Step 3; the favicon's own rows at Step 6; a wordmark's *Fit* at Step 4 |
 | Variants — table, lockup measurements, favicon, print minimums | Step 6 |
 | Colour — binding | Step 0 |
@@ -377,7 +398,7 @@ Stage by explicit pathspec — the asset directory, `docs/design/LOGO.md`, and `
 | Clearspace & minimum sizes | Step 3 |
 | Misuse | Step 7 |
 | Production handoff — outline conversion, trademark clearance | the template's fixed text, shipped unedited |
-| Production handoff — typeface | Step 6 |
+| Production handoff — typeface | Step 0 item 7 establishes the family and whether it resolves here; Step 6 records it with the weight and tracking |
 | Production handoff — checks recorded unrun | Step 4, and Step 7's sweep |
 | Production handoff — still to do | Step 7 |
 | Asset manifest | Step 7, verified by the structural self-verification |
