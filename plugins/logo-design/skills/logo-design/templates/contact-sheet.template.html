@@ -71,6 +71,18 @@
   Viewport width 1360 px. The body is fixed at that width; there is no
   responsive reflow, so a narrower viewport does not rearrange anything.
 
+  WAIT FOR data-sheet-ready FIRST. The sheet rasterises each candidate to a
+  canvas before it draws anything (see M3 below), and image decoding is
+  asynchronous, so the document is EMPTY until that pass finishes. When it
+  does, every section is built in one synchronous burst and the attribute
+  data-sheet-ready="1" is set on <html>. Poll for it:
+
+      await page.waitForFunction(
+        () => document.documentElement.hasAttribute('data-sheet-ready'));
+
+  A shot taken before that is a blank page — deliberately, so an early
+  screenshot cannot be mistaken for a populated one with a few fields missing.
+
   1. FULL PAGE — for the marks. Everything is on one page; nothing needs
      scrolling to be seen. This is the image the visual critique reads.
 
@@ -82,6 +94,46 @@
      #readout is a self-contained panel for exactly this reason.
 
   ---------------------------------------------------------------------------
+  M3 — THE INVERSION-IDENTITY DIFF, computed here
+  ---------------------------------------------------------------------------
+  reproduction.md's mono-collapse item M3 asks for two renders and a per-pixel
+  comparison. This file is the instrument: it is the only place in the plugin
+  that rasterises, so it is the only place the diff can happen.
+
+  Per candidate the sheet serialises the pool <svg>, sets `color` on the root
+  copy to #000 and then to #fff, loads each as a data: URL image, draws it over
+  white and over black on a 256 x 256 canvas, inverts the second and takes the
+  maximum per-channel difference. The gate is reproduction.md's, quoted not
+  restated; the readout prints the number, the pixel count above the gate, and
+  the ink pixel count, so a Δ of 0 over an empty raster can never read as a pass.
+
+  Three things about it that are load-bearing:
+
+  * IT DOES NOT TAINT. A data: URL is same-origin, so getImageData succeeds from
+    file://. If a future engine tightens that, the SecurityError is caught and
+    printed verbatim — the row says NOT COMPUTED and why. It never reports a
+    number it did not compute.
+
+  * TYPE IS A SEPARATE CASE, and it is measured, not assumed. Path antialiasing
+    in this rasteriser is exactly symmetric under inversion — a circle, a
+    diagonal and a curve-heavy annulus all return Δ 0, not Δ "small". Glyph
+    rasterisation is not: it carries a gamma the engine does not apply
+    symmetrically, worth Δ up to ~80/255 on the glyph edge pixels and removable
+    by no flag or text-rendering value. That is a property of the rasteriser
+    with no analogue in one-colour print, so a candidate carrying <text> is
+    diffed TWICE — whole, and again with the text elements removed. The drawn
+    geometry gets the graded number; the type's contribution is recorded unrun,
+    which is the posture reproduction.md already takes for a text element's
+    extents. Convert the type to outlines and the whole file becomes decidable.
+
+  * IT IS NOT THE MONO FILTER. The mono columns below are a CSS viewing aid.
+    M3 is an actual two-render pixel diff and shares nothing with them.
+
+  Like every other render-based check here it is blind to xmlns: XMLSerializer
+  supplies the namespace on the way out, exactly as the HTML parser supplied it
+  on the way in. See the blind-spot note above.
+
+  ---------------------------------------------------------------------------
   DETERMINISM — two runs on the same input must be pixel-identical
   ---------------------------------------------------------------------------
   No network requests of any kind (this is opened from file://, offline).
@@ -89,6 +141,14 @@
   the sheet does NOT follow the viewer's theme, because that would make the
   screenshot depend on the machine. No Date, no random, no timestamp printed
   anywhere. Fixed pixel dimensions throughout.
+
+  The M3 pass is asynchronous and is held to the same standard. Its rasters run
+  strictly one after another in KEYS order, never as a parallel batch, so no
+  result depends on which decode finishes first; and NOTHING is appended to the
+  document until every one of them has settled, so the DOM is built in a single
+  fixed order with all the numbers already in hand. The only clock in the file
+  is a deadlock guard on image load, which a data: URL reaches only if the
+  decoder has hung — and the message it produces is fixed text, not a duration.
 
   ---------------------------------------------------------------------------
   MONO PREVIEW — VIEWING AID ONLY
@@ -308,7 +368,7 @@
 
   <section class="band band-big" id="band-big">
     <h2>256&nbsp;px — the artboard at 1:1</h2>
-    <p class="note">One grid unit is 16&nbsp;px here. This is the size construction.md's correction&nbsp;3 says to check apex centring at, and the size reproduction.md's M3 inversion-identity and M4 structure tests are run at.</p>
+    <p class="note">One grid unit is 16&nbsp;px here. This is the size construction.md's correction&nbsp;3 says to check apex centring at, and the size reproduction.md's M3 inversion-identity and M4 structure tests are run at. These four cells are for looking at; M3's own two renders are made off-screen on a canvas and its number is in the readout above.</p>
   </section>
 
   <section class="legend">
@@ -325,6 +385,10 @@
       <dt>text</dt>
       <dd><em>advance edge</em> is the right edge of <code>getBBox()</code>. <em>ink edge</em> is that edge with the trailing letter-spacing step removed — whether this renderer applies one is <strong>measured</strong>, by re-measuring the same run at zero tracking and counting the steps in the difference, not assumed. <em>fit ×</em> is the multiplier on <code>font-size</code> that lands the ink edge on 224; it assumes <code>text-anchor="start"</code> and <code>letter-spacing</code> scaled with the size, per mark-types.md's wordmark recipe.
       <br>A <code>text</code> element's <code>getBBox()</code> is its <em>layout</em> box — vertically it runs from the font's ascent to its descent, not from cap height to baseline. Read the vertical extents of a wordmark accordingly; they are not tight ink.</dd>
+      <dt>M3 inversion</dt>
+      <dd>reproduction.md's mono-collapse M3, computed here — this sheet is the only instrument in the plugin that rasterises, so it is the only place the diff can happen. The candidate is serialised twice with <code>color</code> resolved to <code>#000</code> and <code>#fff</code>, drawn over white and over black on a 256&nbsp;px canvas, the second inverted, and the maximum per-channel difference taken. The gate is quoted from reproduction.md beside the number, never restated. Printed with it: the count of pixels above the gate, the count of ink pixels, and the raster's own ink box — so a difference of zero taken over a raster that drew nothing reads as zero-of-nothing rather than as a pass.
+      <br>A candidate carrying <code>text</code> is diffed twice, whole and again with the text removed. Path antialiasing here is exactly symmetric under inversion; glyph rasterisation is not, and the second run is what <em>measures</em> that rather than assuming it. The drawn geometry is graded; the type's share is recorded <strong>unrun</strong>, the same posture reproduction.md takes for a <code>text</code> element's extents. Outline the type and the whole file becomes decidable.
+      <br>Nothing to do with the mono columns below: those are a CSS filter for looking at, this is two renders and a pixel comparison.</dd>
       <dt>paint</dt>
       <dd>The literal <code>fill</code> / <code>stroke</code> attribute values present on painted elements. <code>⟨absent⟩</code> matters: construction.md notes that omitting <code>fill</code> does not inherit — SVG's initial fill is black, which silently defeats the <code>currentColor</code> binding.</dd>
       <dt>mono columns</dt>
@@ -659,6 +723,195 @@
     return m;
   }
 
+  /* ------------------------------------------- M3, the inversion-identity diff
+     reproduction.md's mono-collapse M3: render at 256 px with color #000 on
+     white and with color #fff on black, invert the second, compare per channel.
+     The gate is quoted from that file, not restated here; M3_GATE is the only
+     literal and the readout prints its source alongside every number.
+
+     This is the sheet's second rasteriser and it has nothing to do with the
+     mono CSS filter, which is a viewing aid on the matrix below. */
+  var M3_SIZE    = 256;
+  var M3_GATE    = 2;        /* per channel, of 255 — reproduction.md, Mono collapse, M3 */
+  var M3_LOAD_MS = 10000;    /* deadlock guard, not a race: see the header comment */
+
+  /* Serialise the candidate with `color` resolved. Setting one property on the
+     root of a throwaway copy IS reproduction.md's test — "set color to one
+     literal value for the whole file and render. Nothing else changes." The
+     style attribute beats a `color` presentation attribute on the same element,
+     which is what lets a resolved mono variant be re-resolved the other way. */
+  function m3Serialise(svg, colour, dropText) {
+    var c = svg.cloneNode(true);
+    if (dropText) {
+      var ts = c.querySelectorAll('text');
+      for (var i = 0; i < ts.length; i++) ts[i].parentNode.removeChild(ts[i]);
+    }
+    c.setAttribute('width', String(M3_SIZE));
+    c.setAttribute('height', String(M3_SIZE));
+    var prev = c.getAttribute('style');
+    c.setAttribute('style', (prev ? prev + ';' : '') + 'color:' + colour);
+    return new XMLSerializer().serializeToString(c);
+  }
+
+  /* Ground first, mark over it. Every failure path resolves with an `err`
+     string; none of them resolves with a number. */
+  function m3Raster(svgText, ground) {
+    return new Promise(function (resolve) {
+      var settled = false, timer = null;
+      function done(v) { if (settled) return; settled = true; if (timer) clearTimeout(timer); resolve(v); }
+      timer = setTimeout(function () { done({ err: 'the serialised SVG neither loaded nor errored — the image decode hung' }); }, M3_LOAD_MS);
+      var img = new Image();
+      img.onload = function () {
+        var cv = document.createElement('canvas');
+        cv.width = M3_SIZE; cv.height = M3_SIZE;
+        var ctx = cv.getContext('2d');
+        if (!ctx) return done({ err: 'this engine returned no 2d canvas context' });
+        ctx.fillStyle = ground;
+        ctx.fillRect(0, 0, M3_SIZE, M3_SIZE);
+        try { ctx.drawImage(img, 0, 0, M3_SIZE, M3_SIZE); }
+        catch (e) { return done({ err: 'drawImage threw ' + (e && e.name) + ': ' + (e && e.message) }); }
+        try { done({ data: ctx.getImageData(0, 0, M3_SIZE, M3_SIZE).data }); }
+        catch (e2) { done({ err: 'getImageData threw ' + (e2 && e2.name) + ': ' + (e2 && e2.message)
+                              + ' — the canvas is tainted on this engine and no pixel comparison is possible in-page' }); }
+      };
+      img.onerror = function () { done({ err: 'the serialised SVG did not load as an image' }); };
+      /* encodeURIComponent, not btoa: btoa throws on any non-Latin-1 character
+         and construction comments are full of them. */
+      img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgText);
+    });
+  }
+
+  function m3Compare(black, white) {
+    var n = M3_SIZE * M3_SIZE, max = 0, over = 0, ink = 0;
+    var x0 = M3_SIZE, y0 = M3_SIZE, x1 = -1, y1 = -1;
+    for (var p = 0; p < n; p++) {
+      var i = p * 4, pm = 0;
+      for (var ch = 0; ch < 3; ch++) {
+        var d = black[i + ch] - (255 - white[i + ch]);
+        if (d < 0) d = -d;
+        if (d > pm) pm = d;
+      }
+      if (pm > max) max = pm;
+      if (pm > M3_GATE) over++;
+      /* Ink is any pixel the black-on-white render did not leave as paper. It is
+         counted and printed so that a maximum difference of zero taken over a
+         raster that drew nothing is visibly zero-of-nothing rather than a pass. */
+      if (black[i] !== 255 || black[i + 1] !== 255 || black[i + 2] !== 255) {
+        ink++;
+        var px = p % M3_SIZE, py = (p / M3_SIZE) | 0;
+        if (px < x0) x0 = px;
+        if (px > x1) x1 = px;
+        if (py < y0) y0 = py;
+        if (py > y1) y1 = py;
+      }
+    }
+    /* Far edges reported exclusive so the box reads as an extent on the same
+       scale as the ink bbox row above it — a mark filling 16 … 240 prints
+       16 … 240, not 16 … 239. */
+    return { max: max, over: over, ink: ink, box: ink ? [x0, y0, x1 + 1, y1 + 1] : null };
+  }
+
+  function m3Pair(svg, dropText) {
+    return m3Raster(m3Serialise(svg, '#000000', dropText), '#ffffff').then(function (bw) {
+      if (bw.err) return { err: bw.err };
+      return m3Raster(m3Serialise(svg, '#ffffff', dropText), '#000000').then(function (wb) {
+        if (wb.err) return { err: wb.err };
+        return m3Compare(bw.data, wb.data);
+      });
+    });
+  }
+
+  /* A candidate carrying <text> is diffed twice. Path antialiasing here is
+     exactly symmetric under inversion, so the drawn geometry returns a true
+     zero; glyph rasterisation carries an engine gamma that is not, and removing
+     the text elements is what MEASURES that rather than asserting it. */
+  function m3Measure(c) {
+    var hasText = c.analysis.texts.length;
+    var res = { hasText: hasText, whole: null, geom: null, err: null, geomErr: null };
+    return m3Pair(c.svg, false).then(function (w) {
+      if (w.err) { res.err = w.err; return null; }
+      res.whole = w;
+      if (!hasText) return null;
+      return m3Pair(c.svg, true).then(function (gm) {
+        if (gm.err) res.geomErr = gm.err; else res.geom = gm;
+      });
+    }).then(function () { return res; });
+  }
+
+  /* Strictly sequential in KEYS order. Promise.all would settle in whatever
+     order the decoder finished in, and this sheet's screenshots have to match
+     byte for byte across runs. */
+  function m3Run(cands) {
+    var p = Promise.resolve();
+    KEYS.forEach(function (k) {
+      p = p.then(function () {
+        var c = cands[k];
+        if (!c || !c.svg) return null;
+        return m3Measure(c).then(function (m) { c.m3 = m; });
+      });
+    });
+    return p;
+  }
+
+  var M3_SRC = 'gate ≤ ' + M3_GATE + '/255 per channel — reproduction.md, Mono collapse, M3';
+
+  function m3Evidence(d) {
+    return note(d.over + ' px above the gate · ' + d.ink + ' ink px of ' + (M3_SIZE * M3_SIZE)
+      + ' · ' + M3_SIZE + ' px, color #000 on #fff against color #fff on #000 inverted'
+      + (d.box ? ' · raster ink ' + d.box[0] + ' … ' + d.box[2] + ' x, ' + d.box[1] + ' … ' + d.box[3] + ' y, in device px' : ''));
+  }
+  function m3Verdict(d) { return d.max <= M3_GATE ? 'at or under the gate' : 'ABOVE THE GATE'; }
+  function m3Class(d)   { return d.max <= M3_GATE ? '' : 'bad'; }
+
+  function m3Rows(g, m) {
+    if (!m || m.err) {
+      row(g, 'M3 inversion', 'NOT COMPUTED — ' + esc(m && m.err ? m.err : 'the pass did not run')
+        + note('Nothing was compared, so this is not a pass. ' + M3_SRC), 'bad', true);
+      return;
+    }
+    var w = m.whole;
+    if (!w.ink) {
+      row(g, 'M3 inversion', 'NOT COMPUTED — the 256 px raster is empty: 0 ink px'
+        + note('Both renders agree because neither drew anything. ' + M3_SRC), 'bad', true);
+      return;
+    }
+    if (!m.hasText) {
+      row(g, 'M3 inversion', 'Δmax ' + w.max + '/255 — ' + m3Verdict(w)
+        + note(M3_SRC) + m3Evidence(w), m3Class(w), true);
+      return;
+    }
+
+    /* Type present. The graded number is the drawn geometry's. */
+    if (m.geomErr) {
+      row(g, 'M3 inversion', 'Δmax ' + w.max + '/255 whole-file, UNGRADED — the text-free re-run failed: ' + esc(m.geomErr)
+        + note('Without it the type’s share of the difference cannot be separated from the file’s. ' + M3_SRC), 'bad', true);
+      return;
+    }
+    var gm = m.geom;
+    if (!gm || !gm.ink) {
+      row(g, 'M3 inversion', 'UNRUN — this candidate is type only, so there is no drawn geometry to grade'
+        + note('Whole-file Δmax ' + w.max + '/255 on ' + w.over + ' px, which is glyph rasterisation: this engine antialiases '
+             + 'glyphs with a gamma it does not apply symmetrically under inversion, while its path antialiasing is exact. '
+             + 'That is a property of the rasteriser with no analogue in one-colour print. Convert the type to outlines and M3 becomes decidable. '
+             + M3_SRC), 'warn', true);
+      return;
+    }
+    row(g, 'M3 inversion', 'Δmax ' + gm.max + '/255 on the drawn geometry — ' + m3Verdict(gm)
+      + note(M3_SRC) + m3Evidence(gm), m3Class(gm), true);
+    if (gm.max <= M3_GATE && w.max > M3_GATE) {
+      row(g, 'M3 type', 'UNRUN — whole-file Δmax ' + w.max + '/255 on ' + w.over + ' px, all of it in the '
+        + m.hasText + ' text element' + (m.hasText === 1 ? '' : 's')
+        + note('Removing the type removed all of it — the drawn geometry measured Δmax ' + gm.max + '. This engine’s glyph '
+             + 'antialiasing is not symmetric under inversion; its path antialiasing is exact. That is the rasteriser, not the '
+             + 'file, and it has no analogue in one-colour print, so it is recorded unrun rather than failed — the posture '
+             + 'reproduction.md already takes for a text element’s extents. Outline the type and M3 decides the whole file.'), 'warn', true);
+    } else if (w.max > M3_GATE) {
+      row(g, 'M3 type', 'whole-file Δmax ' + w.max + '/255 on ' + w.over + ' px'
+        + note('The drawn geometry is already above the gate at Δmax ' + gm.max
+             + ', so the type is not what this candidate fails on. Fix the geometry first, then re-read this line.'), 'warn', true);
+    }
+  }
+
   /* ----------------------------------------------------------------- render */
   function markNode(svg, size) {
     var w = el('div', 'mark');
@@ -788,6 +1041,9 @@
       row(g, 'paint', pk.length ? esc(pk.map(function (p) { return p + ' ×' + a.paints[p]; }).join('  ·  ')) : '—',
           paintBad ? 'warn' : '', true);
 
+      /* Mono collapse, continued: `paint` above is M1's evidence, this is M3's. */
+      m3Rows(g, c.m3);
+
       if (a.transforms) {
         row(g, 'transform', a.transforms + ' element(s) carry a transform'
             + note('construction.md forbids transform on final geometry; every measurement above ignores it'), 'bad', true);
@@ -841,7 +1097,7 @@
   }
 
   /* ------------------------------------------------------------------- main */
-  function main() {
+  function collect() {
     var pool = document.getElementById('pool');
     var cands = {};
 
@@ -869,11 +1125,29 @@
          rewritten by the substitution step along with the real slots. */
       alert_('bad', 'No candidates were supplied. Substitute at least the ' + '{{' + 'CANDIDATE_A' + '}}' + ' token.');
     }
+    return cands;
+  }
 
+  /* Every append to the document happens here, in one synchronous burst with
+     every number already measured. Nothing is written before the M3 rasters
+     have settled, so an early screenshot catches a blank page rather than a
+     populated one with fields still filling in. */
+  function render(cands) {
     renderReadout(document.getElementById('readout'), cands);
     buildMatrix(document.getElementById('band-small'), SMALL_SIZES, true, cands);
     buildMatrix(document.getElementById('band-big'), null, false, cands);
     renderAlerts(document.getElementById('alerts'));
+    document.documentElement.setAttribute('data-sheet-ready', '1');
+  }
+
+  function main() {
+    var cands = collect();
+    m3Run(cands).then(function () { render(cands); }, function (e) {
+      /* m3Measure resolves its own failures with an err string, so reaching
+         here means the pass itself threw. Say so and draw the rest. */
+      alert_('bad', 'The M3 inversion pass threw, and every M3 row below is unmeasured: ' + (e && e.message || e));
+      render(cands);
+    });
   }
 
   /* Measure after fonts have settled so a wordmark is never measured mid-swap.

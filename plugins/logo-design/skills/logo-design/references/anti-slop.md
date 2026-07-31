@@ -86,7 +86,7 @@ It is also a guaranteed mono-collapse failure. reproduction.md's M1 fails on the
 - Compute `|Δy / Δx|` for every straight segment in the file. **Three or more distinct segments at 0.577 ± 0.02 (`tan 30°`, true isometric) or 0.500 ± 0.02 (the 2:1 pixel-isometric shortcut) is the signature.**
 - The three faces are 4-node parallelograms sharing vertices, and the outer silhouette of the assembly is a regular hexagon — which means this pattern also trips pattern 9's detector. Two hits on one mark is not double-counting; it is the same shape being wrong twice.
 
-It also fails mono collapse outright, and this is the sentence to remember: **an isometric cube in one colour is a hexagon with a Y in it.** The three faces are distinguished only by tint, so reproduction.md's M3 catches it before anyone has to argue about taste.
+It also fails mono collapse outright, and this is the sentence to remember: **an isometric cube in one colour is a hexagon with a Y in it.** The three faces are distinguished only by tint, so reproduction.md's mono collapse catches it before anyone has to argue about taste — **M3 where the tints are literal colour values, M1 where they are opacity.** Both are in reproduction.md § Mono collapse and only one of them is a render: M3's diff sees a tint that is a different colour and cannot see one that is the same colour at a lower alpha, because a half-alpha shape inverts to itself. Naming M3 alone would leave the commonest way this pattern is actually drawn ungraded.
 
 **Why it reads as machine-authored.** It is what "three-dimensional" means to something with no renderer — a projection recited from memory rather than a form observed.
 

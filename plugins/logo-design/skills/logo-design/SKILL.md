@@ -248,7 +248,7 @@ Fill these `LOGO.md` slots as you draw. None of them needs a render, so none of 
 ### Step 4 — render and self-critique
 
 1. **Write the sheet.** Copy `templates/contact-sheet.template.html` to `docs/design/logo-contact-sheet.html` and substitute its placeholders — the template's own **PLACEHOLDERS** comment names each one and its occurrence count. **Never regenerate the file.** Two runs stop being comparable the moment it drifts, and comparability is the only reason it is a file.
-2. **Screenshot it** with Playwright MCP: **two shots**, per the template's own **HOW TO SCREENSHOT IT** comment — the full page for the marks, and an element-scoped shot on `#readout` for the numbers, at the viewport width that comment fixes. One shot is not enough: a measurement that is a smudge in a downscaled PNG does not exist to the agent reading it.
+2. **Screenshot it** with Playwright MCP: **two shots**, per the template's own **HOW TO SCREENSHOT IT** comment — the full page for the marks, and an element-scoped shot on `#readout` for the numbers, at the viewport width that comment fixes. One shot is not enough: a measurement that is a smudge in a downscaled PNG does not exist to the agent reading it. **Wait for the readiness signal that comment names before either shot**: the sheet rasterises M3 before it draws anything, so a shot taken early catches a blank page rather than a partial one.
 3. **Read both PNGs back** with `Read`. This is the pass. Taking the screenshot is not the pass.
 4. **Grade against the checklist below.** The harness prints each number beside the threshold it is held against and returns no verdict — [Shared Protocol](#shared-protocol) item 4. Never quote a readout row as a pass.
 5. **Fix and re-render, once.** The cap below is real.
@@ -261,7 +261,7 @@ Nine items, fixed. Each names what to look at and the file that holds what it is
 |---|---|---|---|
 | C1 | Is it still the same mark in the smallest column — counters open, no two features merged into one | small band, both grounds | `reproduction.md` § Minimum sizes |
 | C2 | The two device-pixel-ratio columns — what a nominal favicon actually rasterises to | small band | `reproduction.md` § When grid alignment actually reaches the raster |
-| C3 | Do the mono columns carry the structure the colour columns did | mono columns | `reproduction.md` § Mono collapse. M1, M2 and M4 are graded from source and arithmetic; this column is a preview and cannot model alpha. |
+| C3 | Do the mono columns carry the structure the colour columns did | mono columns | `reproduction.md` § Mono collapse. M1, M2 and M4 are graded from source and arithmetic; this column is a CSS preview and cannot model alpha. **M3 is not judged here** — it is the readout's own `M3 inversion` row, an actual two-render pixel diff, and reading the filtered column in its place substitutes a look for a measurement. |
 | C4 | On the dark ground: has ink grown, have counters closed | dark columns | `reproduction.md` § Dark inversion |
 | C5 | Optically balanced rather than arithmetically centred — apex, container split, overshoot | the largest band | `construction.md` corrections 1, 3 and 6 |
 | C6 | The horizontal thinning | the two largest columns only | `construction.md` correction 4. Below the size the sheet's own header names it is invisible, so it cannot be judged in the small band at all. |
@@ -475,7 +475,7 @@ So the record-dependent set is short, and it is read off the checklist item by i
 
 1. **Write the sheet.** Copy `templates/contact-sheet.template.html` to `docs/design/YYYY-MM-DD-logo-review-contact-sheet.html` and substitute its placeholders per the template's own **PLACEHOLDERS** comment. **Never overwrite `docs/design/logo-contact-sheet.html`** — that file is `logo-concept`'s record of what the mark was signed off against, and an audit that overwrites it has destroyed the evidence it exists to weigh.
 2. **Three slots, three distinct square drawings** — the master, the favicon and the wordmark, in that order, with unused slots replaced by the empty string as the template prescribes. **No lockup goes in a slot:** `reproduction.md` § Full lockup fixes that the harness is built for the square artboard and a lockup rendered there reports its letterboxing. A set carrying more than three distinct square drawings gets a second sheet, dated and numbered.
-3. **Screenshot twice and read both PNGs back** with `Read` — the full page and an element-scoped shot on `#readout`, at the viewport the template's **HOW TO SCREENSHOT IT** comment fixes. Reading them back is the pass; taking them is not.
+3. **Screenshot twice and read both PNGs back** with `Read` — the full page and an element-scoped shot on `#readout`, at the viewport the template's **HOW TO SCREENSHOT IT** comment fixes, and after the readiness signal that comment names. Reading them back is the pass; taking them is not.
 4. **The harness measures and returns no verdict** — [Shared Protocol](#shared-protocol) item 4. Never quote a readout row as a pass. Every row is routed to the layer that grades it and graded there.
 5. **Without Playwright MCP**, [Shared Protocol](#shared-protocol) item 3 governs: **write the sheet anyway** — it is documentation, and it is what lets somebody with the MCP finish the pass without redoing the flow — then **stop at the screenshot**. Do not open the HTML, do not describe what it would have shown, and record every item whose evidence is that render as `UNRUN`. Layer 2 is unaffected; see Step 4.
 
@@ -485,6 +485,7 @@ So the record-dependent set is short, and it is read off the checklist item by i
 |---|---|
 | C1, C2, C3, C4 | Layer 1 — the reproduction item each one names |
 | C9 | Layer 1 — every `warn` and `bad` readout row, against the file its own note names |
+| The readout's **`M3 inversion`** row | Layer 1 — `reproduction.md`'s mono-collapse **M3**, which this row is the whole evidence for. It is where the two-render diff is computed; nothing else in the plugin rasterises. Read the number, not the mono columns — those are a viewing aid for C3 and are a different check. |
 | C7 | Layer 2 — the render half of the anti-slop scan |
 | C8 | Layer 3 — Distinctiveness, and the collision note below |
 | C5, C6 | **Not read here.** Both grade `construction.md`, which this flow does not audit — see [What this audit does not cover](#what-this-audit-does-not-cover). |
@@ -501,7 +502,7 @@ Each item takes exactly one of **PASS**, **FAIL**, `n/a — <why>`, `UNRUN — <
 |---|---|
 | **Computed or read from the file** — the mono-collapse source tests, D2, the favicon's redraw tests, path complexity, the reuse ratio, clearspace, the computed minimums, artboard hygiene | From the source, always. No record and no render is needed, and the absence of either is not an excuse. |
 | **File side with a record as its escape hatch** — the silhouette above M4's gate, D1's three states, the counter floor's four conditions, the favicon's dropped features | **PASS** where the file side clears on its own. Where it does not and the record is present, grade the record. Where it does not and there is no record, `UNRUN — no record; <the slot>`. |
-| **Render-dependent** — M3, `φ_ink` and `φ_ctr`, a `text` element's right edge, an indeterminate stroked extent | From the render, or `UNRUN`. `reproduction.md` already fixes the indeterminate bracket as unrun rather than failed; do not re-decide it here. |
+| **Render-dependent** — M3, `φ_ink` and `φ_ctr`, a `text` element's right edge, an indeterminate stroked extent | From the render, or `UNRUN`. `reproduction.md` already fixes the indeterminate bracket as unrun rather than failed; do not re-decide it here. **M3 is read off the readout's `M3 inversion` row**, which the harness computes — an `UNRUN` on it now means the render did not happen or that row says why it could not, never that nothing computes it. |
 | **Pure record** — every minimum citing its source, a floor-built mark naming its branch, the favicon's uniform weight recorded as a decision | From `LOGO.md` alone. Present and answered is a **PASS**; absent is `UNRUN — no record; <the slot>`. |
 
 **Grade the item the checklist states, not the quantity underneath it.** Several items ask for a *recording* rather than a value — a `text` element's vertical extents are the clearest case, and `reproduction.md` says outright that they are not computable by anything in this skill. The item is therefore satisfied by a record that says so, and a set whose `LOGO.md` § Checks recorded unrun carries those rows **passes it**. Reading the quantity instead of the item would put every wordmark-bearing set permanently at PARTIAL for a reason `reproduction.md` calls honest.
