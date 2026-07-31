@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="SPX">
+  <!-- SPX favicon — REDRAWN, not scaled, per reproduction.md's favicon spec.
+       Same relationship as the master: two forms on the descending diagonal
+       sharing exactly one 32 x 32 wall block. What changed is that the second
+       form is solid, and both forms grew to reach the live-area bounds.
+       Seed frame: outer 16 … 160 (side 144), declared weight 32, hole 48 … 128
+       on both axes — one counter, 80 x 80. 80 clears the favicon's own target of
+       max(32 x 1.25, 32) = 40 plus the dark increment 0.96 = 40.96 twice over,
+       and does not use the 16-unit floor, which reproduction.md removes from
+       this variant on two independent routes.
+       Solid block: 128 … 240 (side 112), its top-left corner on the frame's
+       bottom-right wall block, so the two share 128 … 160 on both axes.
+       Declared weight 32 throughout, which reproduction.md pins for this
+       variant: 2 device px at a 16 px render, so half a pixel of subpixel offset
+       still leaves one fully covered row of ink.
+       Correction 4 is DECLINED here, not skipped: it would take the frame's
+       horizontal walls to 30.72, which is 1.92 px against 2.00 px at the only
+       size this variant renders at — below the resolution of every size it
+       renders at, and it would buy an OPTICAL flag for a difference no
+       rasteriser resolves. Recorded as a declined correction in LOGO.md.
+       Ink reaches the live-area bounds 16 and 240 on both axes. This is a
+       coverage check and the mark is filled, so the geometry box and the ink
+       bbox coincide and it is decidable.
+       F1: no complete subpath is shared with the master — every value differs.
+       F2: 12 nodes against the master's 16.
+       F3: one counter against the master's two.
+       Reuse 5 distinct / 14 written = 0.36.
+       Ink 25856 / convex hull 41216 = 0.627.
+       Corrections 1, 2, 3, 5, 6, 7, 8 and 9 do not bind, for the same reasons
+       they do not bind on the master. -->
+  <path fill="currentColor" fill-rule="evenodd"
+        d="M16 16H160V128H240V240H128V160H16Z
+           M48 48H128V128H48Z"/>
+</svg>

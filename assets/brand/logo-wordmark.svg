@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="SPX">
+  <!-- SPX wordmark — the name set in type on the square master artboard, so the
+       contact sheet can render it at full size and the phi values can be taken
+       off it. Square is load-bearing: the harness is built for 0 0 256 256.
+       Webfont: Inter 700, declared here and recorded in LOGO.md. NOT converted
+       to outlines — this skill has no font engine and the un-performed step is
+       recorded in LOGO.md's Production handoff. This file is not a finished
+       asset anywhere the webfont is absent.
+       Single text run, which is the default model: tracking is one global
+       letter-spacing and correction 9 does not apply.
+       text-anchor start, x 32 and baseline y 160 are on the grid because all
+       three are values chosen rather than measured. The anchor is an origin, not
+       a painted edge — the first glyph's ink starts one left sidebearing inside
+       it, so the row's ink is not symmetric about 128 and fitting the right ink
+       edge to 224 will not put the left ink edge on 32. LOGO.md says so.
+       font-size 80 with letter-spacing 8 (t = 0.1) is a STARTING value. The fit
+       has NOT been taken: the declared face is not installed on the machine that
+       ran the contact sheet, so the harness measured a fallback and its ink edge
+       describes the fallback rather than Inter. LOGO.md records the fit, phi_ink
+       and phi_ctr as UNRUN rather than writing the fallback's numbers down as
+       the wordmark's.
+       No custom detail is drawn here. mark-types.md's wordmark recipe budgets
+       exactly one for a wordmark-TYPE mark; this is the wordmark VARIANT of a
+       geometric mark, whose one custom element is logo-mark.svg itself, and a
+       second detail here would be a second mark. Recorded in LOGO.md as a
+       deliberate deviation rather than an omission.
+       Correction 4 has nothing to act on: there is no drawn horizontal stroke in
+       this file at all. -->
+  <text x="32" y="160" text-anchor="start" font-family="Inter, sans-serif"
+        font-size="80" font-weight="700" letter-spacing="8" fill="currentColor">SPX</text>
+</svg>
