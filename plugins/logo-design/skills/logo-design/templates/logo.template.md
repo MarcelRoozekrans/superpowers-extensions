@@ -157,9 +157,9 @@ Every shipped file, its use, and its minimum size. **Every minimum cites the for
 | File | Intended use | `viewBox` | Aspect | Minimum size | Source of the minimum |
 |---|---|---|---|---|---|
 | `logo-mark.svg` | `<use>` | `0 0 256 256` | 1:1 | `<px>` | `<formula from reproduction.md § Minimum sizes, with this mark's narrowest counter substituted>` |
-| `logo-full.svg` | `<use>` | `<declared>` | `<w:h>` | `<px width>` | `<measured — see the lockup block below>` |
-| `logo-stacked.svg` | `<use>` | `<declared>` | `<w:h>` | `<px width>` | `<measured>` |
-| `logo-wordmark.svg` | `<use>` | `<declared>` | `<w:h>` | `<px width>` | `<measured>` |
+| `logo-full.svg` | `<use>` | `<declared>` | `<w:h>` | `<px width>` | `<derived from its components — see the lockup block below>` |
+| `logo-stacked.svg` | `<use>` | `<declared>` | `<w:h>` | `<px width>` | `<derived — same>` |
+| `logo-wordmark.svg` | `<use>` | `<declared>` | `<w:h>` | `<px width>` | `<measured — the φ values come off this file's own 256 px render; see the lockup block below>` |
 | `logo-mono-black.svg` | `<use>` | `0 0 256 256` | 1:1 | `<inherits logo-mark's>` | `<the currentColor binding — same geometry>` |
 | `logo-mono-white.svg` | `<use>` | `0 0 256 256` | 1:1 | `<inherits>` | `<same, or the fork recorded in Colour>` |
 | `logo-favicon.svg` | `<use>` | `0 0 256 256` | 1:1 | `<px>` | `<reproduction.md § The favicon redraw>` |
@@ -168,18 +168,19 @@ Non-square variants declare their `viewBox` above; the aspect column is what eac
 
 ### Lockup measurements
 
-Measured off a 256 px cap-height render from `logo-concept`'s contact sheet. Changing the typeface invalidates every row.
+**The two `φ` values are measured off the `logo-wordmark` variant's 256 px render on `logo-concept`'s contact sheet, not off a render of the lockup.** They are properties of the type — stem width and counter width against their own cap height — and the wordmark is the square-artboard variant that carries it. The lockup's own minimums are then **derived** from those `φ` values, from `k`, and from its declared `viewBox`; the lockup itself is checked for composition and clearspace only. Changing the typeface invalidates every row.
 
 | Field | Record |
 |---|---|
 | `k` — mark's rendered height ÷ lockup cap height | `<ratio>` |
 | Cap-height minimum from the mark side | `<px>` = `<mark-alone minimum>` ÷ `k` |
-| `φ_ink` — narrowest ink ÷ cap height | `<measured>`, or `UNRUN — the contact sheet has not run` |
-| `φ_ctr` — narrowest counter ÷ cap height | `<measured>`, or `UNRUN` |
+| `φ_ink` — narrowest ink ÷ cap height, off the `logo-wordmark` render | `<measured>`, or `UNRUN — the contact sheet has not run` |
+| `φ_ctr` — narrowest counter ÷ cap height, off the same render | `<measured>`, or `UNRUN` |
 | Cap-height minimum from the type side | `<px, rounded up per reproduction.md § Full lockup>` |
-| Measured lockup width ÷ measured cap height | `<ratio>` |
-| Lockup width minimum | `<px>` |
-| Typeface these were measured against | `<family, weight>` |
+| Lockup `viewBox` width ÷ cap height inside the lockup | `<ratio, read off the lockup file — not measured>` |
+| Lockup width minimum | `<px, derived from the row above and the cap-height minimum>` |
+| Lockup's own size status | derived from its components — the mark side from `k`, the type side from the wordmark's `φ`. The lockup is not size-tested on the contact sheet. |
+| Typeface the `φ` values were measured against | `<family, weight>` |
 
 ### Favicon
 

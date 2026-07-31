@@ -105,9 +105,13 @@ Check the ink side against both: at the bottom of construction.md's weight band 
 
 ### Full lockup — `logo-full`, `logo-stacked`, `logo-wordmark`
 
-The binding feature is the type, and the skill has no font metrics — the same limit mark-types.md states for the wordmark recipe. So the lockup's minimum is **measured, not computed**: it is the only *minimum size* on this page that is, though M3 and M4 below also need a render.
+The binding feature is the type, and the skill has no font metrics — the same limit mark-types.md states for the wordmark recipe. So one of the two constraints below is **measured** rather than computed, and it is the only *minimum size* on this page that is, though M3 and M4 below also need a render.
 
-The render comes from `logo-concept`'s contact sheet, which is where every measurement and every render check on this page is actually taken. Without it — Playwright MCP absent — these items are **unrun, and recorded as unrun**. That is honest; reporting them as passed is not.
+**The measurement is taken off the `logo-wordmark` variant, not off the lockup.** `φ_ink` and `φ_ctr` are properties of the *type* — the stem width and the counter width of the glyphs, each as a fraction of their own cap height — so the variant that carries the type on the square `0 0 256 256` artboard is where they are read. That is `logo-wordmark`, which `logo-concept`'s contact sheet renders at full size like any other square variant. Nothing about `φ` requires rendering a lockup, and a lockup letterboxed into a square cell would report the letterboxing rather than the type.
+
+**The lockup itself is therefore not size-tested.** It is checked for **composition and clearspace only** — see [Clearspace](#clearspace)'s lockup paragraph — and its minimum sizes are recorded in `LOGO.md` as **derived from its components**: the mark side from `k`, the type side from the wordmark's `φ`. Both constraints below are still binding; only their source is fixed here.
+
+Without the render — Playwright MCP absent — the measured constraint is **unrun, and recorded as unrun**. That is honest; reporting it as passed is not.
 
 Two constraints, both must clear.
 
@@ -119,14 +123,14 @@ cap height ≥ mark-alone minimum / k
 
 At `k = 1` (mark set to cap height) and a target-conformant mark, that is a 16 px cap height. At `k = 1.5` it is 10.67 px. The mark side is almost never the binding one.
 
-**2. The type side, measured.** Render the set type at a 256 px cap height. Measure, in pixels, the narrowest ink `n_ink` and the narrowest counter `n_ctr` of the glyphs actually used. Express both as fractions of the cap height:
+**2. The type side, measured off the `logo-wordmark` variant's 256 px render.** On that render, measure in pixels the cap height `c`, the narrowest ink `n_ink`, and the narrowest counter `n_ctr` of the glyphs actually used. Both `φ` are ratios, so the size the run happens to be set at does not enter:
 
 ```text
-φ_ink = n_ink / 256        φ_ctr = n_ctr / 256
+φ_ink = n_ink / c          φ_ctr = n_ctr / c
 cap height ≥ max( 1 / φ_ink , 2 / φ_ctr )        round up to the next 4 px
 ```
 
-Worked, with values measured off one bold geometric sans — **re-measure for your own face, these are not constants:**
+Worked, with values measured off one bold geometric sans set at `c` = 256 — **re-measure for your own face, these are not constants:**
 
 ```text
 measured at a 256 px cap height:  stem 56 px, tightest lowercase counter 36 px
@@ -135,14 +139,14 @@ measured at a 256 px cap height:  stem 56 px, tightest lowercase counter 36 px
 cap height minimum = 14.2  →  round up  →  16 px
 ```
 
-Then convert to the number people actually measure, using the same render:
+Then convert to the number people actually measure. The ratio it needs is a property of the lockup's own **composition**, not of a render of it: the width is the lockup's declared `viewBox` width and the cap height is the one the type was set at inside it, so both are read off the file.
 
 ```text
-lockup width minimum = cap minimum × (measured lockup width / measured cap height)
+lockup width minimum = cap minimum × (lockup viewBox width / cap height inside the lockup)
                      = 16 × (1120 / 256) = 70 px        for a six-letter name at that aspect
 ```
 
-Record the measured `φ` values, the aspect, and both minimums in `LOGO.md`. Changing the typeface invalidates all of them.
+Record the measured `φ` values, the aspect, both minimums, and the fact that the lockup's own status is derived rather than measured, in `LOGO.md`. Changing the typeface invalidates all of them.
 
 ### Print
 
@@ -622,7 +626,7 @@ Every item is answerable from the file, from the analytic geometry, or from `log
 
 - [ ] `logo-mark`'s narrowest counter clears `max(1.25 w, 32)`, **or** all four conditions in [The counter floor, in aggregate](#the-counter-floor-in-aggregate) are shown to hold — checked against that list, not against a remembered count.
 - [ ] A floor-built mark names its size **branch** in `LOGO.md` and states that branch's minimum: **32 px on branch A, 16 px on branch B.** A branch not named is not a branch shown to hold.
-- [ ] The lockup's `φ_ink` and `φ_ctr` were measured off a 256 px render, and the cap-height and width minimums are recorded in `LOGO.md`.
+- [ ] `φ_ink` and `φ_ctr` were measured off the **`logo-wordmark` variant's** 256 px render, and the lockup's cap-height and width minimums — derived from them, per *Full lockup* above — are recorded in `LOGO.md`.
 - [ ] Print minimums computed for each process the brief named, from the vendor's `L` and `g` where one was available.
 - [ ] Every minimum in `LOGO.md`'s **Variants** table cites the formula or the measurement it came from.
 
