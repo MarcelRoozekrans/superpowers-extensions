@@ -418,7 +418,7 @@ This is a **coverage** check, not a containment one, so it reads the opposite en
 A ring at the favicon's own spec, audited against construction.md coordinate by coordinate in the comment.
 
 ```svg
-<svg viewBox="0 0 256 256" role="img" aria-label="Example favicon">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="Example favicon">
   <!-- Favicon spec. Declared weight 32 (2 px at a 16 px render) — this is a FILLED
        annulus, not a stroked circle: there is no stroke attribute anywhere in it, and
        the 32 is construction.md's "distance between its two edges" for a filled form.
@@ -610,6 +610,7 @@ What *is* checkable is exactly what mark-types.md already says is checkable: the
 
 construction.md's self-check covers a single file. These are the items that only exist because there is a *set* of files, and each is binary.
 
+- **Every variant declares `xmlns="http://www.w3.org/2000/svg"` on its root.** Check the file as text; a render cannot decide this. A standalone `.svg` is parsed as XML, which has no default namespace, so a file without it is not SVG and will not open — while the same markup inline in HTML renders perfectly, because the HTML parser supplies the namespace. That asymmetry is why this item is here and why it is graded on the source: the contact sheet is inline, so **every render-based check in this plugin is blind to it**. The first dogfood run shipped all seven variants without `xmlns`; the sheet rendered, the readout measured, the critique passed, and the files did not open.
 - Every square variant carries the identical `viewBox="0 0 256 256"`. A variant on a different artboard cannot be swapped for another at a call site.
 - Non-square variants — the horizontal and stacked lockups — declare their `viewBox` and record the aspect ratio in `LOGO.md`. That ratio is what the lockup width minimum is computed from.
 - No variant carries `width` or `height` on the root `svg` element.
@@ -674,6 +675,7 @@ Every item is answerable from the file, from the analytic geometry, or from `log
 
 **Artboard hygiene**
 
+- [ ] `xmlns="http://www.w3.org/2000/svg"` on every variant's root, checked as text. Never graded from a render.
 - [ ] Identical `viewBox` across square variants; declared `viewBox` and recorded aspect on the lockups.
 - [ ] No `width` or `height`; `role` and `aria-label` on every variant.
 - [ ] No empty groups, unreferenced `defs`, or surviving construction geometry.

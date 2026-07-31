@@ -339,6 +339,7 @@ Runs before Step 7 completes, against the files actually on disk. Five checks:
 
 - [ ] Every file named in § Asset manifest exists at its recorded path — **and** every SVG in the asset directory appears in the manifest. Both directions: a file on disk and absent from the table is a leftover or an undocumented variant, and `logo.template.md` calls both findings.
 - [ ] Each SVG parses.
+- [ ] **Each root `svg` carries `xmlns="http://www.w3.org/2000/svg"`.** Grep the file; do not render it to decide this. Inline in HTML the namespace is supplied for you, so a file missing it renders correctly on the contact sheet, measures correctly in the readout, and passes the vision critique — and then does not open as a file. The first dogfood run shipped all seven variants without it and no render-based check could have caught it. This item exists because that happened.
 - [ ] Each root `svg` carries a `viewBox`, and the square variants all carry the identical one, per `reproduction.md` § Artboard hygiene.
 - [ ] No `filter` element anywhere in the set.
 - [ ] The mono variants bind every paint to `currentColor`, and differ from their source only in the resolved `color`.

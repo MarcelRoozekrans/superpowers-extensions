@@ -9,19 +9,26 @@ Read it before writing a single path. Apply it to every candidate, not just the 
 Every mark in this skill is authored on one artboard:
 
 ```svg
-<svg viewBox="0 0 256 256" role="img" aria-label="[product name]">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="[product name]">
 ```
 
 ### Required root attributes
 
 | Attribute | Value | Why |
 |---|---|---|
+| `xmlns` | `http://www.w3.org/2000/svg` | **Without it the file is not SVG.** A standalone `.svg` is parsed as XML, which has no default namespace — so the root element is an unrecognised `svg` in no namespace, and every standalone consumer fails: an editor preview, a browser opening the file, an `img` tag, a README. It is optional only *inline in HTML*, where the HTML parser assigns the namespace for you. See the warning below. |
 | `viewBox` | `0 0 256 256` | Square, fixed, identical across every candidate and every variant. A mark that changes artboard between variants cannot be compared or swapped. |
 | `role` | `img` | The file is a picture, not a decorative flourish. |
 | `aria-label` | the product name | Screen readers get the brand, not "image". |
 | `width` / `height` | **absent** | Hardcoding pixels defeats the only advantage SVG has. Size it in CSS at the call site. |
 
 Non-square artboards (a wide lockup, a stacked lockup) are legitimate **variants**, but they are derived after the mark is settled. The master is always `0 0 256 256`.
+
+> **The `xmlns` omission is invisible to every check in this plugin, and it shipped once.**
+>
+> The contact sheet substitutes candidate markup **inline into HTML**, where the parser supplies the SVG namespace whether or not the file declares it. So a mark with no `xmlns` renders perfectly on the sheet, measures correctly in the readout, passes the vision critique, and clears structural self-verification — and then fails to open as a file.
+>
+> The first dogfood run shipped all seven variants without it. Nothing caught it; the harness built to catch what static reading misses shares the blind spot, because it only ever tests inline. **The check has to be a string check on the file, not a render.** `reproduction.md` § Artboard hygiene carries it, and `logo-concept`'s structural self-verification runs it before the commit.
 
 ### The grid
 
@@ -141,7 +148,7 @@ circle base = 128 + 66.56 = 194.56    (square base is 192)
 The centre stays at `128` — on grid. Only the radius leaves it. For a pointed form on the same edges: `128 × 0.03 = 3.84`, apex at `60.16`.
 
 ```svg
-<svg viewBox="0 0 256 256" role="img" aria-label="Overshoot">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="Overshoot">
   <!-- Square, 96 × 96, every edge on the grid. Nominal layout: 16 + 96 + 32 + 96 + 16 = 256. -->
   <path d="M16 80H112V176H16Z" fill="currentColor"/>
   <!-- OPTICAL: r 48 → 49.92 · shared-edge overshoot · 2% of 96 = 1.92 per side -->

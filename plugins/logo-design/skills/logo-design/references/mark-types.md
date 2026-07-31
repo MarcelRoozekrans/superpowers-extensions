@@ -50,7 +50,7 @@ It is the wrong choice when the product's name is the whole idea (wordmark), or 
 A lens derived from two circles whose centres sit on each other's circumference, with a concentric counter knocked out of it.
 
 ```svg
-<svg viewBox="0 0 256 256" role="img" aria-label="Vesica">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="Vesica">
   <!-- Seed: circles r 96 at (80,128) and (176,128). Centre distance 96 = r, so each
        centre sits on the other's circumference. Both are construction geometry and are
        not in the shipped file; only their intersection is drawn.
@@ -149,7 +149,7 @@ Two letters is the ceiling. Three initials at a 16 px render is about five pixel
 Two letters, no container — the containerless decision taken deliberately at step 3, with step 5's gate as what it would have had to clear otherwise.
 
 ```svg
-<svg viewBox="0 0 256 256" role="img" aria-label="HO">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="HO">
   <!-- Cap height 96 (y 80 … 176), single stroke weight 16, no drawn container:
        correction 6 does not bind and the row is centred exactly on 128.
        Row fit: 32 … 224 = 192 = H 64 + gap + O 99.84  →  gap = 28.16.
@@ -221,7 +221,7 @@ The alternative model — individually placed glyphs — buys the per-glyph deta
 ### Worked fragment
 
 ```svg
-<svg viewBox="0 0 256 256" role="img" aria-label="NOVA">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="NOVA">
   <!-- Webfont: Inter 700, declared in LOGO.md. NOT converted to outlines — recorded as
        an un-performed step in LOGO.md's Production handoff. This file is not a finished
        asset anywhere the webfont is absent.
@@ -294,7 +294,7 @@ It is the type with the least for a viewer to hold on to, which makes it the typ
 A four-arm pinwheel: one arm, rotated 90° about `(128, 128)` three times, with each copy's corrections re-derived from its final orientation.
 
 ```svg
-<svg viewBox="0 0 256 256" role="img" aria-label="Pinwheel">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="Pinwheel">
   <!-- Rule: rotate the arm 96 × 32 through 90° about (128,128), four times.
        90° maps the grid onto itself, so every rotated coordinate stays permitted and the
        rotation is baked into the path data rather than carried by a transform.

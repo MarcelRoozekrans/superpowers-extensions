@@ -1,4 +1,4 @@
-<svg viewBox="0 0 256 384" role="img" aria-label="SPX">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 384" role="img" aria-label="SPX">
   <!-- SPX stacked lockup. Non-square by design: viewBox 0 0 256 384, aspect 2:3,
        recorded in LOGO.md. NOT size-tested on the contact sheet, for the same
        reason as logo-full.svg; its minimums are derived from its components.

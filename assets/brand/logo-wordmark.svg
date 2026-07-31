@@ -1,4 +1,4 @@
-<svg viewBox="0 0 256 256" role="img" aria-label="SPX">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="SPX">
   <!-- SPX wordmark — the name set in type on the square master artboard, so the
        contact sheet can render it at full size and the phi values can be taken
        off it. Square is load-bearing: the harness is built for 0 0 256 256.

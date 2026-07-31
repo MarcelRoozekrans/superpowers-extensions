@@ -42,6 +42,21 @@
                      token with the empty string. The sheet renders that slot as
                      "not supplied" and says so on the page.
 
+                     KNOWN BLIND SPOT — this sheet cannot decide xmlns.
+                     Candidates are substituted INLINE into this HTML document,
+                     and the HTML parser assigns the SVG namespace whether or not
+                     the markup declares xmlns. So a candidate missing
+                     xmlns="http://www.w3.org/2000/svg" renders here perfectly,
+                     measures correctly in the readout, and passes the vision
+                     critique -- and then does not open as a standalone .svg file
+                     at all. The first dogfood run shipped all seven variants that
+                     way. Nothing render-based can catch it, including anything
+                     added to this file: by the time the DOM exists the namespace
+                     is already supplied. The check is a STRING check on the file,
+                     and it lives in logo-concept's structural self-verification
+                     and in reproduction.md's artboard hygiene. Do not move it
+                     here, and do not assume a clean sheet means clean files.
+
   Each candidate token appears ONCE because the sheet clones it into every cell
   at run time. Substituting a candidate into all twenty-eight of its own
   renderings by hand is how a sheet ends up comparing a mark against an older

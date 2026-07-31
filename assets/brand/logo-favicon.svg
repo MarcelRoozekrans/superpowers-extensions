@@ -1,4 +1,4 @@
-<svg viewBox="0 0 256 256" role="img" aria-label="SPX">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="SPX">
   <!-- SPX favicon — REDRAWN, not scaled, per reproduction.md's favicon spec.
        Same relationship as the master: two forms on the descending diagonal
        sharing exactly one 32 x 32 wall block. What changed is that the second
