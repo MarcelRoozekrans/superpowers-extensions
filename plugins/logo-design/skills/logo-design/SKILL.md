@@ -385,11 +385,275 @@ Stage by explicit pathspec — the asset directory, `docs/design/LOGO.md`, and `
 
 ## logo-review
 
-> **PLACEHOLDER — NOT A FLOW. Do not run this section; there is nothing here to run.**
+Audits a mark that already exists — one this skill drew, or one it has never seen — across three layers, and writes a verdict to `docs/design/YYYY-MM-DD-logo-review.md`. Seven numbered steps run in order.
+
+> "Starting logo-review. I'll find the mark and whatever record exists for it, render it across the reproduction matrix and read the screenshots back, then grade three layers — reproduction hazards, the ten anti-slop patterns, and a five-dimension critique — and write you a report with a verdict and a prioritised list."
+
+Every item of the [Shared Protocol](#shared-protocol) binds every step below. Three land in a specific place and are named again there: item 1 at Step 1, item 3 in [The UNRUN rule](#the-unrun-rule), item 7 at Step 7.
+
+**Two things this flow never does.**
+
+- **It never writes `docs/design/LOGO.md`.** `logo.template.md`'s own opening fixes the division: `logo-concept` fills it in, `logo-review` audits against it. A missing answer is a finding in the report, and the finding names the slot it belongs in. An audit that fills its own gaps has graded its own writing.
+- **It never redraws the mark.** Where the verdict is FAIL, offering `logo-concept` afterwards is a decision the user can weigh — [the existing-mark guard](#the-existing-mark-guard) sets out why a replacement *after* an audit is legitimate and one *instead of* an audit is not.
+
+### The three layers
+
+| # | Layer | Type | Criteria come from |
+|---|---|---|---|
+| 1 | Reproduction hazards | binary per item | [references/reproduction.md](references/reproduction.md) § The binary checklist — every item, in that file's own order and grouping |
+| 2 | Anti-slop scan | binary per pattern | [references/anti-slop.md](references/anti-slop.md) — all ten, with the bounded carve-out its *Two of these are shapes, not mistakes* section defines |
+| 3 | Five-dimension critique | 1 … 5 per dimension | Distinctiveness · Simplicity · Memorability · Appropriateness · Versatility — the table at [Step 5](#step-5--layer-3-the-five-dimension-critique) |
+
+**The vocabulary is `ui-workflow`'s `ui-review`, deliberately** — **PASS / PARTIAL / FAIL** per layer, the floor rather than the average gating the critique layer, and the final verdict the worst of the three. A verdict on a mark and a verdict on a screen should mean the same thing to the person reading both.
+
+**Layers 1 and 2 are consumed wholesale from their own files.** Do not restate an item, do not copy a threshold, and do not substitute a shorter list per mark. Both are fixed instruments for the same reason the contact sheet is one: two runs are only comparable while the instrument does not move.
+
+### The UNRUN rule
+
+Every other section depends on this, so it is stated before them.
+
+**A binary layer has two grades and three states.** An item can pass, fail, or never have been decided — because the render did not happen, or because the record that would settle it does not exist. Reading that third state as either of the first two is the same defect as `reproduction.md`'s D1 state 2: a gate phrased as a binary, applied to a state space that is ternary, waves through the one state carrying an undocumented discrepancy.
+
+> **`UNRUN` removes PASS from its layer's options. It does not remove FAIL.**
 >
-> The three-layer audit, its verdict logic, its report format, and its commit triple are written by **Task 9** of `docs/plans/2026-07-30-logo-design-skill-plan.md`.
->
-> What is already fixed: `reproduction.md` is the criteria list and **`logo-review` supplies the grading** — the file states thresholds and says explicitly that grading is this sub-skill's job. `anti-slop.md` is graded binary, all ten patterns, with the bounded carve-out its own *Two of these are shapes, not mistakes* section defines. The [Shared Protocol](#shared-protocol) binds here too: a render-dependent criterion with no render is recorded unrun, not failed and not passed.
+> A layer carrying an `UNRUN` item and no FAIL is **PARTIAL**. A layer carrying a FAIL is **FAIL**, whatever else is unrun.
+
+Neither of the other two readings survives contact with the files:
+
+- **`UNRUN` as a pass** destroys [Shared Protocol](#shared-protocol) item 3, which is the plugin's central honesty guarantee. `logo.template.md` § Recording conventions says it in one clause: never a pass.
+- **`UNRUN` as a fail** condemns a mark for the auditor's missing evidence. `reproduction.md` § What a bounding box can and cannot tell you already rules on the direction — *"A false FAIL in the binary layer is worse than a false pass: it sends an agent to redraw a mark that was already right, and the redraw has nowhere to go."*
+
+**One token, two reasons — there is no fifth token.** `logo.template.md` § Recording conventions fixes four, and `logo-concept`'s variants-only path already spends `UNRUN` on a record that does not exist rather than inventing a word for it. Both reasons below are the same token with a different clause after the dash, and `grep UNRUN` over the report lists every one of them:
+
+| Reason shape | Reached when |
+|---|---|
+| `UNRUN — the sheet has not run; <the render that would decide it>` | Playwright MCP is absent, or the item needs a measurement off a render this flow did not take |
+| `UNRUN — no record; <the LOGO.md slot that would decide it>` | The item's only remaining route is a sentence in `LOGO.md`, and the file or the slot does not exist |
+
+**What is not `UNRUN`.** Three exclusions, and they are what stop the token swallowing the audit:
+
+1. **An item decidable from the file is graded from the file.** A missing `LOGO.md` excuses nothing that names no record — M1, M2, M4, D2, F1, F2, F3, path complexity, the reuse ratio and every artboard-hygiene item are graded from the source on any mark, drawn here or not.
+2. **An item whose file side passes is a PASS.** `reproduction.md`'s record clauses are escape hatches on a *failing* file side, not preconditions on a passing one. A silhouette at 0.72 clears M4 with no record at all; only a silhouette above the gate needs `LOGO.md` to name it as a deliberate primitive.
+3. **A rule that does not reach this mark is `n/a — <why>`, and `n/a` caps nothing.** But **`n/a` needs a fact, not a silence**: the user said the mark never prints, or the set carries no `text` element. A question nobody answered is `UNRUN`, never `n/a` — an unanswered question is exactly the applicable-but-undecided case the token exists for.
+
+So the record-dependent set is short, and it is read off the checklist item by item rather than carried here as a second copy.
+
+### A mark with no `LOGO.md`
+
+**The common case, not an edge.** The router sends any project with an existing mark to this flow, including marks this skill never touched, and `reproduction.md`'s checklist repeatedly offers "`LOGO.md` records X" as the escape hatch on a failing item. For an external mark that record does not exist and cannot be produced retroactively.
+
+**A missing record is not a FAIL.** It is the second reason shape above: `UNRUN — no record`, capping its layer at PARTIAL by the same rule as a missing render. The two are the same epistemic situation — the mark may be perfectly sound and simply unchecked — so they take the same token and the same cap.
+
+**What still runs, and it is most of the audit:**
+
+| Layer | Runs without a record |
+|---|---|
+| 1 | Every item that names no record: the whole mono-collapse source side, D2, the favicon's three redraw tests, path complexity and both tracing signatures, clearspace, the computed minimum sizes, and artboard hygiene |
+| 2 | Eight patterns of the ten, in full, from their source signatures |
+| 3 | Simplicity, which is scored from the source alone |
+
+**What goes `UNRUN`:** every pure-record item on the checklist; the record-side escape hatch on any item whose file side did not clear; `anti-slop.md`'s Tests A and B for patterns 1 and 9 and the strict Test A for 6 and 8, wherever the signature hit; pattern 6's brief where the user cannot supply it; and, in Layer 3, Distinctiveness, which names the derivation chain among its evidence.
+
+**So an undocumented mark's ceiling is `PARTIAL — evidence-limited`, and saying so is the point.** The criteria files make the record a precondition of a clean bill — `reproduction.md` asks for values to be written down and `anti-slop.md`'s carve-out asks for an answer that only the person who drew the mark can give. A skill that issued PASS anyway would be certifying the absence of evidence. The remediation is a record, never a redraw, and it has exactly two routes: whoever drew the mark writes the derivation answers, or `logo-concept`'s **variants-only** path fills the slots readable from the file — which is most of them, and it leaves the derivation slots `UNRUN` by its own rule rather than guessing them.
+
+**Never write the missing record and never infer it.** `anti-slop.md`'s carve-out is explicit — *"Not the reviewer's inference of it — the answer, written down, by whoever drew it"* — and `logo-concept`'s variants-only path takes the same line for the same reason. An inferred derivation is the reviewer's inference, which is the one thing that record must not contain.
+
+**An `UNRUN`'s remediation is evidence to obtain, never a change to the mark.** A remediation list that says "widen the counter" for a counter nobody measured is how an audit damages a sound mark.
+
+### Step 1 — the mark, the record, and the specification
+
+1. **Collect the set.** Every file the [existing-mark guard](#the-existing-mark-guard) found, plus anything the user named by path or supplied inline. The audit runs against the *set*, not one file: hygiene, the mono diff and the favicon's three tests are all cross-file.
+2. **Vector source, or nothing.** Layers 1 and 2 read the SVG. Where the mark exists only as a raster — a PNG, an ICO, a screenshot — **both layers are entirely `UNRUN`**, that is the first sentence of the report, and the single remediation is the vector master. Do not derive a stand-in from a bitmap; a source-derived stand-in is a different check wearing this one's name.
+3. **Normalise the artboard.** `reproduction.md`'s pixel rule is stated on `0 0 256 256` and an external mark is usually on something else. Scale every measured value by `256 / <the longer side of the declared viewBox>` before comparing it to any threshold, and record the factor in the report header. A root `svg` carrying no `viewBox` at all is an artboard-hygiene FAIL in its own right; normalise off its `width` and `height` and say that is what you did.
+4. **Read `docs/design/LOGO.md` if it exists.** Where it does, every slot is evidence and every empty slot is a finding — `logo.template.md` says an empty slot is a finding rather than a silence, and this flow is the reader that makes that true.
+5. **Ask only what the record does not already answer**, one question per message, at most two:
+   - **Where must this mark work?** — the same question 4 that `logo-concept` § Step 1 asks. Its consequences table is read **in reverse** here: each context the answer names turns a row that would be undecided into a graded one. Do not ask it where `LOGO.md` already carries the answer in § Variants and § Colour.
+   - **What was the brief?** — asked wherever the record does not carry it, because two grades turn on it: `anti-slop.md` pattern 6 wherever its geometry clause hit, and Layer 3's Appropriateness always. A brief the user states at audit time is captured verbatim per [Shared Protocol](#shared-protocol) item 1 and recorded in the report as supplied at audit time rather than at drawing time. **Never infer it from the mark** — reconstructing a brief from a finished mark reconstructs the evidence. Where nobody can state it, both grades are `UNRUN`, which is exactly where `logo-concept`'s variants-only path leaves pattern 6.
+
+### Step 2 — render the reproduction matrix
+
+1. **Write the sheet.** Copy `templates/contact-sheet.template.html` to `docs/design/YYYY-MM-DD-logo-review-contact-sheet.html` and substitute its placeholders per the template's own **PLACEHOLDERS** comment. **Never overwrite `docs/design/logo-contact-sheet.html`** — that file is `logo-concept`'s record of what the mark was signed off against, and an audit that overwrites it has destroyed the evidence it exists to weigh.
+2. **Three slots, three distinct square drawings** — the master, the favicon and the wordmark, in that order, with unused slots replaced by the empty string as the template prescribes. **No lockup goes in a slot:** `reproduction.md` § Full lockup fixes that the harness is built for the square artboard and a lockup rendered there reports its letterboxing. A set carrying more than three distinct square drawings gets a second sheet, dated and numbered.
+3. **Screenshot twice and read both PNGs back** with `Read` — the full page and an element-scoped shot on `#readout`, at the viewport the template's **HOW TO SCREENSHOT IT** comment fixes. Reading them back is the pass; taking them is not.
+4. **The harness measures and returns no verdict** — [Shared Protocol](#shared-protocol) item 4. Never quote a readout row as a pass. Every row is routed to the layer that grades it and graded there.
+5. **Without Playwright MCP**, [Shared Protocol](#shared-protocol) item 3 governs: **write the sheet anyway** — it is documentation, and it is what lets somebody with the MCP finish the pass without redoing the flow — then **stop at the screenshot**. Do not open the HTML, do not describe what it would have shown, and record every item whose evidence is that render as `UNRUN`. Layer 2 is unaffected; see Step 4.
+
+**Which of `logo-concept`'s nine critique items this render is read for, and where each reading goes.** That checklist is cited, not restated:
+
+| From `logo-concept` § The critique checklist | Routed to |
+|---|---|
+| C1, C2, C3, C4 | Layer 1 — the reproduction item each one names |
+| C9 | Layer 1 — every `warn` and `bad` readout row, against the file its own note names |
+| C7 | Layer 2 — the render half of the anti-slop scan |
+| C8 | Layer 3 — Distinctiveness, and the collision note below |
+| C5, C6 | **Not read here.** Both grade `construction.md`, which this flow does not audit — see [What this audit does not cover](#what-this-audit-does-not-cover). |
+
+**The collision note.** [Shared Protocol](#shared-protocol) item 5 governs C8 in full: it sees, it does not search; it measures nothing; **it is not a trademark search** and is never described, softened or summarised as one; and where it has not run it is recorded unrun, never as "no collision found". The report carries `logo.template.md` § Trademark clearance — not performed's paragraph unedited, exactly as `LOGO.md` does.
+
+### Step 3 — Layer 1, reproduction hazards
+
+Grade every item on `reproduction.md` § The binary checklist, in that file's order and under its own group headings. **It is the criteria list; this is the grading** — the file says so itself, and it is the only place the items live.
+
+Each item takes exactly one of **PASS**, **FAIL**, `n/a — <why>`, `UNRUN — <why>`. Which one is decided by the item's shape, and the four shapes are what make two agents land on the same verdict:
+
+| Item shape | How it is graded |
+|---|---|
+| **Computed or read from the file** — the mono-collapse source tests, D2, the favicon's redraw tests, path complexity, the reuse ratio, clearspace, the computed minimums, artboard hygiene | From the source, always. No record and no render is needed, and the absence of either is not an excuse. |
+| **File side with a record as its escape hatch** — the silhouette above M4's gate, D1's three states, the counter floor's four conditions, the favicon's dropped features | **PASS** where the file side clears on its own. Where it does not and the record is present, grade the record. Where it does not and there is no record, `UNRUN — no record; <the slot>`. |
+| **Render-dependent** — M3, `φ_ink` and `φ_ctr`, a `text` element's right edge, an indeterminate stroked extent | From the render, or `UNRUN`. `reproduction.md` already fixes the indeterminate bracket as unrun rather than failed; do not re-decide it here. |
+| **Pure record** — every minimum citing its source, a floor-built mark naming its branch, the favicon's uniform weight recorded as a decision | From `LOGO.md` alone. Present and answered is a **PASS**; absent is `UNRUN — no record; <the slot>`. |
+
+**Grade the item the checklist states, not the quantity underneath it.** Several items ask for a *recording* rather than a value — a `text` element's vertical extents are the clearest case, and `reproduction.md` says outright that they are not computable by anything in this skill. The item is therefore satisfied by a record that says so, and a set whose `LOGO.md` § Checks recorded unrun carries those rows **passes it**. Reading the quantity instead of the item would put every wordmark-bearing set permanently at PARTIAL for a reason `reproduction.md` calls honest.
+
+**One consequence, stated so it is not mistaken for a defect: an external mark with no record cannot reach Layer 1 PASS.** The pure-record items have nowhere to be satisfied, so `PARTIAL — evidence-limited` is the ceiling until somebody writes the record. It is not a FAIL and must not be reported as one.
+
+**Context-dependent items.** Where an item depends on a context the mark ships into and Step 1 established that context, grade it. Where a named context needs a variant the set does not ship, that is a **FAIL** — a mark cannot reproduce into a context it has no file for. Where the context was never established, the item is `UNRUN`, per the `n/a` needs a fact rule above.
+
+### Step 4 — Layer 2, the anti-slop scan
+
+All ten, in `anti-slop.md`'s order, every time. `anti-slop.md` carries a source signature for each and states that **none of the ten requires eyes to detect**, so the scan runs with or without a render and a negative signature is a PASS that does not wait on one.
+
+| What the source signature says | Grade |
+|---|---|
+| **Absent** | **PASS**, decided from source — no record, no render, no brief. This is most rows on most marks. Pattern 6 is two clauses and both must hit: geometry absent is a PASS before the brief is consulted, which is how `anti-slop.md` grades its own vesica fragment. |
+| **Present**, and the pattern is 2, 3, 4, 5, 7 or 10 | **FAIL.** `anti-slop.md` § Exactly which patterns this reaches: no exception exists, because each is a construction failure as well as a cliché and no derivation repairs a construction failure. Do not accept one. |
+| **Present**, pattern 1 or 9, and `LOGO.md` carries Tests A and B | **PASS** where both answers carry it, **FAIL** where the record is present and they do not. Name which test carried it, so the next reviewer does not re-litigate it. |
+| **Present**, pattern 6 or 8, and `LOGO.md` carries the strict Test A | The same, on the strict form only: a number that produced the geometry. A rationale for why the shape suits the brief is not a derivation and does not qualify. |
+| **Present**, pattern 1, 6, 8 or 9, and there is no record | `UNRUN — no record; LOGO.md § Construction → Derivation answers for the anti-slop patterns`. |
+| **Present**, pattern 6's geometry only, brief not established | `UNRUN — no brief; the brief that produced the mark is not on file`. |
+
+**A render can add a finding under any of the ten. It cannot clear one.** The source signature is the test; a mark that does not read as a cliché in a 1360 px screenshot still has the signature in its file.
+
+**A pattern that also fails an item in Layer 1 is one finding, not two** — `anti-slop.md` says so of patterns 2, 3, 4 and 10. It is listed once, carrying both layer references; both sub-verdicts still record their FAIL.
+
+### Step 5 — Layer 3, the five-dimension critique
+
+Score 1 … 5 on each. Use the bands strictly and do not grade-inflate. **The score is the floor — the worst dimension — not the average**, for the reason `ui-review` gives: an average hides the worst dimension. 5/5/5/5/1 fails on Versatility alone, and that is correct, because a logo that cannot reproduce is not a logo.
+
+| Dimension | What it grades | Scored from | 1 — Broken | 3 — Functional | 5 — Exceptional |
+|---|---|---|---|---|---|
+| **Distinctiveness** | Could a competitor use this mark unchanged? | the vision pass (C8), Layer 2's signature results, and `LOGO.md` § Construction's derivation chain | substitutable for any mark in the category; nothing derived | recognisably this category, with one element derived rather than chosen | no element placed without a number that produced it, and nothing else in the category looks like it |
+| **Simplicity** | Can it be described in one sentence, and redrawn from that sentence? | node and counter counts per `reproduction.md` § Path complexity, plus the derivation chain. **Source only — never `UNRUN`.** | over a complexity ceiling, or needs a paragraph to describe | inside every ceiling; one sentence with a clause per element | one seed and one rule; the sentence is shorter than the file |
+| **Memorability** | What survives one look | the full-page shot | nothing recalled but a colour | one feature recalled | the silhouette alone identifies it |
+| **Appropriateness** | Does the form serve *this* product, or any product in its category? | the brief — from `LOGO.md` § Concept & rationale, or as the user stated it at Step 1 | contradicts what the brief asked for | fits the category and nothing narrower | reads off this product specifically; the brief's own words are visible in the form |
+| **Versatility** | Does it survive every context it is specified for? | Layer 1's own results | Layer 1 FAILs a minimum-size, mono-collapse, dark-inversion or favicon item | Layer 1 is PASS and every specified context has a variant | Layer 1 is PASS with margin — counters at the target plus the dark increment, a favicon redrawn rather than scaled, print minimums computed per named process |
+
+**A dimension is scored only where every evidence source its row names is available.** Where one is missing it is `UNRUN — <the missing source>`, never a guess and never a 3. Two consequences worth stating because they are what make this cheap rather than paralysing:
+
+- **Versatility is `UNRUN` whenever Layer 1 is PARTIAL, and that costs nothing** — Layer 1 has already capped the verdict at PARTIAL, so the second cap changes no outcome. Where Layer 1 FAILs, Versatility is scored 1 or 2 from the row above, not `UNRUN`; a check that ran and failed is never excused by one that did not run.
+- **Simplicity is never `UNRUN`.** Its evidence is the file, and the file is always there.
+
+**Report the floor and the average over the scored dimensions only, and print the average with its denominator** — an average over three of five is not comparable to one over five, and a bare number invites the comparison.
+
+### Step 6 — the verdict
+
+Per layer first, then the worst of the three. The sub-verdict table is `ui-review`'s shape with the third state added to each row:
+
+| Layer | PASS | PARTIAL | FAIL |
+|---|---|---|---|
+| 1 — Reproduction hazards | every item PASS or `n/a` | any item `UNRUN`, and no item FAIL | any item FAIL |
+| 2 — Anti-slop scan | all ten PASS | any pattern `UNRUN`, and no pattern FAIL | any pattern FAIL |
+| 3 — Five-dimension critique | no dimension `UNRUN`, floor ≥ 3, average ≥ 3.5 | no scored dimension ≤ 2, and either a dimension is `UNRUN` or the average is under 3.5 | any scored dimension ≤ 2 |
+
+**Final verdict: the worst of the three.** Any FAIL makes the report FAIL.
+
+**Where the verdict is PARTIAL, say which kind it is on the verdict line**, because the two mean opposite things to the reader:
+
+- **`PARTIAL — evidence-limited`.** Every shortfall is an `UNRUN`. Nothing was measured and found wanting.
+- **`PARTIAL — findings`.** At least one item is short on its own merits.
+
+**The fully-unrun report is the common case for a user without Playwright MCP, and it must not read as a failure of the mark.** With no render and a complete `LOGO.md`, Layer 1 is PARTIAL on its render-dependent items, Layer 2 is PASS in full, and Layer 3 carries scores for Simplicity and Appropriateness with the rest `UNRUN`. The verdict is `PARTIAL — evidence-limited`, and the rationale says in its first sentence that no finding was raised against the mark and that the gap is the render. **That is the best verdict this skill can issue without a render, and it is a statement about the evidence, not about the mark.** Never present it as a defect, and never soften it into a PASS.
+
+**One consistency check, and it runs every time.** Layers 1 and 2 are exactly the gates `logo-concept` already applies: its two-iteration cap withdraws any candidate failing a binary reproduction item, its Step 2 and Step 3 run the anti-slop signatures before and after drawing, and its Step 7 verification render re-checks the final assets. **So a mark this skill produced cannot legitimately FAIL Layer 1 or Layer 2.** If one does, that is a bug in `logo-concept`, not a finding against the mark: say so in the report, name the step that should have caught it, and do not file it as a defect in the drawing.
+
+Layer 3 carries no such guarantee and must not. `logo-concept` never claimed the mark was good — the user picked it at Step 5 — so a conformant mark scoring 2 on Distinctiveness is this layer working, not the two flows disagreeing.
+
+### Step 7 — the report and the commit
+
+Write `docs/design/YYYY-MM-DD-logo-review.md`. **The reader has to find the failing item without reading the file**, which is what fixes the shape below: a verdict line, a three-row summary, then the failures. Layer 1 is the only layer whose passing items are not listed individually — its group counts are what keep the coverage auditable without printing a checklist nobody reads.
+
+```markdown
+# Logo Review: <product name>
+
+**Date:** YYYY-MM-DD
+**Mark audited:** <every file in the set, by path>
+**Record:** `docs/design/LOGO.md`, or `absent — the mark was not drawn by this skill`
+**Render:** `docs/design/YYYY-MM-DD-logo-review-contact-sheet.html`, or `not run — Playwright MCP absent`
+**Artboard normalisation:** `× <factor>` from the declared viewBox, or `none — already 0 0 256 256`
+**Verdict:** PASS | PARTIAL — evidence-limited | PARTIAL — findings | FAIL
+
+## At a glance
+
+| Layer | Sub-verdict | PASS | n/a | UNRUN | FAIL | The worst item |
+|---|---|---|---|---|---|---|
+| 1 — Reproduction hazards | | | | | | |
+| 2 — Anti-slop scan | | | | | | |
+| 3 — Five-dimension critique | | <floor> / <average> | | | | |
+
+Layer 3 reports its floor and its average in place of the PASS and n/a counts.
+
+## Layer 1 — Reproduction hazards
+
+One row per checklist group with its counts, under the group headings the
+checklist itself uses; then one row per item that is not PASS. A passing item
+is not listed individually — the counts are what make the coverage auditable.
+
+| Group | PASS | n/a | UNRUN | FAIL |
+|---|---|---|---|---|
+
+| Item | Status | Measured | Held against |
+|---|---|---|---|
+
+## Layer 2 — Anti-slop scan
+
+All ten, always, in order.
+
+| # | Pattern | Status | Evidence |
+|---|---|---|---|
+
+## Layer 3 — Five-dimension critique
+
+| Dimension | Score | Evidence |
+|---|---|---|
+| **Floor** | | <which dimension> |
+| **Average** | | over <n> scored of 5 |
+
+## Findings, prioritised
+
+FAILs first in layer order, then every UNRUN, then any dimension scoring 3.
+Each names the layer, the item, what was measured against what, and the
+remediation. An UNRUN's remediation is the evidence to obtain — never a change
+to the mark.
+
+## Verdict rationale
+
+## What was not audited
+```
+
+**Fixed text that ships unedited:** `logo.template.md` § Trademark clearance — not performed's paragraph, into *What was not audited*. It is not paraphrased and not summarised, and no sentence anywhere in the report describes the vision pass as a search.
+
+#### What this audit does not cover
+
+Named in the report, every time, so that a PASS is not read as more than it is:
+
+- **Trademark, design-mark and prior-art clearance.** Nothing here measures collision with an existing mark. [Shared Protocol](#shared-protocol) item 5.
+- **`construction.md` conformance.** The grid, the permitted values and the nine corrections are a *drawing* standard for marks this skill draws — `logo-concept` gates them at its Step 3 self-check and its Step 7 structural verification. An external mark was not drawn to that grid, and grading it there would emit a wall of failures against a mark whose only fault is not having been made here. Where a construction rule genuinely reaches reproduction, `reproduction.md` already imports it by reference and Layer 1 grades it through that import.
+- **Brand strategy, naming, and the market the mark competes in.** Layer 3's Appropriateness grades the form against the brief; it does not grade the brief.
+- **Anything the report records `UNRUN`.** The rows are listed, not summarised.
+
+#### The review's commit
+
+[Shared Protocol](#shared-protocol) item 7. Supply the triple to `project-orchestration`'s **Commit & Release Protocol**, which loads the host project's `docs/planning/CONVENTIONS.md`, runs the branch guard, and renders the message:
+
+- **`type`** — `docs`
+- **`scope`** — resolved by the protocol from the host project's `Scope source`; where no allowed scope matches, its `Fallback when scope not allowed` decides. Do not invent one.
+- **`subject`** — `add logo review — <product name>, <verdict>`
+
+Stage by explicit pathspec — the report and the review's own contact sheet, and nothing else. **The audited files are not staged**: this flow did not change them, and a review that appears in a diff alongside the mark it graded is indistinguishable from a review that edited it.
+
+**Render nothing locally.** No message literal, no message format, no tag scheme, anywhere in this flow.
+
+Then announce the verdict in conversation with the layer that produced it, the FAIL count, the `UNRUN` count, and the top three findings. Where the verdict is `PARTIAL — evidence-limited`, the first sentence says that no finding was raised against the mark.
 
 ## Reference Index
 
