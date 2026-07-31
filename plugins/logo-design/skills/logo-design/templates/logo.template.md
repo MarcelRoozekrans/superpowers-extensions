@@ -159,7 +159,7 @@ Every shipped file, its use, and its minimum size. **Every minimum cites the for
 | `logo-mark.svg` | `<use>` | `0 0 256 256` | 1:1 | `<px>` | `<formula from reproduction.md § Minimum sizes, with this mark's narrowest counter substituted>` |
 | `logo-full.svg` | `<use>` | `<declared>` | `<w:h>` | `<px width>` | `<derived from its components — see the lockup block below>` |
 | `logo-stacked.svg` | `<use>` | `<declared>` | `<w:h>` | `<px width>` | `<derived — same>` |
-| `logo-wordmark.svg` | `<use>` | `<declared>` | `<w:h>` | `<px width>` | `<measured — the φ values come off this file's own 256 px render; see the lockup block below>` |
+| `logo-wordmark.svg` | `<use>` | `0 0 256 256` | 1:1 | `<px width>` | `<measured — the φ values come off this file's own 256 px render; see the lockup block below>` |
 | `logo-mono-black.svg` | `<use>` | `0 0 256 256` | 1:1 | `<inherits logo-mark's>` | `<the currentColor binding — same geometry>` |
 | `logo-mono-white.svg` | `<use>` | `0 0 256 256` | 1:1 | `<inherits>` | `<same, or the fork recorded in Colour>` |
 | `logo-favicon.svg` | `<use>` | `0 0 256 256` | 1:1 | `<px>` | `<reproduction.md § The favicon redraw>` |
@@ -167,6 +167,8 @@ Every shipped file, its use, and its minimum size. **Every minimum cites the for
 Non-square variants declare their `viewBox` above; the aspect column is what each lockup's width minimum is computed from. Square variants all carry the identical `viewBox`.
 
 ### Lockup measurements
+
+**`logo-wordmark.svg` is square — `0 0 256 256`, like the master.** Only the two lockups are non-square, per `reproduction.md` § Artboard hygiene. This is load-bearing rather than incidental: the whole measurement route below depends on the wordmark being renderable by the contact sheet, which stops on a non-square `viewBox`. A non-square wordmark silently removes the only variant the `φ` values can be taken from, and the failure surfaces as an unexplained `UNRUN` several sections later. The row above is pinned, not a placeholder.
 
 **The two `φ` values are measured off the `logo-wordmark` variant's 256 px render on `logo-concept`'s contact sheet, not off a render of the lockup.** They are properties of the type — stem width and counter width against their own cap height — and the wordmark is the square-artboard variant that carries it. The lockup's own minimums are then **derived** from those `φ` values, from `k`, and from its declared `viewBox`; the lockup itself is checked for composition and clearspace only. Changing the typeface invalidates every row.
 
