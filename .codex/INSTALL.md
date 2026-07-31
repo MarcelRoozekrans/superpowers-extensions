@@ -2,7 +2,7 @@
 
 Codex auto-discovers skills under `~/.agents/skills/`. Each plugin in this
 suite is a separate skill bundle, so installation is a clone followed by
-eleven symlinks (one per plugin).
+twelve symlinks (one per plugin).
 
 ## Prerequisites
 
@@ -26,7 +26,7 @@ eleven symlinks (one per plugin).
    REPO=~/.codex/superpowers-extensions
    for plugin in regression-test pre-push-review refactor-analysis decision-tracker \
                  roslyn-codelens-integration memorylens-integration project-orchestration \
-                 ui-workflow ui-design-system squad compress-memory; do
+                 ui-workflow ui-design-system squad compress-memory logo-design; do
      ln -sfn "$REPO/plugins/$plugin/skills/$plugin" "$HOME/.agents/skills/$plugin"
    done
    ```
@@ -39,7 +39,7 @@ eleven symlinks (one per plugin).
    $plugins = @(
      'regression-test', 'pre-push-review', 'refactor-analysis', 'decision-tracker',
      'roslyn-codelens-integration', 'memorylens-integration', 'project-orchestration',
-     'ui-workflow', 'ui-design-system', 'squad', 'compress-memory'
+     'ui-workflow', 'ui-design-system', 'squad', 'compress-memory', 'logo-design'
    )
    foreach ($plugin in $plugins) {
      $src = "$repo\plugins\$plugin\skills\$plugin"
@@ -53,10 +53,10 @@ eleven symlinks (one per plugin).
 ## Verify
 
 ```bash
-ls -la ~/.agents/skills/ | grep -E '(regression-test|pre-push-review|refactor-analysis|decision-tracker|roslyn-codelens-integration|memorylens-integration|project-orchestration|ui-workflow|ui-design-system|squad|compress-memory)'
+ls -la ~/.agents/skills/ | grep -E '(regression-test|pre-push-review|refactor-analysis|decision-tracker|roslyn-codelens-integration|memorylens-integration|project-orchestration|ui-workflow|ui-design-system|squad|compress-memory|logo-design)'
 ```
 
-You should see eleven symlinks (or junctions on Windows), one per plugin.
+You should see twelve symlinks (or junctions on Windows), one per plugin.
 
 ## Updating
 
@@ -71,7 +71,7 @@ Skills update instantly through the symlinks.
 ```bash
 for plugin in regression-test pre-push-review refactor-analysis decision-tracker \
               roslyn-codelens-integration memorylens-integration project-orchestration \
-              ui-workflow ui-design-system squad compress-memory; do
+              ui-workflow ui-design-system squad compress-memory logo-design; do
   rm -f "$HOME/.agents/skills/$plugin"
 done
 ```

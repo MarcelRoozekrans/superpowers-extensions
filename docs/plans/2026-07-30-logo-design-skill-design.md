@@ -114,7 +114,7 @@ Or blends — "A's grid with C's counters" is a valid answer.
 
 ### Step 6 — variant set
 
-`logo-full`, `logo-stacked`, `logo-mark`, `logo-wordmark`, `logo-mono-black`, `logo-mono-white`, `favicon.svg`.
+`logo-full`, `logo-stacked`, `logo-mark`, `logo-wordmark`, `logo-mono-black`, `logo-mono-white`, `logo-favicon.svg`.
 
 The favicon is **redrawn, not scaled** — its own simplification step with its own critique pass, because the thing that reads at 256px is rarely the thing that reads at 16.
 

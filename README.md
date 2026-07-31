@@ -2,7 +2,7 @@
 
 [![GitHub Sponsors](https://img.shields.io/github/sponsors/MarcelRoozekrans?style=flat&logo=githubsponsors&color=ea4aaa&label=Sponsor)](https://github.com/sponsors/MarcelRoozekrans)
 
-Extension skills for the [superpowers](https://github.com/obra/superpowers) suite, providing quality gates, development workflow skills, and project lifecycle management for web application development. It includes eleven skills:
+Extension skills for the [superpowers](https://github.com/obra/superpowers) suite, providing quality gates, development workflow skills, and project lifecycle management for web application development. It includes twelve skills:
 
 - **regression-test** -- Comprehensive regression testing using the [Microsoft Playwright MCP server](https://github.com/microsoft/playwright-mcp), combining existing test suite execution with AI-powered visual and functional browser testing.
 - **pre-push-review** -- A structured branch review that diffs against the base branch and gates on plan adherence, code quality, commit hygiene, and regression testing, producing a PASS/FAIL verdict with a prioritized remediation plan on failure.
@@ -14,6 +14,7 @@ Extension skills for the [superpowers](https://github.com/obra/superpowers) suit
 - **project-orchestration** -- GSD-inspired project lifecycle management for larger multi-session projects. Brownfield codebase mapping, milestone tracking, phase management, session pause/resume, milestone audit, release cycle management, and a `start-next-phase` routing hub that mechanically chains brainstorming → writing-plans → executing-plans for the next non-complete phase.
 - **ui-workflow** -- Frontend design contracts and visual auditing. Generates structured UI design contracts before implementing frontend phases (`ui-phase`) and performs visual audits afterwards (`ui-review`) using a three-layer grading: contract adherence, anti-slop scan, and 5-dimension critique.
 - **ui-design-system** -- Generates a complete design system before frontend implementation. Three modes: **curated** (pick from 74 vendored real-world references — Stripe, Linear, Vercel, Notion, Apple, Figma, Supabase, Cursor, Claude, …), **guided** (7 questions), or **quick** (inline one-liner). Includes 5 hand-tuned OKLch design directions and an anti-slop checklist. Auto-detects Blazor, React, Vue, Astro stacks. Outputs `docs/design/MASTER.md`.
+- **logo-design** -- Generates brand marks as hand-authored SVG and audits existing ones. Two sub-skills: `logo-concept` draws a mark (or derives the variant set for one that already exists) and `logo-review` audits one across three layers — reproduction hazards, a ten-pattern anti-slop scan, and a five-dimension critique. Ships four mark types (geometric, monogram, wordmark, abstract) and **refuses pictorial, mascot, and illustrative-emblem marks** by design. Reads `docs/design/MASTER.md` for palette and typography when present. Outputs `docs/design/LOGO.md`, seven SVG variants through to a redrawn favicon, and a contact sheet.
 - **squad** -- Persistent AI agent teams (Lead, Backend Engineer, Frontend Engineer, Tester, Scribe) **dispatched as parallel `Task` subagents** during brainstorming and planning workflows. Each specialist runs in an isolated context window with its own charter and tier-1 history, so they cannot anchor on each other's reasoning. Per-role `history.md` files accumulate project-specific knowledge across sessions; tiered context lookup (semantic search → grep → recent history) keeps each subagent's prompt lean.
 
 ---
@@ -488,6 +489,76 @@ No additional tools required.
 
 ---
 
+## Logo Design Skill
+
+The logo-design skill generates a brand mark as hand-authored SVG — every coordinate derived by arithmetic from one already placed, rather than sampled freehand — and audits marks that already exist, including ones it never drew.
+
+### Sub-Skills
+
+**`logo-concept`** — Draws a new mark, or derives the variant set for a mark that already exists. Eight numbered steps: read `docs/design/MASTER.md` and scan for an existing mark; capture the brief verbatim *before* drawing; ask five questions one at a time; write three directions as rationale before anything is drawn; draw all three on a 16-unit grid on a 256 artboard; render them on a fixed contact sheet and critique the render against a nine-item checklist; present the survivors for the user to pick or blend; then derive the variant set and close out `docs/design/LOGO.md`. Two renders per presentation — the first, and one re-render after fixes. There is no third.
+
+**`logo-review`** — Audits a mark across three layers. The verdict is the worst of the three:
+
+1. **Reproduction hazards** — binary per item: minimum sizes for screen and print, clearspace, mono collapse, dark inversion, the favicon redraw tests, path complexity, and artboard hygiene.
+2. **Anti-slop scan** — ten clichés, each with a source signature. None of the ten needs a render to detect, so this layer runs in full with or without a browser.
+3. **Five-dimension critique** — Distinctiveness, Simplicity, Memorability, Appropriateness, Versatility, each scored 1-5. The floor gates, not the average.
+
+The vocabulary is deliberately `ui-workflow`'s `ui-review`: **PASS / PARTIAL / FAIL** per layer, so a verdict on a mark and a verdict on a screen mean the same thing to the person reading both. The report is saved to `docs/design/YYYY-MM-DD-logo-review.md`. `logo-review` never writes `LOGO.md` and never redraws the mark.
+
+### Mark types — four shipped, three refused
+
+Four types are shippable, each with its own recipe, worked fragment, and characteristic failure: **geometric** (the default when the user has no preference), **monogram**, **wordmark**, and **abstract**.
+
+Three are refused by name, behind a `<HARD-GATE>`:
+
+| Refused | What it is |
+|---|---|
+| **Pictorial** | The mark is a recognisable object or living thing drawn as itself — a fox, a mountain, a coffee cup. |
+| **Mascot or character** | Anything with a face, a posture, a gesture, or a name. |
+| **Illustrative emblem** | A badge, crest, or roundel whose interior is a depicted scene rather than a construction. |
+
+**This is a feature, not a caveat.** The gate fires on the *request*, before anything is drawn; it is not negotiable by the user and not waivable by the agent. The skill will not draw a simplified version, a placeholder, or a rough — and it will not ship a degraded mark with a disclaimer attached. The reason is mechanical rather than modest: the skill derives every coordinate from one already placed, and its own reproduction layer treats an outline that reuses none of its own numbers as a tracing signature and fails it. A convincing animal is exactly that outline. Instead it offers three alternatives: a brief-only deliverable, a different mark type that serves the same goal, or commissioning a designer or illustrator — stated plainly as the legitimate answer it often is.
+
+### Entry paths
+
+Three, decided before anything is drawn by a guard that scans `assets/brand/`, `public/brand/`, `wwwroot/brand/`, `public/favicon.*` and `static/logo.*`. A hit does not decide the route on its own — what was asked for does:
+
+| Found | Asked for | Route |
+|---|---|---|
+| nothing | anything | `logo-concept`, **full flow** — all eight steps |
+| a mark | **variants of it** — a favicon, a dark or mono version, a lockup, an app icon | `logo-concept`, **variants-only** — no new concept is generated and nothing that ships is redrawn. Requires the existing mark to clear the reproduction checklist first, and that gate is not waivable. |
+| a mark | an **audit**, or a **new** mark | `logo-review` |
+
+A replacement is never generated for a mark that already exists. Offered *after* an audit it is a decision the user can weigh; offered *instead of* one it is a guess about work somebody already paid for. The route and the row that matched are announced before any work happens.
+
+### Output
+
+- **`docs/design/LOGO.md`** — the record: the brief verbatim, the seed and derivation chain, the nine optical corrections one row each, stroke and counter values, computed contrast, clearspace and minimum sizes, misuse rules that each cite a number from the file, and an asset manifest. An empty slot is a finding, not a silence.
+- **Seven SVG variants** — `logo-mark.svg`, `logo-wordmark.svg`, `logo-full.svg`, `logo-stacked.svg`, `logo-mono-black.svg`, `logo-mono-white.svg`, and `logo-favicon.svg` — written to `public/brand/`, `wwwroot/brand/`, or `assets/brand/` depending on the detected stack. The favicon is **redrawn, not scaled**. Where a variant is meaningless for the chosen type (a wordmark has no mark-alone symbol) the row reads `n/a` with a reason and no file ships — the count is never padded to reach seven.
+- **`docs/design/logo-contact-sheet.html`** — the fixed render harness: every candidate at each size, on both grounds, in colour and mono, with a measurement readout. It prints each number beside the threshold it is held against and returns no verdict; the grading belongs to the skill.
+- **`docs/design/YYYY-MM-DD-logo-review.md`** — `logo-review`'s report: verdict line, a three-row summary, then the failures and a prioritised findings list.
+
+### Honest limits
+
+- **The vision collision check is not a trademark search.** Where the sheet has been rendered and read back, one thing looked for is a resemblance to a mark the model happens to recognise. It consults no corpus and queries no register, and a resemblance it does not recognise is not a resemblance that is absent. `LOGO.md` carries that disclaimer as fixed text that ships unedited, and no sentence in either flow describes the pass as a search. Clearance remains somebody's job.
+- **Wordmarks ship referencing a declared webfont.** The skill has no font engine — an explicit non-goal, not an oversight — so outline conversion is recorded as a step that was **not** performed. It has to happen before the mark is used anywhere the webfont is not guaranteed: print, embroidery, a third party's site, an email client. Until it does, a `text`-bearing wordmark is not a finished asset.
+- **`logo-review` cannot issue PASS for a mark with no `LOGO.md`.** Several checklist items are satisfiable only by a record — a derivation answer that only whoever drew the mark can give — so an undocumented mark caps at `PARTIAL — evidence-limited`. That is deliberate: a skill that issued PASS anyway would be certifying the absence of evidence. It is a statement about the evidence rather than about the mark: the remediation is the record and never a redraw, and the report's first sentence says that no finding was raised against the mark.
+
+### Usage
+
+- "Design a logo for this product", "we need a brand mark" → `logo-concept`
+- "Make us a favicon", "we need a dark version", "we need a stacked lockup" → `logo-concept`, variants-only
+- "Review our logo", "does our mark survive at favicon size" → `logo-review`
+- `logo-design: <one-liner>` → quick mode, which skips the questions the one-liner already answers. *Where the mark must survive* is asked anyway, standalone, because it eliminates half the solution space before anything is drawn.
+- `/logo-design`
+
+### Prerequisites
+
+- **Playwright MCP — optional, but strongly recommended.** Every render-dependent check goes through it. Without it both sub-skills still run and the contact sheet is still written, but every such check is recorded `UNRUN — <what would decide it>`, never passed — and a review caps at `PARTIAL — evidence-limited`. `grep UNRUN` over a finished `LOGO.md` lists everything the record admits it does not know.
+- **`docs/design/MASTER.md` — optional.** Read for palette and typography when present. When it is absent the mark ships in `currentColor` and the absence is recorded; running `ui-design-system` first produces a better result, but this skill never blocks on it.
+
+---
+
 ## Squad Skill
 
 Squad creates persistent AI agent teams within your Claude Code session. Rather than treating Claude as a single assistant, squad dispatches five specialists — Lead, Backend Engineer, Frontend Engineer, Tester, and Scribe — as **parallel `Task` subagents** that participate actively in superpowers workflows and grow smarter about your project across sessions.
@@ -596,7 +667,7 @@ per harness; only how the harness loads them.
 | **OpenAI Codex CLI / App** | [`.codex-plugin/plugin.json`](.codex-plugin/plugin.json) + [`.codex/INSTALL.md`](.codex/INSTALL.md) | Clone-and-symlink each plugin into `~/.agents/skills/`; instructions and a copy-paste loop in [`.codex/INSTALL.md`](.codex/INSTALL.md) |
 | **Gemini CLI** | [`gemini-extension.json`](gemini-extension.json) + [`GEMINI.md`](GEMINI.md) | `GEMINI.md` lists each SKILL.md via `@./plugins/.../SKILL.md` import syntax |
 | **GitHub Copilot CLI** | Reuses [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json) + [`.copilot-cli/INSTALL.md`](.copilot-cli/INSTALL.md) | `copilot plugin marketplace add MarcelRoozekrans/superpowers-extensions`, then install individual plugins |
-| **OpenCode.ai** | [`.opencode/plugins/superpowers-extensions.js`](.opencode/plugins/superpowers-extensions.js) | JS plugin registers all eleven plugin skill paths via OpenCode's `config.skills.paths` array — no symlinks needed |
+| **OpenCode.ai** | [`.opencode/plugins/superpowers-extensions.js`](.opencode/plugins/superpowers-extensions.js) | JS plugin registers all twelve plugin skill paths via OpenCode's `config.skills.paths` array — no symlinks needed |
 
 The polymorphic [`hooks/session-start`](hooks/session-start) script
 detects which harness is running it via env vars (`CURSOR_PLUGIN_ROOT`,
@@ -638,7 +709,7 @@ The multi-provider mechanism here is adapted directly from
 [`obra/superpowers`](https://github.com/obra/superpowers) (MIT). Their
 session-start hook was the model for ours; their per-harness manifest
 pattern is what enables one shared markdown tree to load natively in
-each host. Differences: we are a marketplace of eleven plugins (versus
+each host. Differences: we are a marketplace of twelve plugins (versus
 their single-plugin layout), so our manifests target the suite at the
 repo root with skills resolved via `./plugins/`.
 
@@ -669,6 +740,7 @@ claude plugin install ui-workflow
 claude plugin install ui-design-system
 claude plugin install squad
 claude plugin install compress-memory
+claude plugin install logo-design
 ```
 
 The regression-test plugin automatically configures the Playwright MCP server with `--caps=testing`. The pre-push-review plugin requires only git and no additional MCP servers for its core review.
@@ -769,6 +841,12 @@ xcopy /E /I plugins\compress-memory\skills\compress-memory %USERPROFILE%\.claude
 
 # macOS / Linux -- compress-memory
 cp -r plugins/compress-memory/skills/compress-memory ~/.claude/skills/compress-memory
+
+# Windows -- logo-design
+xcopy /E /I plugins\logo-design\skills\logo-design %USERPROFILE%\.claude\skills\logo-design
+
+# macOS / Linux -- logo-design
+cp -r plugins/logo-design/skills/logo-design ~/.claude/skills/logo-design
 ```
 
 **Note:** Some plugins require companion MCP servers. Install them separately:
@@ -789,7 +867,7 @@ claude mcp add playwright -- npx @playwright/mcp@latest --caps=testing,pdf,visio
 
 ### Verify Installation
 
-In Claude Code, the skills should appear when you type `/regression-test`, `/pre-push-review`, `/refactor-analysis`, `/decision-tracker`, `/roslyn-codelens-integration`, `/memorylens-integration`, `/project-orchestration`, `/ui-workflow`, `/ui-design-system`, `/squad`, or `/compress-memory`, or when you ask Claude to perform regression testing, a pre-push review, a refactor impact analysis, decision tracking, .NET code graph analysis, .NET memory profiling, project lifecycle management, UI design contract work, design system generation, to activate your agent team, or to compress a memory file.
+In Claude Code, the skills should appear when you type `/regression-test`, `/pre-push-review`, `/refactor-analysis`, `/decision-tracker`, `/roslyn-codelens-integration`, `/memorylens-integration`, `/project-orchestration`, `/ui-workflow`, `/ui-design-system`, `/squad`, `/compress-memory`, or `/logo-design`, or when you ask Claude to perform regression testing, a pre-push review, a refactor impact analysis, decision tracking, .NET code graph analysis, .NET memory profiling, project lifecycle management, UI design contract work, design system generation, to activate your agent team, to compress a memory file, or to design or audit a brand mark.
 
 ---
 
@@ -865,6 +943,9 @@ ui-design-system       → generate design tokens and component patterns (once p
                          curated mode: pick from 74 vendored references (Stripe, Linear, …)
                          guided mode: 7 questions
                          quick mode: inline one-liner
+logo-design            → brand mark as SVG, from brief to favicon (once per product)
+                         logo-concept: draw a mark, or derive its variant set
+                         logo-review: audit an existing mark across 3 layers
 ui-workflow ui-phase   → generate UI contract before implementing each frontend phase
 [implement the phase]  → subagent-driven-development executes the contract
 ui-workflow ui-review  → 3-layer audit: contract adherence + anti-slop scan + 5-dim critique
@@ -876,6 +957,8 @@ ui-workflow ui-review  → 3-layer audit: contract adherence + anti-slop scan + 
 ```text
 "Make it look like Linear"                   → ui-design-system curated mode
 "Generate a design system for this project"  → ui-design-system guided mode
+"Design a logo for this product"             → logo-design logo-concept
+"Review our logo"                            → logo-design logo-review
 "Design the UI for this phase"               → ui-workflow ui-phase
 "Execute"                                    → subagent-driven-development
 "Review the UI"                              → ui-workflow ui-review
@@ -927,7 +1010,7 @@ memorylens-integration → snapshot before and after, compare, confirm fix
 |---|---|---|
 | New feature | brainstorming → writing-plans → subagent → pre-push-review | squad, decision-tracker |
 | Refactor | refactor-analysis → writing-plans → subagent → pre-push-review | squad, roslyn-codelens-integration, decision-tracker |
-| Frontend | ui-design-system → ui-workflow → subagent → ui-review | squad, regression-test |
+| Frontend | ui-design-system → logo-design → ui-workflow → subagent → ui-review | squad, regression-test |
 | Bug fix | systematic-debugging → TDD → pre-push-review | squad, memorylens-integration (.NET) |
 | Large project | project-orchestration wrapping any of the above | squad (histories auto-sync on pause) |
 | Memory hygiene | compress-memory (manual or auto) | project-orchestration (auto-invokes on pause-work when opted in) |
@@ -1037,15 +1120,23 @@ superpowers-extensions/
 │   │               ├── frontend.md
 │   │               ├── tester.md
 │   │               └── scribe.md
-│   └── compress-memory/                    # Memory file compression (11th plugin)
+│   ├── compress-memory/                    # Memory file compression (11th plugin)
+│   │   ├── .claude-plugin/
+│   │   │   └── plugin.json
+│   │   └── skills/
+│   │       └── compress-memory/
+│   │           ├── SKILL.md                # Main skill — 5-step flow with hard denylist
+│   │           ├── compression-rules.md    # Drop / Replace / Preserve / Compress rules
+│   │           ├── safety-rules.md         # Denylist, backup invariant, validation
+│   │           └── NOTICE.md               # Attribution to caveman (MIT)
+│   └── logo-design/                        # Brand marks as SVG (12th plugin)
 │       ├── .claude-plugin/
 │       │   └── plugin.json
 │       └── skills/
-│           └── compress-memory/
-│               ├── SKILL.md                # Main skill — 5-step flow with hard denylist
-│               ├── compression-rules.md    # Drop / Replace / Preserve / Compress rules
-│               ├── safety-rules.md         # Denylist, backup invariant, validation
-│               └── NOTICE.md               # Attribution to caveman (MIT)
+│           └── logo-design/
+│               ├── SKILL.md                # logo-concept and logo-review sub-skills + refusal gate
+│               ├── references/             # construction / mark-types / reproduction / anti-slop
+│               └── templates/              # LOGO.md skeleton + contact-sheet render harness
 └── docs/
     ├── planning/                           # Project lifecycle state (ROADMAP, MILESTONE, STATE, CONVENTIONS)
     └── plans/                              # Design documents and phase plans
@@ -1074,6 +1165,7 @@ React Router, Next.js (App Router & Pages Router), Angular, Vue Router, SvelteKi
 - **For ui-workflow:** `ui-phase` requires no additional tools. `ui-review` requires the `regression-test` skill and its Playwright MCP prerequisite.
 - **For memorylens-integration:** [memorylens-mcp](https://github.com/MarcelRoozekrans/memorylens-mcp) MCP server (installed automatically via marketplace dependencies). Skill is inert without it — safe to ignore on non-.NET projects.
 - **For ui-design-system:** No additional tools required.
+- **For logo-design:** No hard requirements — the drawing and the arithmetic need only built-in tools. Playwright MCP is optional but strongly recommended: without it every render-dependent check is recorded `UNRUN` rather than passed, and a review caps at `PARTIAL — evidence-limited`. `docs/design/MASTER.md` from `ui-design-system` supplies palette and typography when present; the skill ships in `currentColor` when it is absent.
 - **For squad:** No hard requirements — works standalone. [LongtermMemory-MCP](https://github.com/MarcelRoozekrans/LongtermMemory-MCP) enables tier-1 semantic search for agent history (installed automatically via marketplace dependencies). Works without it, falling back to grep-based lookup.
 
 ## Contributing
