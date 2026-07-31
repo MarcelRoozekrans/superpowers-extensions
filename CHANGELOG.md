@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.21.0](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.20.0...superpowers-extensions-v1.21.0) (2026-07-31)
+
+
+### Features
+
+* **logo-design:** add the logo-design plugin ([#118](https://github.com/MarcelRoozekrans/superpowers-extensions/issues/118)) ([65ba831](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/65ba8312fe9d294e2508fb6e2ba9990d9d1637a9))
+
 ## [1.20.0](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.19.1...superpowers-extensions-v1.20.0) (2026-07-17)
 
 
