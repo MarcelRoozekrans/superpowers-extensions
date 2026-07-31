@@ -572,6 +572,8 @@ Layer 3 carries no such guarantee and must not. `logo-concept` never claimed the
 
 Write `docs/design/YYYY-MM-DD-logo-review.md`. **The reader has to find the failing item without reading the file**, which is what fixes the shape below: a verdict line, a three-row summary, then the failures. Layer 1 is the only layer whose passing items are not listed individually — its group counts are what keep the coverage auditable without printing a checklist nobody reads.
 
+**If that path already exists, do not overwrite it.** Append `-2`, `-3` and so on, and name the prior report in the new one's header. The reason is the one given at Step 2 for the contact sheet: a second audit on the same day is usually a re-audit *after* remediation, so the earlier report is the evidence that the remediation was needed. Destroying it leaves a clean verdict with nothing showing what it replaced — and an audit trail that only ever holds the latest verdict is not an audit trail. The same applies to the sheet at Step 2, which shares the dated stem.
+
 ```markdown
 # Logo Review: <product name>
 
