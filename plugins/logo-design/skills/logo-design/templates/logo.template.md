@@ -35,7 +35,8 @@ Citations name a reference file and a section — `construction.md § Counter di
 | Why this candidate won | `<what it does that the other two did not>` |
 | Candidates rejected | `<B: reason>` · `<C: reason>` |
 | Keywords present from anti-slop.md pattern 6's list | `<the ones the brief contains, or "none">` |
-| Type chosen because | `<the signal from mark-types.md § Choosing the type>` |
+| Type chosen because | `<the signal from mark-types.md § Choosing the type — where the type was derived rather than asked for, the string length and the reproduction contexts it was derived from>` |
+| Mark–name relationship | `<how the mark carries the string set in type>`, or `the mark does not reference the name — <the type the derivation produced, the type taken instead, and why>` |
 
 ## Construction
 
@@ -236,7 +237,7 @@ One row per process the brief named. `L` and `g` come from the vendor's own spec
 |---|---|
 | Mono collapse M1 — every paint is `currentColor` | `<yes, or the finding>` |
 | M2 — no element's geometry wholly inside another's | `<yes / n/a — one path, knockout only>` |
-| M3 — inversion identity at 256 px | `<max per-channel difference>`, or `UNRUN — the contact sheet has not run` |
+| M3 — inversion identity at 256 px | `<max per-channel difference, from the contact-sheet readout's M3 inversion row>`, or `UNRUN — the contact sheet has not run`. On a variant carrying `text`, record the drawn geometry's number and the type's share as unrun, per reproduction.md § Mono collapse |
 | M4 — ink ÷ hull | recorded in [Construction § Silhouette](#silhouette) |
 | One-colour print | `<the value it prints in, and the process>` |
 
@@ -346,6 +347,7 @@ Where the contact sheet did run, every row it settled is recorded with its value
 |---|---|
 | Outline conversion | **not performed** — see above |
 | Trademark clearance | **not performed** — see above |
+| Declared face installed where the sheet renders | `<yes — the measured rows below carry values>`, or `not performed — <the face>; k, both cap-height minimums, the width minimum, φ_ink and φ_ctr in [Lockup measurements](#lockup-measurements), and the wordmark Fit in [Type-specific records](#type-specific-records), stay UNRUN until it is` |
 | `<any other step this mark hands off>` | `<status>` |
 
 ## Asset manifest

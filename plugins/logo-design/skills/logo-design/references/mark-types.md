@@ -17,7 +17,7 @@ Minimum sizes, clearspace and the favicon redraw are in [reproduction.md](reprod
 | The name *is* the brand and no symbol has been earned yet — early stage, single product, name-led | Wordmark |
 | The idea is a relationship or a process rather than an object, and no letterform carries it | Abstract |
 
-When the user answers "you choose", default to **geometric**. It has the widest reproduction range and the fewest dependencies outside the file: a monogram depends on the initials being distinctive, a wordmark on a webfont being present wherever the mark is rendered.
+When the user answers "you choose", the table above is still the instrument — read it with the brief's own answers as the signals. `SKILL.md`'s `logo-concept` § Step 1 states that derivation, off the length of the string to be set in type and the contexts the mark has to reproduce into, and **geometric is the default only where neither signal decides**. It has the widest reproduction range and the fewest dependencies outside the file: a monogram depends on the initials being distinctive, a wordmark on a webfont being present wherever the mark is rendered — the dependency `SKILL.md`'s Step 0 makes you check before the run rather than discover after it.
 
 ## Geometric
 
@@ -96,6 +96,7 @@ One or two letterforms drawn as paths. Never a `text` element — construction.m
 ### When it is the right choice
 
 - The name is long but its initials are short and distinctive.
+- The name is short enough to *be* its initials. A three- or four-character string is already a lettermark, and the ceiling below decides how many of its characters the mark actually carries — the string's length is not the letter count.
 - Nothing about the product suggests a form, so a geometric mark would have to be invented rather than derived — but the mark still has to work without the name.
 
 Two letters is the ceiling. Three initials at a 16 px render is about five pixels per letter, which is not a letter.

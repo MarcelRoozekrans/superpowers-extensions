@@ -1,21 +1,29 @@
 #!/usr/bin/env node
-// Assert that project-orchestration's SKILL.md never hardcodes a commit message
-// or a release tag, and that the Commit & Release Protocol and the conventions
-// template cannot drift apart.
+// Assert that no plugin hardcodes a commit message or a release tag outside the
+// Commit & Release Protocol, and that the protocol and the conventions template
+// cannot drift apart.
 //
-// Every check here exists because the failure already happened, twice over:
+// project-orchestration OWNS the protocol and gets every check. Any other plugin
+// whose SKILL.md names the protocol is DELEGATING to it, and gets the literal
+// checks — discovered by walking plugins/, never by a hardcoded path.
+//
+// Every check here exists because the failure already happened, three times:
 //
 //   - A gate grepping `git commit -m` reported "no literals" while a commit
 //     message sat hardcoded in *prose* two lines away.
 //   - A gate grepping `git tag -a` reported clean while a tag was promised in
 //     prose ("Tagged as vN.0").
+//   - This guard itself scanned one hardcoded path. `logo-design` shipped making
+//     the same delegation promise in its own SKILL.md, and a commit literal
+//     there would have passed CI green.
 //
-// Grepping the shape of the bug misses the bug. So this guard asserts the
-// *claims* too, not only the git commands that usually carry them.
+// Grepping the shape of the bug misses the bug, and guarding one file misses
+// every other file making the same promise. So this guard asserts the *claims*
+// too, and follows the promise rather than a path.
 //
 // Run: npm run check:conventions
 
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -101,29 +109,76 @@ const TAG_CLAIMS = [
   /release tagging/i,
 ];
 
-for (const [i, line] of lines.entries()) {
-  if (inProtocol(i)) continue;
+// Applied to the protocol's owner (where `exempt` carves out the protocol
+// section itself) and to every plugin that delegates to it (where nothing is
+// exempt, because a delegating file has no protocol section to write in).
+function scanLiterals(file, fileLines, exempt) {
+  for (const [i, line] of fileLines.entries()) {
+    if (exempt(i)) continue;
 
-  for (const [re, label] of LITERALS) {
-    if (re.test(line)) {
-      fail(SKILL, `L${lineNo(i)}: literal \`${label}\` outside the protocol — call sites pass type/scope/subject, the protocol renders it`);
+    for (const [re, label] of LITERALS) {
+      if (re.test(line)) {
+        fail(file, `L${lineNo(i)}: literal \`${label}\` outside the protocol — call sites pass type/scope/subject, the protocol renders it`);
+      }
+    }
+
+    const shape = MESSAGE_SHAPE.exec(line);
+    if (shape) {
+      fail(file, `L${lineNo(i)}: hardcoded commit message \`${shape[0]}\` outside the protocol — the host project's config decides the format, not this file`);
+    }
+
+    if (line.includes(POINTER)) continue; // delegating, not claiming
+
+    for (const re of TAG_CLAIMS) {
+      const m = re.exec(line);
+      if (m) {
+        fail(file, `L${lineNo(i)}: prose promises a tag ("${m[0]}") without delegating to the protocol — whether a tag is created at all is the protocol's decision`);
+        break;
+      }
     }
   }
+}
 
-  const shape = MESSAGE_SHAPE.exec(line);
-  if (shape) {
-    fail(SKILL, `L${lineNo(i)}: hardcoded commit message \`${shape[0]}\` outside the protocol — the host project's config decides the format, not this file`);
+scanLiterals(SKILL, lines, inProtocol);
+
+// ── 3b. Every plugin that delegates gets the same literal checks ─────────────
+// This guard used to scan exactly one hardcoded path. `logo-design` shipped
+// making the same delegation promise in its own SKILL.md, and nothing enforced
+// it — a `git commit -m` literal there passed CI green. The promise is what is
+// being guarded, so the guard follows the promise rather than a path.
+//
+// A delegating file has no protocol section of its own, so NOTHING is exempt in
+// it. That is the point: the owner may write a commit literal inside the
+// protocol because that is where rendering is defined; a delegator may not write
+// one anywhere.
+const PROTOCOL_NAME = 'Commit & Release Protocol';
+
+const skillFiles = [];
+for (const plugin of readdirSync(join(root, 'plugins'))) {
+  const skillsDir = join(root, 'plugins', plugin, 'skills');
+  if (!existsSync(skillsDir)) continue;
+  for (const skill of readdirSync(skillsDir)) {
+    const rel = `plugins/${plugin}/skills/${skill}/SKILL.md`;
+    if (existsSync(join(root, rel))) skillFiles.push(rel);
   }
+}
 
-  if (line.includes(POINTER)) continue; // delegating, not claiming
+const mentionsProtocol = skillFiles.filter((p) => readText(p).includes(PROTOCOL_NAME));
 
-  for (const re of TAG_CLAIMS) {
-    const m = re.exec(line);
-    if (m) {
-      fail(SKILL, `L${lineNo(i)}: prose promises a tag ("${m[0]}") without delegating to the protocol — whether a tag is created at all is the protocol's decision`);
-      break;
-    }
-  }
+// Anti-vacuous, in the same spirit as the KNOWN_READS pin below: if discovery
+// silently matched nothing it would scan zero delegators and report success.
+// The owner names the protocol by definition, so failing to find it means the
+// walk or the marker is broken, not that nobody delegates.
+if (!mentionsProtocol.includes(SKILL)) {
+  fail(
+    'scripts/check-conventions.mjs',
+    `delegation discovery did not find the protocol's own owner (${SKILL}) — the plugins walk or the \`${PROTOCOL_NAME}\` marker is broken, so the delegator scan below proved nothing`
+  );
+}
+
+const delegators = mentionsProtocol.filter((p) => p !== SKILL);
+for (const file of delegators) {
+  scanLiterals(file, readText(file).split(/\r?\n/), () => false);
 }
 
 // ── 4. Every sub-skill that stages files points at the protocol ──────────────
@@ -226,7 +281,10 @@ function report() {
       `check:conventions — OK\n` +
         `  no commit/tag literals or hardcoded claims outside the Commit & Release Protocol\n` +
         `  ${stagingSites} staging sub-skills all delegate to the protocol\n` +
-        `  every protocol-read field is produced by the conventions template`
+        `  every protocol-read field is produced by the conventions template\n` +
+        `  ${delegators.length} delegating plugin(s) scanned, no literals: ${delegators
+          .map((p) => p.split('/')[1])
+          .join(', ') || 'none found'}`
     );
     process.exit(0);
   }

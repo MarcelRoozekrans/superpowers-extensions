@@ -241,7 +241,15 @@ That second stage is what admits mark-types.md's wordmark detail — drawn geome
 
 There is exactly one legal form of a genuinely enclosed shape, and it is not two elements: it is **two subpaths in one `path` with `fill-rule="evenodd"`**, which is construction.md's knockout. One element never enters the pairwise test at all.
 
-**M3 — render, inversion identity.** Render at 256 px with `color: #000` on white, then with `color: #fff` on black. Invert the second image and compare pixel by pixel. **Maximum per-channel difference ≤ 2/255**, which is anti-aliasing and rounding; anything above it is something in the file that is not colour-neutral, and it will be exactly the thing that vanishes in one-colour print.
+**M3 — render, inversion identity.** Render at 256 px with `color: #000` on white, then with `color: #fff` on black. Invert the second image and compare pixel by pixel. **Maximum per-channel difference ≤ 2/255**; anything above it is something in the file that is not colour-neutral, and it will be exactly the thing that vanishes in one-colour print.
+
+**The instrument is `logo-concept`'s contact-sheet harness**, which is the only thing in this skill that rasterises and therefore the only place the comparison can happen. It serialises the candidate twice with `color` resolved, draws each over its ground on a 256 px canvas, inverts the second and prints the maximum difference in its readout, beside the count of pixels above the gate and the count of ink pixels — so a difference of zero taken over a raster that drew nothing reads as zero-of-nothing rather than as a pass. Where the diff cannot run, the readout names the reason and the item is **unrun**, never passed. This item stopped being unrunnable when that pass was added; a review recording it `UNRUN` because no instrument exists is reading an older version of this file.
+
+**The allowance is headroom, not an expected reading.** Measured on the harness's own engine, path and primitive antialiasing is *exactly* symmetric under inversion — a circle, a diagonal and a curve-heavy annulus each return 0, not "something small". The 2/255 is there for an engine whose rounding is not, and a conformant mark that reports 1 or 2 is inside the gate rather than marginal.
+
+**Type is the one part of a file this cannot decide, and the harness measures that rather than assuming it.** Glyph rasterisation carries a gamma that engines do not apply symmetrically under inversion — worth two orders of magnitude more than the gate on the glyph edge pixels, and removable by no rendering hint. It is a property of the rasteriser with no analogue in one-colour print. So a candidate carrying `text` is diffed twice, whole and again with the text removed: the drawn geometry takes the graded number, and the type's share is recorded **unrun**, which is the posture [`text` is a third case](#text-is-a-third-case-and-mostly-it-is-unrun) already takes for that element's extents. Outline the type — which `logo.template.md` § Production handoff already asks for — and M3 decides the whole file.
+
+**M3 does not reach alpha, and M1 is why that is not a hole.** A shape at `fill-opacity="0.5"` renders mid-grey on both grounds and inverts to itself, so it passes M3 at 0. M1 rejects it from source, which is the correct place for it and the same division the contact sheet's mono preview already documents for its own filter.
 
 **M4 — computed, structure.** Compute the ink area and the area of the silhouette's convex hull **analytically, from the geometry**. This is the primary route and the only one a markdown-only skill can actually run — there is no image-analysis path from a PNG to an area, and both worked examples below were computed this way rather than measured.
 
@@ -641,7 +649,7 @@ Every item is answerable from the file, from the analytic geometry, or from `log
 
 - [ ] M1 — every paint is `currentColor`; no literal colour, no alpha, no blend mode, no gradient.
 - [ ] M2a — any pair whose bounding boxes nest is identified. M2b — none of those pairs has the inner element's *geometry* wholly inside the outer's. Knockouts are one `path`, two subpaths, `fill-rule="evenodd"`, and do not enter the test.
-- [ ] M3 — black-on-white and inverted white-on-black differ by at most 2/255 per channel.
+- [ ] M3 — black-on-white and inverted white-on-black differ by at most 2/255 per channel, read off the contact-sheet readout's **M3 inversion** row. On a candidate carrying `text` the graded number is the drawn geometry's and the type's share is **unrun**, per *Mono collapse* above.
 - [ ] M4 — ink area over convex hull area, computed analytically, is at or below 0.85, or `LOGO.md` names the silhouette as a deliberate primitive.
 
 **Dark inversion**
