@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { OUTPUTS, CONVERTERS, detectConverter } from './export-raster.mjs';
+import { OUTPUTS, CONVERTERS, detectConverter, SOURCE_ARTBOARD } from './export-raster.mjs';
 
 test('every output names the SVG it is rasterised from', () => {
   assert.ok(OUTPUTS.length > 0);
@@ -72,4 +72,17 @@ test('the ImageMagick entry is magick, never convert', () => {
     'convert is the NTFS filesystem utility on Windows, not ImageMagick — use magick',
   );
   assert.ok(names.includes('magick'), 'ImageMagick should be reachable via its portable name');
+});
+
+test('the magick density never renders beyond a 2048px intermediate', () => {
+  const magick = CONVERTERS.find((c) => c.bin === 'magick');
+  for (const size of [16, 32, 48, 180, 192, 512, 1024]) {
+    const argv = magick.argv('in.svg', 'out.png', size);
+    const density = Number(argv[argv.indexOf('-density') + 1]);
+    assert.ok(Number.isFinite(density), `density for ${size} is not a number`);
+    assert.ok(
+      (SOURCE_ARTBOARD * density) / 72 <= 2048,
+      `size ${size} renders a ${(SOURCE_ARTBOARD * density) / 72}px intermediate`,
+    );
+  }
 });

@@ -28,6 +28,13 @@ import { spawnSync } from 'node:child_process';
 // NTFS filesystem conversion utility, present on every machine — a probe for it
 // succeeds and we would hand image arguments to a disk tool. ImageMagick's
 // portable binary is `magick`.
+
+// The artboard every mark this skill draws is built on — construction.md pins
+// it. The magick density derivation below reads off it; a source on a different
+// artboard rasterises at a different scale and then downsamples, which costs
+// time but not correctness.
+export const SOURCE_ARTBOARD = 256;
+
 export const CONVERTERS = [
   {
     bin: 'resvg',
@@ -53,11 +60,17 @@ export const CONVERTERS = [
   {
     bin: 'magick',
     probe: ['-version'],
+    // Density is derived, not guessed. A viewBox-only SVG renders at
+    // 256 * density/72 px, so a 2x supersample of the target is
+    // density = 72 * 2 * size / 256. Floored at 72 so tiny icons still
+    // render at 256px and downsample cleanly rather than being rasterised
+    // at 9dpi. Ceiling is therefore 2048px at size 1024 — an unbounded
+    // `size * 4` would have rendered 14,563px square for that same output.
     argv: (svg, out, size) => [
       '-background',
       'none',
       '-density',
-      String(size * 4),
+      String(Math.max(72, Math.ceil((size * 2 * 72) / SOURCE_ARTBOARD))),
       svg,
       '-resize',
       `${size}x${size}`,
@@ -67,7 +80,9 @@ export const CONVERTERS = [
 ];
 
 export function detectConverter({ only } = {}) {
-  const list = only ? [{ bin: only, probe: ['--version'], argv: () => [] }] : CONVERTERS;
+  const list = only
+    ? [CONVERTERS.find((c) => c.bin === only) ?? { bin: only, probe: ['--version'], argv: () => [] }]
+    : CONVERTERS;
   for (const c of list) {
     // spawnSync sets .error to ENOENT rather than throwing when the binary is
     // absent, which is what makes this portable to Windows without `command -v`.
@@ -79,8 +94,10 @@ export function detectConverter({ only } = {}) {
 
 export const INSTALL_HINT = [
   'No SVG rasteriser found. Install one of:',
-  '  resvg         cargo install resvg   (best small-size output)',
+  '  resvg         prebuilt binaries: https://github.com/linebender/resvg/releases',
+  '                or `cargo install resvg` if you already have Rust',
+  '                (best small-size output)',
   '  librsvg       brew install librsvg | apt install librsvg2-bin',
-  '  Inkscape      https://inkscape.org',
+  '  Inkscape      https://inkscape.org — version 1.0 or newer',
   '  ImageMagick   https://imagemagick.org',
 ].join('\n');
