@@ -702,9 +702,16 @@ node <skill-dir>/scripts/export-raster.mjs <brand-dir>
 
 It writes eight files and **routes each one to the SVG whose reproduction spec covers its size** — 16, 32, 48 and the `.ico` from `logo-favicon.svg`, and 180, 192, 512 and 1024 from `logo-mark.svg`. That routing is not configurable, and the reason is `reproduction.md § The favicon's own spec`: the favicon is a redraw for exactly those sizes, and the master is specified above its own computed minimum. **Never rasterise the master at 16 px** — it ships a mark this skill's own binary layer already failed.
 
-**Exit code 3 is `UNRUN`, not a failure.** No rasteriser on the machine degrades exactly as a missing Playwright MCP does — [Shared Protocol](#shared-protocol) item 3. Ship the SVG set, record every raster row `UNRUN — no rasteriser on this machine; <the install line the script printed>` in § Variants → *Raster set*, put the install step into § Production handoff → *Still to do*, and say so in the first sentence at Step 7. **Do not fake a PNG, do not substitute a screenshot, and do not report the icons as shipped.**
+**Read the exit code. It is a four-way contract, and three of the four are not failures of the mark:**
 
-Exit code 2 is a real failure — a source SVG is missing, which means Step 6 did not complete. Fix Step 6.
+| Code | Means | What to do |
+|---|---|---|
+| **0** | The eight files were written | Record them, per the paragraph below |
+| **1** | A converter failed at runtime — a malformed SVG, a crashed binary, an Inkscape that passed the `--version` probe and then rejected the 1.0+ export flags | A real failure, and the message carries the converter, the source, the size, the argv and the tool's own stderr. It also lists any files already written, so **the directory is half-populated** — read that list before doing anything else. Fix the cause and re-run; a re-run overwrites cleanly. |
+| **2** | Usage error, or a source SVG is missing | Step 6 did not complete. Fix Step 6; do not work around it here. |
+| **3** | No rasteriser on the machine | **`UNRUN`, not a failure** — see below |
+
+**Exit code 3 degrades exactly as a missing Playwright MCP does** — [Shared Protocol](#shared-protocol) item 3. Ship the SVG set, record every raster row `UNRUN — no rasteriser on this machine; <the install line the script printed>` in § Variants → *Raster set*, put the install step into § Production handoff → *Still to do*, and say so in the first sentence at Step 7. **Do not fake a PNG, do not substitute a screenshot, and do not report the icons as shipped.**
 
 **Record every written file** in § Variants → *Raster set* and in § Asset manifest, each row naming the SVG it came from. A raster whose source is not recorded cannot be regenerated when the mark changes, and a raster nobody can regenerate is the file that goes stale first.
 
