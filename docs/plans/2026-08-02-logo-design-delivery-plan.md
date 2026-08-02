@@ -520,6 +520,24 @@ test('exportRasters writes every output from its declared source', { skip: !have
   const ico = readFileSync(join(dir, 'brand', 'favicon.ico'));
   assert.equal(ico.readUInt16LE(2), 1, 'favicon.ico is not an ICO');
   assert.equal(ico.readUInt16LE(4), 3, 'favicon.ico should carry three images');
+
+  // Every packed entry must be a real PNG at its declared offset. The unit
+  // tests pack synthetic byte blobs, so they cannot catch the temp-file dance
+  // feeding packIco the wrong bytes — and a malformed ICO renders as a blank
+  // favicon rather than an error, which is the worst kind of bug to find late.
+  const PNG_MAGIC = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+  for (let i = 0; i < 3; i++) {
+    const at = 6 + i * 16;
+    const len = ico.readUInt32LE(at + 8);
+    const off = ico.readUInt32LE(at + 12);
+    assert.ok(len > 0, `ico entry ${i} is empty`);
+    assert.ok(off + len <= ico.length, `ico entry ${i} runs past the end of the file`);
+    assert.deepEqual(
+      ico.subarray(off, off + 8),
+      PNG_MAGIC,
+      `ico entry ${i} is not a PNG at its declared offset`,
+    );
+  }
 });
 
 test('a missing source SVG is reported, not thrown', () => {
@@ -590,15 +608,23 @@ export function exportRasters(dir, opts = {}) {
   for (const o of OUTPUTS) {
     const out = path(dir, o.file);
     if (o.pack) {
-      // Rasterise each packed size to a temp PNG, pack, then clean up.
-      const images = o.pack.map((size) => {
-        const tmp = path(dir, `.ico-${size}.png`);
-        raster(o.source, tmp, size);
-        const data = read(tmp);
-        unlinkSync(tmp);
-        return { size, data };
-      });
-      writeFileSync(out, packIco(images));
+      // Rasterise each packed size to a scratch PNG, pack, then clean up.
+      // The scratch directory is under tmpdir() and removed in a `finally`,
+      // NOT written beside the target: a converter that throws partway through
+      // would otherwise orphan a `.ico-32.png` inside the user's asset
+      // directory — which is the directory Task 11 commits from, and a leading
+      // dot hides nothing on Windows or from `git add`.
+      const scratch = mkdtempSync(path(tmpdir(), 'logo-ico-'));
+      try {
+        const images = o.pack.map((size) => {
+          const tmp = path(scratch, `${size}.png`);
+          raster(o.source, tmp, size);
+          return { size, data: read(tmp) };
+        });
+        writeFileSync(out, packIco(images));
+      } finally {
+        rmSync(scratch, { recursive: true, force: true });
+      }
     } else {
       raster(o.source, out, o.size);
     }
