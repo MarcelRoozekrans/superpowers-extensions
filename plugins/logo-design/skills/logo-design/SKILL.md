@@ -150,7 +150,7 @@ Both sub-skills inherit every item below. They are here rather than in either fl
 
 ## logo-concept
 
-Draws a new mark from a brief, or — where a conformant mark already exists — derives its variant set. Eight numbered steps run in order, plus Step 6.5, which is a half-step because it ships files rather than deciding anything and nothing downstream renumbers around it. A structural self-verification gates the commit.
+Draws a new mark from a brief, or — where a conformant mark already exists — derives its variant set. Nine numbered steps run in order, plus Step 6.5, which is a half-step because it ships files rather than deciding anything and nothing downstream renumbers around it; Step 8 is optional, offered rather than run automatically. A structural self-verification gates the commit.
 
 > "Starting logo-concept. I'll read `docs/design/MASTER.md` if it is there, ask five questions one at a time, write three directions before drawing any of them, render all three on a contact sheet and critique the render, then hand you the set to pick from."
 
@@ -164,8 +164,8 @@ Three, decided in Step 0 by [the existing-mark guard](#the-existing-mark-guard) 
 
 | Entry path | Precondition | What runs |
 |---|---|---|
-| **New mark** | the guard finds nothing | Steps 0 → 7, all of them, Step 6.5 included |
-| **Variants only** | the guard finds a mark **and** the request is for variants of it | Step 0, then Steps 4, 6, 6.5 and 7 against the existing master. **Steps 1, 2, 3 and 5 do not run** — no concept is generated and nothing that ships is redrawn, the favicon excepted, which is a redraw by rule. |
+| **New mark** | the guard finds nothing | Steps 0 → 7, all of them, Step 6.5 included, then Step 8 — offered, not run automatically |
+| **Variants only** | the guard finds a mark **and** the request is for variants of it | Step 0, then Steps 4, 6, 6.5 and 7 against the existing master, then Step 8 on the same offered terms. **Steps 1, 2, 3 and 5 do not run** — no concept is generated and nothing that ships is redrawn, the favicon excepted, which is a redraw by rule. |
 | **Neither** | the guard finds a mark and the request is an audit, or a *new* mark | `logo-review`. This sub-skill does not run. |
 
 **The variants-only path requires a conformant master, and this gate is not waivable.** Before anything is drawn, grade the existing mark against `reproduction.md` § The binary checklist — that is `logo-review`'s reproduction layer, borrowed rather than restated. If it fails, **stop there**: name the items that failed, offer the audit, and produce no variants. A variant set derived from an unsound master inherits the fault into every file and then documents it as though it had been checked, which is worse than the master alone.
@@ -410,6 +410,44 @@ Stage by explicit pathspec — the asset directory, `docs/design/LOGO.md`, and `
 
 **Render nothing locally.** No message literal, no message format, no tag scheme, anywhere in this flow.
 
+### Step 8 — wire it into the project
+
+Optional, and **asked for rather than assumed**: Step 7 committed the asset set, and replacing a project's live icons is a separate decision with a separate blast radius. Offer it, name every file that would change, and wait.
+
+> "The set is committed. I can also replace the icons this project already ships — I found `<paths>`. Nothing else would change, and I would not add any icon file the project does not already reference. Want me to?"
+
+**1. Find the slots that already exist.** Only these, and only where the file is already there:
+
+```text
+public/favicon.ico          public/favicon.svg          public/apple-touch-icon.png
+public/icon-192.png         public/icon-512.png         public/pwa-192x192.png
+public/pwa-512x512.png      static/favicon.ico          wwwroot/favicon.ico
+src/app/favicon.ico         app/favicon.ico
+**/AppIcon.appiconset/*.png
+```
+
+**2. Replace, never add.** A slot that does not exist is not created. The project's own build config decides which icons it ships, and this flow does not have that config in view — inventing a file the manifest never references leaves an orphan that outlives the reason for it. Where the project plainly wants an icon it has no file for, **say so and stop**; that is a change to the project's configuration, not to its assets.
+
+**3. Match the source by size, per Step 6.5's routing.** A 16, 32 or 48 px slot takes the favicon redraw's raster; everything larger takes the master's. **A slot whose pixel size cannot be determined from its name is not filled** — record it and ask. An `AppIcon.appiconset` entry carries its size in its own `Contents.json`; read it rather than guessing from the filename.
+
+**4. Update a manifest only where one already lists the file being replaced.** `manifest.json`, `site.webmanifest`, and `<link rel="icon">` tags in an existing `index.html`. Change the *file* an entry points at only where the filename itself changed; never add an entry, and never change an entry's `sizes` or `type` to suit our filenames. **Where our filename differs from the project's, keep the project's** — the host's build depends on its own names, and renaming its assets to match ours is a breaking change dressed as a logo update.
+
+**5. Record what changed** in § Asset manifest, one row per replaced file, each naming the file it was replaced with and the slot it fills. A replaced file is a shipped file: a manifest that omits it is wrong about what this project now contains.
+
+**6. Verify before committing.** Every replaced path still exists, is non-empty, and — for a raster — still carries the PNG or ICO magic bytes it did before. A replacement that truncated a file is worse than no replacement, because the asset it overwrote is already gone.
+
+#### The commit
+
+[Shared Protocol](#shared-protocol) item 7. Supply the triple to `project-orchestration`'s **Commit & Release Protocol**, which loads the host project's `docs/planning/CONVENTIONS.md`, runs the branch guard, and renders the message:
+
+- **`type`** — `chore`
+- **`scope`** — resolved by the protocol from the host project's `Scope source`; where no allowed scope matches, its `Fallback when scope not allowed` decides. Do not invent one.
+- **`subject`** — `replace project icons with the new brand mark`
+
+Stage by explicit pathspec — every replaced file and `docs/design/LOGO.md`, nothing else. **Separate from Step 7's commit.** That one added the asset set; this one changes what the project ships, and a reviewer has to be able to revert the second without losing the first.
+
+**Render nothing locally.** No message literal, no message format, no tag scheme, anywhere in this flow.
+
 ### Where each `LOGO.md` slot is filled
 
 `logo.template.md` carries a slot for every value the reference files ask to be written down, and an empty one is a finding. This is the map from its sections to the step that fills them; a section with no step would be a gap in this flow rather than a silence in the record.
@@ -431,7 +469,7 @@ Stage by explicit pathspec — the asset directory, `docs/design/LOGO.md`, and `
 | Production handoff — typeface | Step 0 item 7 establishes the family and whether it resolves here; Step 6 records it with the weight and tracking |
 | Production handoff — checks recorded unrun | Step 4, and Step 7's sweep |
 | Production handoff — still to do | Step 7 |
-| Asset manifest | Step 7, from Step 6 and Step 6.5, verified by the structural self-verification |
+| Asset manifest | Step 7, from Step 6 and Step 6.5, verified by the structural self-verification, and Step 8 where project icons were replaced |
 
 **One answer has no slot: question 5's must-avoid.** It constrains every direction and `logo.template.md` has no field for it. Record it verbatim inside the *brief, in one line* row with the rest of the brief, where Step 2 reads it. If a later revision of the template adds a field, it moves there and this note goes.
 
