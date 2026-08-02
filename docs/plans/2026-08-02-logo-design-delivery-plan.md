@@ -778,16 +778,18 @@ The files hosts read when they cannot read SVG. Every row names the SVG it was r
 
 **Nothing here is graded.** `reproduction.md`'s checklist is graded on the vector source; these are conversions of an already-measured geometry.
 
-| File | px | Rasterised from | Intended slot |
-|---|---|---|---|
-| `favicon-16.png` | 16 | `logo-favicon.svg` | `<link rel="icon" sizes="16x16">` |
-| `favicon-32.png` | 32 | `logo-favicon.svg` | `<link rel="icon" sizes="32x32">` |
-| `favicon-48.png` | 48 | `logo-favicon.svg` | legacy browser tab |
-| `favicon.ico` | 16/32/48 | `logo-favicon.svg` | site root, for hosts that ignore `favicon.svg` |
-| `apple-touch-icon.png` | 180 | `logo-mark.svg` | iOS home screen |
-| `icon-192.png` | 192 | `logo-mark.svg` | web app manifest |
-| `icon-512.png` | 512 | `logo-mark.svg` | web app manifest, splash |
-| `icon-1024.png` | 1024 | `logo-mark.svg` | app store listing |
+The four descriptive columns are pre-filled because the routing is invariant and matches the exporter's `OUTPUTS` exactly. **`Status` is the only per-row thing a run decides, and it is what stops a half-populated directory reading as a complete one** — the exporter can exit 1 having written some files and not others.
+
+| File | px | Rasterised from | Intended slot | Status |
+|---|---|---|---|---|
+| `favicon-16.png` | 16 | `logo-favicon.svg` | `<link rel="icon" sizes="16x16">` | `<written / UNRUN — <why>>` |
+| `favicon-32.png` | 32 | `logo-favicon.svg` | `<link rel="icon" sizes="32x32">` | `<written / UNRUN — <why>>` |
+| `favicon-48.png` | 48 | `logo-favicon.svg` | legacy browser tab | `<written / UNRUN — <why>>` |
+| `favicon.ico` | 16/32/48 | `logo-favicon.svg` | site root, for hosts that ignore `favicon.svg` | `<written / UNRUN — <why>>` |
+| `apple-touch-icon.png` | 180 | `logo-mark.svg` | iOS home screen | `<written / UNRUN — <why>>` |
+| `icon-192.png` | 192 | `logo-mark.svg` | web app manifest | `<written / UNRUN — <why>>` |
+| `icon-512.png` | 512 | `logo-mark.svg` | web app manifest, splash | `<written / UNRUN — <why>>` |
+| `icon-1024.png` | 1024 | `logo-mark.svg` | app store listing | `<written / UNRUN — <why>>` |
 
 | Field | Record |
 |---|---|
