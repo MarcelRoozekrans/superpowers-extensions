@@ -515,7 +515,12 @@ So the record-dependent set is short, and it is read off the checklist item by i
 ### Step 1 — the mark, the record, and the specification
 
 1. **Collect the set.** Every file the [existing-mark guard](#the-existing-mark-guard) found, plus anything the user named by path or supplied inline. The audit runs against the *set*, not one file: hygiene, the mono diff and the favicon's three tests are all cross-file.
-2. **Vector source, or nothing.** Layers 1 and 2 read the SVG. Where the mark exists only as a raster — a PNG, an ICO, a screenshot — **both layers are entirely `UNRUN`**, that is the first sentence of the report, and the single remediation is the vector master. Do not derive a stand-in from a bitmap; a source-derived stand-in is a different check wearing this one's name.
+2. **Vector source, or nothing — but a raster *beside* a vector is not a raster-only mark.** Layers 1 and 2 read the SVG. Two cases, and conflating them is how a sound set gets audited as though it had no source:
+
+   - **A raster with a vector master in the same set** — the icon files `logo-concept` § Step 6.5 ships, or any equivalent. Grade the **vector**. The rasters are conversions of a geometry that is already being measured and add no evidence of their own; they are checked only by the raster provenance item in Layer 1 below.
+   - **A raster with no vector anywhere** — a PNG, an ICO or a screenshot and nothing else. **Both layers are entirely `UNRUN`**, that is the first sentence of the report, and the single remediation is the vector master.
+
+   In neither case is a stand-in derived from a bitmap. A source-derived stand-in is a different check wearing this one's name.
 3. **Normalise the artboard.** `reproduction.md`'s pixel rule is stated on `0 0 256 256` and an external mark is usually on something else. Scale every measured value by `256 / <the longer side of the declared viewBox>` before comparing it to any threshold, and record the factor in the report header. A root `svg` carrying no `viewBox` at all is an artboard-hygiene FAIL in its own right; normalise off its `width` and `height` and say that is what you did.
 4. **Read `docs/design/LOGO.md` if it exists.** Where it does, every slot is evidence and every empty slot is a finding — `logo.template.md` says an empty slot is a finding rather than a silence, and this flow is the reader that makes that true.
 5. **Ask only what the record does not already answer**, one question per message, at most two:
@@ -561,6 +566,14 @@ Each item takes exactly one of **PASS**, **FAIL**, `n/a — <why>`, `UNRUN — <
 **One consequence, stated so it is not mistaken for a defect: an external mark with no record cannot reach Layer 1 PASS.** The pure-record items have nowhere to be satisfied, so `PARTIAL — evidence-limited` is the ceiling until somebody writes the record. It is not a FAIL and must not be reported as one.
 
 **Context-dependent items.** Where an item depends on a context the mark ships into and Step 1 established that context, grade it. Where a named context needs a variant the set does not ship, that is a **FAIL** — a mark cannot reproduce into a context it has no file for. Where the context was never established, the item is `UNRUN`, per the `n/a` needs a fact rule above.
+
+**Raster provenance.** Where the set carries rasters alongside a vector master, one item, graded from the files and the record: **every raster is accounted for by a row in `LOGO.md` § Asset manifest → *Raster files* naming the SVG it was rasterised from, and every size at or below 48 px names the favicon redraw rather than the master.** Three ways it resolves:
+
+- A raster on disk with no row is an undocumented asset — the same finding as an undocumented SVG, and a **FAIL** by the same rule.
+- A raster at or below 48 px whose row names the master is a **FAIL**. It ships the master at a size its own recorded minimum excludes, which is the one thing `logo-concept` § Step 6.5's routing exists to prevent, and no caveat repairs it.
+- Where there is no `LOGO.md`, this is `UNRUN — no record; LOGO.md § Asset manifest → Raster files`, like every other pure-record item.
+
+**A raster is never graded on its own pixels.** It carries no geometry this skill can measure — the mono tests, the counter arithmetic and the silhouette all read the vector. An audit that opens a PNG to judge the mark has substituted the conversion for the thing converted.
 
 ### Step 4 — Layer 2, the anti-slop scan
 
