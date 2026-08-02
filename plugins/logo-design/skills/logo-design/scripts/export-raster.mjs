@@ -157,7 +157,7 @@ export function packIco(images) {
 export function exportRasters(dir, opts = {}) {
   const sources = [...new Set(OUTPUTS.map((o) => o.source))];
   const missing = sources.filter((s) => !exists(path(dir, s)));
-  if (missing.length) return { status: 'missing-source', missing };
+  if (missing.length) return { status: 'missing-source', missing, written: [] };
 
   const converter = opts.forceNoConverter ? null : (opts.converter ?? detectConverter());
   if (!converter) return { status: 'unrun', reason: INSTALL_HINT, written: [] };
@@ -186,30 +186,38 @@ export function exportRasters(dir, opts = {}) {
     }
   };
 
-  for (const o of OUTPUTS) {
-    const out = path(dir, o.file);
-    if (o.pack) {
-      // Rasterise each packed size to a scratch PNG, pack, then clean up.
-      // The scratch directory is under tmpdir() and removed in a `finally`,
-      // NOT written beside the target: a converter that throws partway through
-      // would otherwise orphan a `.ico-32.png` inside the user's asset
-      // directory — which is the directory Task 11 commits from, and a leading
-      // dot hides nothing on Windows or from `git add`.
-      const scratch = mkdtempSync(path(tmpdir(), 'logo-ico-'));
-      try {
-        const images = o.pack.map((size) => {
-          const tmp = path(scratch, `${size}.png`);
-          raster(o.source, tmp, size);
-          return { size, data: read(tmp) };
-        });
-        writeFileSync(out, packIco(images));
-      } finally {
-        rmSync(scratch, { recursive: true, force: true });
+  try {
+    for (const o of OUTPUTS) {
+      const out = path(dir, o.file);
+      if (o.pack) {
+        // Rasterise each packed size to a scratch PNG, pack, then clean up.
+        // The scratch directory is under tmpdir() and removed in a `finally`,
+        // NOT written beside the target: a converter that throws partway through
+        // would otherwise orphan a `.ico-32.png` inside the user's asset
+        // directory — which is the directory Task 11 commits from, and a leading
+        // dot hides nothing on Windows or from `git add`.
+        const scratch = mkdtempSync(path(tmpdir(), 'logo-ico-'));
+        try {
+          const images = o.pack.map((size) => {
+            const tmp = path(scratch, `${size}.png`);
+            raster(o.source, tmp, size);
+            return { size, data: read(tmp) };
+          });
+          writeFileSync(out, packIco(images));
+        } finally {
+          rmSync(scratch, { recursive: true, force: true });
+        }
+      } else {
+        raster(o.source, out, o.size);
       }
-    } else {
-      raster(o.source, out, o.size);
+      written.push({ file: o.file, source: o.source, size: o.size ?? o.pack.join('/') });
     }
-    written.push({ file: o.file, source: o.source, size: o.size ?? o.pack.join('/') });
+  } catch (err) {
+    // The caller needs to know the directory is half-written. Rolling back
+    // would be worse: a re-run overwrites cleanly, but silently leaving five
+    // of eight icons on disk with no record is how a partial set gets committed.
+    err.written = written;
+    throw err;
   }
 
   return { status: 'ok', converter: converter.bin, written };
@@ -222,7 +230,26 @@ if (process.argv[1] && process.argv[1].endsWith('export-raster.mjs')) {
     console.error('Usage: node export-raster.mjs <brand-dir>');
     process.exit(2);
   }
-  const result = exportRasters(dir);
+
+  // Exit codes are a contract the skill reads:
+  //   0 — written
+  //   1 — a converter failed at runtime (bad SVG, crashed binary, an Inkscape
+  //       that passed the --version probe and then rejected the 1.0+ flags)
+  //   2 — usage error, or a source SVG is missing (an earlier step failed)
+  //   3 — no rasteriser installed. UNRUN, not failure. The skill ships the
+  //       SVG set anyway and records the gap.
+  let result;
+  try {
+    result = exportRasters(dir);
+  } catch (err) {
+    console.error(err.message);
+    if (err.written?.length) {
+      console.error(`\nAlready written before the failure (${err.written.length}):`);
+      for (const w of err.written) console.error(`  ${w.file}`);
+    }
+    process.exit(1);
+  }
+
   if (result.status === 'missing-source') {
     console.error(`Missing source SVG(s): ${result.missing.join(', ')}`);
     process.exit(2);

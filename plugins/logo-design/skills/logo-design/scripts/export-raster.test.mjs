@@ -217,6 +217,64 @@ test('no converter reports unrun rather than failing', () => {
   assert.match(result.reason, /rasteriser/i);
 });
 
+test('a mid-run converter failure reports what was already written', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'logo-raster-partial-'));
+  for (const f of ['logo-mark.svg', 'logo-favicon.svg']) {
+    copyFileSync(join(here, 'fixtures', f), join(dir, f));
+  }
+
+  // A stub "converter" that is actually node itself: it writes a real output
+  // file for every row sourced from logo-favicon.svg (which sorts first in
+  // OUTPUTS — the three favicon-NN.png rows plus favicon.ico's packed sizes)
+  // and fails as soon as it hits the first logo-mark.svg-sourced row. That
+  // makes `written` non-empty by the time the throw happens, so this exercises
+  // Fix 2 for real rather than only checking the shape on an empty array.
+  let calls = 0;
+  const stub = {
+    bin: process.execPath,
+    probe: ['--version'],
+    argv: (svg, out, size) => {
+      calls++;
+      const script = svg.includes('logo-mark')
+        ? 'process.exit(7)'
+        : `require('fs').writeFileSync(${JSON.stringify(out)}, Buffer.from([0,1,2,3]))`;
+      return ['-e', script, String(size)];
+    },
+  };
+
+  assert.throws(
+    () => exportRasters(dir, { converter: stub }),
+    (err) => {
+      assert.ok(err.message.includes(process.execPath), 'error names the converter binary');
+      assert.ok(err.message.includes('argv:'), 'error carries the argv');
+      assert.ok(Array.isArray(err.written), 'error carries the written list');
+      assert.ok(
+        err.written.length > 0,
+        'the favicon-sourced rows complete before the mark-sourced row fails, so written should be non-empty',
+      );
+      return true;
+    },
+  );
+  assert.ok(calls > 0, 'the stub converter was actually invoked');
+
+  // The scratch dir used to pack favicon.ico lives under tmpdir(), never
+  // beside the target — confirm the throw did not leave anything behind in
+  // the target directory itself: no `logo-ico-*` scratch dir, no stray PNGs
+  // from a half-finished pack, only sources plus the rows that actually
+  // completed before the failure.
+  const expected = new Set([
+    'logo-mark.svg',
+    'logo-favicon.svg',
+    'favicon-16.png',
+    'favicon-32.png',
+    'favicon-48.png',
+    'favicon.ico',
+  ]);
+  for (const entry of readdirSync(dir)) {
+    assert.ok(expected.has(entry), `unexpected leftover in the target directory after a mid-run failure: ${entry}`);
+  }
+});
+
 test('packIco rejects a malformed image list', () => {
   assert.throws(() => packIco([{ size: 16.5, data: Buffer.from('x') }]), /size/i);
   assert.throws(() => packIco([{ size: undefined, data: Buffer.from('x') }]), /size/i);
