@@ -500,11 +500,11 @@ So the record-dependent set is short, and it is read off the checklist item by i
 
 | Layer | Runs without a record |
 |---|---|
-| 1 | Every item that names no record: the whole mono-collapse source side, D2, the favicon's three redraw tests, path complexity and both tracing signatures, clearspace, the computed minimum sizes, and artboard hygiene |
+| 1 | Every item that names no record: the whole mono-collapse source side, D2, the favicon's three redraw tests, path complexity and both tracing signatures, clearspace, the computed minimum sizes, and artboard hygiene. Raster provenance's file side also runs without a record — every raster on disk can be listed and its size read against 48 px — but neither of its FAILs is reachable until a record exists to check the listing against. |
 | 2 | Eight patterns of the ten, in full, from their source signatures |
 | 3 | Simplicity, which is scored from the source alone |
 
-**What goes `UNRUN`:** every pure-record item on the checklist; the record-side escape hatch on any item whose file side did not clear; `anti-slop.md`'s Tests A and B for patterns 1 and 9 and the strict Test A for 6 and 8, wherever the signature hit; pattern 6's brief where the user cannot supply it; and, in Layer 3, Distinctiveness, which names the derivation chain among its evidence.
+**What goes `UNRUN`:** every pure-record item on the checklist; the record-side escape hatch on any item whose file side did not clear; raster provenance, whenever there is no `LOGO.md` or no *Raster files* table in it; `anti-slop.md`'s Tests A and B for patterns 1 and 9 and the strict Test A for 6 and 8, wherever the signature hit; pattern 6's brief where the user cannot supply it; and, in Layer 3, Distinctiveness, which names the derivation chain among its evidence.
 
 **So an undocumented mark's ceiling is `PARTIAL — evidence-limited`, and saying so is the point.** The criteria files make the record a precondition of a clean bill — `reproduction.md` asks for values to be written down and `anti-slop.md`'s carve-out asks for an answer that only the person who drew the mark can give. A skill that issued PASS anyway would be certifying the absence of evidence. The remediation is a record, never a redraw, and it has exactly two routes: whoever drew the mark writes the derivation answers, or `logo-concept`'s **variants-only** path fills the slots readable from the file — which is most of them, and it leaves the derivation slots `UNRUN` by its own rule rather than guessing them.
 
@@ -567,13 +567,15 @@ Each item takes exactly one of **PASS**, **FAIL**, `n/a — <why>`, `UNRUN — <
 
 **Context-dependent items.** Where an item depends on a context the mark ships into and Step 1 established that context, grade it. Where a named context needs a variant the set does not ship, that is a **FAIL** — a mark cannot reproduce into a context it has no file for. Where the context was never established, the item is `UNRUN`, per the `n/a` needs a fact rule above.
 
-**Raster provenance.** Where the set carries rasters alongside a vector master, one item, graded from the files and the record: **every raster is accounted for by a row in `LOGO.md` § Asset manifest → *Raster files* naming the SVG it was rasterised from, and every size at or below 48 px names the favicon redraw rather than the master.** Three ways it resolves:
+**Raster provenance.** Where the set carries rasters alongside a vector master, one item, graded from the files and the record. **Ask first whether there is a record at all** — the two failures below are only reachable once there is:
 
-- A raster on disk with no row is an undocumented asset — the same finding as an undocumented SVG, and a **FAIL** by the same rule.
-- A raster at or below 48 px whose row names the master is a **FAIL**. It ships the master at a size its own recorded minimum excludes, which is the one thing `logo-concept` § Step 6.5's routing exists to prevent, and no caveat repairs it.
-- Where there is no `LOGO.md`, this is `UNRUN — no record; LOGO.md § Asset manifest → Raster files`, like every other pure-record item.
+- **No `LOGO.md`, or no *Raster files* table in it** — `UNRUN — no record; LOGO.md § Asset manifest → Raster files`, like every other pure-record item. **Not a FAIL.** Every raster is unaccounted for, but by the auditor's missing evidence rather than the mark's fault, and the two rows below do not fire.
+- **A record exists, and a raster on disk has no row in it** — an undocumented asset, and a **FAIL**. A file that ships without appearing in the manifest that claims to list what ships is the manifest being wrong, which is a finding against a record that exists rather than against one that does not.
+- **A record exists, and a row for a raster at or below 48 px names the master** — a **FAIL**. It ships the master at a size its own recorded minimum excludes, which is the one thing `logo-concept` § Step 6.5's routing exists to prevent, and no caveat repairs it.
 
 **A raster is never graded on its own pixels.** It carries no geometry this skill can measure — the mono tests, the counter arithmetic and the silhouette all read the vector. An audit that opens a PNG to judge the mark has substituted the conversion for the thing converted.
+
+This item is not on `reproduction.md`'s checklist and has no group there — it is a record question rather than a reproduction hazard. Report it in Layer 1's per-item table under its own name, and count it in the group row as `Raster provenance`, so the group counts still sum to the items graded.
 
 ### Step 4 — Layer 2, the anti-slop scan
 
