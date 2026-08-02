@@ -32,8 +32,14 @@ test('sizes above the master minimum come from the master', () => {
 test('the ico is packed from the favicon redraw at three sizes', () => {
   const ico = OUTPUTS.find((o) => o.file === 'favicon.ico');
   assert.ok(ico, 'favicon.ico is missing from the output table');
-  assert.equal(ico.source, 'logo-favicon.svg');
+  assert.equal(ico.source, 'logo-favicon.svg', 'favicon.ico must come from the favicon redraw');
   assert.deepEqual(ico.pack, [16, 32, 48]);
+});
+
+test('every non-packed output declares a numeric size', () => {
+  for (const o of OUTPUTS.filter((x) => !x.pack)) {
+    assert.equal(typeof o.size, 'number', `${o.file} has no numeric size`);
+  }
 });
 
 test('every declared source resolves to a real fixture file', () => {
