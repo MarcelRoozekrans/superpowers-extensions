@@ -150,7 +150,7 @@ Both sub-skills inherit every item below. They are here rather than in either fl
 
 ## logo-concept
 
-Draws a new mark from a brief, or — where a conformant mark already exists — derives its variant set. Nine numbered steps run in order, plus Step 6.5, which is a half-step because it ships files rather than deciding anything and nothing downstream renumbers around it; Step 8 is optional, offered rather than run automatically. A structural self-verification gates the commit.
+Draws a new mark from a brief, or — where a conformant mark already exists — derives its variant set. Eight numbered steps run in order, plus Step 6.5, which is a half-step because it ships files rather than deciding anything and nothing downstream renumbers around it. **Step 8 is offered, never run on its own initiative** — it is the only step that overwrites files the project already had. A structural self-verification gates the commit.
 
 > "Starting logo-concept. I'll read `docs/design/MASTER.md` if it is there, ask five questions one at a time, write three directions before drawing any of them, render all three on a contact sheet and critique the render, then hand you the set to pick from."
 
@@ -164,7 +164,7 @@ Three, decided in Step 0 by [the existing-mark guard](#the-existing-mark-guard) 
 
 | Entry path | Precondition | What runs |
 |---|---|---|
-| **New mark** | the guard finds nothing | Steps 0 → 7, all of them, Step 6.5 included, then Step 8 — offered, not run automatically |
+| **New mark** | the guard finds nothing | Steps 0 → 7, all of them, Step 6.5 included, then Step 8 — offered, never run on its own initiative |
 | **Variants only** | the guard finds a mark **and** the request is for variants of it | Step 0, then Steps 4, 6, 6.5 and 7 against the existing master, then Step 8 on the same offered terms. **Steps 1, 2, 3 and 5 do not run** — no concept is generated and nothing that ships is redrawn, the favicon excepted, which is a redraw by rule. |
 | **Neither** | the guard finds a mark and the request is an audit, or a *new* mark | `logo-review`. This sub-skill does not run. |
 
@@ -423,18 +423,25 @@ public/favicon.ico          public/favicon.svg          public/apple-touch-icon.
 public/icon-192.png         public/icon-512.png         public/pwa-192x192.png
 public/pwa-512x512.png      static/favicon.ico          wwwroot/favicon.ico
 src/app/favicon.ico         app/favicon.ico
-**/AppIcon.appiconset/*.png
 ```
 
-**2. Replace, never add.** A slot that does not exist is not created. The project's own build config decides which icons it ships, and this flow does not have that config in view — inventing a file the manifest never references leaves an orphan that outlives the reason for it. Where the project plainly wants an icon it has no file for, **say so and stop**; that is a change to the project's configuration, not to its assets.
+**An iOS asset catalog is deliberately not in that list.** `AppIcon.appiconset` needs sizes this flow does not produce — 20, 29, 40, 58, 60, 76, 80, 87, 120, 152 and 167 among them — and its `ios-marketing` entry must carry no alpha channel, which nothing here flattens. Filling the entries we happen to match and leaving the rest is how a build passes locally and fails App Store review later, with nothing pointing back at this step. Say the catalog exists, say it needs sizes and an opaque marketing icon this flow does not generate, and leave it alone.
 
-**3. Match the source by size, per Step 6.5's routing.** A 16, 32 or 48 px slot takes the favicon redraw's raster; everything larger takes the master's. **A slot whose pixel size cannot be determined from its name is not filled** — record it and ask. An `AppIcon.appiconset` entry carries its size in its own `Contents.json`; read it rather than guessing from the filename.
+**2. Refuse to overwrite anything git cannot give back.** Before writing to a path, check it with `git status --porcelain -- <path>` in the project that owns it. **Replace it only where it is tracked and clean.** Where it is untracked, ignored, or carries uncommitted edits, **name it, skip it, and say why** — the same posture as the row above. This is the difference between a replacement a reviewer can revert with one command and a file that no longer exists anywhere. It is cheap, it is checkable, and it is the only protection this step has: every other check here runs *after* the original is gone.
 
-**4. Update a manifest only where one already lists the file being replaced.** `manifest.json`, `site.webmanifest`, and `<link rel="icon">` tags in an existing `index.html`. Change the *file* an entry points at only where the filename itself changed; never add an entry, and never change an entry's `sizes` or `type` to suit our filenames. **Where our filename differs from the project's, keep the project's** — the host's build depends on its own names, and renaming its assets to match ours is a breaking change dressed as a logo update.
+**3. Replace, never add.** A slot that does not exist is not created. The project's own build config decides which icons it ships, and this flow does not have that config in view — inventing a file the manifest never references leaves an orphan that outlives the reason for it. Where the project plainly wants an icon it has no file for, **say so and stop**; that is a change to the project's configuration, not to its assets.
 
-**5. Record what changed** in § Asset manifest, one row per replaced file, each naming the file it was replaced with and the slot it fills. A replaced file is a shipped file: a manifest that omits it is wrong about what this project now contains.
+**4. Match on the size the existing file actually is, never on its name.** Read the target's real pixel dimensions before choosing a source — a `.png`'s IHDR carries them, and a name like `apple-touch-icon.png` carries nothing. Then take the raster the exporter produced **at that exact size**: 16, 32 or 48 from the favicon redraw, and 180, 192, 512 or 1024 from the master. **Where the target's size is not one of those seven, do not substitute the nearest** — name it, skip it, and say which size would be needed. A 167 px slot filled with the 180 px raster is a manifest declaring a size the bytes do not have, and instruction 5 forbids fixing that by editing the declaration.
 
-**6. Verify before committing.** Every replaced path still exists, is non-empty, and — for a raster — still carries the PNG or ICO magic bytes it did before. A replacement that truncated a file is worse than no replacement, because the asset it overwrote is already gone.
+**A `favicon.ico` carries a size list of its own — read it before replacing it.** Ours packs 16, 32 and 48. Where the project's packs sizes beyond those, replacing it drops them, and no later check notices. Say which sizes would be lost and let the user decide; do not replace it silently.
+
+**5. Update a manifest only where one already lists the file being replaced.** `manifest.json`, `site.webmanifest`, and `<link rel="icon">` tags in an existing `index.html`. Change the *file* an entry points at only where the filename itself changed; never add an entry, and never change an entry's `sizes` or `type` to suit our filenames. **Where our filename differs from the project's, keep the project's** — the host's build depends on its own names, and renaming its assets to match ours is a breaking change dressed as a logo update.
+
+**6. Record what changed** in § Project files replaced, one row per replaced file, naming its size, the file it was replaced with, and the commit that can revert it — then fill the summary fields: how many files were replaced, that every one was tracked and clean before the write, and which slots were found but skipped, and why. A replaced file is a shipped file: a section that omits it is wrong about what this project now contains.
+
+**7. Verify before committing.** Every replaced path still exists, is non-empty, and — for a raster — still carries the PNG or ICO magic bytes it did before. A replacement that truncated a file is worse than no replacement, because the asset it overwrote is already gone.
+
+**A failure here is not a warning to pass along.** Restore the path from git — instruction 2's tracked-and-clean rule is what guarantees you can — re-run the replacement for that file alone, and verify again. Where it fails twice, restore it, leave the project's original in place, and record the slot as skipped. Never commit a replacement you could not verify.
 
 #### The commit
 
@@ -469,7 +476,8 @@ Stage by explicit pathspec — every replaced file and `docs/design/LOGO.md`, no
 | Production handoff — typeface | Step 0 item 7 establishes the family and whether it resolves here; Step 6 records it with the weight and tracking |
 | Production handoff — checks recorded unrun | Step 4, and Step 7's sweep |
 | Production handoff — still to do | Step 7 |
-| Asset manifest | Step 7, from Step 6 and Step 6.5, verified by the structural self-verification, and Step 8 where project icons were replaced |
+| Asset manifest | Step 7, from Step 6 and Step 6.5, verified by the structural self-verification |
+| Asset manifest — project files replaced | Step 8, where it ran; `n/a — Step 8 was not run` otherwise |
 
 **One answer has no slot: question 5's must-avoid.** It constrains every direction and `logo.template.md` has no field for it. Record it verbatim inside the *brief, in one line* row with the rest of the brief, where Step 2 reads it. If a later revision of the template adds a field, it moves there and this note goes.
 

@@ -409,3 +409,17 @@ The table above records geometry. A raster has none — it records provenance, w
 | Files in the raster set | `<n of 8>`, or `0 — UNRUN, no rasteriser` |
 | Every raster's source appears in the SVG manifest above | `<yes>` |
 | Rasteriser used | recorded once in [Raster set](#raster-set) — not duplicated here |
+
+### Project files replaced
+
+Written only where `logo-concept`'s Step 8 ran. These live in the host project, not the brand directory — the tables above record what this mark *is*, and this one records what it *replaced*.
+
+| Project path | Size | Replaced with | Reverted by |
+|---|---|---|---|
+| `<path in the host project>` | `<px, read off the file that was there>` | `<the file from the brand directory>` | `<the commit that can be reverted>` |
+
+| Field | Record |
+|---|---|
+| Files replaced | `<n>`, or `n/a — Step 8 was not run` |
+| Every replaced path was tracked and clean before the write | `<yes>` — Step 8 refuses any that were not |
+| Slots found but skipped | `<path — why>`, or `none` |
