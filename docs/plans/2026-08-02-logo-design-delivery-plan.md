@@ -133,16 +133,18 @@ export const OUTPUTS = [];
 
 **Step 4: Run the test to verify it fails**
 
-Run: `node --test plugins/logo-design/skills/logo-design/scripts/`
+Run: `node --test "plugins/logo-design/skills/logo-design/scripts/**/*.test.mjs"`
 
 Expected: FAIL — `assert.ok(OUTPUTS.length > 0)` on an empty array.
+
+> **Pass a glob, never a bare directory.** `node --test <dir>` does not do recursive discovery on this setup — it resolves the path as a module and throws `Cannot find module '...\scripts'`. Verified on Node 24.10.0 and 22.22.0, with and without a trailing slash, forward and backslash, and against a throwaway directory in `%TEMP%`. Bare `node --test` (auto-discovery from cwd) works, and so does an explicit glob; a directory argument does not. A directory path here crashes the runner regardless of `OUTPUTS`, which would make Task 2's red→green transition unreachable.
 
 **Step 5: Add the `test` script to `package.json`**
 
 Add to `scripts`, after `check:conventions`:
 
 ```json
-"test": "node --test plugins/logo-design/skills/logo-design/scripts/"
+"test": "node --test plugins/logo-design/skills/logo-design/scripts/**/*.test.mjs"
 ```
 
 **Step 6: Verify the runner is wired**
