@@ -806,12 +806,30 @@ After the `Declared face installed where the sheet renders` row:
 | Icon raster set exported | `<yes — n files, rasteriser <name>>`, or `not performed — no rasteriser on the machine that ran this; <the install line>. The SVG set ships; the eight raster rows in [Raster set](#raster-set) stay UNRUN until it is` |
 ```
 
-**Step 3: Add the manifest field**
+**Step 3: Give rasters their own manifest table, and say why they do not share the SVG one**
 
-In § Asset manifest's second table:
+The existing § Asset manifest table's columns are `viewBox`, `Nodes` and `Distinct OPTICAL: reasons` — every one of them SVG-specific and meaningless for a PNG. Putting raster rows in it would fill three columns with `n/a` and quietly redefine what the table is a manifest *of*. Add a separate table immediately after it instead:
 
 ```markdown
-| Every raster names the SVG it was rasterised from | `<yes>`, or `n/a — UNRUN, no raster shipped` |
+### Raster files
+
+The SVG table above records geometry. A raster has none — it records provenance, which is the only thing about it that can go stale.
+
+| Path | px | Rasterised from | Bytes |
+|---|---|---|---|
+| `<path>` | `<n, or 16/32/48 for the ico>` | `<the SVG in the table above>` | `<n>` |
+
+| Field | Record |
+|---|---|
+| Files in the raster set | `<n of 8>`, or `0 — UNRUN, no rasteriser` |
+| Every raster's source appears in the SVG manifest above | `<yes>` |
+| Rasteriser used | `<name and version>`, or `UNRUN — <why>` |
+```
+
+Then add one row to § Asset manifest's *second* table (the checklist of yes/no fields), so the SVG manifest points at the new one rather than silently omitting eight shipped files:
+
+```markdown
+| Raster files recorded in [Raster files](#raster-files) | `<n>`, or `n/a — UNRUN, no raster shipped` |
 ```
 
 **Step 4: Lint**
