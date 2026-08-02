@@ -566,12 +566,24 @@ export function exportRasters(dir, opts = {}) {
   const written = [];
 
   const raster = (source, out, size) => {
-    const r = spawnSync(converter.bin, converter.argv(path(dir, source), out, size), {
-      stdio: 'ignore',
+    const argv = converter.argv(path(dir, source), out, size);
+    // Capture stderr rather than discarding it. Every converter failure that
+    // is not "binary absent" arrives here — a malformed SVG, a missing font, a
+    // full disk, or an Inkscape 0.92 that passed the `--version` probe and then
+    // rejected the 1.0+ export flags. Without the tool's own message and the
+    // argv, all of those present as one contentless crash.
+    const r = spawnSync(converter.bin, argv, {
+      stdio: ['ignore', 'ignore', 'pipe'],
       shell: false,
+      encoding: 'utf8',
     });
     if (r.error || r.status !== 0) {
-      throw new Error(`${converter.bin} failed on ${source} at ${size}px`);
+      const detail = (r.stderr || r.error?.message || '').trim();
+      throw new Error(
+        `${converter.bin} failed on ${source} at ${size}px\n` +
+          `  argv: ${argv.join(' ')}\n` +
+          (detail ? `  ${detail}` : '  (the converter produced no error output)'),
+      );
     }
   };
 
