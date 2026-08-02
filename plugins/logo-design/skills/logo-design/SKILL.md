@@ -341,6 +341,33 @@ Also at this step: § Variants → *Print minimums*, one row per process questio
 
 **Where the chosen type makes a variant meaningless, it is not written.** A wordmark-type mark has no mark-alone symbol, so there is no `logo-mark.svg` and no lockup distinct from the wordmark itself. The § Variants row then reads `n/a — <why>`, the file does not ship, and *Files in the set* records what actually did. Writing an empty or duplicated file to make the count reach seven is worse than recording the gap.
 
+### Step 6.5 — the raster set
+
+Seven SVGs are not a shipped identity. A `favicon.ico`, an `apple-touch-icon.png` and the PWA icon sizes are what hosts, app stores and older browsers actually read, and none of them accepts SVG.
+
+Run the bundled exporter against the directory Step 0 detected:
+
+```bash
+node <skill-dir>/scripts/export-raster.mjs <brand-dir>
+```
+
+It writes eight files and **routes each one to the SVG whose reproduction spec covers its size** — 16, 32, 48 and the `.ico` from `logo-favicon.svg`, and 180, 192, 512 and 1024 from `logo-mark.svg`. That routing is not configurable, and the reason is `reproduction.md § The favicon's own spec`: the favicon is a redraw for exactly those sizes, and the master is specified above its own computed minimum. **Never rasterise the master at 16 px** — it ships a mark this skill's own binary layer already failed.
+
+**Read the exit code. It is a four-way contract, and three of the four are not failures of the mark:**
+
+| Code | Means | What to do |
+|---|---|---|
+| **0** | The eight files were written | Record them, per the paragraph below |
+| **1** | A converter failed at runtime — a malformed SVG, a crashed binary, an Inkscape that passed the `--version` probe and then rejected the 1.0+ export flags | A real failure, and the message carries the converter, the source, the size, the argv and the tool's own stderr. It also lists any files already written, so **the directory is half-populated** — read that list before doing anything else. Fix the cause and re-run; a re-run overwrites cleanly. |
+| **2** | Usage error, or a source SVG is missing | Step 6 did not complete. Fix Step 6; do not work around it here. |
+| **3** | No rasteriser on the machine | **`UNRUN`, not a failure** — see below |
+
+**Exit code 3 degrades exactly as a missing Playwright MCP does** — [Shared Protocol](#shared-protocol) item 3. Ship the SVG set, record every raster row `UNRUN — no rasteriser on this machine; <the install line the script printed>` in § Variants → *Raster set*, put the install step into § Production handoff → *Still to do*, and say so in the first sentence at Step 7. **Do not fake a PNG, do not substitute a screenshot, and do not report the icons as shipped.**
+
+**Record every written file** in § Variants → *Raster set* and in § Asset manifest, each row naming the SVG it came from. A raster whose source is not recorded cannot be regenerated when the mark changes, and a raster nobody can regenerate is the file that goes stale first.
+
+**No raster is graded.** The exporter is a converter, not an instrument: `reproduction.md`'s checklist is graded on the vector source, and a PNG adds no evidence about a mark whose geometry was already measured. This step ships files; it does not decide anything.
+
 ### Step 7 — finalise
 
 1. **Close out `docs/design/LOGO.md`.** It was started at Step 0 and filled as the flow ran.
@@ -356,7 +383,7 @@ Also at this step: § Variants → *Print minimums*, one row per process questio
 
 #### Structural self-verification
 
-Runs before Step 7 completes, against the files actually on disk. Five checks:
+Runs before Step 7 completes, against the files actually on disk. Eight checks:
 
 - [ ] Every file named in § Asset manifest exists at its recorded path — **and** every SVG in the asset directory appears in the manifest. Both directions: a file on disk and absent from the table is a leftover or an undocumented variant, and `logo.template.md` calls both findings.
 - [ ] Each SVG parses.
@@ -364,10 +391,12 @@ Runs before Step 7 completes, against the files actually on disk. Five checks:
 - [ ] Each root `svg` carries a `viewBox`, and the square variants all carry the identical one, per `reproduction.md` § Artboard hygiene.
 - [ ] No `filter` element anywhere in the set.
 - [ ] The mono variants bind every paint to `currentColor`, and differ from their source only in the resolved `color`.
+- [ ] Every file the exporter reported written exists at its recorded path and appears in § Asset manifest with the SVG it was rasterised from. Where the exporter returned `UNRUN`, every raster row says so and no raster file is on disk.
+- [ ] No raster file in the asset directory lacks a manifest row. A stray PNG is the same finding as a stray SVG.
 
-**A failure here is a bug in the generated assets, not a warning to pass along.** Fix it and re-run all five. Do not commit, do not present it as a caveat beside the assets, and do not write it into `LOGO.md` as a finding and move on.
+**A failure here is a bug in the generated assets, not a warning to pass along.** Fix it and re-run all eight. Do not commit, do not present it as a caveat beside the assets, and do not write it into `LOGO.md` as a finding and move on.
 
-**None of the five is render-dependent.** They read the files, so they run identically with and without Playwright MCP and are **never** recorded `UNRUN`. A set that skipped them because the MCP was absent skipped them for no reason at all.
+**None of the eight is render-dependent.** They read the files, so they run identically with and without Playwright MCP and are **never** recorded `UNRUN`. A set that skipped them because the MCP was absent skipped them for no reason at all.
 
 #### The commit
 
@@ -391,6 +420,7 @@ Stage by explicit pathspec — the asset directory, `docs/design/LOGO.md`, and `
 | Concept & rationale | Step 0 (brief, keywords), Step 2 (type chosen because, mark–name relationship), Step 5 (opening sentences, why it won, candidates rejected) |
 | Construction — chain, optical exceptions, nine corrections, stroke and counters, silhouette, anti-slop derivations, type-specific | Step 3; the favicon's own rows at Step 6; a wordmark's *Fit* at Step 4 |
 | Variants — table, lockup measurements, favicon, print minimums | Step 6 |
+| Variants — raster set | Step 6.5 |
 | Colour — binding | Step 0 |
 | Colour — contrast | Step 3 |
 | Colour — one-colour print and mono | Step 3 for M1, M2 and M4; Step 4 for M3, or `UNRUN` |
@@ -401,7 +431,7 @@ Stage by explicit pathspec — the asset directory, `docs/design/LOGO.md`, and `
 | Production handoff — typeface | Step 0 item 7 establishes the family and whether it resolves here; Step 6 records it with the weight and tracking |
 | Production handoff — checks recorded unrun | Step 4, and Step 7's sweep |
 | Production handoff — still to do | Step 7 |
-| Asset manifest | Step 7, verified by the structural self-verification |
+| Asset manifest | Step 7, from Step 6 and Step 6.5, verified by the structural self-verification |
 
 **One answer has no slot: question 5's must-avoid.** It constrains every direction and `logo.template.md` has no field for it. Record it verbatim inside the *brief, in one line* row with the rest of the brief, where Step 2 reads it. If a later revision of the template adds a field, it moves there and this note goes.
 
