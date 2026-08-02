@@ -471,9 +471,25 @@ git commit -m "feat(logo-design): pack a multi-size favicon.ico without an Image
 - Modify: `plugins/logo-design/skills/logo-design/scripts/export-raster.mjs`
 - Modify: `plugins/logo-design/skills/logo-design/scripts/export-raster.test.mjs`
 
+**Step 0: Install a rasteriser in CI, so this task's integration test is not permanently skipped**
+
+The `test` job added in Task 1 runs on bare `ubuntu-latest` with no rasteriser. The integration test below is gated `{ skip: !haveConverter }`, so **without this step it never runs in CI — not once, ever.** The whole `exportRasters` path, the ICO packing, and the converter argv builders would then have zero automated coverage, and the only guard left would be Task 2's boundary assertions on the routing table.
+
+`librsvg2-bin` is in Ubuntu's default repositories and provides `rsvg-convert`, which is second in the detection order. Add to the `test` job in `.github/workflows/lint.yml`, before the `npm test` step:
+
+```yaml
+      # Without a rasteriser the exporter's integration test skips itself, so
+      # the whole export path would have no CI coverage at all. rsvg-convert is
+      # second in the detection order and is a single apt package.
+      - name: Install an SVG rasteriser
+        run: sudo apt-get update && sudo apt-get install -y librsvg2-bin
+```
+
+Then amend the existing comment in that job, which currently says tests requiring a rasteriser "skip themselves when none is installed, which is the case on a bare runner" — that stops being true here and a stale comment is worse than none.
+
 **Step 1: Write the failing integration test**
 
-It skips itself when no converter is installed — otherwise CI on a bare runner goes red for a reason that is not a defect.
+It still skips itself when no converter is installed, so a contributor without one gets a green local run rather than a spurious failure. CI, after Step 0, actually runs it.
 
 ```js
 import { mkdtempSync, existsSync, readFileSync, copyFileSync, mkdirSync } from 'node:fs';
