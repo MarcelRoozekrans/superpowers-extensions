@@ -150,7 +150,7 @@ Both sub-skills inherit every item below. They are here rather than in either fl
 
 ## logo-concept
 
-Draws a new mark from a brief, or — where a conformant mark already exists — derives its variant set. Eight numbered steps run in order, and a structural self-verification that gates the commit.
+Draws a new mark from a brief, or — where a conformant mark already exists — derives its variant set. Eight numbered steps run in order, plus Step 6.5, which is a half-step because it ships files rather than deciding anything and nothing downstream renumbers around it. A structural self-verification gates the commit.
 
 > "Starting logo-concept. I'll read `docs/design/MASTER.md` if it is there, ask five questions one at a time, write three directions before drawing any of them, render all three on a contact sheet and critique the render, then hand you the set to pick from."
 
@@ -164,8 +164,8 @@ Three, decided in Step 0 by [the existing-mark guard](#the-existing-mark-guard) 
 
 | Entry path | Precondition | What runs |
 |---|---|---|
-| **New mark** | the guard finds nothing | Steps 0 → 7, all of them |
-| **Variants only** | the guard finds a mark **and** the request is for variants of it | Step 0, then Steps 4, 6 and 7 against the existing master. **Steps 1, 2, 3 and 5 do not run** — no concept is generated and nothing that ships is redrawn, the favicon excepted, which is a redraw by rule. |
+| **New mark** | the guard finds nothing | Steps 0 → 7, all of them, Step 6.5 included |
+| **Variants only** | the guard finds a mark **and** the request is for variants of it | Step 0, then Steps 4, 6, 6.5 and 7 against the existing master. **Steps 1, 2, 3 and 5 do not run** — no concept is generated and nothing that ships is redrawn, the favicon excepted, which is a redraw by rule. |
 | **Neither** | the guard finds a mark and the request is an audit, or a *new* mark | `logo-review`. This sub-skill does not run. |
 
 **The variants-only path requires a conformant master, and this gate is not waivable.** Before anything is drawn, grade the existing mark against `reproduction.md` § The binary checklist — that is `logo-review`'s reproduction layer, borrowed rather than restated. If it fails, **stop there**: name the items that failed, offer the audit, and produce no variants. A variant set derived from an unsound master inherits the fault into every file and then documents it as though it had been checked, which is worse than the master alone.
@@ -362,7 +362,7 @@ It writes eight files and **routes each one to the SVG whose reproduction spec c
 | **2** | Usage error, or a source SVG is missing | Step 6 did not complete. Fix Step 6; do not work around it here. |
 | **3** | No rasteriser on the machine | **`UNRUN`, not a failure** — see below |
 
-**Exit code 3 degrades exactly as a missing Playwright MCP does** — [Shared Protocol](#shared-protocol) item 3. Ship the SVG set, record every raster row `UNRUN — no rasteriser on this machine; <the install line the script printed>` in § Variants → *Raster set*, put the install step into § Production handoff → *Still to do*, and say so in the first sentence at Step 7. **Do not fake a PNG, do not substitute a screenshot, and do not report the icons as shipped.**
+**Exit code 3 degrades exactly as a missing Playwright MCP does** — [Shared Protocol](#shared-protocol) item 3. Ship the SVG set, record every raster row `UNRUN — no rasteriser on this machine; install one of the four the script names` in § Variants → *Raster set*, put the install step into § Production handoff → *Still to do*, and say so in the first sentence at Step 7. **Do not fake a PNG, do not substitute a screenshot, and do not report the icons as shipped.**
 
 **Record every written file** in § Variants → *Raster set* and in § Asset manifest, each row naming the SVG it came from. A raster whose source is not recorded cannot be regenerated when the mark changes, and a raster nobody can regenerate is the file that goes stale first.
 
