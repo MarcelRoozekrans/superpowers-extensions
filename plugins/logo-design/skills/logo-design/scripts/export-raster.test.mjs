@@ -1,9 +1,17 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { existsSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, copyFileSync, mkdirSync, readdirSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { OUTPUTS, CONVERTERS, detectConverter, SOURCE_ARTBOARD, packIco } from './export-raster.mjs';
+import {
+  OUTPUTS,
+  CONVERTERS,
+  detectConverter,
+  SOURCE_ARTBOARD,
+  packIco,
+  exportRasters,
+} from './export-raster.mjs';
 
 test('every output names the SVG it is rasterised from', () => {
   assert.ok(OUTPUTS.length > 0);
@@ -135,4 +143,82 @@ test('every packed image is recoverable at its declared offset and length', () =
       `image ${i} does not round-trip at its declared offset`,
     );
   });
+});
+
+const here = dirname(fileURLToPath(import.meta.url));
+const haveConverter = detectConverter() !== null;
+
+test('exportRasters writes every output from its declared source', { skip: !haveConverter }, () => {
+  const dir = mkdtempSync(join(tmpdir(), 'logo-raster-'));
+  mkdirSync(join(dir, 'brand'), { recursive: true });
+  for (const f of ['logo-mark.svg', 'logo-favicon.svg']) {
+    copyFileSync(join(here, 'fixtures', f), join(dir, 'brand', f));
+  }
+
+  const result = exportRasters(join(dir, 'brand'));
+
+  assert.equal(result.status, 'ok');
+  for (const o of OUTPUTS) {
+    const p = join(dir, 'brand', o.file);
+    assert.ok(existsSync(p), `${o.file} was not written`);
+    assert.ok(readFileSync(p).length > 0, `${o.file} is empty`);
+  }
+
+  const ico = readFileSync(join(dir, 'brand', 'favicon.ico'));
+  assert.equal(ico.readUInt16LE(2), 1, 'favicon.ico is not an ICO');
+  assert.equal(ico.readUInt16LE(4), 3, 'favicon.ico should carry three images');
+
+  // Every packed entry must be a real PNG at its declared offset. The unit
+  // tests pack synthetic byte blobs, so they cannot catch the temp-file dance
+  // feeding packIco the wrong bytes — and a malformed ICO renders as a blank
+  // favicon rather than an error, which is the worst kind of bug to find late.
+  const PNG_MAGIC = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+  for (let i = 0; i < 3; i++) {
+    const at = 6 + i * 16;
+    const len = ico.readUInt32LE(at + 8);
+    const off = ico.readUInt32LE(at + 12);
+    assert.ok(len > 0, `ico entry ${i} is empty`);
+    assert.ok(off + len <= ico.length, `ico entry ${i} runs past the end of the file`);
+    assert.deepEqual(
+      ico.subarray(off, off + 8),
+      PNG_MAGIC,
+      `ico entry ${i} is not a PNG at its declared offset`,
+    );
+  }
+});
+
+test('exportRasters leaves no scratch files in the target directory', { skip: !haveConverter }, () => {
+  const dir = mkdtempSync(join(tmpdir(), 'logo-raster-clean-'));
+  for (const f of ['logo-mark.svg', 'logo-favicon.svg']) {
+    copyFileSync(join(here, 'fixtures', f), join(dir, f));
+  }
+  exportRasters(dir);
+  const expected = new Set([...OUTPUTS.map((o) => o.file), 'logo-mark.svg', 'logo-favicon.svg']);
+  for (const entry of readdirSync(dir)) {
+    assert.ok(expected.has(entry), `unexpected leftover in the target directory: ${entry}`);
+  }
+});
+
+test('a missing source SVG is reported, not thrown', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'logo-raster-empty-'));
+  const result = exportRasters(dir);
+  assert.equal(result.status, 'missing-source');
+  assert.ok(result.missing.includes('logo-mark.svg'));
+});
+
+test('no converter reports unrun rather than failing', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'logo-raster-nc-'));
+  mkdirSync(dir, { recursive: true });
+  for (const f of ['logo-mark.svg', 'logo-favicon.svg']) {
+    copyFileSync(join(here, 'fixtures', f), join(dir, f));
+  }
+  const result = exportRasters(dir, { converter: null, forceNoConverter: true });
+  assert.equal(result.status, 'unrun');
+  assert.match(result.reason, /rasteriser/i);
+});
+
+test('packIco rejects a malformed image list', () => {
+  assert.throws(() => packIco([{ size: 16.5, data: Buffer.from('x') }]), /size/i);
+  assert.throws(() => packIco([{ size: undefined, data: Buffer.from('x') }]), /size/i);
+  assert.throws(() => packIco([{ size: 16, data: 'not a buffer' }]), /buffer/i);
 });

@@ -53,8 +53,14 @@ jobs:
 
       # node:test and node:assert are builtins and the exporter has no runtime
       # dependencies, so this job needs no `npm ci`. Tests that require an SVG
-      # rasteriser skip themselves when none is installed, which is the case on
-      # a bare runner.
+      # rasteriser skip themselves when none is installed — which is why the
+      # step below installs one, so the export path actually gets covered here.
+      # Without a rasteriser the exporter's integration test skips itself, so
+      # the whole export path would have no CI coverage at all. rsvg-convert is
+      # second in the detection order and is a single apt package.
+      - name: Install an SVG rasteriser
+        run: sudo apt-get update && sudo apt-get install -y librsvg2-bin
+
       - name: Run the raster exporter tests
         run: npm test
 

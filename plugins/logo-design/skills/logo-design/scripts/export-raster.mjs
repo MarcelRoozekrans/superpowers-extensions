@@ -19,6 +19,15 @@ export const OUTPUTS = [
 ];
 
 import { spawnSync } from 'node:child_process';
+import {
+  readFileSync as read,
+  writeFileSync,
+  existsSync as exists,
+  mkdtempSync,
+  rmSync,
+} from 'node:fs';
+import { join as path } from 'node:path';
+import { tmpdir } from 'node:os';
 
 // Ordered by output quality for flat vector art. resvg and librsvg are the two
 // that get stroke geometry right at 16px; Inkscape and ImageMagick are fallbacks
@@ -106,6 +115,20 @@ export const INSTALL_HINT = [
 // the image blobs. PNG-in-ICO is valid on every target that matters. A byte of
 // 0 in the width or height field means 256 — the field is one byte wide.
 export function packIco(images) {
+  // Buffer.writeUInt8 silently coerces undefined/NaN to 0 and truncates a
+  // fractional value on Node 24 rather than throwing — so a bad `size` would
+  // otherwise pack a malformed ICO that renders as a blank favicon instead of
+  // failing loudly. Not reachable from today's callers (sizes come from the
+  // hardcoded [16, 32, 48]), but this is an exported function; cheap insurance.
+  for (const img of images) {
+    if (!Number.isInteger(img.size) || img.size < 1 || img.size > 256) {
+      throw new Error(`packIco: size must be an integer in 1..256, got ${img.size}`);
+    }
+    if (!Buffer.isBuffer(img.data)) {
+      throw new Error('packIco: data must be a Buffer');
+    }
+  }
+
   const header = Buffer.alloc(6);
   header.writeUInt16LE(0, 0); // reserved
   header.writeUInt16LE(1, 2); // type: icon
@@ -129,4 +152,86 @@ export function packIco(images) {
   });
 
   return Buffer.concat([header, dir, ...images.map((i) => i.data)]);
+}
+
+export function exportRasters(dir, opts = {}) {
+  const sources = [...new Set(OUTPUTS.map((o) => o.source))];
+  const missing = sources.filter((s) => !exists(path(dir, s)));
+  if (missing.length) return { status: 'missing-source', missing };
+
+  const converter = opts.forceNoConverter ? null : (opts.converter ?? detectConverter());
+  if (!converter) return { status: 'unrun', reason: INSTALL_HINT, written: [] };
+
+  const written = [];
+
+  const raster = (source, out, size) => {
+    const argv = converter.argv(path(dir, source), out, size);
+    // Capture stderr rather than discarding it. Every converter failure that
+    // is not "binary absent" arrives here — a malformed SVG, a missing font, a
+    // full disk, or an Inkscape 0.92 that passed the `--version` probe and then
+    // rejected the 1.0+ export flags. Without the tool's own message and the
+    // argv, all of those present as one contentless crash.
+    const r = spawnSync(converter.bin, argv, {
+      stdio: ['ignore', 'ignore', 'pipe'],
+      shell: false,
+      encoding: 'utf8',
+    });
+    if (r.error || r.status !== 0) {
+      const detail = (r.stderr || r.error?.message || '').trim();
+      throw new Error(
+        `${converter.bin} failed on ${source} at ${size}px\n` +
+          `  argv: ${argv.join(' ')}\n` +
+          (detail ? `  ${detail}` : '  (the converter produced no error output)'),
+      );
+    }
+  };
+
+  for (const o of OUTPUTS) {
+    const out = path(dir, o.file);
+    if (o.pack) {
+      // Rasterise each packed size to a scratch PNG, pack, then clean up.
+      // The scratch directory is under tmpdir() and removed in a `finally`,
+      // NOT written beside the target: a converter that throws partway through
+      // would otherwise orphan a `.ico-32.png` inside the user's asset
+      // directory — which is the directory Task 11 commits from, and a leading
+      // dot hides nothing on Windows or from `git add`.
+      const scratch = mkdtempSync(path(tmpdir(), 'logo-ico-'));
+      try {
+        const images = o.pack.map((size) => {
+          const tmp = path(scratch, `${size}.png`);
+          raster(o.source, tmp, size);
+          return { size, data: read(tmp) };
+        });
+        writeFileSync(out, packIco(images));
+      } finally {
+        rmSync(scratch, { recursive: true, force: true });
+      }
+    } else {
+      raster(o.source, out, o.size);
+    }
+    written.push({ file: o.file, source: o.source, size: o.size ?? o.pack.join('/') });
+  }
+
+  return { status: 'ok', converter: converter.bin, written };
+}
+
+// CLI: node export-raster.mjs <brand-dir>
+if (process.argv[1] && process.argv[1].endsWith('export-raster.mjs')) {
+  const dir = process.argv[2];
+  if (!dir) {
+    console.error('Usage: node export-raster.mjs <brand-dir>');
+    process.exit(2);
+  }
+  const result = exportRasters(dir);
+  if (result.status === 'missing-source') {
+    console.error(`Missing source SVG(s): ${result.missing.join(', ')}`);
+    process.exit(2);
+  }
+  if (result.status === 'unrun') {
+    console.error(result.reason);
+    process.exit(3); // 3 means UNRUN, not failure — SKILL.md Step 6.5 reads this.
+  }
+  console.log(`Using: ${result.converter}\n`);
+  for (const w of result.written) console.log(`  ${w.file}  (${w.size}) <- ${w.source}`);
+  console.log(`\nDone. ${result.written.length} files in ${dir}`);
 }
