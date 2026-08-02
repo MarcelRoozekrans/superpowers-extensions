@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { OUTPUTS, CONVERTERS, detectConverter, SOURCE_ARTBOARD } from './export-raster.mjs';
+import { OUTPUTS, CONVERTERS, detectConverter, SOURCE_ARTBOARD, packIco } from './export-raster.mjs';
 
 test('every output names the SVG it is rasterised from', () => {
   assert.ok(OUTPUTS.length > 0);
@@ -85,4 +85,54 @@ test('the magick density never renders beyond a 2048px intermediate', () => {
       `size ${size} renders a ${(SOURCE_ARTBOARD * density) / 72}px intermediate`,
     );
   }
+});
+
+test('packIco writes a valid ICONDIR with one entry per image', () => {
+  const a = Buffer.from('AAAA');
+  const b = Buffer.from('BBBBBB');
+  const ico = packIco([
+    { size: 16, data: a },
+    { size: 32, data: b },
+  ]);
+
+  assert.equal(ico.readUInt16LE(0), 0, 'reserved must be 0');
+  assert.equal(ico.readUInt16LE(2), 1, 'type must be 1 (icon)');
+  assert.equal(ico.readUInt16LE(4), 2, 'count must match the image count');
+
+  assert.equal(ico.readUInt8(6), 16, 'first entry width');
+  assert.equal(ico.readUInt32LE(6 + 8), a.length, 'first entry byte length');
+  assert.equal(ico.readUInt32LE(6 + 12), 6 + 32, 'first entry offset');
+
+  assert.equal(ico.readUInt8(22), 32, 'second entry width');
+  assert.equal(ico.readUInt32LE(22 + 12), 6 + 32 + a.length, 'second entry offset');
+
+  assert.equal(ico.length, 6 + 32 + a.length + b.length);
+});
+
+test('packIco encodes 256 as 0, per the ICO spec', () => {
+  const ico = packIco([{ size: 256, data: Buffer.from('X') }]);
+  assert.equal(ico.readUInt8(6), 0);
+  assert.equal(ico.readUInt8(7), 0);
+});
+
+test('every packed image is recoverable at its declared offset and length', () => {
+  const images = [
+    { size: 16, data: Buffer.from('sixteen') },
+    { size: 32, data: Buffer.from('thirty-two') },
+    { size: 48, data: Buffer.from('forty-eight!') },
+  ];
+  const ico = packIco(images);
+
+  assert.equal(ico.readUInt16LE(4), 3, 'count');
+  images.forEach((img, i) => {
+    const at = 6 + i * 16;
+    const len = ico.readUInt32LE(at + 8);
+    const off = ico.readUInt32LE(at + 12);
+    assert.equal(len, img.data.length, `image ${i} length`);
+    assert.deepEqual(
+      ico.subarray(off, off + len),
+      img.data,
+      `image ${i} does not round-trip at its declared offset`,
+    );
+  });
 });

@@ -101,3 +101,32 @@ export const INSTALL_HINT = [
   '  Inkscape      https://inkscape.org — version 1.0 or newer',
   '  ImageMagick   https://imagemagick.org',
 ].join('\n');
+
+// ICO container: ICONDIR (6 bytes) + one ICONDIRENTRY (16 bytes) per image +
+// the image blobs. PNG-in-ICO is valid on every target that matters. A byte of
+// 0 in the width or height field means 256 — the field is one byte wide.
+export function packIco(images) {
+  const header = Buffer.alloc(6);
+  header.writeUInt16LE(0, 0); // reserved
+  header.writeUInt16LE(1, 2); // type: icon
+  header.writeUInt16LE(images.length, 4);
+
+  const dir = Buffer.alloc(16 * images.length);
+  let offset = 6 + 16 * images.length;
+
+  images.forEach((img, i) => {
+    const at = i * 16;
+    const dim = img.size >= 256 ? 0 : img.size;
+    dir.writeUInt8(dim, at);
+    dir.writeUInt8(dim, at + 1);
+    dir.writeUInt8(0, at + 2); // palette size: 0 for truecolour
+    dir.writeUInt8(0, at + 3); // reserved
+    dir.writeUInt16LE(1, at + 4); // colour planes
+    dir.writeUInt16LE(32, at + 6); // bits per pixel
+    dir.writeUInt32LE(img.data.length, at + 8);
+    dir.writeUInt32LE(offset, at + 12);
+    offset += img.data.length;
+  });
+
+  return Buffer.concat([header, dir, ...images.map((i) => i.data)]);
+}
