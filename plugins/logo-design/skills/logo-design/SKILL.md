@@ -362,7 +362,7 @@ It writes eight files and **routes each one to the SVG whose reproduction spec c
 | **2** | Usage error, or a source SVG is missing | Step 6 did not complete. Fix Step 6; do not work around it here. |
 | **3** | No rasteriser on the machine | **`UNRUN`, not a failure** — see below |
 
-**Exit code 3 degrades exactly as a missing Playwright MCP does** — [Shared Protocol](#shared-protocol) item 3. Ship the SVG set, record every raster row `UNRUN — no rasteriser on this machine; install one of the four the script names` in § Variants → *Raster set*, put the install step into § Production handoff → *Still to do*, and say so in the first sentence at Step 7. **Do not fake a PNG, do not substitute a screenshot, and do not report the icons as shipped.**
+**Exit code 3 degrades exactly as a missing Playwright MCP does** — [Shared Protocol](#shared-protocol) item 3. Ship the SVG set, record every raster row `UNRUN — no rasteriser on this machine; install one of the four the exporter names` in § Variants → *Raster set*, put the install step into § Production handoff → *Still to do*, and say so in the first sentence at Step 7. **Do not fake a PNG, do not substitute a screenshot, and do not report the icons as shipped.**
 
 **Record every written file** in § Variants → *Raster set* and in § Asset manifest, each row naming the SVG it came from. A raster whose source is not recorded cannot be regenerated when the mark changes, and a raster nobody can regenerate is the file that goes stale first.
 

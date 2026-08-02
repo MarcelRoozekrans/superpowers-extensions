@@ -210,26 +210,26 @@ The files hosts read when they cannot read SVG. Every row names the SVG it was r
 
 **Nothing here is graded.** `reproduction.md`'s checklist is graded on the vector source; these are conversions of an already-measured geometry.
 
-| File | px | Rasterised from | Intended slot |
-|---|---|---|---|
-| `favicon-16.png` | 16 | `logo-favicon.svg` | `<link rel="icon" sizes="16x16">` |
-| `favicon-32.png` | 32 | `logo-favicon.svg` | `<link rel="icon" sizes="32x32">` |
-| `favicon-48.png` | 48 | `logo-favicon.svg` | legacy browser tab |
-| `favicon.ico` | 16/32/48 | `logo-favicon.svg` | site root, for hosts that ignore `favicon.svg` |
-| `apple-touch-icon.png` | 180 | `logo-mark.svg` | iOS home screen |
-| `icon-192.png` | 192 | `logo-mark.svg` | web app manifest |
-| `icon-512.png` | 512 | `logo-mark.svg` | web app manifest, splash |
-| `icon-1024.png` | 1024 | `logo-mark.svg` | app store listing |
+| File | px | Rasterised from | Intended slot | Status |
+|---|---|---|---|---|
+| `favicon-16.png` | 16 | `logo-favicon.svg` | `<link rel="icon" sizes="16x16">` | `<written / UNRUN — <why>>` |
+| `favicon-32.png` | 32 | `logo-favicon.svg` | `<link rel="icon" sizes="32x32">` | `<written / UNRUN — <why>>` |
+| `favicon-48.png` | 48 | `logo-favicon.svg` | legacy browser tab | `<written / UNRUN — <why>>` |
+| `favicon.ico` | 16/32/48 | `logo-favicon.svg` | site root, for hosts that ignore `favicon.svg` | `<written / UNRUN — <why>>` |
+| `apple-touch-icon.png` | 180 | `logo-mark.svg` | iOS home screen | `<written / UNRUN — <why>>` |
+| `icon-192.png` | 192 | `logo-mark.svg` | web app manifest | `<written / UNRUN — <why>>` |
+| `icon-512.png` | 512 | `logo-mark.svg` | web app manifest, splash | `<written / UNRUN — <why>>` |
+| `icon-1024.png` | 1024 | `logo-mark.svg` | app store listing | `<written / UNRUN — <why>>` |
 
 **The routing is a rule, not a convenience.** Everything at or below 48 px comes from the favicon redraw and everything above it from the master, because the favicon is drawn for those sizes and the master is specified above its own computed minimum. A master rasterised at 16 px is a mark this skill's own reproduction layer already failed.
 
 | Field | Record |
 |---|---|
-| Rasteriser used | `<name and version>`, or `UNRUN — no rasteriser on the machine that ran this; install one of the four the exporter names` |
+| Rasteriser used | `<name and version>`, or `UNRUN — no rasteriser on this machine; install one of the four the exporter names` |
 | Sizes at or below 48 px come from the favicon redraw | `<yes>` — never the master; see `reproduction.md § The favicon's own spec` |
-| Files written | `<n of 8>`, or `0 — UNRUN` |
+| Files written | `<n of 8>`, or `0 — UNRUN, no rasteriser` |
 
-Where the exporter returned `UNRUN`, every row above carries that token, no raster file is on disk, and the install step is in [Still to do](#still-to-do).
+Where the exporter returned `UNRUN`, every row's Status carries that token, no raster file is on disk, and the install step is in [Still to do](#still-to-do). Where it exited 1 partway through, the rows it wrote say `written` and the rest say `UNRUN`, because a half-populated directory that reads as a complete one is the failure this column exists to prevent.
 
 ### Print minimums
 
@@ -394,7 +394,7 @@ Every file that ships, and nothing that does not. A file in the directory and ab
 | No empty groups, unreferenced `defs`, or surviving construction geometry | `<yes>` |
 | Mono variants diffed against their source | `<result, or the fork recorded in Colour>` |
 | Every variant's ink sits inside the live area | `<which box each was graded against, and whether the two boxes coincided>`, with any indeterminate result carried into [Checks recorded unrun](#checks-recorded-unrun) |
-| Raster files recorded in [Raster files](#raster-files) | `<n>`, or `n/a — UNRUN, no raster shipped` |
+| Raster files recorded in [Raster files](#raster-files) | `<n>`, or `UNRUN — no rasteriser, no raster shipped` |
 
 ### Raster files
 
@@ -408,4 +408,4 @@ The table above records geometry. A raster has none — it records provenance, w
 |---|---|
 | Files in the raster set | `<n of 8>`, or `0 — UNRUN, no rasteriser` |
 | Every raster's source appears in the SVG manifest above | `<yes>` |
-| Rasteriser used | `<name and version>`, or `UNRUN — <why>` |
+| Rasteriser used | recorded once in [Raster set](#raster-set) — not duplicated here |
