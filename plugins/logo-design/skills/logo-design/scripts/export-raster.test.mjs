@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { OUTPUTS } from './export-raster.mjs';
+import { OUTPUTS, CONVERTERS, detectConverter } from './export-raster.mjs';
 
 test('every output names the SVG it is rasterised from', () => {
   assert.ok(OUTPUTS.length > 0);
@@ -50,4 +50,26 @@ test('every declared source resolves to a real fixture file', () => {
       `${source} is declared as a source but has no fixture`,
     );
   }
+});
+
+test('every converter declares a probe and an argv builder', () => {
+  for (const c of CONVERTERS) {
+    assert.ok(c.bin, 'converter has no binary name');
+    assert.ok(Array.isArray(c.probe), `${c.bin} has no probe args`);
+    assert.equal(typeof c.argv, 'function', `${c.bin} has no argv builder`);
+  }
+});
+
+test('detection returns null rather than throwing when nothing is installed', () => {
+  const found = detectConverter({ only: '__definitely-not-a-real-binary__' });
+  assert.equal(found, null);
+});
+
+test('the ImageMagick entry is magick, never convert', () => {
+  const names = CONVERTERS.map((c) => c.bin);
+  assert.ok(
+    !names.includes('convert'),
+    'convert is the NTFS filesystem utility on Windows, not ImageMagick — use magick',
+  );
+  assert.ok(names.includes('magick'), 'ImageMagick should be reachable via its portable name');
 });
