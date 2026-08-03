@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.22.1](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.22.0...superpowers-extensions-v1.22.1) (2026-08-03)
+
+
+### Bug Fixes
+
+* **logo-design:** close the gaps a second dogfood run found ([#125](https://github.com/MarcelRoozekrans/superpowers-extensions/issues/125)) ([347ace8](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/347ace8255b6853699fafb7c9b7b5a8fb83f2ed4))
+
 ## [1.22.0](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.21.1...superpowers-extensions-v1.22.0) (2026-08-03)
 
 
