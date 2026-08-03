@@ -4,6 +4,7 @@
 hooks/session-start text eol=lf
 hooks/*.sh text eol=lf
 scripts/*.sh text eol=lf
+plugins/*/skills/*/scripts/*.mjs text eol=lf
 
 # Cmd files MUST keep CRLF on Windows
 hooks/*.cmd text eol=crlf

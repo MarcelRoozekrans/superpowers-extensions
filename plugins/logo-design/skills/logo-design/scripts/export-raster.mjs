@@ -1,0 +1,264 @@
+#!/usr/bin/env node
+// Rasterise a logo-design SVG set into the icon files hosts actually consume.
+// Zero dependencies at rest: detects whatever converter is on the machine.
+// See SKILL.md Step 6.5. Degrades to UNRUN; never blocks a run.
+
+// D2 in the plan: routing is a rule, not a convenience. logo-favicon.svg is a
+// redraw built for small sizes (reproduction.md § The favicon's own spec);
+// logo-mark.svg is specified above its own computed minimum. Rasterising the
+// master at 16px ships a mark this skill's reproduction layer already failed.
+export const OUTPUTS = [
+  { file: 'favicon-16.png', size: 16, source: 'logo-favicon.svg' },
+  { file: 'favicon-32.png', size: 32, source: 'logo-favicon.svg' },
+  { file: 'favicon-48.png', size: 48, source: 'logo-favicon.svg' },
+  { file: 'favicon.ico', source: 'logo-favicon.svg', pack: [16, 32, 48] },
+  { file: 'apple-touch-icon.png', size: 180, source: 'logo-mark.svg' },
+  { file: 'icon-192.png', size: 192, source: 'logo-mark.svg' },
+  { file: 'icon-512.png', size: 512, source: 'logo-mark.svg' },
+  { file: 'icon-1024.png', size: 1024, source: 'logo-mark.svg' },
+];
+
+import { spawnSync } from 'node:child_process';
+import {
+  readFileSync as read,
+  writeFileSync,
+  existsSync as exists,
+  mkdtempSync,
+  rmSync,
+} from 'node:fs';
+import { join as path } from 'node:path';
+import { tmpdir } from 'node:os';
+
+// Ordered by output quality for flat vector art. resvg and librsvg are the two
+// that get stroke geometry right at 16px; Inkscape and ImageMagick are fallbacks
+// that are far more likely to already be installed.
+//
+// NEVER add `convert` here. On Windows that is C:\WINDOWS\system32\convert, the
+// NTFS filesystem conversion utility, present on every machine — a probe for it
+// succeeds and we would hand image arguments to a disk tool. ImageMagick's
+// portable binary is `magick`.
+
+// The artboard every mark this skill draws is built on — construction.md pins
+// it. The magick density derivation below reads off it; a source on a different
+// artboard rasterises at a different scale and then downsamples, which costs
+// time but not correctness.
+export const SOURCE_ARTBOARD = 256;
+
+export const CONVERTERS = [
+  {
+    bin: 'resvg',
+    probe: ['--version'],
+    argv: (svg, out, size) => [svg, out, '--width', String(size), '--height', String(size)],
+  },
+  {
+    bin: 'rsvg-convert',
+    probe: ['--version'],
+    argv: (svg, out, size) => ['-w', String(size), '-h', String(size), '-o', out, svg],
+  },
+  {
+    bin: 'inkscape',
+    probe: ['--version'],
+    argv: (svg, out, size) => [
+      svg,
+      '--export-type=png',
+      `--export-filename=${out}`,
+      `--export-width=${size}`,
+      `--export-height=${size}`,
+    ],
+  },
+  {
+    bin: 'magick',
+    probe: ['-version'],
+    // Density is derived, not guessed. A viewBox-only SVG renders at
+    // 256 * density/72 px, so a 2x supersample of the target is
+    // density = 72 * 2 * size / 256. Floored at 72 so tiny icons still
+    // render at 256px and downsample cleanly rather than being rasterised
+    // at 9dpi. Ceiling is therefore 2048px at size 1024 — an unbounded
+    // `size * 4` would have rendered 14,563px square for that same output.
+    argv: (svg, out, size) => [
+      '-background',
+      'none',
+      '-density',
+      String(Math.max(72, Math.ceil((size * 2 * 72) / SOURCE_ARTBOARD))),
+      svg,
+      '-resize',
+      `${size}x${size}`,
+      out,
+    ],
+  },
+];
+
+export function detectConverter({ only } = {}) {
+  const list = only
+    ? [CONVERTERS.find((c) => c.bin === only) ?? { bin: only, probe: ['--version'], argv: () => [] }]
+    : CONVERTERS;
+  for (const c of list) {
+    // spawnSync sets .error to ENOENT rather than throwing when the binary is
+    // absent, which is what makes this portable to Windows without `command -v`.
+    const r = spawnSync(c.bin, c.probe, { stdio: 'ignore', shell: false });
+    if (!r.error && r.status === 0) return c;
+  }
+  return null;
+}
+
+export const INSTALL_HINT = [
+  'No SVG rasteriser found. Install one of:',
+  '  resvg         prebuilt binaries: https://github.com/linebender/resvg/releases',
+  '                or `cargo install resvg` if you already have Rust',
+  '                (best small-size output)',
+  '  librsvg       brew install librsvg | apt install librsvg2-bin',
+  '  Inkscape      https://inkscape.org — version 1.0 or newer',
+  '  ImageMagick   https://imagemagick.org',
+].join('\n');
+
+// ICO container: ICONDIR (6 bytes) + one ICONDIRENTRY (16 bytes) per image +
+// the image blobs. PNG-in-ICO is valid on every target that matters. A byte of
+// 0 in the width or height field means 256 — the field is one byte wide.
+export function packIco(images) {
+  // Buffer.writeUInt8 silently coerces undefined/NaN to 0 and truncates a
+  // fractional value on Node 24 rather than throwing — so a bad `size` would
+  // otherwise pack a malformed ICO that renders as a blank favicon instead of
+  // failing loudly. Not reachable from today's callers (sizes come from the
+  // hardcoded [16, 32, 48]), but this is an exported function; cheap insurance.
+  for (const img of images) {
+    if (!Number.isInteger(img.size) || img.size < 1 || img.size > 256) {
+      throw new Error(`packIco: size must be an integer in 1..256, got ${img.size}`);
+    }
+    if (!Buffer.isBuffer(img.data)) {
+      throw new Error('packIco: data must be a Buffer');
+    }
+  }
+
+  const header = Buffer.alloc(6);
+  header.writeUInt16LE(0, 0); // reserved
+  header.writeUInt16LE(1, 2); // type: icon
+  header.writeUInt16LE(images.length, 4);
+
+  const dir = Buffer.alloc(16 * images.length);
+  let offset = 6 + 16 * images.length;
+
+  images.forEach((img, i) => {
+    const at = i * 16;
+    const dim = img.size >= 256 ? 0 : img.size;
+    dir.writeUInt8(dim, at);
+    dir.writeUInt8(dim, at + 1);
+    dir.writeUInt8(0, at + 2); // palette size: 0 for truecolour
+    dir.writeUInt8(0, at + 3); // reserved
+    dir.writeUInt16LE(1, at + 4); // colour planes
+    dir.writeUInt16LE(32, at + 6); // bits per pixel
+    dir.writeUInt32LE(img.data.length, at + 8);
+    dir.writeUInt32LE(offset, at + 12);
+    offset += img.data.length;
+  });
+
+  return Buffer.concat([header, dir, ...images.map((i) => i.data)]);
+}
+
+export function exportRasters(dir, opts = {}) {
+  const sources = [...new Set(OUTPUTS.map((o) => o.source))];
+  const missing = sources.filter((s) => !exists(path(dir, s)));
+  if (missing.length) return { status: 'missing-source', missing, written: [] };
+
+  const converter = opts.forceNoConverter ? null : (opts.converter ?? detectConverter());
+  if (!converter) return { status: 'unrun', reason: INSTALL_HINT, written: [] };
+
+  const written = [];
+
+  const raster = (source, out, size) => {
+    const argv = converter.argv(path(dir, source), out, size);
+    // Capture stderr rather than discarding it. Every converter failure that
+    // is not "binary absent" arrives here — a malformed SVG, a missing font, a
+    // full disk, or an Inkscape 0.92 that passed the `--version` probe and then
+    // rejected the 1.0+ export flags. Without the tool's own message and the
+    // argv, all of those present as one contentless crash.
+    const r = spawnSync(converter.bin, argv, {
+      stdio: ['ignore', 'ignore', 'pipe'],
+      shell: false,
+      encoding: 'utf8',
+    });
+    if (r.error || r.status !== 0) {
+      const detail = (r.stderr || r.error?.message || '').trim();
+      throw new Error(
+        `${converter.bin} failed on ${source} at ${size}px\n` +
+          `  argv: ${argv.join(' ')}\n` +
+          (detail ? `  ${detail}` : '  (the converter produced no error output)'),
+      );
+    }
+  };
+
+  try {
+    for (const o of OUTPUTS) {
+      const out = path(dir, o.file);
+      if (o.pack) {
+        // Rasterise each packed size to a scratch PNG, pack, then clean up.
+        // The scratch directory is under tmpdir() and removed in a `finally`,
+        // NOT written beside the target: a converter that throws partway through
+        // would otherwise orphan a `.ico-32.png` inside the user's asset
+        // directory — which is the directory Task 11 commits from, and a leading
+        // dot hides nothing on Windows or from `git add`.
+        const scratch = mkdtempSync(path(tmpdir(), 'logo-ico-'));
+        try {
+          const images = o.pack.map((size) => {
+            const tmp = path(scratch, `${size}.png`);
+            raster(o.source, tmp, size);
+            return { size, data: read(tmp) };
+          });
+          writeFileSync(out, packIco(images));
+        } finally {
+          rmSync(scratch, { recursive: true, force: true });
+        }
+      } else {
+        raster(o.source, out, o.size);
+      }
+      written.push({ file: o.file, source: o.source, size: o.size ?? o.pack.join('/') });
+    }
+  } catch (err) {
+    // The caller needs to know the directory is half-written. Rolling back
+    // would be worse: a re-run overwrites cleanly, but silently leaving five
+    // of eight icons on disk with no record is how a partial set gets committed.
+    err.written = written;
+    throw err;
+  }
+
+  return { status: 'ok', converter: converter.bin, written };
+}
+
+// CLI: node export-raster.mjs <brand-dir>
+if (process.argv[1] && process.argv[1].endsWith('export-raster.mjs')) {
+  const dir = process.argv[2];
+  if (!dir) {
+    console.error('Usage: node export-raster.mjs <brand-dir>');
+    process.exit(2);
+  }
+
+  // Exit codes are a contract the skill reads:
+  //   0 — written
+  //   1 — a converter failed at runtime (bad SVG, crashed binary, an Inkscape
+  //       that passed the --version probe and then rejected the 1.0+ flags)
+  //   2 — usage error, or a source SVG is missing (an earlier step failed)
+  //   3 — no rasteriser installed. UNRUN, not failure. The skill ships the
+  //       SVG set anyway and records the gap.
+  let result;
+  try {
+    result = exportRasters(dir);
+  } catch (err) {
+    console.error(err.message);
+    if (err.written?.length) {
+      console.error(`\nAlready written before the failure (${err.written.length}):`);
+      for (const w of err.written) console.error(`  ${w.file}`);
+    }
+    process.exit(1);
+  }
+
+  if (result.status === 'missing-source') {
+    console.error(`Missing source SVG(s): ${result.missing.join(', ')}`);
+    process.exit(2);
+  }
+  if (result.status === 'unrun') {
+    console.error(result.reason);
+    process.exit(3); // 3 means UNRUN, not failure — SKILL.md Step 6.5 reads this.
+  }
+  console.log(`Using: ${result.converter}\n`);
+  for (const w of result.written) console.log(`  ${w.file}  (${w.size}) <- ${w.source}`);
+  console.log(`\nDone. ${result.written.length} files in ${dir}`);
+}
