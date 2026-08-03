@@ -204,6 +204,33 @@ The favicon is a redraw, not a scale. Record what it dropped, in reproduction te
 | Ink reaches the live-area bounds on its longer axis | `<which box it was graded on>`, or `UNRUN — <the bracket>` |
 | Uniform weight | recorded as a `declined` correction in [Construction](#the-nine-corrections) |
 
+### Raster set
+
+The files hosts read when they cannot read SVG. Every row names the SVG it was rasterised from — a raster whose source is not recorded cannot be regenerated when the mark changes.
+
+**Nothing here is graded.** `reproduction.md`'s checklist is graded on the vector source; these are conversions of an already-measured geometry.
+
+| File | px | Rasterised from | Intended slot | Status |
+|---|---|---|---|---|
+| `favicon-16.png` | 16 | `logo-favicon.svg` | `<link rel="icon" sizes="16x16">` | `<written / UNRUN — <why>>` |
+| `favicon-32.png` | 32 | `logo-favicon.svg` | `<link rel="icon" sizes="32x32">` | `<written / UNRUN — <why>>` |
+| `favicon-48.png` | 48 | `logo-favicon.svg` | legacy browser tab | `<written / UNRUN — <why>>` |
+| `favicon.ico` | 16/32/48 | `logo-favicon.svg` | site root, for hosts that ignore `favicon.svg` | `<written / UNRUN — <why>>` |
+| `apple-touch-icon.png` | 180 | `logo-mark.svg` | iOS home screen | `<written / UNRUN — <why>>` |
+| `icon-192.png` | 192 | `logo-mark.svg` | web app manifest | `<written / UNRUN — <why>>` |
+| `icon-512.png` | 512 | `logo-mark.svg` | web app manifest, splash | `<written / UNRUN — <why>>` |
+| `icon-1024.png` | 1024 | `logo-mark.svg` | app store listing | `<written / UNRUN — <why>>` |
+
+**The routing is a rule, not a convenience.** Everything at or below 48 px comes from the favicon redraw and everything above it from the master, because the favicon is drawn for those sizes and the master is specified above its own computed minimum. A master rasterised at 16 px is a mark this skill's own reproduction layer already failed.
+
+| Field | Record |
+|---|---|
+| Rasteriser used | `<name and version>`, or `UNRUN — no rasteriser on this machine; install one of the four the exporter names` |
+| Sizes at or below 48 px come from the favicon redraw | `<yes>` — never the master; see `reproduction.md § The favicon's own spec` |
+| Files written | `<n of 8>`, or `0 — UNRUN, no rasteriser` |
+
+Where the exporter returned `UNRUN`, every row's Status carries that token, no raster file is on disk, and the install step is in [Still to do](#still-to-do). Where it exited 1 partway through, the rows it wrote say `written` and the rest say `UNRUN`, because a half-populated directory that reads as a complete one is the failure this column exists to prevent.
+
 ### Print minimums
 
 One row per process the brief named. `L` and `g` come from the vendor's own spec sheet where one exists; where they are trade defaults, say so.
@@ -348,6 +375,7 @@ Where the contact sheet did run, every row it settled is recorded with its value
 | Outline conversion | **not performed** — see above |
 | Trademark clearance | **not performed** — see above |
 | Declared face installed where the sheet renders | `<yes — the measured rows below carry values>`, or `not performed — <the face>; k, both cap-height minimums, the width minimum, φ_ink and φ_ctr in [Lockup measurements](#lockup-measurements), and the wordmark Fit in [Type-specific records](#type-specific-records), stay UNRUN until it is` |
+| Icon raster set exported | `<yes — n files, rasteriser <name>>`, or `not performed — no rasteriser on the machine that ran this; the SVG set ships and the eight rows in [Raster set](#raster-set) stay UNRUN until it is` |
 | `<any other step this mark hands off>` | `<status>` |
 
 ## Asset manifest
@@ -366,3 +394,32 @@ Every file that ships, and nothing that does not. A file in the directory and ab
 | No empty groups, unreferenced `defs`, or surviving construction geometry | `<yes>` |
 | Mono variants diffed against their source | `<result, or the fork recorded in Colour>` |
 | Every variant's ink sits inside the live area | `<which box each was graded against, and whether the two boxes coincided>`, with any indeterminate result carried into [Checks recorded unrun](#checks-recorded-unrun) |
+| Raster files recorded in [Raster files](#raster-files) | `<n>`, or `UNRUN — no rasteriser, no raster shipped` |
+
+### Raster files
+
+The table above records geometry. A raster has none — it records provenance, which is the only thing about it that can go stale.
+
+| Path | px | Rasterised from | Bytes |
+|---|---|---|---|
+| `<path>` | `<n, or 16/32/48 for the ico>` | `<the SVG in the table above>` | `<n>` |
+
+| Field | Record |
+|---|---|
+| Files in the raster set | `<n of 8>`, or `0 — UNRUN, no rasteriser` |
+| Every raster's source appears in the SVG manifest above | `<yes>` |
+| Rasteriser used | recorded once in [Raster set](#raster-set) — not duplicated here |
+
+### Project files replaced
+
+Written only where `logo-concept`'s Step 8 ran. These live in the host project, not the brand directory — the tables above record what this mark *is*, and this one records what it *replaced*.
+
+| Project path | Size | Replaced with | Reverted by |
+|---|---|---|---|
+| `<path in the host project>` | `<px, read off the file that was there>` | `<the file from the brand directory>` | `<the commit that can be reverted>` |
+
+| Field | Record |
+|---|---|
+| Files replaced | `<n>`, or `n/a — Step 8 was not run` |
+| Every replaced path was tracked and clean before the write | `<yes>` — Step 8 refuses any that were not |
+| Slots found but skipped | `<path — why>`, or `none` |
