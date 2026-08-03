@@ -193,7 +193,19 @@ The request that opened *this* run is still captured verbatim, per item 1 — it
    The scan then runs over the same words either way, which is correct: what changes is that `logo-review` can see whether the brief was authored or ratified, and weigh Appropriateness accordingly.
 
    **Never block on this, and never infer question 4 from it.** A repository says nothing about where the mark has to survive; that answer comes from the user and from nowhere else — see [Question 4's consequences](#question-4s-consequences).
-2. **Read `docs/design/MASTER.md` if it exists** and bind values per `construction.md` § Colour binding, into `LOGO.md` § Colour → *Binding*. If it is absent, say that running `ui-design-system` first produces a better result, ship in `currentColor`, and replace that table with the single line `logo.template.md` prescribes for the absent case. **Never block on it** — [Shared Protocol](#shared-protocol) item 6.
+2. **Read `docs/design/MASTER.md` if it exists** and bind values per `construction.md` § Colour binding, into `LOGO.md` § Colour → *Binding*. **Never block on it** — [Shared Protocol](#shared-protocol) item 6.
+
+   **A `MASTER.md` belonging to a different product does not apply, and this is a real case rather than a hypothetical one.** A repository can carry the design system for the site it *is* while the mark being drawn is for a separate company, a spin-out, or a second product in the same monorepo. Binding the mark to a palette that was decided for something else is not inheritance, it is a category error. Where the file's own header names a product other than the one Step 0 item 1 established, treat it as **absent** and say why in `LOGO.md` § Colour → *Binding* — naming the file, the product it belongs to, and the product this mark is for.
+
+   **Where it is absent — genuinely, or by the paragraph above — ask for the colour before defaulting to `currentColor`.** [Shared Protocol](#shared-protocol) item 6 prohibits **inventing** a palette. It has never prohibited *asking* for one, and reading the prohibition as though it did is how a run reaches Step 6 and hands over a set of colourless files the user never agreed to. The distinction is the whole of this paragraph: a guessed brand colour presented as a decision is the failure; a colour the user supplied is the best evidence available, better than `MASTER.md`.
+
+   Ask it as its own message, with exactly three legal answers:
+
+   - **their values** — hex, a token name, or "the same blue as our invoices". Bind and record them.
+   - **a direction to propose against** — "something warmer than the cyan on the other site", "one accent, not two". Propose, show the contrast arithmetic against every ground the mark is specified for, and record that the values were proposed and confirmed. This is not inventing: the user set the constraint and ratified the result.
+   - **`currentColor`, deliberately** — a mark with no colour of its own, which is a legitimate and sometimes correct answer for a mark that must live inside other people's palettes.
+
+   Record which of the three was taken. **Only the third ships a colourless master, and only after somebody chose it.** Suggest `ui-design-system` alongside, exactly as before; it produces a better-integrated result and it still never blocks.
 3. **Scan for an existing mark** at the paths in [The existing-mark guard](#the-existing-mark-guard). They are listed there; do not carry a second copy of the list into the flow.
 4. **Route** by the three-way table in that section, and announce the path and the row that matched.
 5. **Detect where assets go**, reusing `ui-design-system`'s stack detection: React, Next, Astro or Vue → `public/brand/`; Blazor → `wwwroot/brand/`; anything else → `assets/brand/`. The contact sheet is documentation rather than a shipped asset and goes to `docs/design/logo-contact-sheet.html` on every project.
@@ -241,8 +253,49 @@ Ask them **one at a time — one question per message.** A batched list gets a b
 | a favicon | condition 3 in `reproduction.md` § The counter floor, in aggregate is now unmet, so every counter is built to the target; `logo-favicon.svg` ships |
 | a dark UI | condition 2 in that same list is unmet, and counters are drawn at the target **plus** the increment derived in `reproduction.md` § The counter consequence, which binds regardless |
 | one-colour print or embroidery | a row per process in § Variants → *Print minimums*, computed from this mark's own `u_ink` and `u_ctr`. Embroidery is a constraint on the stroke weight before a line is drawn, not a footnote after it. |
-| an app icon | a drawn container, so `construction.md`'s correction 6 binds and its split is taken at the point its order of application puts it |
+| an app icon | the mark must read inside a square tile. **Whether that tile is drawn into the master is a design decision, not a consequence** — see the note below. Where one *is* drawn, `construction.md`'s correction 6 binds and its split is taken at the point its order of application puts it |
 | large format | correction 4 becomes visible, and is judged on the sheet's two largest columns at Step 4 |
+
+**"App icon" does not mean "drawn container", and conflating the two removes a decision that belongs to the designer.** An app icon is a delivery format: a square raster with the mark composited onto a background at export. That tile can be added at export time from a mark that carries no container at all, which is what most identities actually do. An earlier revision of this table stated the container as a mechanical consequence, and a dogfood run duly built a candidate around a drawn roundel it never needed — spending the container's interior room, its clearance gate, and roughly five units of the mark's minimum size on a requirement nobody had.
+
+So the consequence is the **square-tile reading**, not the container. Two routes satisfy it and the choice is recorded in `LOGO.md` § Construction → *The nine corrections*, correction 6:
+
+| Route | When it is right | What it costs |
+|---|---|---|
+| **Composite at export** — no container in the master | the default. The mark stands on its own and the tile is a delivery detail | nothing; correction 6 is `n/a — no drawn container` |
+| **Draw the container** — a roundel, tile or badge that ships as part of the mark | the container carries meaning the mark does not — a seal, a stamp, a plate | correction 6 binds; the clearance gate runs from the *shifted* corner per `mark-types.md` § Monogram step 5; and the interior room the container takes raises the mark's minimum size |
+
+A drawn container that cannot survive `anti-slop.md`'s Test B — delete it, is the mark worse? — is decoration, and pattern 9's reasoning reaches it whatever its shape.
+
+#### Before Step 2 — check the contexts are jointly satisfiable
+
+**Question 4's consequences are stated per context and are not automatically compatible with each other.** Each row above is sound alone; the *combination* can leave a solution space that is empty or nearly so, and nothing downstream notices until Step 3 has drawn three candidates and Step 4 has rendered them.
+
+The arithmetic is cheap and it runs here, once, before any direction is written:
+
+```text
+counter target = max(1.25 w, 32)                    reproduction.md § Counter discipline
+               + r · w  where a dark variant ships  reproduction.md § The counter consequence
+minimum two-stem letter width = w + target + w      mark-types.md § Monogram step 4
+```
+
+Run it at each legal weight and say what is left. A worked case, from the run this section came out of — a long name, a favicon, an app icon and dark backgrounds:
+
+```text
+w 32  target = max(40, 32) + 0.96 = 40.96   letter needs 32 + 40.96 + 32 = 104.96 wide
+w 24  target = max(30, 32) + 0.72 = 32.72   letter needs 24 + 32.72 + 24 =  80.72 wide
+w 16  target = max(20, 32) + 0.48 = 32.48   letter needs 16 + 32.48 + 16 =  64.48 wide
+```
+
+**Then check the type's own binding constraint against what is left.** For a letterform carrying a diagonal — `A K M N R V W X Y Z` — that is `construction.md` correction 7's interior-join floor, and it is the constraint most likely to collide with a raised counter target: a wide counter pushes the bowl's base down the artboard, which shortens the leg's vertical run, which closes the aperture the floor governs. In the run above, all three weights drove the same `R` and the space collapsed to essentially one drawing.
+
+**Say so when it happens, before drawing three of it.** A collapsed space is a finding for the user, not a grind for the agent, and the three legal responses are all conversations rather than drawings:
+
+- **name the binding context and offer to drop it** — it is almost always the hardest one question 4 named, and the user is the only one who knows whether it was real or aspirational;
+- **report that the constraints admit essentially one construction**, and go to Step 5 with one candidate and the arithmetic that explains why, rather than three near-identical marks;
+- **change the derived type**, recording the departure in *Mark–name relationship* exactly as that rule already requires.
+
+`mark-types.md`'s "all three from the same type" assumes the type has room for three distinct constructions. Where this check shows it does not, three directions is not an exploration — it is the same mark drawn three times, and the render will say so at the cost of a full pass.
 
 ### Step 2 — three directions, written as rationale
 
@@ -289,7 +342,7 @@ Fill these `LOGO.md` slots as you draw. None of them needs a render, so none of 
 
 #### The critique checklist
 
-Nine items, fixed. Each names what to look at and the file that holds what it is held against. **Do not substitute a different list per mark** — a fixed instrument is the only kind whose two runs can be compared.
+Ten items, fixed. Each names what to look at and the file that holds what it is held against. **Do not substitute a different list per mark** — a fixed instrument is the only kind whose two runs can be compared.
 
 | # | What is judged | Read it off | Held against |
 |---|---|---|---|
@@ -302,8 +355,21 @@ Nine items, fixed. Each names what to look at and the file that holds what it is
 | C7 | Does the render read as any of the ten clichés | full-page shot | `anti-slop.md`. The source signatures ran at Step 3; this is the half that needs eyes. |
 | C8 | Does it resemble a mark you happen to recognise | full-page shot | [Shared Protocol](#shared-protocol) item 5 — this sees, it does not search, and it is never described or summarised as a trademark search |
 | C9 | Every `warn` and `bad` row in the readout is a finding until it is answered | `#readout` shot | whichever file that row's own note names |
+| C10 | **Read the largest band cold: what letter is it?** Monogram and wordmark types only | the largest band | Step 1's question 1 string, and `LOGO.md` § Concept & rationale *Mark–name relationship* |
 
 A finding names the candidate, the checklist number, and the fix. "Candidate B is a bit heavy" is not a finding. "Candidate B's counter closes in the smallest column on the dark ground — C1 and C4 — so its counters go to the target plus the dark increment" is.
+
+#### C10 — the letter is not checked by anything else
+
+**Nothing else in this skill verifies that a monogram is the letter it claims to be.** Every binary item in `reproduction.md`, every pattern in `anti-slop.md`, every one of `construction.md`'s nine corrections and all of C1 … C9 can pass on a mark that reads as the wrong letter, because none of them ever asks. `LOGO.md`'s *Mark–name relationship* row records the **intent**; it is written at Step 2, before the drawing exists, and no step reads it back against the render.
+
+That gap has been reached in practice. A dogfood run drew two candidates for an `R` in which both verticals ran the full cap height, joined by a top bar and a mid bar over an enclosed counter — which is the construction of a capital `A`. Both cleared M1 … M4, D1, D2, the node and reuse ceilings, artboard hygiene, all nine corrections and C1 … C9. The render made it obvious in one look and no rule made it a finding.
+
+**How to run it, and the wording matters.** Look at the 256 px band and name the letter *before* re-reading the brief. The failure mode is recognition-by-expectation: an agent holding the string `Roozekrans` in context will see an `R` in almost anything. If a fresh reading is not available, the mechanical form of the same question is: **for the intended letter, what distinguishes it from its nearest neighbours, and is that feature present as geometry?** For `R` against `A` and `P`: the right side must terminate at the bowl's base while a leg departs from it, and the left stem must run alone to the baseline. Two full-height verticals is an `A` whatever the brief says.
+
+**A mismatch withdraws the candidate. It is not a judgement finding.** A monogram that is not its letter has no fix short of a redraw, and presenting it with a caveat beside it hands the user a mark whose whole premise is broken — the case [The Refusal Gate](#the-refusal-gate) already answers for a different failure. Withdraw it under the cap below, exactly as a binary failure withdraws one.
+
+**Where the type is geometric or abstract, C10 is `n/a — <type>`.** Those marks make no claim about a letter, and `Mark–name relationship` already records that they do not reference the name.
 
 #### The two-iteration cap
 
@@ -312,6 +378,7 @@ A finding names the candidate, the checklist number, and the fix. "Candidate B i
 When an item still fails after the second render:
 
 - A **binary** failure — anything on `reproduction.md` § The binary checklist — **withdraws that candidate from Step 5.** It is not presented with a caveat. [The Refusal Gate](#the-refusal-gate) sets out why a caveat is not a mitigation, and that reasoning does not weaken because the failure arrived late.
+- A **C10 failure — the mark is not the letter it claims to be — withdraws it on the same terms.** It is not on the binary checklist because no source test can reach it, but its consequence is identical: there is no fix short of a redraw, so there is nothing for a caveat to qualify.
 - A **judgement** failure — balance, a resemblance, a cliché reading — is presented with the finding named beside its candidate and recorded in `LOGO.md`.
 - **If every candidate is withdrawn, do not render again.** Say so, name the constraint that killed all three — it is almost always the hardest context question 4 named — and return to **Step 2** with that constraint stated up front. That is a new set of directions and a fresh pair of renders, announced as such rather than slipped in as a third iteration. **At most one such restart.** A second means the brief and its reproduction constraints are incompatible, and saying so is the answer; three more drawings are not.
 
@@ -320,8 +387,9 @@ When an item still fails after the second render:
 [Shared Protocol](#shared-protocol) item 3 governs, and this is the step it exists for. **Degrade; do not fail, and do not let the output read as though a critique happened.**
 
 - **Write the sheet anyway** and save it. It is documentation, and it is what lets somebody who has the MCP run the pass later without redoing the flow.
-- **Stop at the screenshot.** Do not open the HTML, do not describe what it would have shown, and do not grade C1 … C9 off the source instead — the checklist reads a render, and a source-derived stand-in is a different check wearing this one's name.
-- **Record all nine as `UNRUN — <what would decide it>`** in `LOGO.md` § Production handoff → *Checks recorded unrun*, alongside every render-dependent item on `reproduction.md` § The binary checklist and the wordmark fit `mark-types.md` leaves unmeasured. `grep UNRUN` over the finished file must list every one of them.
+- **Stop at the screenshot.** Do not open the HTML, do not describe what it would have shown, and do not grade C1 … C10 off the source instead — the checklist reads a render, and a source-derived stand-in is a different check wearing this one's name.
+- **Record all ten as `UNRUN — <what would decide it>`** in `LOGO.md` § Production handoff → *Checks recorded unrun*, alongside every render-dependent item on `reproduction.md` § The binary checklist and the wordmark fit `mark-types.md` leaves unmeasured. `grep UNRUN` over the finished file must list every one of them.
+- **C10 in particular is unrun, and say so at Step 5 in those words.** A monogram whose letter has not been read off a render is a mark nobody has confirmed is its own letter. That is not a defect in the mark and must not be reported as one — but it is the single most consequential thing an absent render leaves undecided for this type, and it is worth naming ahead of the other nine rather than leaving the user to find it in a table.
 - **Write no absence.** Not "no cliché found", not "no collision found", not "reads balanced". An absent pass has no result, and C8's absence in particular is never "no collision".
 - **Say it in the first sentence at Step 5**, not in a closing footnote: the marks are uncritiqued and the user is the only judge.
 - The cap is not spent. It caps a pass that did not run.
@@ -348,7 +416,9 @@ Draw them in this order; each later one depends on an earlier:
 4. **`logo-mono-black.svg`** and **`logo-mono-white.svg`** — derived by resolving `color`, never redrawn. Determine the D1 **state first, from the size**, per `reproduction.md` § Three states, not two, then meet that state's obligation. Byte-identity on its own is not a pass at or above the threshold. Diff them against their source and record the result.
 5. **`logo-favicon.svg`** — **redrawn, not scaled.** Its own drawing on the same artboard, to `reproduction.md` § The favicon's own spec, satisfying F1, F2 and F3. Every dropped feature goes into § Variants → *Favicon* in reproduction terms: the measurement, the device pixels it works out to, and what that does to the raster. "Simplified for small sizes" is not a reason.
 
-**The favicon gets its own critique pass.** Write the sheet again with the favicon in a candidate slot, screenshot, read back, and grade **C1, C2, C3 and C9** — the small-size and readout items. C5 and C6 do not apply: the favicon renders at one size, and it is not the size at which either correction is visible. Same cap of two, same degradation, same `UNRUN` recording.
+**The favicon gets its own critique pass.** Write the sheet again with the favicon in a candidate slot, screenshot, read back, and grade **C1, C2, C3, C9 and C10** — the small-size and readout items, plus the letter. C5 and C6 do not apply: the favicon renders at one size, and it is not the size at which either correction is visible. Same cap of two, same degradation, same `UNRUN` recording.
+
+**C10 binds hardest here, because the favicon is the variant that drops detail on purpose.** A redraw that sheds a counter or a terminal to clear F1 … F3 can shed exactly the feature that distinguished the letter from its neighbours — an `R` losing its leg is a `P`, a `Q` losing its tail is an `O`, a `G` losing its bar is a `C`. Read the favicon's letter cold like any other, and where a dropped feature is what carried the distinction, that is a **C10 withdrawal of the favicon**, not a note in § Variants → *Favicon*. Drop something else, or accept a heavier favicon.
 
 Also at this step: § Variants → *Print minimums*, one row per process question 4 named, computed from **this mark's** own `u_ink` and `u_ctr` — never lifted from `reproduction.md`'s worked table, which is the worst legal construction rather than this one.
 
@@ -388,7 +458,8 @@ It writes eight files and **routes each one to the SVG whose reproduction spec c
    - Fill § Misuse with rows that each name a number from this file. A row that would be true of any logo is not doing work.
    - Fill § Production handoff → *Still to do*. The outline-conversion and trademark-clearance paragraphs ship **unedited**; where no variant carries a `text` element, add the one-line `n/a` the template prescribes under the first of them. **Where the declared face did not resolve on the render machine, *Still to do* carries the install step**, naming the face and the seven slots Step 0 item 8 lists — those rows are `UNRUN` for a reason somebody else can clear in five minutes, and a handoff that does not say so wastes it.
    - Fill § Asset manifest, one row per shipped file.
-   - **Sweep for empty cells.** An empty slot is a finding, not a silence, and the four tokens in `logo.template.md` § Recording conventions are the only legal fills. Every one of them carries a reason after the dash.
+   - **Sweep for empty cells.** An empty slot is a finding, not a silence, and the tokens in `logo.template.md` § Recording conventions are the only legal fills. Every one of them carries a reason after the dash.
+   - **Sweep for `PENDING`, and resolve every one.** That token marks a slot the flow had not reached yet, and it is the one token that may not survive this step — `grep PENDING` over the closed-out file must return nothing. A survivor means the step that owned the slot either did not run or ran without writing back, and both are bugs in the flow rather than facts about the mark. Do not convert it to `UNRUN` to clear the sweep: `UNRUN` asserts that a check applied and was skipped, which is a different claim and a false one.
 2. **Regenerate the sheet against the final assets.** The sheet has three candidate slots and the set has three distinct square drawings: `logo-mark.svg`, `logo-favicon.svg` and `logo-wordmark.svg`. The mono pair is the master with `color` resolved and is already rendered in the master's own mono columns; the lockups are not size-tested, per Step 6. Screenshot, read back, run the checklist once.
    This is a **verification** render, not a new iteration. A failure here is a defect in a final asset: fix it in Step 6 for that variant and re-verify **once**. If it fails again, stop and report it — do not commit a set whose own sheet contradicts its record.
 3. **Run the structural self-verification** below. It gates the commit.
@@ -594,7 +665,7 @@ So the record-dependent set is short, and it is read off the checklist item by i
 4. **The harness measures and returns no verdict** — [Shared Protocol](#shared-protocol) item 4. Never quote a readout row as a pass. Every row is routed to the layer that grades it and graded there.
 5. **Without Playwright MCP**, [Shared Protocol](#shared-protocol) item 3 governs: **write the sheet anyway** — it is documentation, and it is what lets somebody with the MCP finish the pass without redoing the flow — then **stop at the screenshot**. Do not open the HTML, do not describe what it would have shown, and record every item whose evidence is that render as `UNRUN`. Layer 2 is unaffected; see Step 4.
 
-**Which of `logo-concept`'s nine critique items this render is read for, and where each reading goes.** That checklist is cited, not restated:
+**Which of `logo-concept`'s ten critique items this render is read for, and where each reading goes.** That checklist is cited, not restated:
 
 | From `logo-concept` § The critique checklist | Routed to |
 |---|---|
@@ -603,7 +674,14 @@ So the record-dependent set is short, and it is read off the checklist item by i
 | The readout's **`M3 inversion`** row | Layer 1 — `reproduction.md`'s mono-collapse **M3**, which this row is the whole evidence for. It is where the two-render diff is computed; nothing else in the plugin rasterises. Read the number, not the mono columns — those are a viewing aid for C3 and are a different check. |
 | C7 | Layer 2 — the render half of the anti-slop scan |
 | C8 | Layer 3 — Distinctiveness, and the collision note below |
+| C10 | Layer 3 — **Appropriateness**, and it caps that dimension. See below. |
 | C5, C6 | **Not read here.** Both grade `construction.md`, which this flow does not audit — see [What this audit does not cover](#what-this-audit-does-not-cover). |
+
+**C10 in an audit needs the intended letter, and that is not always available.** In `logo-concept` the string is question 1's answer and the check is unambiguous. Here the mark may be one this skill never drew, and the reading has three states rather than two:
+
+- **`LOGO.md` § Concept & rationale records the string, or the user supplied it at Step 1** — read the largest band cold, name the letter, and grade. A mismatch is an **Appropriateness score of 1**: a mark that is not its own initial does not merely fit the category loosely, it contradicts what the brief asked for, which is that row's own 1-band wording.
+- **The mark is not a monogram or wordmark** — `n/a — <type>`, and it caps nothing.
+- **The type is a monogram but nobody can state the intended letter** — `UNRUN — no record; LOGO.md § Concept & rationale *Mark–name relationship*`. Never guessed from the shape: inferring the intended letter *from the drawing* is circular, and it is the same prohibition [A mark with no `LOGO.md`](#a-mark-with-no-logomd) already states for the derivation answers.
 
 **The collision note.** [Shared Protocol](#shared-protocol) item 5 governs C8 in full: it sees, it does not search; it measures nothing; **it is not a trademark search** and is never described, softened or summarised as one; and where it has not run it is recorded unrun, never as "no collision found". The report carries `logo.template.md` § Trademark clearance — not performed's paragraph unedited, exactly as `LOGO.md` does.
 
