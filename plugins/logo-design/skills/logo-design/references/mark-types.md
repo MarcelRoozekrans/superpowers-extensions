@@ -101,6 +101,16 @@ One or two letterforms drawn as paths. Never a `text` element — construction.m
 
 Two letters is the ceiling. Three initials at a 16 px render is about five pixels per letter, which is not a letter.
 
+**One letter is a legal monogram and the recipe below has to be read with that in mind.** `SKILL.md`'s type derivation reaches it directly — a long name whose initials are *not* short and distinctive collapses to the single most distinctive one — and it is the strongest form at favicon size, because one letter at 224 units of cap height has roughly four times the ink of each half of a pair. Every step below applies except two, and both drop out cleanly rather than needing a judgement:
+
+| Step | Single letter |
+|---|---|
+| 1 — choose the letters on legibility | becomes: **choose *the* letter on structure.** Prefer one that already contains contrasting terminals — `R`, `G`, `K`, `Q` and `B` each carry a flat stem against a curve or a diagonal, which is what corrections 1, 4 and 7 have to act on. `I`, `J`, `L` and `T` alone remain what the original clause says they are: a stroke, not a mark. |
+| 7 — space by area, solve `s` from the fit | **`n/a`.** There is no second letter and no gap to divide. The row is centred on 128 and the fit is the letter's own width against the live area. |
+| 8 — correction 9 always applies | **`n/a` for one letter**, and it is the single exception to that clause. Correction 9's own scope note is about the gap *between* letterforms; with one there is no facing pair. Record it `n/a — single letterform` rather than leaving it to be inferred. |
+
+Everything else binds unchanged, and correction 7 binds *harder* than it does for a pair: a lone letter carrying a diagonal has its aperture fully exposed with no neighbour to crowd it, so [construction.md](construction.md)'s split between an ink join and an aperture is the clause to read before drawing `R`, `K` or `A`.
+
 ### Recipe
 
 1. **Choose the letters on legibility, not on the name.** An `I`, a `J` or an `L` alone is a stroke, not a mark. A pair whose terminals are both flat (`H` + `I`) gives you nothing to space against. Prefer one flat-terminal letter and one round or pointed one — the contrast is what the sidebearing rule is for.

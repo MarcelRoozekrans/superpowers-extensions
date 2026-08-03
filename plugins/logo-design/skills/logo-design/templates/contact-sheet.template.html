@@ -71,6 +71,17 @@
   Viewport width 1360 px. The body is fixed at that width; there is no
   responsive reflow, so a narrower viewport does not rearrange anything.
 
+  IF file:// IS BLOCKED, SERVE IT OVER LOOPBACK. Some Playwright MCP builds --
+  notably containerised ones -- refuse the file: protocol outright and allow
+  only http:, https:, about: and data:. That is a property of the harness the
+  browser runs under, not of this sheet. The fallback is a static server on
+  loopback pointed at the directory this file was written to; the sheet makes
+  no network requests of any kind, so serving it changes nothing it measures
+  and nothing it renders. Where the browser runs in a container, the host is
+  usually reachable at host.docker.internal rather than localhost.
+  Do NOT reach for a data: URL instead -- Chrome blocks top-level navigation to
+  data: URLs, so it fails in a way that looks like the sheet is broken.
+
   WAIT FOR data-sheet-ready FIRST. The sheet rasterises each candidate to a
   canvas before it draws anything (see M3 below), and image decoding is
   asynchronous, so the document is EMPTY until that pass finishes. When it
@@ -381,7 +392,7 @@
       <dt>nodes</dt>
       <dd>Every <code>M</code>, <code>L</code>, <code>H</code>, <code>V</code>, <code>A</code> endpoint and every cubic/quadratic endpoint. Bézier control points are not nodes. An endpoint coincident with its subpath start is counted once. Ceilings from reproduction.md: 28 per contour, 56 per file, 24 is the redraw signal.</dd>
       <dt>coord reuse</dt>
-      <dd>Distinct ÷ total coordinate values, per <code>path</code>, computed only at 12 or more values. Coordinates are endpoint and control-point coordinates; an arc's radii, x-axis-rotation and two flags are not coordinates and are excluded. Above 0.75 is reproduction.md's tracing signal.</dd>
+      <dd>Distinct ÷ total coordinate values, per <code>path</code>, computed only at 12 or more values. Coordinates are endpoint and control-point coordinates, <strong>plus an arc's <code>rx</code> and <code>ry</code></strong> — reproduction.md counts the radii because a shared radius is the clearest evidence of derivation there is. An arc's x-axis-rotation and its two flags are not coordinates and are excluded. Above 0.75 is reproduction.md's tracing signal.</dd>
       <dt>text</dt>
       <dd><em>advance edge</em> is the right edge of <code>getBBox()</code>. <em>ink edge</em> is that edge with the trailing letter-spacing step removed — whether this renderer applies one is <strong>measured</strong>, by re-measuring the same run at zero tracking and counting the steps in the difference, not assumed. <em>fit ×</em> is the multiplier on <code>font-size</code> that lands the ink edge on 224; it assumes <code>text-anchor="start"</code> and <code>letter-spacing</code> scaled with the size, per mark-types.md's wordmark recipe.
       <br>A <code>text</code> element's <code>getBBox()</code> is its <em>layout</em> box — vertically it runs from the font's ascent to its descent, not from cap height to baseline. Read the vertical extents of a wordmark accordingly; they are not tight ink.</dd>
@@ -442,13 +453,22 @@
   function key(v) { return String(Math.round(v * 10000) / 10000); }
 
   /* ------------------------------------------------------------ path parsing
-     Arg counts, and which of those args are coordinate values. An arc's rx, ry,
-     x-axis-rotation, large-arc-flag and sweep-flag are not coordinates; only its
-     final x,y is. Cubic and quadratic control points ARE coordinates (they are
-     points in user space) but are NOT nodes. */
+     Arg counts, and which of those args are coordinate values. An arc's rx and
+     ry ARE counted, per reproduction.md's reuse-ratio rule -- "Count arc rx and
+     ry. They are the construction: a shared radius is the clearest evidence of
+     derivation on the page." Its x-axis-rotation and two flags are NOT: they are
+     not coordinates, they take three values between them, and including them
+     dilutes the ratio toward pass on every arc-heavy mark.
+     An earlier revision of this file excluded the radii, which put the harness
+     and reproduction.md in disagreement about an input to a threshold -- on a
+     two-arc knockout it was the difference between 12 counted values (computable)
+     and 8 ("under 12, not computed"), so the sheet silently declined to grade the
+     ratio on exactly the construction the rule was written to reward.
+     Cubic and quadratic control points ARE coordinates (they are points in user
+     space) but are NOT nodes. */
   var ARGS  = { M:2, L:2, H:1, V:1, C:6, S:4, Q:4, T:2, A:7, Z:0 };
   var COORD = { M:[0,1], L:[0,1], H:[0], V:[0], C:[0,1,2,3,4,5], S:[0,1,2,3],
-                Q:[0,1,2,3], T:[0,1], A:[5,6], Z:[] };
+                Q:[0,1,2,3], T:[0,1], A:[0,1,5,6], Z:[] };
 
   /* Assumes whitespace- or comma-separated arc flags, which is how
      construction.md's own fragments are written. A path packing its flags

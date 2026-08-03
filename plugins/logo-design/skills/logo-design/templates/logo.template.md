@@ -14,7 +14,16 @@ Read this before filling anything in. The distinction it draws is the point of t
 | `n/a — <why>` | **Not applicable.** The rule does not reach this mark at all. | A geometric mark has no webfont. A mark with no drawn container takes no container split. |
 | `declined — <why>` | **Applicable, deliberately not taken.** A recorded deviation from a rule that binds. | A uniform ring, where correction 4 binds and was not applied. |
 | `UNRUN — <what would decide it>` | **Applicable, not done.** Never a pass. | The contact sheet did not run, so the wordmark's fit is unmeasured. |
+| `PENDING — <the step that fills it>` | **Not reached yet.** The flow has not arrived at the step that owns this slot. **Never survives Step 7.** | This file is started at Step 0 and filled as the flow runs, so at Step 3 the Variants table has no values yet. |
 | empty | Never valid. | — |
+
+**`PENDING` exists because this file is written progressively, not in one pass.** `SKILL.md`'s `logo-concept` § Step 0 starts it before anything is drawn and fills it as each step completes, which means a real file spends most of its life half-written — and the other four tokens all describe a *finished* record. Without a fifth, an unreached slot has to borrow one of them, and every available choice is a lie: `UNRUN` says a check was applicable and skipped, which caps a `logo-review` layer at PARTIAL for a step that simply had not happened yet; `n/a` asserts a rule does not reach this mark before anyone has looked; and empty is never valid.
+
+Three rules on it, and the third is what stops it becoming a place to hide:
+
+- **It names the step, not the reason.** `PENDING — Step 6` is complete; `PENDING` alone is an empty cell with a word in it.
+- **It is the only token that is not a terminal state.** Every other token is an answer. This one is a promise that an answer is coming.
+- **Step 7 resolves every one of them, and the sweep checks it.** A `PENDING` in a closed-out record is a bug in the flow — the step that owned it did not run, or ran and did not write back. `grep PENDING` over a finished `LOGO.md` must return nothing, exactly as `grep UNRUN` over it must return everything the record admits it does not know.
 
 Four rules on top of the table:
 

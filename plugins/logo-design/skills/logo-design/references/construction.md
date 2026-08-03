@@ -297,7 +297,28 @@ Two riders. First, the same correction does **not** apply horizontally — there
 **Rule.** Where two strokes of width `w` meet, the join accumulates ink and reads heavier than either straight run. Two consequences, both checkable:
 
 - **Rounded corners:** `inner radius = outer radius − w`. If `outer < w`, the inner corner is sharp (`r = 0`). Equal radii on both sides is the tell of a machine-drawn corner: the stroke visibly bulges at the bend.
-- **Angles:** no interior join tighter than **60°**. Below that the ink build-up cannot be relieved without redrawing, and at favicon size the join fills solid and swallows whatever the angle was supposed to express.
+- **Angles:** no **ink** join tighter than **60°**. Below that the ink build-up cannot be relieved without redrawing, and at favicon size the join fills solid and swallows whatever the angle was supposed to express.
+
+#### An ink join and an aperture are not the same angle
+
+**The 60° floor governs the side where ink accumulates, not the side where it does not.** Two strokes meeting at a vertex create two angles that sum to 360°, and only one of them is filled. Grading the empty one against this floor forbids geometry that is correct, and it forbids a great deal of it: every letterform carrying a diagonal — `A K M N R V W X Y Z` — meets a stem at an acute angle *on the open side*, and so does every arrow, chevron and notch in the geometric and abstract recipes.
+
+The distinction is mechanical, so decide it before measuring:
+
+| At the vertex | What it is | Which rule governs |
+|---|---|---|
+| the angle **filled with ink** by both strokes | an **ink join**. The two strokes' ink overlaps here and the overlap grows as the angle closes | **this floor. 60°, no exceptions.** |
+| the angle **left empty** between the two strokes | an **aperture** — the open wedge of an `R`, `K` or `V` | [Counter discipline](#counter-discipline), as an open gap. Not this floor. |
+
+`mark-types.md`'s worked monogram is `HO` — two letters, no diagonals — so the reference set never exercises this, and a dogfood run spent a full redraw cycle deciding whether an `R`'s leg was legal. It is. The aperture between an `R`'s stem and its leg is negative space; the ink join at the same vertex is its 300°-ish reflex, which is nowhere near the floor.
+
+**What the aperture owes instead.** Counter discipline's own clause reaches it — *"any negative space narrower than the stroke closes the same way whether or not it is enclosed"* — and an aperture that tapers to a point necessarily passes under the stroke width near the vertex. That is not a reason to widen the angle. It is the case the standard remedy exists for:
+
+> **Trap the vertex.** Cut a small notch of negative space *into the ink* at the point where the two strokes converge, so the aperture reaches its narrowest at a measurable width rather than at zero. A trap of `0.25 w` to `0.5 w`, measured across the wedge where it would otherwise close, holds the aperture open at every reproduction size and is invisible above about 64 px. Record its width in `LOGO.md` § Construction → *Stroke and counters*, on its own row, with the vertex it relieves.
+
+Where the aperture is not trapped, record it — `declined — <the vertex, and the size at which it closes>`. Both are legitimate; an untrapped acute vertex that nobody wrote down is not.
+
+**So the check has two halves and they read opposite sides of the same vertex:** the ink angle against the 60° floor, and the aperture against the counter target with a trap if it needs one.
 
 **Worked.** A 32-unit stroke turning a corner with a 48-unit outer radius:
 
@@ -631,7 +652,7 @@ Run this list against every candidate before it reaches the contact sheet. Every
 - [ ] **4** — every horizontal stroke carries the 4% thinning off its declared weight, including the horizontal tangents of a curved stroke. Unconditional: a horizontal with no vertical counterpart anywhere in the mark is thinned too. A uniform ring is a recorded deviation, not an exemption.
 - [ ] **5** — every diagonal drawn as a filled outline uses `w / cos θ` for its offset.
 - [ ] **6** — anything inside a *drawn* container is split 45:55, above:below. A mark free on the artboard is exactly centred; the artboard is not a container.
-- [ ] **7** — no interior join tighter than 60°; on rounded corners, `inner radius = outer radius − w`.
+- [ ] **7** — no **ink** join tighter than 60°, graded on the filled side of the vertex; every **aperture** on the open side graded against the counter target instead, and trapped or recorded where it tapers under the stroke width. On rounded corners, `inner radius = outer radius − w`.
 - [ ] **8** — every rotated form holds its area, not its bounding box, and corrections 1 and 4 are re-derived from the final orientation.
 - [ ] **9** — where you position letterforms yourself, sidebearings are scaled by terminal shape (1.00 / 0.94 / 0.88). Not applicable to a `<text>` wordmark.
 
