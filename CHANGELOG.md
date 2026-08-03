@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.22.0](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.21.1...superpowers-extensions-v1.22.0) (2026-08-03)
+
+
+### Features
+
+* **logo-design:** add the delivery layer — raster export, repo integration, brief auto-context ([#123](https://github.com/MarcelRoozekrans/superpowers-extensions/issues/123)) ([6234d3b](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/6234d3b20dc9efcbfdf93064173091d9e3eb7543))
+
 ## [1.21.1](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.21.0...superpowers-extensions-v1.21.1) (2026-07-31)
 
 
