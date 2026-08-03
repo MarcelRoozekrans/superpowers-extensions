@@ -125,7 +125,7 @@
     },
     {
       "name": "logo-design",
-      "description": "Generates a brand mark: three concepts drawn as SVG, then the winner shipped as a docs/design/LOGO.md brief plus full, stacked, mark-only, wordmark-only, mono, and favicon variants. Renders a contact sheet and, when Playwright MCP is available, self-critiques with vision before presenting. Scoped to geometric, monogram, wordmark, and abstract marks; refuses pictorial, mascot, and emblem work. Includes logo-review for auditing existing marks.",
+      "description": "Generates a brand mark: three concepts drawn as SVG, then the winner shipped as a docs/design/LOGO.md brief plus full, stacked, mark-only, wordmark-only, mono, and favicon variants. Exports the PNG and ICO icons hosts actually read, and optionally replaces a project's existing icon files. Renders a contact sheet and, when Playwright MCP is available, self-critiques with vision before presenting. Scoped to geometric, monogram, wordmark, and abstract marks; refuses pictorial, mascot, and emblem work. Includes logo-review for auditing existing marks.",
       "version": "1.21.0",
       "author": {
         "name": "Marcel Roozekrans"

@@ -33,7 +33,7 @@ Each sub-skill carries its own announce line in its own section.
 ## Prerequisites
 
 - **Playwright MCP — optional.** Every render-dependent check in this skill goes through it. Without it, both sub-skills still run and every such check is recorded **unrun**, never passed. See [Shared Protocol](#shared-protocol) item 3.
-- **The declared typeface has to be installed on the machine that renders the sheet — check it before the run, not after.** Every full `logo-concept` run sets type: the variant set at [Step 6](#step-6--the-variant-set) carries a wordmark and two lockups whatever type the mark itself turns out to be. Where the face does not resolve there, the harness detects it and says so at Step 4 — accurately, and too late to act on — and **seven `LOGO.md` slots go `UNRUN` behind that one fact**. [Step 0](#step-0--context-and-guard) item 7 names them and states the check. Like everything else here it degrades rather than blocks, which is exactly why nothing downstream will stop you.
+- **The declared typeface has to be installed on the machine that renders the sheet — check it before the run, not after.** Every full `logo-concept` run sets type: the variant set at [Step 6](#step-6--the-variant-set) carries a wordmark and two lockups whatever type the mark itself turns out to be. Where the face does not resolve there, the harness detects it and says so at Step 4 — accurately, and too late to act on — and **seven `LOGO.md` slots go `UNRUN` behind that one fact**. [Step 0](#step-0--context-and-guard) item 8 names them and states the check. Like everything else here it degrades rather than blocks, which is exactly why nothing downstream will stop you.
 - Everything else — the drawing, the arithmetic, and the source-level anti-slop signatures — needs nothing beyond `Read`, `Write` and `Glob`.
 
 ## Mode Detection
@@ -150,7 +150,7 @@ Both sub-skills inherit every item below. They are here rather than in either fl
 
 ## logo-concept
 
-Draws a new mark from a brief, or — where a conformant mark already exists — derives its variant set. Eight numbered steps run in order, and a structural self-verification that gates the commit.
+Draws a new mark from a brief, or — where a conformant mark already exists — derives its variant set. Eight numbered steps run in order, plus Step 6.5, which is a half-step because it ships files rather than deciding anything and nothing downstream renumbers around it. **Step 8 is offered, never run on its own initiative** — it is the only step that overwrites files the project already had. A structural self-verification gates the commit.
 
 > "Starting logo-concept. I'll read `docs/design/MASTER.md` if it is there, ask five questions one at a time, write three directions before drawing any of them, render all three on a contact sheet and critique the render, then hand you the set to pick from."
 
@@ -164,8 +164,8 @@ Three, decided in Step 0 by [the existing-mark guard](#the-existing-mark-guard) 
 
 | Entry path | Precondition | What runs |
 |---|---|---|
-| **New mark** | the guard finds nothing | Steps 0 → 7, all of them |
-| **Variants only** | the guard finds a mark **and** the request is for variants of it | Step 0, then Steps 4, 6 and 7 against the existing master. **Steps 1, 2, 3 and 5 do not run** — no concept is generated and nothing that ships is redrawn, the favicon excepted, which is a redraw by rule. |
+| **New mark** | the guard finds nothing | Steps 0 → 7, all of them, Step 6.5 included, then Step 8 — offered, never run on its own initiative |
+| **Variants only** | the guard finds a mark **and** the request is for variants of it | Step 0, then Steps 4, 6, 6.5 and 7 against the existing master, then Step 8 on the same offered terms. **Steps 1, 2, 3 and 5 do not run** — no concept is generated and nothing that ships is redrawn, the favicon excepted, which is a redraw by rule. |
 | **Neither** | the guard finds a mark and the request is an audit, or a *new* mark | `logo-review`. This sub-skill does not run. |
 
 **The variants-only path requires a conformant master, and this gate is not waivable.** Before anything is drawn, grade the existing mark against `reproduction.md` § The binary checklist — that is `logo-review`'s reproduction layer, borrowed rather than restated. If it fails, **stop there**: name the items that failed, offer the audit, and produce no variants. A variant set derived from an unsound master inherits the fault into every file and then documents it as though it had been checked, which is worse than the master alone.
@@ -180,13 +180,26 @@ The request that opened *this* run is still captured verbatim, per item 1 — it
 
 ### Step 0 — context and guard
 
-1. **Read `docs/design/MASTER.md` if it exists** and bind values per `construction.md` § Colour binding, into `LOGO.md` § Colour → *Binding*. If it is absent, say that running `ui-design-system` first produces a better result, ship in `currentColor`, and replace that table with the single line `logo.template.md` prescribes for the absent case. **Never block on it** — [Shared Protocol](#shared-protocol) item 6.
-2. **Scan for an existing mark** at the paths in [The existing-mark guard](#the-existing-mark-guard). They are listed there; do not carry a second copy of the list into the flow.
-3. **Route** by the three-way table in that section, and announce the path and the row that matched.
-4. **Detect where assets go**, reusing `ui-design-system`'s stack detection: React, Next, Astro or Vue → `public/brand/`; Blazor → `wwwroot/brand/`; anything else → `assets/brand/`. The contact sheet is documentation rather than a shipped asset and goes to `docs/design/logo-contact-sheet.html` on every project.
-5. **Start `docs/design/LOGO.md` now**, from `templates/logo.template.md`. It is filled progressively as the flow runs and closed out at Step 7 — it is not written from memory at the end.
-6. **Capture the brief verbatim, at this point and not later.** [Shared Protocol](#shared-protocol) item 1. The invoking request goes into § Concept & rationale's *brief, in one line* row word for word, and is scanned against the eight-keyword list in `anti-slop.md` pattern 6 — cite that list, do not copy it — with the hits, or `none`, in the *keywords* row. Step 1's answers are appended verbatim as they arrive and the scan re-runs over the whole of it. Reconstructing a brief from the finished mark reconstructs the evidence, which is why this happens in Step 0 rather than as a Step 7 chore.
-7. **Establish the typeface, and check it resolves on this machine — now, before the run is spent.** Step 6 ships a wordmark and two lockups on every full run, so every full run sets type in a declared face; on the variants-only path the check binds wherever the request names the wordmark or a lockup. Take the family from `MASTER.md`'s typography where item 1 found one, and where it did not, choose it here rather than at Step 6 — from what is actually installed. Then **say out loud what an unavailable face costs**, because the user can still act on it at this point:
+1. **Read what the project already says about itself, before asking the user for it.** Questions 1 and 2 at [Step 1](#step-1--the-five-questions) ask for the product's name and what it does, and both are usually on disk. Read whichever of these exist — `package.json`, `pyproject.toml`, `*.csproj`, `Cargo.toml`, `README.md`, `index.html`'s `<title>` — and take the name and the one-line description from them.
+
+   **The one-liner outranks the repo, and the user outranks both.** Where the invoking request already names the product or says what it does, that is the answer — do not re-propose a repo value against it, and do not ask the user to choose between them. The repo is consulted only where the request is silent. A `package.json` that disagrees with what the user just typed is not a second opinion; it is a stale file.
+
+   **What is found is *proposed*, never assumed — and proposed one at a time, per [Step 1](#step-1--the-five-questions)'s rule.** These stand in for questions 1 and 2, so they inherit that rule rather than sidestepping it: a compound proposal gets a compound "yes", which is the batched answer the rule exists to prevent. Show the name first — *"`package.json` says the name is `<x>`. Is that the string you want set in type, capitalisation and spacing included?"* — and only then the description, naming the file each came from.
+
+   **Where the name reads as a slug, propose the humanised form beside it** — `acme-web` alongside `Acme`, and say which came from the file. Offering only the raw identifier invites a default-accept of a string that was never a brand name.
+
+   **Record the provenance, not just the text.** A confirmed proposal is not the same evidence as a brief somebody wrote, and the record has to be able to tell them apart — [Shared Protocol](#shared-protocol) item 1 requires the brief up front precisely because *no file can supply it*, and a file string the user nodded at is still a file string. So where the user accepts a proposal unchanged, the *brief, in one line* row carries the text **and** its source: `<the text> — proposed from package.json, confirmed unchanged`. Where they reword it, even slightly, their words are the brief and no provenance note is needed. Where they answer only "yes", the proposed text becomes the confirmed value — never the word "yes", which the pattern-6 scan cannot read.
+
+   The scan then runs over the same words either way, which is correct: what changes is that `logo-review` can see whether the brief was authored or ratified, and weigh Appropriateness accordingly.
+
+   **Never block on this, and never infer question 4 from it.** A repository says nothing about where the mark has to survive; that answer comes from the user and from nowhere else — see [Question 4's consequences](#question-4s-consequences).
+2. **Read `docs/design/MASTER.md` if it exists** and bind values per `construction.md` § Colour binding, into `LOGO.md` § Colour → *Binding*. If it is absent, say that running `ui-design-system` first produces a better result, ship in `currentColor`, and replace that table with the single line `logo.template.md` prescribes for the absent case. **Never block on it** — [Shared Protocol](#shared-protocol) item 6.
+3. **Scan for an existing mark** at the paths in [The existing-mark guard](#the-existing-mark-guard). They are listed there; do not carry a second copy of the list into the flow.
+4. **Route** by the three-way table in that section, and announce the path and the row that matched.
+5. **Detect where assets go**, reusing `ui-design-system`'s stack detection: React, Next, Astro or Vue → `public/brand/`; Blazor → `wwwroot/brand/`; anything else → `assets/brand/`. The contact sheet is documentation rather than a shipped asset and goes to `docs/design/logo-contact-sheet.html` on every project.
+6. **Start `docs/design/LOGO.md` now**, from `templates/logo.template.md`. It is filled progressively as the flow runs and closed out at Step 7 — it is not written from memory at the end.
+7. **Capture the brief verbatim, at this point and not later.** [Shared Protocol](#shared-protocol) item 1. The invoking request goes into § Concept & rationale's *brief, in one line* row word for word, and is scanned against the eight-keyword list in `anti-slop.md` pattern 6 — cite that list, do not copy it — with the hits, or `none`, in the *keywords* row. Step 1's answers are appended verbatim as they arrive and the scan re-runs over the whole of it. Reconstructing a brief from the finished mark reconstructs the evidence, which is why this happens in Step 0 rather than as a Step 7 chore.
+8. **Establish the typeface, and check it resolves on this machine — now, before the run is spent.** Step 6 ships a wordmark and two lockups on every full run, so every full run sets type in a declared face; on the variants-only path the check binds wherever the request names the wordmark or a lockup. Take the family from `MASTER.md`'s typography where item 2 found one, and where it did not, choose it here rather than at Step 6 — from what is actually installed. Then **say out loud what an unavailable face costs**, because the user can still act on it at this point:
 
    - **Seven `LOGO.md` slots go `UNRUN` behind one missing face**, and they are values on any machine where it resolves: `φ_ink` and `φ_ctr`, `k`, both cap-height minimums and the width minimum in § Variants → *Lockup measurements*, and the wordmark *Fit* in § Construction → *Type-specific records*. `reproduction.md` § Full lockup is why — the type side of the lockup minimum is the one constraint on that page that is measured rather than computed, and it is measured off a render of the declared face.
    - **The remedy is to install the face where the sheet will run**, and there is no self-hosting route inside this plugin: a shipped master may not carry `style`, per `construction.md` § Forbidden constructs, and the sheet is filled by placeholder substitution only — adding a face to it is regenerating the instrument, which Step 4 forbids for the reason it gives there.
@@ -198,8 +211,8 @@ Ask them **one at a time — one question per message.** A batched list gets a b
 
 | # | Question | In quick mode | Where the answer lands |
 |---|---|---|---|
-| 1 | The exact string to be set in type. Capitalisation and spacing are design decisions, not typos. | asked if the one-liner does not carry it | § Concept & rationale *brief*; the `aria-label` on every variant |
-| 2 | What the product does, in one sentence. | asked if absent | § Concept & rationale *brief*; it is what Step 2's directions are about |
+| 1 | The exact string to be set in type. Capitalisation and spacing are design decisions, not typos. | asked if the one-liner does not carry it; where Step 0 item 1 found a name, proposed for confirmation rather than asked cold | § Concept & rationale *brief*; the `aria-label` on every variant |
+| 2 | What the product does, in one sentence. | asked if absent; where Step 0 item 1 found a description, proposed for confirmation rather than asked cold | § Concept & rationale *brief*; it is what Step 2's directions are about |
 | 3 | Mark type preference — geometric, monogram, wordmark, abstract, or "you choose". | defaults to "you choose" | § Concept & rationale *Type chosen because* and *Mark–name relationship*; on "you choose" both are derived from answers 1 and 4, per the procedure below |
 | 4 | **Where it must survive** — favicon, app icon, one-colour print or embroidery, dark UI, large format. | **asked standalone, always** | more slots than any other answer; see below |
 | 5 | Must-avoid. | defaults to none | § Concept & rationale *brief*, verbatim with the rest |
@@ -211,7 +224,7 @@ Ask them **one at a time — one question per message.** A batched list gets a b
 | Q1's string | Q4 size-hostile | Derived type |
 |---|---|---|
 | short — roughly four characters or fewer | yes | **Monogram**, on as many of those characters as `mark-types.md` § Monogram permits — that recipe sets the ceiling and says what three initials measure at a 16 px render, so a three-character string does not become a three-character monogram. A string this short *is* its own initials, and the lettermark is the construction that carries the name at the size that decides it. It is drawn as paths, so it takes no typeface dependency at all. |
-| short | no | **Monogram** still, for the same reason minus the urgency. A **wordmark** is the one defensible alternative here — at four characters it is the monogram plus the remaining letters — and it is available only once Step 0 item 7's face question is settled, because a wordmark master ships a `text` element and inherits both that dependency and the un-performed outline conversion `mark-types.md` § Wordmark records. |
+| short | no | **Monogram** still, for the same reason minus the urgency. A **wordmark** is the one defensible alternative here — at four characters it is the monogram plus the remaining letters — and it is available only once Step 0 item 8's face question is settled, because a wordmark master ships a `text` element and inherits both that dependency and the un-performed outline conversion `mark-types.md` § Wordmark records. |
 | long | yes | The name cannot be set at that size at all, so a **mark-alone variant is mandatory** and the type question is only about what that mark is: **monogram** where the initials are short and distinctive, **geometric** or **abstract** where they are not, on the remaining rows of that same table. |
 | long | no | **Wordmark**, per that table's name-led row — nothing has to survive without the name. Same face question, same place. |
 
@@ -330,7 +343,7 @@ Seven files, written to the directory Step 0 detected. `logo.template.md` § Var
 Draw them in this order; each later one depends on an earlier:
 
 1. **`logo-mark.svg`** — Step 5's winner, unchanged.
-2. **`logo-wordmark.svg`** — the name set in type on the **square master artboard**, per `mark-types.md` § Wordmark and its worked fragment. **Declare the face Step 0 item 7 established, and if that check was skipped, run it before drawing rather than after** — this file and the two below it are what the seven slots named there hang off. Square is load-bearing here: this is the variant `φ_ink` and `φ_ctr` are measured off, and the harness renders a square artboard at full size. Its family, weight and tracking go to § Production handoff → *Typeface*; the un-performed outline conversion is already the template's fixed text and ships unedited.
+2. **`logo-wordmark.svg`** — the name set in type on the **square master artboard**, per `mark-types.md` § Wordmark and its worked fragment. **Declare the face Step 0 item 8 established, and if that check was skipped, run it before drawing rather than after** — this file and the two below it are what the seven slots named there hang off. Square is load-bearing here: this is the variant `φ_ink` and `φ_ctr` are measured off, and the harness renders a square artboard at full size. Its family, weight and tracking go to § Production handoff → *Typeface*; the un-performed outline conversion is already the template's fixed text and ships unedited.
 3. **`logo-full.svg`** and **`logo-stacked.svg`** — the lockups. Each declares its own non-square `viewBox` and records its aspect, per `reproduction.md` § Artboard hygiene. **They are not size-tested on the sheet.** The harness is built for the square artboard and would render them letterboxed at a fraction of the size the square variants get, so a measurement taken there describes the letterboxing rather than the lockup. They are checked for **composition and clearspace only** — `reproduction.md` § Clearspace's lockup rule — and their minimum sizes are **derived from their components**: the mark side from `k`, the type side from the wordmark's φ. `reproduction.md` § Full lockup carries that derivation; record the result *and* the derived status in § Variants → *Lockup measurements*.
 4. **`logo-mono-black.svg`** and **`logo-mono-white.svg`** — derived by resolving `color`, never redrawn. Determine the D1 **state first, from the size**, per `reproduction.md` § Three states, not two, then meet that state's obligation. Byte-identity on its own is not a pass at or above the threshold. Diff them against their source and record the result.
 5. **`logo-favicon.svg`** — **redrawn, not scaled.** Its own drawing on the same artboard, to `reproduction.md` § The favicon's own spec, satisfying F1, F2 and F3. Every dropped feature goes into § Variants → *Favicon* in reproduction terms: the measurement, the device pixels it works out to, and what that does to the raster. "Simplified for small sizes" is not a reason.
@@ -341,12 +354,39 @@ Also at this step: § Variants → *Print minimums*, one row per process questio
 
 **Where the chosen type makes a variant meaningless, it is not written.** A wordmark-type mark has no mark-alone symbol, so there is no `logo-mark.svg` and no lockup distinct from the wordmark itself. The § Variants row then reads `n/a — <why>`, the file does not ship, and *Files in the set* records what actually did. Writing an empty or duplicated file to make the count reach seven is worse than recording the gap.
 
+### Step 6.5 — the raster set
+
+Seven SVGs are not a shipped identity. A `favicon.ico`, an `apple-touch-icon.png` and the PWA icon sizes are what hosts, app stores and older browsers actually read, and none of them accepts SVG.
+
+Run the bundled exporter against the directory Step 0 detected:
+
+```bash
+node <skill-dir>/scripts/export-raster.mjs <brand-dir>
+```
+
+It writes eight files and **routes each one to the SVG whose reproduction spec covers its size** — 16, 32, 48 and the `.ico` from `logo-favicon.svg`, and 180, 192, 512 and 1024 from `logo-mark.svg`. That routing is not configurable, and the reason is `reproduction.md § The favicon's own spec`: the favicon is a redraw for exactly those sizes, and the master is specified above its own computed minimum. **Never rasterise the master at 16 px** — it ships a mark this skill's own binary layer already failed.
+
+**Read the exit code. It is a four-way contract, and three of the four are not failures of the mark:**
+
+| Code | Means | What to do |
+|---|---|---|
+| **0** | The eight files were written | Record them, per the paragraph below |
+| **1** | A converter failed at runtime — a malformed SVG, a crashed binary, an Inkscape that passed the `--version` probe and then rejected the 1.0+ export flags | A real failure, and the message carries the converter, the source, the size, the argv and the tool's own stderr. It also lists any files already written, so **the directory is half-populated** — read that list before doing anything else. Fix the cause and re-run; a re-run overwrites cleanly. |
+| **2** | Usage error, or a source SVG is missing | Step 6 did not complete. Fix Step 6; do not work around it here. |
+| **3** | No rasteriser on the machine | **`UNRUN`, not a failure** — see below |
+
+**Exit code 3 degrades exactly as a missing Playwright MCP does** — [Shared Protocol](#shared-protocol) item 3. Ship the SVG set, record every raster row `UNRUN — no rasteriser on this machine; install one of the four the exporter names` in § Variants → *Raster set*, put the install step into § Production handoff → *Still to do*, and say so in the first sentence at Step 7. **Do not fake a PNG, do not substitute a screenshot, and do not report the icons as shipped.**
+
+**Record every written file** in § Variants → *Raster set* and in § Asset manifest, each row naming the SVG it came from. A raster whose source is not recorded cannot be regenerated when the mark changes, and a raster nobody can regenerate is the file that goes stale first.
+
+**No raster is graded.** The exporter is a converter, not an instrument: `reproduction.md`'s checklist is graded on the vector source, and a PNG adds no evidence about a mark whose geometry was already measured. This step ships files; it does not decide anything.
+
 ### Step 7 — finalise
 
 1. **Close out `docs/design/LOGO.md`.** It was started at Step 0 and filled as the flow ran.
    - **Delete every block headed `Example —`.** The template says it: examples are not content.
    - Fill § Misuse with rows that each name a number from this file. A row that would be true of any logo is not doing work.
-   - Fill § Production handoff → *Still to do*. The outline-conversion and trademark-clearance paragraphs ship **unedited**; where no variant carries a `text` element, add the one-line `n/a` the template prescribes under the first of them. **Where the declared face did not resolve on the render machine, *Still to do* carries the install step**, naming the face and the seven slots Step 0 item 7 lists — those rows are `UNRUN` for a reason somebody else can clear in five minutes, and a handoff that does not say so wastes it.
+   - Fill § Production handoff → *Still to do*. The outline-conversion and trademark-clearance paragraphs ship **unedited**; where no variant carries a `text` element, add the one-line `n/a` the template prescribes under the first of them. **Where the declared face did not resolve on the render machine, *Still to do* carries the install step**, naming the face and the seven slots Step 0 item 8 lists — those rows are `UNRUN` for a reason somebody else can clear in five minutes, and a handoff that does not say so wastes it.
    - Fill § Asset manifest, one row per shipped file.
    - **Sweep for empty cells.** An empty slot is a finding, not a silence, and the four tokens in `logo.template.md` § Recording conventions are the only legal fills. Every one of them carries a reason after the dash.
 2. **Regenerate the sheet against the final assets.** The sheet has three candidate slots and the set has three distinct square drawings: `logo-mark.svg`, `logo-favicon.svg` and `logo-wordmark.svg`. The mono pair is the master with `color` resolved and is already rendered in the master's own mono columns; the lockups are not size-tested, per Step 6. Screenshot, read back, run the checklist once.
@@ -356,7 +396,7 @@ Also at this step: § Variants → *Print minimums*, one row per process questio
 
 #### Structural self-verification
 
-Runs before Step 7 completes, against the files actually on disk. Five checks:
+Runs before Step 7 completes, against the files actually on disk. Eight checks:
 
 - [ ] Every file named in § Asset manifest exists at its recorded path — **and** every SVG in the asset directory appears in the manifest. Both directions: a file on disk and absent from the table is a leftover or an undocumented variant, and `logo.template.md` calls both findings.
 - [ ] Each SVG parses.
@@ -364,10 +404,12 @@ Runs before Step 7 completes, against the files actually on disk. Five checks:
 - [ ] Each root `svg` carries a `viewBox`, and the square variants all carry the identical one, per `reproduction.md` § Artboard hygiene.
 - [ ] No `filter` element anywhere in the set.
 - [ ] The mono variants bind every paint to `currentColor`, and differ from their source only in the resolved `color`.
+- [ ] Every file the exporter reported written exists at its recorded path and appears in § Asset manifest with the SVG it was rasterised from. Where the exporter returned `UNRUN`, every raster row says so and no raster file is on disk.
+- [ ] No raster file in the asset directory lacks a manifest row. A stray PNG is the same finding as a stray SVG.
 
-**A failure here is a bug in the generated assets, not a warning to pass along.** Fix it and re-run all five. Do not commit, do not present it as a caveat beside the assets, and do not write it into `LOGO.md` as a finding and move on.
+**A failure here is a bug in the generated assets, not a warning to pass along.** Fix it and re-run all eight. Do not commit, do not present it as a caveat beside the assets, and do not write it into `LOGO.md` as a finding and move on.
 
-**None of the five is render-dependent.** They read the files, so they run identically with and without Playwright MCP and are **never** recorded `UNRUN`. A set that skipped them because the MCP was absent skipped them for no reason at all.
+**None of the eight is render-dependent.** They read the files, so they run identically with and without Playwright MCP and are **never** recorded `UNRUN`. A set that skipped them because the MCP was absent skipped them for no reason at all.
 
 #### The commit
 
@@ -381,6 +423,51 @@ Stage by explicit pathspec — the asset directory, `docs/design/LOGO.md`, and `
 
 **Render nothing locally.** No message literal, no message format, no tag scheme, anywhere in this flow.
 
+### Step 8 — wire it into the project
+
+Optional, and **asked for rather than assumed**: Step 7 committed the asset set, and replacing a project's live icons is a separate decision with a separate blast radius. Offer it, name every file that would change, and wait.
+
+> "The set is committed. I can also replace the icons this project already ships — I found `<paths>`. Nothing else would change, and I would not add any icon file the project does not already reference. Want me to?"
+
+**1. Find the slots that already exist.** Only these, and only where the file is already there:
+
+```text
+public/favicon.ico          public/favicon.svg          public/apple-touch-icon.png
+public/icon-192.png         public/icon-512.png         public/pwa-192x192.png
+public/pwa-512x512.png      static/favicon.ico          wwwroot/favicon.ico
+src/app/favicon.ico         app/favicon.ico
+```
+
+**An iOS asset catalog is deliberately not in that list.** `AppIcon.appiconset` needs sizes this flow does not produce — 20, 29, 40, 58, 60, 76, 80, 87, 120, 152 and 167 among them — and its `ios-marketing` entry must carry no alpha channel, which nothing here flattens. Filling the entries we happen to match and leaving the rest is how a build passes locally and fails App Store review later, with nothing pointing back at this step. Say the catalog exists, say it needs sizes and an opaque marketing icon this flow does not generate, and leave it alone.
+
+**2. Refuse to overwrite anything git cannot give back.** Before writing to a path, check it with `git status --porcelain -- <path>` in the project that owns it. **Replace it only where it is tracked and clean.** Where it is untracked, ignored, or carries uncommitted edits, **name it, skip it, and say why** — the same posture as the row above. This is the difference between a replacement a reviewer can revert with one command and a file that no longer exists anywhere. It is cheap, it is checkable, and it is the only protection this step has: every other check here runs *after* the original is gone.
+
+**3. Replace, never add.** A slot that does not exist is not created. The project's own build config decides which icons it ships, and this flow does not have that config in view — inventing a file the manifest never references leaves an orphan that outlives the reason for it. Where the project plainly wants an icon it has no file for, **say so and stop**; that is a change to the project's configuration, not to its assets.
+
+**4. Match on the size the existing file actually is, never on its name.** Read the target's real pixel dimensions before choosing a source — a `.png`'s IHDR carries them, and a name like `apple-touch-icon.png` carries nothing. Then take the raster the exporter produced **at that exact size**: 16, 32 or 48 from the favicon redraw, and 180, 192, 512 or 1024 from the master. **Where the target's size is not one of those seven, do not substitute the nearest** — name it, skip it, and say which size would be needed. A 167 px slot filled with the 180 px raster is a manifest declaring a size the bytes do not have, and instruction 5 forbids fixing that by editing the declaration.
+
+**A `favicon.ico` carries a size list of its own — read it before replacing it.** Ours packs 16, 32 and 48. Where the project's packs sizes beyond those, replacing it drops them, and no later check notices. Say which sizes would be lost and let the user decide; do not replace it silently.
+
+**5. Update a manifest only where one already lists the file being replaced.** `manifest.json`, `site.webmanifest`, and `<link rel="icon">` tags in an existing `index.html`. Change the *file* an entry points at only where the filename itself changed; never add an entry, and never change an entry's `sizes` or `type` to suit our filenames. **Where our filename differs from the project's, keep the project's** — the host's build depends on its own names, and renaming its assets to match ours is a breaking change dressed as a logo update.
+
+**6. Record what changed** in § Project files replaced, one row per replaced file, naming its size, the file it was replaced with, and the commit that can revert it — then fill the summary fields: how many files were replaced, that every one was tracked and clean before the write, and which slots were found but skipped, and why. A replaced file is a shipped file: a section that omits it is wrong about what this project now contains.
+
+**7. Verify before committing.** Every replaced path still exists, is non-empty, and — for a raster — still carries the PNG or ICO magic bytes it did before. A replacement that truncated a file is worse than no replacement, because the asset it overwrote is already gone.
+
+**A failure here is not a warning to pass along.** Restore the path from git — instruction 2's tracked-and-clean rule is what guarantees you can — re-run the replacement for that file alone, and verify again. Where it fails twice, restore it, leave the project's original in place, and record the slot as skipped. Never commit a replacement you could not verify.
+
+#### The commit
+
+[Shared Protocol](#shared-protocol) item 7. Supply the triple to `project-orchestration`'s **Commit & Release Protocol**, which loads the host project's `docs/planning/CONVENTIONS.md`, runs the branch guard, and renders the message:
+
+- **`type`** — `chore`
+- **`scope`** — resolved by the protocol from the host project's `Scope source`; where no allowed scope matches, its `Fallback when scope not allowed` decides. Do not invent one.
+- **`subject`** — `replace project icons with the new brand mark`
+
+Stage by explicit pathspec — every replaced file and `docs/design/LOGO.md`, nothing else. **Separate from Step 7's commit.** That one added the asset set; this one changes what the project ships, and a reviewer has to be able to revert the second without losing the first.
+
+**Render nothing locally.** No message literal, no message format, no tag scheme, anywhere in this flow.
+
 ### Where each `LOGO.md` slot is filled
 
 `logo.template.md` carries a slot for every value the reference files ask to be written down, and an empty one is a finding. This is the map from its sections to the step that fills them; a section with no step would be a gap in this flow rather than a silence in the record.
@@ -391,6 +478,7 @@ Stage by explicit pathspec — the asset directory, `docs/design/LOGO.md`, and `
 | Concept & rationale | Step 0 (brief, keywords), Step 2 (type chosen because, mark–name relationship), Step 5 (opening sentences, why it won, candidates rejected) |
 | Construction — chain, optical exceptions, nine corrections, stroke and counters, silhouette, anti-slop derivations, type-specific | Step 3; the favicon's own rows at Step 6; a wordmark's *Fit* at Step 4 |
 | Variants — table, lockup measurements, favicon, print minimums | Step 6 |
+| Variants — raster set | Step 6.5 |
 | Colour — binding | Step 0 |
 | Colour — contrast | Step 3 |
 | Colour — one-colour print and mono | Step 3 for M1, M2 and M4; Step 4 for M3, or `UNRUN` |
@@ -398,10 +486,11 @@ Stage by explicit pathspec — the asset directory, `docs/design/LOGO.md`, and `
 | Clearspace & minimum sizes | Step 3 |
 | Misuse | Step 7 |
 | Production handoff — outline conversion, trademark clearance | the template's fixed text, shipped unedited |
-| Production handoff — typeface | Step 0 item 7 establishes the family and whether it resolves here; Step 6 records it with the weight and tracking |
+| Production handoff — typeface | Step 0 item 8 establishes the family and whether it resolves here; Step 6 records it with the weight and tracking |
 | Production handoff — checks recorded unrun | Step 4, and Step 7's sweep |
 | Production handoff — still to do | Step 7 |
-| Asset manifest | Step 7, verified by the structural self-verification |
+| Asset manifest | Step 7, from Step 6 and Step 6.5, verified by the structural self-verification |
+| Asset manifest — project files replaced | Step 8, where it ran; `n/a — Step 8 was not run` otherwise |
 
 **One answer has no slot: question 5's must-avoid.** It constrains every direction and `logo.template.md` has no field for it. Record it verbatim inside the *brief, in one line* row with the rest of the brief, where Step 2 reads it. If a later revision of the template adds a field, it moves there and this note goes.
 
@@ -470,11 +559,11 @@ So the record-dependent set is short, and it is read off the checklist item by i
 
 | Layer | Runs without a record |
 |---|---|
-| 1 | Every item that names no record: the whole mono-collapse source side, D2, the favicon's three redraw tests, path complexity and both tracing signatures, clearspace, the computed minimum sizes, and artboard hygiene |
+| 1 | Every item that names no record: the whole mono-collapse source side, D2, the favicon's three redraw tests, path complexity and both tracing signatures, clearspace, the computed minimum sizes, and artboard hygiene. Raster provenance's file side also runs without a record — every raster on disk can be listed and its size read against 48 px — but neither of its FAILs is reachable until a record exists to check the listing against. |
 | 2 | Eight patterns of the ten, in full, from their source signatures |
 | 3 | Simplicity, which is scored from the source alone |
 
-**What goes `UNRUN`:** every pure-record item on the checklist; the record-side escape hatch on any item whose file side did not clear; `anti-slop.md`'s Tests A and B for patterns 1 and 9 and the strict Test A for 6 and 8, wherever the signature hit; pattern 6's brief where the user cannot supply it; and, in Layer 3, Distinctiveness, which names the derivation chain among its evidence.
+**What goes `UNRUN`:** every pure-record item on the checklist; the record-side escape hatch on any item whose file side did not clear; raster provenance, whenever there is no `LOGO.md` or no *Raster files* table in it; `anti-slop.md`'s Tests A and B for patterns 1 and 9 and the strict Test A for 6 and 8, wherever the signature hit; pattern 6's brief where the user cannot supply it; and, in Layer 3, Distinctiveness, which names the derivation chain among its evidence.
 
 **So an undocumented mark's ceiling is `PARTIAL — evidence-limited`, and saying so is the point.** The criteria files make the record a precondition of a clean bill — `reproduction.md` asks for values to be written down and `anti-slop.md`'s carve-out asks for an answer that only the person who drew the mark can give. A skill that issued PASS anyway would be certifying the absence of evidence. The remediation is a record, never a redraw, and it has exactly two routes: whoever drew the mark writes the derivation answers, or `logo-concept`'s **variants-only** path fills the slots readable from the file — which is most of them, and it leaves the derivation slots `UNRUN` by its own rule rather than guessing them.
 
@@ -485,7 +574,12 @@ So the record-dependent set is short, and it is read off the checklist item by i
 ### Step 1 — the mark, the record, and the specification
 
 1. **Collect the set.** Every file the [existing-mark guard](#the-existing-mark-guard) found, plus anything the user named by path or supplied inline. The audit runs against the *set*, not one file: hygiene, the mono diff and the favicon's three tests are all cross-file.
-2. **Vector source, or nothing.** Layers 1 and 2 read the SVG. Where the mark exists only as a raster — a PNG, an ICO, a screenshot — **both layers are entirely `UNRUN`**, that is the first sentence of the report, and the single remediation is the vector master. Do not derive a stand-in from a bitmap; a source-derived stand-in is a different check wearing this one's name.
+2. **Vector source, or nothing — but a raster *beside* a vector is not a raster-only mark.** Layers 1 and 2 read the SVG. Two cases, and conflating them is how a sound set gets audited as though it had no source:
+
+   - **A raster with a vector master in the same set** — the icon files `logo-concept` § Step 6.5 ships, or any equivalent. Grade the **vector**. The rasters are conversions of a geometry that is already being measured and add no evidence of their own; they are checked only by the raster provenance item in Layer 1 below.
+   - **A raster with no vector anywhere** — a PNG, an ICO or a screenshot and nothing else. **Both layers are entirely `UNRUN`**, that is the first sentence of the report, and the single remediation is the vector master.
+
+   In neither case is a stand-in derived from a bitmap. A source-derived stand-in is a different check wearing this one's name.
 3. **Normalise the artboard.** `reproduction.md`'s pixel rule is stated on `0 0 256 256` and an external mark is usually on something else. Scale every measured value by `256 / <the longer side of the declared viewBox>` before comparing it to any threshold, and record the factor in the report header. A root `svg` carrying no `viewBox` at all is an artboard-hygiene FAIL in its own right; normalise off its `width` and `height` and say that is what you did.
 4. **Read `docs/design/LOGO.md` if it exists.** Where it does, every slot is evidence and every empty slot is a finding — `logo.template.md` says an empty slot is a finding rather than a silence, and this flow is the reader that makes that true.
 5. **Ask only what the record does not already answer**, one question per message, at most two:
@@ -531,6 +625,16 @@ Each item takes exactly one of **PASS**, **FAIL**, `n/a — <why>`, `UNRUN — <
 **One consequence, stated so it is not mistaken for a defect: an external mark with no record cannot reach Layer 1 PASS.** The pure-record items have nowhere to be satisfied, so `PARTIAL — evidence-limited` is the ceiling until somebody writes the record. It is not a FAIL and must not be reported as one.
 
 **Context-dependent items.** Where an item depends on a context the mark ships into and Step 1 established that context, grade it. Where a named context needs a variant the set does not ship, that is a **FAIL** — a mark cannot reproduce into a context it has no file for. Where the context was never established, the item is `UNRUN`, per the `n/a` needs a fact rule above.
+
+**Raster provenance.** Where the set carries rasters alongside a vector master, one item, graded from the files and the record. **Ask first whether there is a record at all** — the two failures below are only reachable once there is:
+
+- **No `LOGO.md`, or no *Raster files* table in it** — `UNRUN — no record; LOGO.md § Asset manifest → Raster files`, like every other pure-record item. **Not a FAIL.** Every raster is unaccounted for, but by the auditor's missing evidence rather than the mark's fault, and the two rows below do not fire.
+- **A record exists, and a raster on disk has no row in it** — an undocumented asset, and a **FAIL**. A file that ships without appearing in the manifest that claims to list what ships is the manifest being wrong, which is a finding against a record that exists rather than against one that does not.
+- **A record exists, and a row for a raster at or below 48 px names the master** — a **FAIL**. It ships the master at a size its own recorded minimum excludes, which is the one thing `logo-concept` § Step 6.5's routing exists to prevent, and no caveat repairs it.
+
+**A raster is never graded on its own pixels.** It carries no geometry this skill can measure — the mono tests, the counter arithmetic and the silhouette all read the vector. An audit that opens a PNG to judge the mark has substituted the conversion for the thing converted.
+
+This item is not on `reproduction.md`'s checklist and has no group there — it is a record question rather than a reproduction hazard. Report it in Layer 1's per-item table under its own name, and count it in the group row as `Raster provenance`, so the group counts still sum to the items graded.
 
 ### Step 4 — Layer 2, the anti-slop scan
 

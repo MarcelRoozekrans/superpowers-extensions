@@ -198,6 +198,35 @@ The favicon is a redraw, not a scale. Record what it dropped, in reproduction te
 | Ink reaches the live-area bounds on its longer axis | graded on the **geometry box**, which is the sound end of the bracket for a coverage check. The variant is filled, so the geometry box and the `ink bbox` coincide and the item is simply decidable; the sheet's readout reports `ink bbox x 16.00 … 240.00` and `y 16.00 … 240.00`, spanning the bounds on both axes |
 | Uniform weight | recorded as a `declined` correction in [The nine corrections](#the-nine-corrections) |
 
+### Raster set
+
+The files hosts read when they cannot read SVG. Every row names the SVG it was rasterised from — a raster whose source is not recorded cannot be regenerated when the mark changes.
+
+**Nothing here is graded.** `reproduction.md`'s checklist is graded on the vector source; these are conversions of an already-measured geometry.
+
+`node plugins/logo-design/skills/logo-design/scripts/export-raster.mjs assets/brand` was run against this mark on the machine that produced this record. It printed an install hint to stderr and exited `3` — no rasteriser (`resvg`, `rsvg-convert`, `inkscape`, or `magick`) is on that machine. No file was written; `git status --short assets/brand` came back clean both before and after the run.
+
+| File | px | Rasterised from | Intended slot | Status |
+|---|---|---|---|---|
+| `favicon-16.png` | 16 | `logo-favicon.svg` | `<link rel="icon" sizes="16x16">` | `UNRUN — no rasteriser on this machine; install one of the four the exporter names` |
+| `favicon-32.png` | 32 | `logo-favicon.svg` | `<link rel="icon" sizes="32x32">` | `UNRUN — no rasteriser on this machine; install one of the four the exporter names` |
+| `favicon-48.png` | 48 | `logo-favicon.svg` | legacy browser tab | `UNRUN — no rasteriser on this machine; install one of the four the exporter names` |
+| `favicon.ico` | 16/32/48 | `logo-favicon.svg` | site root, for hosts that ignore `favicon.svg` | `UNRUN — no rasteriser on this machine; install one of the four the exporter names` |
+| `apple-touch-icon.png` | 180 | `logo-mark.svg` | iOS home screen | `UNRUN — no rasteriser on this machine; install one of the four the exporter names` |
+| `icon-192.png` | 192 | `logo-mark.svg` | web app manifest | `UNRUN — no rasteriser on this machine; install one of the four the exporter names` |
+| `icon-512.png` | 512 | `logo-mark.svg` | web app manifest, splash | `UNRUN — no rasteriser on this machine; install one of the four the exporter names` |
+| `icon-1024.png` | 1024 | `logo-mark.svg` | app store listing | `UNRUN — no rasteriser on this machine; install one of the four the exporter names` |
+
+**The routing is a rule, not a convenience.** Everything at or below 48 px comes from the favicon redraw and everything above it from the master, because the favicon is drawn for those sizes and the master is specified above its own computed minimum. A master rasterised at 16 px is a mark this skill's own reproduction layer already failed.
+
+| Field | Record |
+|---|---|
+| Rasteriser used | `UNRUN — no rasteriser on this machine; install one of the four the exporter names` |
+| Sizes at or below 48 px come from the favicon redraw | `yes` — never the master; see `reproduction.md § The favicon's own spec` |
+| Files written | `0 — UNRUN, no rasteriser` |
+
+Where the exporter returned `UNRUN`, every row's Status carries that token, no raster file is on disk, and the install step is in [Still to do](#still-to-do). Where it exited 1 partway through, the rows it wrote say `written` and the rest say `UNRUN`, because a half-populated directory that reads as a complete one is the failure this column exists to prevent.
+
 ### Print minimums
 
 One row per process the brief named. **The brief named `one-colour print / sticker` and named no vendor and no process**, so the three rows below are the trade-default processes that answer for a one-colour print and a sticker, and every `L` and `g` is a trade default from `reproduction.md` § Print rather than a vendor spec. A real vendor spec replaces them and the Minimum column recomputes. Computed from this mark's own `u_ink` 30.72 and `u_ctr` 64, never from `reproduction.md`'s worked table, which is the worst legal construction.
@@ -332,6 +361,7 @@ Where the contact sheet did run, every row it settled is recorded with its value
 | Trademark clearance | **not performed** — see above |
 | Install or self-host Inter 700 on the machine that runs the contact sheet, then re-run it | **not done** — it is what turns eight of the nine rows above into values |
 | Run `ui-design-system` to produce `docs/design/MASTER.md` | **not done** — the mark ships in `currentColor` and no palette was invented; a design system would give the Colour § Binding table real values |
+| Icon raster set exported | `not performed — no rasteriser on the machine that ran this; the SVG set ships and the eight rows in [Raster set](#raster-set) stay UNRUN until it is` |
 | Copy or symlink `logo-favicon.svg` to a site root as `favicon.svg` if one is ever added | **not done** — this repository has no site root today. The asset is not renamed; the manifest records it under its own name |
 
 ## Asset manifest
@@ -356,3 +386,20 @@ Every file that ships, and nothing that does not.
 | No empty groups, unreferenced `defs`, or surviving construction geometry | `yes` — there is no `g` and no `defs` anywhere in the set |
 | Mono variants diffed against their source | `pass` — both differ from `logo-mark.svg` only in the added root `color` attribute and the comment; the `d` attributes are byte-identical |
 | Every variant's ink sits inside the live area | graded on the **geometry box**, which coincides with the `ink bbox` on every drawn variant because all of them are filled — the sheet's readout reports `16.00 … 240.00` on both axes for `logo-mark.svg` and `logo-favicon.svg`, both `inside`. On `logo-wordmark.svg` the reported box is a `text` layout box, not ink, and its extents are carried into [Checks recorded unrun](#checks-recorded-unrun) |
+| Raster files recorded in [Raster files](#raster-files) | `UNRUN — no rasteriser, no raster shipped` |
+
+### Raster files
+
+The table above records geometry. A raster has none — it records provenance, which is the only thing about it that can go stale.
+
+No raster shipped. The exporter (`plugins/logo-design/skills/logo-design/scripts/export-raster.mjs`) was run against `assets/brand` and exited `3` — no rasteriser on the machine — before writing anything, so the table below carries no rows.
+
+| Path | px | Rasterised from | Bytes |
+|---|---|---|---|
+| `none` | `n/a` | `n/a` | `n/a` |
+
+| Field | Record |
+|---|---|
+| Files in the raster set | `0 — UNRUN, no rasteriser` |
+| Every raster's source appears in the SVG manifest above | `n/a — no raster shipped` |
+| Rasteriser used | recorded once in [Raster set](#raster-set) — not duplicated here |
