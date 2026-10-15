@@ -1,0 +1,125 @@
+name: Upstream watch
+
+# Opens one issue per new obra/superpowers release, so changes upstream that
+# affect this suite get looked at instead of discovered by users. The issue
+# carries the release notes, what changed in upstream's skills and hooks since
+# the pinned release, and the result of check-upstream against the new release.
+#
+# The pin (.github/upstream-superpowers.json) is bumped by hand in the PR that
+# adapts the suite, which is what closes the issue.
+
+on:
+  schedule:
+    # Daily 06:17 UTC; off the hour so it is not queued behind every :00 cron
+    - cron: '17 6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      LABEL: upstream-superpowers
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - name: Compare the latest upstream release with the pin
+        id: compare
+        run: |
+          repo=$(node -p "require('./.github/upstream-superpowers.json').repo")
+          pinned=$(node -p "require('./.github/upstream-superpowers.json').ref")
+          latest=$(gh release view --repo "$repo" --json tagName --jq .tagName)
+          echo "repo=$repo" >> "$GITHUB_OUTPUT"
+          echo "pinned=$pinned" >> "$GITHUB_OUTPUT"
+          echo "latest=$latest" >> "$GITHUB_OUTPUT"
+
+          if [ "$latest" = "$pinned" ]; then
+            echo "Pinned $pinned is the latest release; nothing to do."
+            echo "new=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # One issue per release, open or closed: a closed issue means it was
+          # handled (or deliberately skipped), so it must not be reopened daily.
+          existing=$(LATEST="$latest" gh issue list --label "$LABEL" --state all --limit 200 \
+            --json title --jq '[.[] | select(.title | startswith("Upstream superpowers " + $ENV.LATEST + " "))] | length')
+          if [ "$existing" != "0" ]; then
+            echo "An issue for $latest already exists."
+            echo "new=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "new=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build the issue body
+        if: steps.compare.outputs.new == 'true'
+        env:
+          REPO: ${{ steps.compare.outputs.repo }}
+          PINNED: ${{ steps.compare.outputs.pinned }}
+          LATEST: ${{ steps.compare.outputs.latest }}
+        run: |
+          git clone --quiet --filter=blob:none "https://github.com/$REPO.git" upstream
+          git -C upstream checkout --quiet "$LATEST"
+
+          set +e
+          compat=$(node scripts/check-upstream.mjs --upstream upstream 2>&1)
+          compat_status=$?
+          set -e
+
+          url=$(gh release view "$LATEST" --repo "$REPO" --json url --jq .url)
+          # Issue bodies cap at 65536 characters; leave room for the rest.
+          notes=$(gh release view "$LATEST" --repo "$REPO" --json body --jq .body | head -c 30000)
+
+          {
+            echo "Upstream [\`$REPO\`](https://github.com/$REPO) released [\`$LATEST\`]($url). This suite is pinned to \`$PINNED\`."
+            echo
+            echo "## Compatibility check"
+            echo
+            if [ "$compat_status" -eq 0 ]; then
+              echo "✅ \`check-upstream\` passes against \`$LATEST\`: every referenced skill and quoted hand-off still exists. Read the changes below for behaviour that moved without renaming anything."
+            else
+              echo "❌ \`check-upstream\` fails against \`$LATEST\`. These need fixing before the pin can move:"
+            fi
+            echo
+            echo '```text'
+            echo "$compat"
+            echo '```'
+            echo
+            echo "## What changed in skills and hooks"
+            echo
+            echo '```text'
+            git -C upstream diff --stat=120 "$PINNED" "$LATEST" -- skills hooks .claude-plugin | tail -n 80
+            echo '```'
+            echo
+            echo "Full diff: https://github.com/$REPO/compare/$PINNED...$LATEST"
+            echo
+            echo "## Release notes"
+            echo
+            echo "$notes"
+            echo
+            echo "## To close this issue"
+            echo
+            echo "- [ ] Adapt the plugins that depend on what changed (each failed anchor names them)"
+            echo "- [ ] Update \`ANCHORS\` in \`scripts/check-upstream.mjs\` if the suite now relies on different upstream text"
+            echo "- [ ] Bump \`.github/upstream-superpowers.json\` to \`$LATEST\` in the same PR, so CI checks against it"
+            echo
+            echo "🤖 Opened by \`.github/workflows/upstream-watch.yml\`"
+          } > issue.md
+
+      - name: Open the issue
+        if: steps.compare.outputs.new == 'true'
+        env:
+          PINNED: ${{ steps.compare.outputs.pinned }}
+          LATEST: ${{ steps.compare.outputs.latest }}
+        run: |
+          gh label create "$LABEL" --color 5319e7 \
+            --description "A new obra/superpowers release to adapt to" --force
+          gh issue create --label "$LABEL" --body-file issue.md \
+            --title "Upstream superpowers $LATEST released (pinned: $PINNED)"
