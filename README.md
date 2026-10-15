@@ -432,6 +432,10 @@ The ui-design-system skill generates a complete design system before frontend im
 - "Generate a design system for a SaaS dashboard"
 - `/ui-design-system dark modern fintech`
 
+### Contrast check
+
+Before `MASTER.md` is written, every text pair the design system defines (text on background and surface, foreground on primary and secondary, each semantic colour on background) is checked with [`scripts/contrast.mjs`](plugins/ui-design-system/skills/ui-design-system/scripts/contrast.mjs) and must reach WCAG AA 4.5:1. The ratios are recorded in `MASTER.md`'s Contrast section. The five built-in OKLch directions are held to the same bar by a test that runs in CI.
+
 ### Curated catalog
 
 84 real-world design systems vendored from [VoltAgent/awesome-design-md](https://github.com/VoltAgent/awesome-design-md) (MIT) and categorized in [`design-systems/INDEX.md`](plugins/ui-design-system/skills/ui-design-system/design-systems/INDEX.md):

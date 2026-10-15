@@ -70,7 +70,7 @@ jobs:
       - name: Install an SVG rasteriser
         run: sudo apt-get update && sudo apt-get install -y librsvg2-bin
 
-      - name: Run the raster exporter tests
+      - name: Run the plugin script tests
         run: npm test
 
   commitlint:

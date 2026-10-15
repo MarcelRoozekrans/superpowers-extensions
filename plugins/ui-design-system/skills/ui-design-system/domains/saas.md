@@ -5,7 +5,7 @@
 - Use cool blues and indigos as primary — they signal trust, reliability, technology
 - Accent with a single high-energy color (violet, teal, amber) for CTAs and highlights
 - Keep backgrounds white or very light gray (#F8F9FA) — avoid dark-mode-first for B2B
-- Semantic colors: success green (#16A34A), warning amber (#D97706), error red (#DC2626), info blue (#2563EB)
+- Semantic colors: success green, warning amber, error red, info blue, each at a step that passes 4.5:1 as text on the background (on white: #15803D, #B45309, #DC2626, #1D4ED8; the lighter #16A34A and #D97706 fail at about 3.2:1)
 - Recommended palettes: Indigo+Violet, Blue+Cyan, Slate+Emerald
 
 ## Typography

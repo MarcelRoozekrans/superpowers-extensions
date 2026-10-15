@@ -28,14 +28,16 @@
 ```css
 /* global.css */
 :root {
-  --color-primary: #4F46E5;
-  --color-text: #0F172A;
-  --color-muted: #64748B;
+  --color-primary: <Primary>;
+  --color-text: <Text primary>;
+  --color-muted: <Text secondary / muted>;
   --font-body: 'Inter', system-ui, sans-serif;
   --font-display: 'Cal Sans', sans-serif;
   --spacing-section: clamp(4rem, 10vw, 8rem);
 }
 ```
+
+Every `<...>` value is a token from `docs/design/MASTER.md`. The examples carry no colours of their own on purpose: a sample hex in a code block gets copied into real projects.
 
 ## Layout Patterns
 

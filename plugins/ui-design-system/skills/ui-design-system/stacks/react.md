@@ -11,13 +11,15 @@
 
 Map design system to Tailwind in `tailwind.config.ts`:
 
+Every `<...>` value is a token from `docs/design/MASTER.md`. The examples carry no colours of their own on purpose: a sample hex in a code block gets copied into real projects.
+
 ```typescript
 export default {
   theme: {
     extend: {
       colors: {
-        primary: { DEFAULT: '#4F46E5', 50: '#EEF2FF', 900: '#1E1B4B' },
-        secondary: { DEFAULT: '#7C3AED' },
+        primary: { DEFAULT: '<Primary>', hover: '<Primary hover>' },
+        secondary: { DEFAULT: '<Secondary>' },
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
