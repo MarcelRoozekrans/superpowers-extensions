@@ -10,18 +10,20 @@
 
 Apply design system via `MudThemeProvider` in `App.razor` or `MainLayout.razor`:
 
+Every `<...>` value is a token from `docs/design/MASTER.md`. The examples carry no colours of their own on purpose: a sample hex in a code block gets copied into real projects.
+
 ```csharp
 var theme = new MudTheme
 {
     Palette = new PaletteLight
     {
-        Primary = "#4F46E5",          // from design system primary
-        Secondary = "#7C3AED",        // from design system secondary
-        AppbarBackground = "#FFFFFF",
-        Background = "#F8F9FA",
-        Surface = "#FFFFFF",
-        TextPrimary = "#0F172A",
-        TextSecondary = "#64748B"
+        Primary = "<Primary>",
+        Secondary = "<Secondary>",
+        AppbarBackground = "<Surface>",
+        Background = "<Background>",
+        Surface = "<Surface>",
+        TextPrimary = "<Text primary>",
+        TextSecondary = "<Text secondary / muted>"
     },
     Typography = new Typography
     {

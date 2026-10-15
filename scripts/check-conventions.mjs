@@ -110,8 +110,8 @@ const TAG_CLAIMS = [
 ];
 
 // Applied to the protocol's owner (where `exempt` carves out the protocol
-// section itself) and to every plugin that delegates to it (where nothing is
-// exempt, because a delegating file has no protocol section to write in).
+// section itself) and to every other plugin's SKILL.md (where nothing is
+// exempt, because no other file has a protocol section to write in).
 function scanLiterals(file, fileLines, exempt) {
   for (const [i, line] of fileLines.entries()) {
     if (exempt(i)) continue;
@@ -141,11 +141,15 @@ function scanLiterals(file, fileLines, exempt) {
 
 scanLiterals(SKILL, lines, inProtocol);
 
-// ── 3b. Every plugin that delegates gets the same literal checks ─────────────
+// ── 3b. Every other plugin gets the same literal checks ──────────────────────
 // This guard used to scan exactly one hardcoded path. `logo-design` shipped
 // making the same delegation promise in its own SKILL.md, and nothing enforced
-// it — a `git commit -m` literal there passed CI green. The promise is what is
-// being guarded, so the guard follows the promise rather than a path.
+// it — a `git commit -m` literal there passed CI green. The fix then followed
+// the promise: it scanned only plugins that NAME the protocol. That left the
+// plugins that never mention it, and ui-design-system and ui-workflow kept
+// hardcoding `feat(design):` and `docs(ui):` messages, green. A plugin that
+// commits without naming the protocol is the worse case, not the exempt one,
+// so every SKILL.md other than the owner's is scanned.
 //
 // A delegating file has no protocol section of its own, so NOTHING is exempt in
 // it. That is the point: the owner may write a commit literal inside the
@@ -177,7 +181,8 @@ if (!mentionsProtocol.includes(SKILL)) {
 }
 
 const delegators = mentionsProtocol.filter((p) => p !== SKILL);
-for (const file of delegators) {
+const others = skillFiles.filter((p) => p !== SKILL);
+for (const file of others) {
   scanLiterals(file, readText(file).split(/\r?\n/), () => false);
 }
 
@@ -282,7 +287,7 @@ function report() {
         `  no commit/tag literals or hardcoded claims outside the Commit & Release Protocol\n` +
         `  ${stagingSites} staging sub-skills all delegate to the protocol\n` +
         `  every protocol-read field is produced by the conventions template\n` +
-        `  ${delegators.length} delegating plugin(s) scanned, no literals: ${delegators
+        `  ${others.length} other plugin(s) scanned, no literals; ${delegators.length} delegate to the protocol: ${delegators
           .map((p) => p.split('/')[1])
           .join(', ') || 'none found'}`
     );

@@ -101,14 +101,12 @@ Do NOT invoke for:
 
 10. **VERIFY the contract** — re-read the file with the `Read` tool and confirm every required section is present (Components, Layouts at all three breakpoints, Interaction states, Design system tokens, Accessibility, Open questions). If any section is missing, the write was incomplete — re-write before committing.
 
-11. **Commit:**
+11. **Commit** `docs/superpowers/specs/YYYY-MM-DD-<phase>-ui-contract.md`. Supply the triple to `project-orchestration`'s **Commit & Release Protocol**, which loads the host project's `docs/planning/CONVENTIONS.md`, runs the branch guard, and renders the message. The scope is resolved by the protocol from the host project's `Scope source`; do not invent one. Stage the file by explicit pathspec, never everything. **Render nothing locally:** no message literal and no message format here.
 
-    ```bash
-    git add docs/superpowers/specs/YYYY-MM-DD-<phase>-ui-contract.md
-    git commit -m "docs(ui): add ui contract for phase N.M — <name>"
-    ```
+    - **`type`** — `docs`
+    - **`subject`** — `add ui contract for phase N.M — <name>`
 
-    Run `git status` and confirm a clean tree before continuing.
+    Run `git status` and confirm the commit succeeded before continuing.
 
 12. **Transition to writing-plans** — only after VERIFY and a clean commit. **Confirm the contract file exists** with one final Glob before chaining (`docs/superpowers/specs/*-ui-contract.md`). Then **read** the `superpowers:writing-plans` skill file and follow it end-to-end. Do not loosely "invoke" — read the actual skill body.
 
@@ -290,12 +288,10 @@ Do NOT invoke when:
 
    Final verdict: take the worst of the three. If any sub-verdict is FAIL, the report is FAIL — fix the weakest before claiming PASS.
 
-10. **Commit the report:**
+10. **Commit the report** `docs/superpowers/reviews/YYYY-MM-DD-ui-review-<phase>.md`. Supply the triple to `project-orchestration`'s **Commit & Release Protocol**, which loads the host project's `docs/planning/CONVENTIONS.md`, runs the branch guard, and renders the message. The scope is resolved by the protocol from the host project's `Scope source`; do not invent one. Stage the file by explicit pathspec, never everything. **Render nothing locally:** no message literal and no message format here.
 
-    ```bash
-    git add docs/superpowers/reviews/YYYY-MM-DD-ui-review-<phase>.md
-    git commit -m "docs(ui-review): add ui-review report for phase N.M — <name>"
-    ```
+    - **`type`** — `docs`
+    - **`subject`** — `add ui-review report for phase N.M — <name>`
 
 11. **Announce verdict** in conversation with issue count, anti-slop fails, critique floor, and top issues.
 

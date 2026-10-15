@@ -4,21 +4,23 @@ This file applies when no specific framework is detected. Use CSS custom propert
 
 ## CSS Custom Properties Token System
 
+Every `<...>` value is a token from `docs/design/MASTER.md`. The examples carry no colours of their own on purpose: a sample hex in a code block gets copied into real projects.
+
 ```css
 :root {
   /* Colors */
-  --color-primary: #4F46E5;
-  --color-primary-hover: #4338CA;
-  --color-secondary: #7C3AED;
-  --color-success: #16A34A;
-  --color-warning: #D97706;
-  --color-error: #DC2626;
-  --color-info: #2563EB;
-  --color-text: #0F172A;
-  --color-text-muted: #64748B;
-  --color-border: #E2E8F0;
-  --color-surface: #FFFFFF;
-  --color-background: #F8F9FA;
+  --color-primary: <Primary>;
+  --color-primary-hover: <Primary hover>;
+  --color-secondary: <Secondary>;
+  --color-success: <Success>;
+  --color-warning: <Warning>;
+  --color-error: <Error>;
+  --color-info: <Info>;
+  --color-text: <Text primary>;
+  --color-text-muted: <Text secondary / muted>;
+  --color-border: <Border>;
+  --color-surface: <Surface>;
+  --color-background: <Background>;
 
   /* Typography */
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
