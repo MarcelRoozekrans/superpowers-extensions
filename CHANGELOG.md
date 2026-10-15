@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.22.2](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.22.1...superpowers-extensions-v1.22.2) (2026-10-15)
+
+
+### Bug Fixes
+
+* **suite:** align with superpowers v7 and watch upstream releases ([#135](https://github.com/MarcelRoozekrans/superpowers-extensions/issues/135)) ([137ef61](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/137ef61b9d3611c5604e6fbd5661a7b2ef2f844c))
+
 ## [1.22.1](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.22.0...superpowers-extensions-v1.22.1) (2026-08-03)
 
 
