@@ -1,6 +1,6 @@
 ---
 name: decision-tracker
-description: Use to capture or recall cross-cutting project decisions (architecture choices, naming conventions, library selections, "going forward we'll..." commitments). Trigger on phrases like "we decided", "let's standardize on", "going forward", "this affects multiple modules", or whenever brainstorming, writing-plans, or refactor-analysis surface a decision that will outlive the current task. Also recall stored decisions at the start of brainstorming or subagent dispatch so prior choices are honored. Skip for one-off implementation choices that only apply to a single file.
+description: Use to capture or recall cross-cutting project decisions (architecture choices, naming conventions, library selections, "going forward we'll..." commitments). Trigger on phrases like "we decided", "let's standardize on", "going forward", "this affects multiple modules", or whenever brainstorming, writing-plans, or refactor-analysis surface a decision that will outlive the current task. Also recall stored decisions at the start of brainstorming or subagent dispatch so prior choices are honored, and harvest the `Ruling:` lines of a subagent-driven-development or executing-plans run before its workspace is deleted. Skip for one-off implementation choices that only apply to a single file.
 ---
 
 # Decision Tracker Skill
@@ -40,6 +40,7 @@ Invoke this skill when:
 - **During writing-plans** when conventions apply across tasks
 - **During refactor-analysis** when constraints are identified
 - **When subagent-driven-development dispatches agents** to inject relevant decisions into agent prompts
+- **When a subagent-driven-development or executing-plans run reaches its Finish step**, before the plan's workspace is deleted (see [Ruling Harvest](#ruling-harvest-plan-run-finish))
 
 Do NOT use this skill when:
 
@@ -56,6 +57,7 @@ Use this checklist to track progress:
 - [ ] **Present recalled decisions** — Group and display to establish context
 - [ ] **Track new decisions during session** — Extract from brainstorming, writing-plans, refactor-analysis
 - [ ] **Inject decisions into subagents** — Targeted recall at dispatch time
+- [ ] **Harvest plan-run rulings** — At a plan run's Finish, and from leftover ledgers at session start
 
 ## Process Flow
 
@@ -131,16 +133,17 @@ Derive the project name from (in priority order):
 When any superpowers skill activates, recall existing decisions:
 
 1. **Detect the project name** using the priority order above.
-2. **Call `search_by_tags`** with `["decision", "project:<name>"]`.
-3. **Read squad decisions if present** — if the project has a `.squad/decisions.md` file (created by the `squad` skill), read it. Squad records project decisions as a markdown list distinct from long-term memory; merging the two sources gives the agent a complete picture even when one is incomplete (e.g. squad was used in earlier sessions but long-term memory was added later, or vice versa). Each squad decision entry typically follows the format `- YYYY-MM-DD: <decision> — <rationale>`. De-duplicate against the long-term memory results by decision text; if both sources have the same decision, prefer the long-term-memory entry (it has structured tags and date validation).
-4. **Group results by category** — architectural first, then convention, then task-specific. Annotate each entry with its source (`[memory]` or `[.squad/decisions.md]`) so the user can see which decisions are persisted vs. which only live in the file.
-5. **Present the results:**
+2. **Harvest leftover ledgers first** — glob `.superpowers/sdd/*/progress.md`. Each file is the ledger of a plan run that has not reached its Finish step, either still in progress or interrupted. Harvest each one per [Ruling Harvest](#ruling-harvest-plan-run-finish); deduplication makes a later harvest of the same ledger a no-op. Read only: the ledger belongs to the run's resume, so never edit or delete it. This runs before the recall so the harvested rulings appear in the list presented below.
+3. **Call `search_by_tags`** with `["decision", "project:<name>"]`.
+4. **Read squad decisions if present** — if the project has a `.squad/decisions.md` file (created by the `squad` skill), read it. Squad records project decisions as a markdown list distinct from long-term memory; merging the two sources gives the agent a complete picture even when one is incomplete (e.g. squad was used in earlier sessions but long-term memory was added later, or vice versa). Each squad decision entry typically follows the format `- YYYY-MM-DD: <decision> — <rationale>`. De-duplicate against the long-term memory results by decision text; if both sources have the same decision, prefer the long-term-memory entry (it has structured tags and date validation).
+5. **Group results by category** — architectural first, then convention, then task-specific. Annotate each entry with its source (`[memory]` or `[.squad/decisions.md]`) so the user can see which decisions are persisted vs. which only live in the file.
+6. **Present the results:**
 
    > "Recalled N decisions for ProjectName (M from long-term memory, K from .squad/decisions.md):"
 
    Followed by the grouped list of decisions.
 
-6. **Validate stale decisions** — after the main recall, call `search_by_date_range` with:
+7. **Validate stale decisions** — after the main recall, call `search_by_date_range` with:
    - `start`: a fixed epoch date earlier than any realistic decision date (e.g., `2000-01-01`)
    - `end`: today's date minus 90 days
 
@@ -155,13 +158,13 @@ When any superpowers skill activates, recall existing decisions:
      - User says no longer valid → call `delete_memory`
      - User says superseded → call `update_memory` to record what replaced it
 
-7. **Once per session** — this recall happens once at the start. Do NOT re-recall on every skill invocation.
+8. **Once per session** — this recall happens once at the start. Do NOT re-recall on every skill invocation.
 
-8. **If `search_by_tags` is not available:** Skip the long-term-memory recall (steps 2 and 6) and announce:
+9. **If `search_by_tags` is not available:** Skip the long-term-memory steps (2, 3 and 7; the harvest has nowhere to save) and announce:
 
    > "LongtermMemory-MCP not detected. Install it to persist decisions across sessions: `claude install gh:MarcelRoozekrans/LongtermMemory-MCP`"
 
-   Step 3 (read `.squad/decisions.md` if present) is independent and still runs — it does not require LongtermMemory-MCP. So a project with squad but no LongtermMemory still gets decision recall, just from the file.
+   Step 4 (read `.squad/decisions.md` if present) is independent and still runs — it does not require LongtermMemory-MCP. So a project with squad but no LongtermMemory still gets decision recall, just from the file.
 
 ## Decision Extraction (Save)
 
@@ -197,6 +200,47 @@ If `save_memory` is not available, embed decisions in the plan document under a 
 
 > "Install LongtermMemory-MCP to persist these decisions across sessions."
 
+## Ruling Harvest (Plan Run Finish)
+
+Upstream `subagent-driven-development` and `executing-plans` never stop to ask. They decide conflicts and ambiguities themselves and record each call as a line in the plan's ledger, `.superpowers/sdd/<plan>/progress.md`:
+
+```text
+Ruling: <what was decided> — <why> — <what it costs if wrong>
+Task <N>: Ruling: <what was decided> — <why> — <what it costs if wrong>
+Final: Ruling: <review finding> — <why the code stands> — <what it costs if wrong>
+```
+
+At their Finish step they copy the rulings into the final message under "Rulings I made", then delete the workspace. After that the rulings exist only in one chat message. A ruling that settles how later work should be done is a decision, and it is lost unless it is saved here.
+
+**When:** at the Finish step of either skill, after "Rulings I made" is collected and before the workspace directory is deleted. Also for leftover ledgers during session-start recall (step 2 of Decision Recall).
+
+**Steps:**
+
+1. **Read every line containing `Ruling:`** from the ledger. Its first line, `# SDD ledger — plan: <path>`, names the plan file.
+2. **Sort each ruling** against [What Qualifies as a Decision](#what-qualifies-as-a-decision):
+   - **Keep** a ruling that states a rule later work should follow: a convention, a constraint, a placement rule, a pattern or library choice. Keep it even when one file prompted it; "placed it in `src/export/` because the repo keeps one folder per feature" records the one-folder-per-feature convention.
+   - **Keep** every `Final: Ruling:` where code was kept against a reviewer's finding. It records a known trade-off and the condition it rests on, which is exactly what a later change can break.
+   - **Skip** a ruling that only settles one task's detail, such as a typo in a brief or a name mismatch. The final message already shows it to the user.
+3. **Save each kept ruling:** deduplicate per [Deduplication](#deduplication), then `save_memory` with:
+   - **Category** from [Decision Categories](#decision-categories). A reviewer trade-off is task-specific unless it states a project-wide rule.
+   - **Tags:** the category's tags, plus `ruling` and `plan:<plan file basename without .md>`.
+   - **Content** in this shape, keeping the cost: it tells a later session how hard to defend the decision.
+
+     ```text
+     <the decision as a rule, in plain words>
+     Why: <why>
+     Cost if wrong: <cost>
+     Source: <plan path>, <Task N | final review | plan-wide>
+     ```
+
+     Take the source from the ruling's own prefix: `Task <N>:` is Task N, `Final:` is the final review, and a bare `Ruling:` is plan-wide, whatever line precedes it.
+
+4. **Announce:**
+
+   > "Saved N of M plan rulings to long-term memory; skipped K as local to one task: [numbered list of saved rulings]"
+
+Without LongtermMemory-MCP there is nowhere to persist them. The final message already lists them, so add the install nudge and nothing else.
+
 ## Subagent Injection
 
 When subagent-driven-development dispatches an agent, the controller (not the subagent) performs the following before filling in the implementer prompt template:
@@ -221,6 +265,7 @@ When subagent-driven-development dispatches an agent, the controller (not the su
 | Save during writing-plans | `save_memory` with tags | Embed in plan doc |
 | Save during refactor-analysis | `save_memory` with tags | Embed in plan doc |
 | Subagent injection | `search_memory` → targeted | Include plan doc decisions section in prompt |
+| Ruling harvest | Sort ledger `Ruling:` lines → dedup → `save_memory` | Skip; the run's final message lists the rulings. Nudge to install |
 
 ## Red Flags
 
@@ -234,7 +279,9 @@ These are mistakes that compromise the quality of decision tracking. If you noti
 
 4. **Flooding subagents with all decisions** — Use targeted semantic search, not a full dump. Subagents work best with 2-3 relevant decisions, not 20.
 
-5. **Saving implementation details as decisions** — Decisions are about "what" and "why", not "how". "We use the repository pattern" is a decision; "the repository class has a GetById method" is an implementation detail.
+5. **Deleting a plan workspace before harvesting it** — The ledger is the only structured record of the calls a plan run made on the user's behalf. Harvest first, then let the run delete it.
+
+6. **Saving implementation details as decisions** — Decisions are about "what" and "why", not "how". "We use the repository pattern" is a decision; "the repository class has a GetById method" is an implementation detail.
 
 ## Common Rationalizations
 
@@ -244,6 +291,8 @@ These are mistakes that compromise the quality of decision tracking. If you noti
 | "I'll remember this decision" | Memory doesn't persist across sessions | Save it to long-term memory |
 | "This is just for this file" | If it affects how other code interacts, it's cross-cutting | Save only truly cross-cutting decisions |
 | "The plan doc has all the decisions" | Plan docs aren't searched semantically by subagents | Persist to long-term memory for targeted retrieval |
+| "The rulings are in the final message, that's enough" | A chat message is not searched at the next brainstorm or subagent dispatch | Harvest the rulings that state a rule before the workspace is deleted |
+| "Every ruling is a decision, save them all" | Most rulings settle one task's detail; saving them buries the few that matter | Keep rules and reviewer trade-offs, skip one-task fixes |
 | "I'll save everything to be safe" | Over-saving dilutes relevance of search results | Only save cross-cutting decisions, not implementation details |
 
 ## Quick Reference
@@ -255,6 +304,7 @@ These are mistakes that compromise the quality of decision tracking. If you noti
 | Decision extraction | Identify cross-cutting statement → dedup → save | `search_memory`, `save_memory` |
 | Stale validation | `search_by_date_range` (end = today − 90d) → filter by tags → ask user → delete or update | `search_by_date_range`, `delete_memory`, `update_memory` |
 | Subagent injection | Derive query → search → filter → inject top 2-3 | `search_memory` |
+| Ruling harvest | Read ledger `Ruling:` lines → keep rules and reviewer trade-offs → dedup → save with `ruling`, `plan:<name>` tags | `Read`, `search_memory`, `save_memory` |
 | Graceful degradation | Check tool availability → embed in plan doc if missing | `Write` (plan doc) |
 
 ## Relationship to Superpowers Skills
@@ -265,13 +315,14 @@ This skill is designed to complement — not replace — the superpowers workflo
 |---|---|---|
 | `superpowers:brainstorming` | **Always-on when available.** Recalls existing decisions at brainstorming start to inform design. Extracts and saves new decisions when design choices are approved. | Decisions from prior sessions prevent contradictory designs. |
 | `superpowers:writing-plans` | **Adds decisions after plan header.** Recalls all project decisions and adds a `## Cross-Cutting Decisions` section after the plan header so every task can reference them. Saves new convention decisions. | Subagents executing the plan inherit these decisions. |
-| `superpowers:subagent-driven-development` | **Injects targeted decisions per agent.** Uses semantic search to find the 2-3 decisions most relevant to each subagent's task and includes them in the prompt. | Keeps subagent context focused rather than flooding with all decisions. |
+| `superpowers:subagent-driven-development` | **Injects targeted decisions per agent, harvests rulings at Finish.** Uses semantic search to find the 2-3 decisions most relevant to each subagent's task and includes them in the prompt. At Finish, saves the ledger's rule-setting `Ruling:` lines before the workspace is deleted. | Keeps subagent context focused rather than flooding with all decisions. Rulings outlive the plan that made them. |
+| `superpowers:executing-plans` | **Harvests rulings at Finish.** Same ledger and same harvest as subagent-driven-development. | The ledger is shared between the two. |
 | `refactor-analysis` | **Saves constraints, recalls architecture.** Refactor approach (Phase 1) and constraints (Phase 4) are saved as task-specific decisions. Architectural decisions are recalled to inform impact classification. | Ensures refactor respects established patterns. |
 | `pre-push-review` | **Decisions available for reference.** Architectural and convention decisions are available during Phase 3 (Code Quality) to verify implementation respects established patterns. No active extraction or saving. | Read-only — decisions inform the review but pre-push-review does not modify them. |
 | `ui-design-system` | **Saves design system decisions.** After `ui-design-system` generates a design system, key choices (primary color, font pairing, component library) are saved as architectural decisions. These are recalled in subsequent sessions to prevent contradictory design choices. | Design token decisions are high-importance and long-lived — ideal candidates for decision-tracker. |
 | `ui-workflow` | **Saves UI contract decisions.** Accessibility contract level, component library choice, and breakpoint strategy from `ui-phase` are saved as convention decisions so all future phases and subagents inherit them. | Prevents ui-review from flagging issues that were intentional deviations approved in earlier phases. |
 | `longterm-memory:long-term-memory` | **Required dependency.** Provides the persistence layer (`save_memory`, `search_memory`, `search_by_tags`, `search_by_date_range`, `update_memory`, `delete_memory`) that this skill uses to store and recall decisions. | Skill degrades gracefully without it — see Graceful Degradation section. |
-| `squad` | **Read-side integration via `.squad/decisions.md`.** When squad is installed and has populated `.squad/decisions.md`, decision recall (step 3 of "Decision Recall") reads that file as a second source alongside long-term memory and de-duplicates by decision text. Squad continues to write `decisions.md` as normal — decision-tracker does not modify it; it only reads. This handles projects where squad records decisions before long-term memory is set up, or sessions where one of the two persistence layers is unavailable. | One-directional read integration. The reverse (long-term memory → squad) is not implemented; squad's file is the source for squad's own consumers (agent histories), not a downstream of decision-tracker. |
+| `squad` | **Read-side integration via `.squad/decisions.md`.** When squad is installed and has populated `.squad/decisions.md`, decision recall (step 4 of "Decision Recall") reads that file as a second source alongside long-term memory and de-duplicates by decision text. Squad continues to write `decisions.md` as normal — decision-tracker does not modify it; it only reads. This handles projects where squad records decisions before long-term memory is set up, or sessions where one of the two persistence layers is unavailable. | One-directional read integration. The reverse (long-term memory → squad) is not implemented; squad's file is the source for squad's own consumers (agent histories), not a downstream of decision-tracker. |
 
 **Recommended workflow chain:**
 
@@ -279,6 +330,6 @@ This skill is designed to complement — not replace — the superpowers workflo
 brainstorming (decision-tracker: recall prior decisions, extract new ones)
   → refactor-analysis (decision-tracker: recall architecture, save constraints; refactors only, as writing-plans starts)
   → writing-plans (decision-tracker: embed all decisions in plan header)
-  → subagent-driven-development (decision-tracker: inject targeted decisions per agent)
+  → subagent-driven-development or executing-plans (decision-tracker: inject targeted decisions per agent; harvest rulings at Finish)
   → pre-push-review (decision-tracker: decisions available for reference)
 ```
