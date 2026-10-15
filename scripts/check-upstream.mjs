@@ -61,6 +61,28 @@ const ANCHORS = [
     text: '## Execution Handoff',
     users: 'squad runs its plan review before this step',
   },
+  ...['skills/subagent-driven-development/SKILL.md', 'skills/executing-plans/SKILL.md'].flatMap((file) => [
+    {
+      file,
+      text: 'Ruling: <what you decided> — <why> — <what it costs if wrong>',
+      users: 'decision-tracker parses this ledger line format when it harvests rulings',
+    },
+    {
+      file,
+      text: 'Rulings I made',
+      users: 'decision-tracker harvests rulings at this Finish step, before the workspace is deleted',
+    },
+    {
+      file,
+      text: '# SDD ledger — plan: <plan file path>',
+      users: 'decision-tracker reads the plan path from this ledger header',
+    },
+  ]),
+  {
+    file: 'skills/subagent-driven-development/scripts/sdd-workspace',
+    text: '.superpowers/sdd',
+    users: 'decision-tracker globs .superpowers/sdd/*/progress.md for leftover ledgers',
+  },
 ];
 
 // Vendored third-party content is not ours to keep in step with upstream.
