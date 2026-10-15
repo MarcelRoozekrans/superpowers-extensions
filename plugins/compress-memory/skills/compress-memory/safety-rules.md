@@ -10,7 +10,8 @@ The following path patterns are NEVER compressible. The denylist lives in this s
 
 | Pattern | Why protected |
 |---|---|
-| `docs/plans/**` | Plan documents read by `executing-plans`, `subagent-driven-development` |
+| `docs/superpowers/**` | Specs, plans, and reports: plans are read by `executing-plans` and `subagent-driven-development`, specs by `writing-plans` |
+| `docs/plans/**` | Legacy location of the same documents |
 | `*ui-contract*` | UI design contracts audited by `ui-workflow:ui-review` against literal criteria text |
 | `*impact-analysis*` | Refactor impact analyses with nuanced risk register prose |
 | `*-design.md` | Brainstorm design documents consumed by `writing-plans` |

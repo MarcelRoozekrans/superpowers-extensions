@@ -177,7 +177,7 @@ Decision extraction is automatic — no explicit "save this" step is needed.
 
 ### When to Extract
 
-- **During brainstorming:** When the user selects from proposed approaches, save the chosen approach as an architectural decision. When the user approves a design section, scan for additional cross-cutting statements (placement rules, constraints, naming conventions) and save each as a decision.
+- **During brainstorming:** When the user decides part of the how (platform, library, pattern), save it as an architectural decision. When the user confirms a played-back chunk or approves the written design, scan it for additional cross-cutting statements (placement rules, constraints, naming conventions) and save each as a decision. Saving is a memory write, not a skill invocation, so it does not conflict with brainstorming's hand-off straight to writing-plans.
 - **During writing-plans:** When conventions apply across all tasks, save as convention decisions.
 - **During refactor-analysis:** Phase 1 refactor approach, Phase 4 impact constraints, and Phase 5 risks flagged as high severity — save as task-specific decisions.
 
@@ -277,7 +277,7 @@ This skill is designed to complement — not replace — the superpowers workflo
 
 ```text
 brainstorming (decision-tracker: recall prior decisions, extract new ones)
-  → refactor-analysis (decision-tracker: recall architecture, save constraints)
+  → refactor-analysis (decision-tracker: recall architecture, save constraints; refactors only, as writing-plans starts)
   → writing-plans (decision-tracker: embed all decisions in plan header)
   → subagent-driven-development (decision-tracker: inject targeted decisions per agent)
   → pre-push-review (decision-tracker: decisions available for reference)

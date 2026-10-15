@@ -5,7 +5,7 @@
 
 **Date:** YYYY-MM-DD
 **Phase:** N.M — {Phase Name}
-**Plan:** `docs/plans/YYYY-MM-DD-<phase>.md`
+**Plan:** `docs/superpowers/plans/YYYY-MM-DD-<phase>.md`
 
 ---
 
