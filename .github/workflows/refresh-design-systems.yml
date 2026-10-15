@@ -9,10 +9,15 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  # To start lint.yml on the PR head; see the last step.
+  actions: write
 
 jobs:
   refresh:
     runs-on: ubuntu-latest
+    env:
+      DEST: plugins/ui-design-system/skills/ui-design-system/design-systems
+      BRANCH: automation/refresh-design-systems
     steps:
       - uses: actions/checkout@v7
 
@@ -21,11 +26,58 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: bash scripts/refresh-design-systems.sh
 
+      # check-registries fails until every system on disk is in INDEX.md and
+      # every indexed system is on disk. Indexing needs a category and a vibe
+      # line, which is a judgement call, so the PR lists exactly what to do.
+      - name: Write the PR body
+        run: |
+          index="$DEST/INDEX.md"
+          to_index=""
+          for dir in "$DEST"/*/; do
+            name=$(basename "$dir")
+            grep -qF "]($name/DESIGN.md)" "$index" || to_index+="- [ ] \`$name\` — add to a category in INDEX.md with a vibe line"$'\n'
+          done
+          to_drop=""
+          for name in $(grep -oE '\]\([^)/]+/DESIGN\.md\)' "$index" | sed -E 's#^\]\(([^/]+)/.*#\1#'); do
+            [ -d "$DEST/$name" ] || to_drop+="- [ ] \`$name\` — removed upstream: drop its INDEX.md row, or restore it as \`$name-archived/\` to keep it"$'\n'
+          done
+
+          {
+            echo "## Automated refresh"
+            echo
+            echo "Opened by the scheduled \`refresh-design-systems\` workflow. It re-fetches every"
+            echo "\`DESIGN.md\` from [VoltAgent/awesome-design-md](https://github.com/VoltAgent/awesome-design-md)"
+            echo "(MIT) and applies upstream additions, removals, and content edits."
+            echo
+            echo "## Catalog changes to curate"
+            echo
+            if [ -z "$to_index$to_drop" ]; then
+              echo "None: no systems were added or removed, so INDEX.md needs no change."
+            else
+              echo "\`check-registries\` fails until each item below is done. Update the"
+              echo "\"<N> vendored design systems\" count in INDEX.md and everywhere it is published."
+              echo
+              printf '%s%s' "$to_index" "$to_drop"
+            fi
+            echo
+            echo "## Review checklist"
+            echo
+            echo "- [ ] Spot-check changed \`DESIGN.md\` files for unexpected content; large delete-and-add patterns deserve a closer look than small edits"
+            echo "- [ ] For each added system, decide whether it belongs in the catalog"
+            echo
+            echo "Lint is started on this PR's head commit by the workflow, so its checks appear here."
+            echo "If the branch is updated by hand, the push triggers CI as usual."
+            echo
+            echo "🤖 Opened by \`.github/workflows/refresh-design-systems.yml\`"
+          } > "$RUNNER_TEMP/pr-body.md"
+          cat "$RUNNER_TEMP/pr-body.md"
+
       - name: Open PR with refreshed catalog
+        id: cpr
         uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          branch: automation/refresh-design-systems
+          branch: ${{ env.BRANCH }}
           delete-branch: true
           commit-message: |
             chore(ui-design-system): refresh design system catalog from upstream
@@ -33,31 +85,17 @@ jobs:
             Automated refresh from VoltAgent/awesome-design-md (MIT) via the
             scheduled refresh-design-systems workflow.
           title: 'chore(ui-design-system): refresh design system catalog from upstream'
-          body: |
-            ## Automated refresh
-
-            This PR was opened by the scheduled `refresh-design-systems`
-            workflow. It re-fetches every `DESIGN.md` from
-            [VoltAgent/awesome-design-md](https://github.com/VoltAgent/awesome-design-md)
-            (MIT) and applies any upstream additions, removals, or content edits.
-
-            The script (`scripts/refresh-design-systems.sh`) is idempotent: a no-op
-            refresh produces no diff and no PR.
-
-            ## Review checklist
-
-            - [ ] Spot-check changed `DESIGN.md` files for unexpected content (look at the diff stat — large delete-and-add patterns deserve a closer look than small edits)
-            - [ ] If new systems were added, decide whether they belong in the catalog and update [`design-systems/INDEX.md`](../tree/master/plugins/ui-design-system/skills/ui-design-system/design-systems/INDEX.md) accordingly (categorize + add a vibe one-liner)
-            - [ ] If systems were removed, decide whether to keep our copy (rename to `<name>-archived/` before merging this PR) or accept the deletion
-            - [ ] Confirm CI passes — `lint.yml` excludes the `design-systems/` directory so upstream formatting changes should not break the build
-
-            ## CI note
-
-            PRs opened by `GITHUB_TOKEN` do not automatically trigger downstream
-            workflows. If `lint` / `commitlint` show as "no checks", push an empty
-            commit to trigger them, or close-and-reopen this PR.
-
-            🤖 Opened by `.github/workflows/refresh-design-systems.yml`
+          body-path: ${{ runner.temp }}/pr-body.md
           labels: |
             automation
             ui-design-system
+
+      # Pushes made with GITHUB_TOKEN do not trigger pull_request workflows, so
+      # the PR would otherwise show no checks at all. workflow_dispatch is the
+      # one event GITHUB_TOKEN may start; the run's check results attach to the
+      # head commit, which is what the PR shows.
+      - name: Run lint on the PR head
+        if: steps.cpr.outputs.pull-request-operation == 'created' || steps.cpr.outputs.pull-request-operation == 'updated'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh workflow run lint.yml --ref "$BRANCH"
