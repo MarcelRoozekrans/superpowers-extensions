@@ -150,11 +150,13 @@ The decision tracker skill provides persistent cross-cutting decision tracking t
 
 ### What It Does
 
-The skill operates in two modes:
+The skill operates in three modes:
 
 1. **Recall** -- At session start, searches long-term memory for decisions tagged with the current project and presents them grouped by category (architectural, convention, task-specific).
 
 2. **Extract** -- During brainstorming, writing-plans, and refactor-analysis, automatically identifies cross-cutting decisions and saves them to long-term memory with appropriate tags, types, and importance levels.
+
+3. **Harvest** -- When a superpowers `subagent-driven-development` or `executing-plans` run finishes, it saves the run's rule-setting `Ruling:` lines from the plan ledger before upstream deletes the workspace. It keeps rules and reviewer trade-offs, skips one-task fixes, and tags each saved ruling `ruling` and `plan:<name>`. Ledgers left behind by interrupted runs are harvested at the next session start.
 
 ### Decision Categories
 
