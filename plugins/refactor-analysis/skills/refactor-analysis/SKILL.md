@@ -7,7 +7,7 @@ description: Use before writing an implementation plan for a refactor that spans
 
 <HARD-GATE>
 This skill produces an impact analysis document on disk at
-`docs/plans/YYYY-MM-DD-<topic>-impact-analysis.md`. The document is the
+`docs/superpowers/specs/YYYY-MM-DD-<topic>-impact-analysis.md`. The document is the
 input to `superpowers:writing-plans` — without it, plan generation
 proceeds with no knowledge of the affected files or the safe execution
 order.
@@ -127,7 +127,7 @@ This phase identifies exactly what is being changed and confirms the scope with 
 
 ### Steps
 
-1. **Read the design doc** — If a brainstorming design doc exists in `docs/plans/`, read it and extract the refactoring intent.
+1. **Read the design doc** — If a brainstorming design doc exists in `docs/superpowers/specs/` (or the legacy `docs/plans/`), read it and extract the refactoring intent.
 
 2. **Identify refactor targets** — List every concrete thing being changed:
    - Classes, interfaces, types
@@ -290,7 +290,7 @@ Generate the impact analysis document and transition to the implementation plann
 1. **Save the impact analysis document** to:
 
    ```text
-   docs/plans/YYYY-MM-DD-<topic>-impact-analysis.md
+   docs/superpowers/specs/YYYY-MM-DD-<topic>-impact-analysis.md
    ```
 
 2. **Document structure:**
@@ -418,12 +418,20 @@ This skill is designed to complement — not replace — the superpowers workflo
 
 ```text
 brainstorming (what and why)
-  → refactor-analysis (this skill: blast radius and safe ordering)
+  → refactor-analysis (this skill: blast radius and safe ordering — as writing-plans starts)
   → writing-plans (implementation steps)
   → implementation
   → pre-push-review (quality gate)
   → finishing-a-development-branch (merge/PR decision)
 ```
+
+**With superpowers v7+ brainstorming.** Upstream brainstorming (superpowers v7+) ends with "invoke superpowers:writing-plans and no other skill", so it will not route here by itself. Run this skill when
+writing-plans starts on a refactor spec and no impact analysis exists yet,
+before writing-plans maps its File Structure. The analysis only writes a
+document, so brainstorming's gate (nothing gets built before the design is
+approved) still holds. Then continue writing-plans with the analysis as
+input. Under `project-orchestration`, `start-next-phase` runs this skill
+for `Surface: Refactor` phases, so no manual step is needed there.
 
 ## Supporting References
 

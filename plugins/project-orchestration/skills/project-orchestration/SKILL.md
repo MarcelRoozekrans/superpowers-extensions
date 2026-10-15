@@ -14,11 +14,13 @@ When this skill chains to a sub-skill (`brainstorming`, `writing-plans`, `execut
 
    | Sub-skill | Required output artifact |
    |---|---|
-   | `superpowers:brainstorming` | `docs/superpowers/specs/YYYY-MM-DD-*-design.md` (or equivalent design spec) |
-   | `superpowers:writing-plans` | `docs/superpowers/plans/YYYY-MM-DD-*.md` (or equivalent plan file) |
+   | `superpowers:brainstorming` | `docs/superpowers/specs/YYYY-MM-DD-*-design.md` (or where the project's preferences put specs) |
+   | `superpowers:writing-plans` | `docs/superpowers/plans/YYYY-MM-DD-*.md` (or where the project's preferences put plans) |
    | `superpowers:executing-plans` | All plan tasks checked off, tests passing |
 
 If the artifact is missing, the previous step did not complete — return to it. Do not proceed with the next link in the chain on faith.
+
+**Brainstorming's hand-off when this skill drives it.** Upstream brainstorming (superpowers v7+) ends with "invoke superpowers:writing-plans and no other skill". That line keeps an agent from jumping to implementation. When `start-next-phase`, `plan-roadmap`, or `new-milestone` drives brainstorming, its job ends at the approved design: return here and continue from this skill's routing. The Surface pre-plan hook between brainstorming and writing-plans runs skills that only write documents (`ui-design-system`, `ui-workflow ui-phase`, `refactor-analysis`), so brainstorming's gate still holds: nothing gets built before the design is approved and planned. `plan-roadmap` and `new-milestone` do not chain to writing-plans at all; they write planning files from the approved design.
 
 **State file writes (separate gate, applies to every sub-skill below that touches `docs/planning/`):**
 
@@ -156,7 +158,7 @@ This skill contains multiple sub-skills, each invoked by a specific trigger phra
 Invoke before `brainstorming` when starting work on an existing codebase the agent has not previously analyzed. Especially useful when:
 
 - The user says "I have an existing project and want to add features"
-- The project has no `docs/plans/` directory or design docs
+- The project has no `docs/superpowers/` (or legacy `docs/plans/`) directory or design docs
 - The codebase is unfamiliar and context is needed before asking design questions
 
 ### Announce Line
@@ -183,7 +185,7 @@ Invoke before `brainstorming` when starting work on an existing codebase the age
    - Key patterns and conventions observed
    - Recommended starting points for the planned work
 
-7. **Save to:** `docs/plans/YYYY-MM-DD-codebase-map.md`
+7. **Save to:** `docs/superpowers/specs/YYYY-MM-DD-codebase-map.md`
 
 8. **Transition** — invoke `brainstorming` with the codebase map as context.
 
@@ -209,7 +211,7 @@ Steps refer to each other by **name**, never by number.
 
    | Field | Signal |
    |---|---|
-   | Language / runtime, Package manager, Framework | If `map-codebase` ran this session, read `docs/plans/*-codebase-map.md` — it already detected these. Otherwise apply `map-codebase`'s **Read project root** and **Identify patterns** steps. Greenfield: no signal. |
+   | Language / runtime, Package manager, Framework | If `map-codebase` ran this session, read `docs/superpowers/specs/*-codebase-map.md` — it already detected these. Otherwise apply `map-codebase`'s **Read project root** and **Identify patterns** steps. Greenfield: no signal. |
    | Datastore | ORM config, connection strings, compose service images; else no signal. |
    | Commit format | `commitlint.config.js`, `.commitlintrc*`, husky hooks. Else sample `git log -50 --format=%s`: a clear majority matching `type(scope):` → `conventional`. No commits → no signal. |
    | Scopes / Scope source | A `scope-enum` rule → `enforced` plus the path of the file holding it. Conventional but no rule → `free`, `Scope source: n/a`. Not conventional → `none`, `n/a`. |
@@ -372,8 +374,8 @@ Before starting execution of a phase — surfaces Claude's intended implementati
 
 ### Process
 
-1. Read the phase's plan document from `docs/plans/`.
-2. Read relevant design docs from `docs/plans/`.
+1. Read the phase's plan document from `docs/superpowers/plans/` (or the legacy `docs/plans/`).
+2. Read relevant design docs from `docs/superpowers/specs/` (or the legacy `docs/plans/`).
 3. Present:
 
    > **Phase N.M — Name: Intended Approach**
@@ -399,7 +401,7 @@ After `audit-milestone` identifies gaps — the milestone definition of done is 
 
 ### Process
 
-1. Read the audit report (from `docs/plans/YYYY-MM-DD-milestone-N-audit.md`).
+1. Read the audit report (from `docs/superpowers/reviews/YYYY-MM-DD-milestone-N-audit.md`).
 2. For each gap identified, propose a new phase to close it.
 3. Present the proposed phases to the user for approval.
 4. On approval, invoke `add-phase` for each approved phase.
@@ -487,7 +489,7 @@ If you encounter a malformed state file that `resume-work` cannot parse — fron
 
 ### When to Use
 
-When a phase's plan is finished — all tasks in `docs/plans/YYYY-MM-DD-<phase>.md` are checked off (`- [x]`), tests pass, and `executing-plans` returned a clean state. Promotes the phase from `active` to `complete` in the planning files.
+When a phase's plan is finished — all tasks in `docs/superpowers/plans/YYYY-MM-DD-<phase>.md` are checked off (`- [x]`), tests pass, and `executing-plans` returned a clean state. Promotes the phase from `active` to `complete` in the planning files.
 
 This sub-skill closes the loop that was missing: without it, `executing-plans` finishes a phase but ROADMAP.md still shows the phase as `active`, so the next session sees stale state and `start-next-phase` routes back to the same already-finished phase.
 
@@ -512,7 +514,7 @@ This sub-skill closes the loop that was missing: without it, `executing-plans` f
    ```markdown
    ### Phase 1.2: <Name> [status: active]
    **Goal:** <one sentence>
-   **Plan:** `docs/plans/<plan-file>.md`
+   **Plan:** `docs/superpowers/plans/<plan-file>.md`
    ```
 
    **After:**
@@ -520,7 +522,7 @@ This sub-skill closes the loop that was missing: without it, `executing-plans` f
    ```markdown
    ### Phase 1.2: <Name> [status: complete]
    **Goal:** <one sentence>
-   **Plan:** `docs/plans/<plan-file>.md`
+   **Plan:** `docs/superpowers/plans/<plan-file>.md`
    **Completed:** YYYY-MM-DD
    ```
 
@@ -585,8 +587,9 @@ After `resume-work` confirmation, or any time the user says "continue", "next", 
    - **Design spec** — does `docs/superpowers/specs/*-<phase>-*.md` (or the phase's referenced design doc) exist?
    - **Plan file** — does the phase's `Plan:` link in ROADMAP.md (`docs/superpowers/plans/*-<phase>-*.md` or similar) exist on disk?
    - **Surface artifacts** (only checked when Surface implies them):
-     - For `Surface: UI` — does `docs/design/MASTER.md` exist? Does a UI contract `docs/plans/*-<phase>-*-ui-contract.md` exist?
-     - For `Surface: Refactor` — does an impact analysis `docs/plans/*-<phase>-*-impact-analysis.md` exist?
+     - For `Surface: UI` — does `docs/design/MASTER.md` exist? Does a UI contract `docs/superpowers/specs/*-<phase>-*-ui-contract.md` exist?
+     - For `Surface: Refactor` — does an impact analysis `docs/superpowers/specs/*-<phase>-*-impact-analysis.md` exist?
+   - **Legacy layout** — projects started before superpowers moved to `docs/superpowers/` keep these files in `docs/plans/`. Check there too before deciding an artifact is missing.
 
 4. **Base routing** — route based on design spec / plan file presence. **Read** the target skill file and follow it end-to-end — do not loosely "invoke" it.
 
@@ -601,8 +604,8 @@ After `resume-work` confirmation, or any time the user says "continue", "next", 
 
    | Surface | Pre-plan chain | Required artifact after the hook runs |
    |---|---|---|
-   | `UI` | (a) If `decision-tracker` is active for this project, run a recall for `tags=[ui, design]` so prior UI conventions surface before a new contract is written. (b) If `docs/design/MASTER.md` is missing, **read** the `ui-design-system` skill end-to-end and follow it. **VERIFY:** `docs/design/MASTER.md` exists. (c) **Read** the `ui-workflow` skill (sub-skill `ui-phase`) end-to-end and follow it. **VERIFY:** the phase's UI contract exists. | `docs/plans/*-<phase>-*-ui-contract.md` |
-   | `Refactor` | (a) If `decision-tracker` is active, run a recall for `tags=[architecture, naming]` and any project-specific tags so prior structural decisions inform the impact analysis. (b) **Read** the `refactor-analysis` skill end-to-end and follow it (Phases 1–7) until it produces the impact analysis document. **VERIFY:** the impact analysis file exists. | `docs/plans/*-<phase>-*-impact-analysis.md` |
+   | `UI` | (a) If `decision-tracker` is active for this project, run a recall for `tags=[ui, design]` so prior UI conventions surface before a new contract is written. (b) If `docs/design/MASTER.md` is missing, **read** the `ui-design-system` skill end-to-end and follow it. **VERIFY:** `docs/design/MASTER.md` exists. (c) **Read** the `ui-workflow` skill (sub-skill `ui-phase`) end-to-end and follow it. **VERIFY:** the phase's UI contract exists. | `docs/superpowers/specs/*-<phase>-*-ui-contract.md` |
+   | `Refactor` | (a) If `decision-tracker` is active, run a recall for `tags=[architecture, naming]` and any project-specific tags so prior structural decisions inform the impact analysis. (b) **Read** the `refactor-analysis` skill end-to-end and follow it (Phases 1–7) until it produces the impact analysis document. **VERIFY:** the impact analysis file exists. | `docs/superpowers/specs/*-<phase>-*-impact-analysis.md` |
    | `Backend` / `Data` / `Infra` / `Docs` / `Mixed` / unset | No pre-plan hook. Proceed directly to `superpowers:writing-plans`. | (none) |
 
    The hook produces inputs that `writing-plans` consumes — UI contracts give the plan concrete component / layout / state targets; impact analyses give the plan a safe execution order grounded in transitive dependencies. Skipping the hook for an applicable surface means `writing-plans` runs blind to those inputs and produces a less informed plan. **`Mixed` deliberately skips the hook** — the author signals that two surfaces are in play and they will sequence them manually; force-firing both `ui-phase` and `refactor-analysis` for `Mixed` produces noisy artifacts.
@@ -724,7 +727,7 @@ When the user believes a milestone is complete and wants to verify it against it
    - **Documentation** — check that plan docs exist for each phase, design docs are present.
    - **Release will tag correctly** — only when `docs/planning/CONVENTIONS.md` says `Milestone completion tags a release: yes`. Do **not** check that the tag already exists: `complete-milestone` creates it, and it runs *after* this audit passes, so requiring it here is a deadlock — the mirror of the `no`-case forever-fail. Instead confirm the tag *can* be rendered: `Scheme` is a shape the [Commit & Release Protocol](#commit--release-protocol)'s **Tag** step handles (`semver` / `calver` / `milestone`, not `none` or unrecognised), and — for `semver` — that a version is obtainable. When conventions say `no`, **skip this criterion**: it is not a gap and must not count toward a FAIL verdict. The release is owned by whatever `Released by` names, and the absence of a milestone tag is the correct state. Unguarded either way, this criterion blocks `complete-milestone`: `no`-projects fail forever because the tag never comes, `yes`-projects deadlock because it cannot come yet.
 3. Produce verdict: **PASS** (all criteria met) or **FAIL** (gaps found).
-4. Save audit report to: `docs/plans/YYYY-MM-DD-milestone-N-audit.md`
+4. Save audit report to: `docs/superpowers/reviews/YYYY-MM-DD-milestone-N-audit.md`
 5. On **PASS**: announce and offer to invoke `complete-milestone`.
 6. On **FAIL**: list gaps and offer to invoke `plan-milestone-gaps`.
 
@@ -789,7 +792,7 @@ Capture both once at the start of the sub-skill and reuse them for every iterati
    b. `Edit` ROADMAP.md to add `**Milestone:** N` immediately after the milestone's `**Started:**` line.
    c. VERIFY by re-reading ROADMAP.md.
 4. **For each phase under each milestone (in order):**
-   a. Build the issue body: the phase's `**Goal:**` line + Surface tag + permalink to the design spec at `https://github.com/${OWNER_REPO}/blob/${SHA}/docs/plans/<spec>.md` if a spec exists; otherwise include the literal text "no design spec yet" in the issue body in place of the permalink line. Use the captured `OWNER_REPO` and `SHA` from Step 1 — do not paste the literal `{owner}/{repo}` placeholders here, those only work for `gh api`.
+   a. Build the issue body: the phase's `**Goal:**` line + Surface tag + permalink to the design spec at `https://github.com/${OWNER_REPO}/blob/${SHA}/docs/superpowers/specs/<spec>.md` if a spec exists; otherwise include the literal text "no design spec yet" in the issue body in place of the permalink line. Use the captured `OWNER_REPO` and `SHA` from Step 1 — do not paste the literal `{owner}/{repo}` placeholders here, those only work for `gh api`.
    b. Build the label list: `surface:<value>`, `status:<value>`, plus `help wanted` if `**HelpWanted:** yes`.
    c. `gh issue create --title "Phase N.M: <Name>" --body "<body>" --milestone <milestone-number> --label "<labels>"` — capture the returned issue number. Title comes from the phase's `### Phase N.M: <Name>` heading in ROADMAP.md.
    d. `Edit` ROADMAP.md to add `**Issue:** #N` after the phase's `**HelpWanted:**` line if present, otherwise after `**Surface:**` (legacy phases authored before HelpWanted existed may omit it — fall through to Surface).
@@ -1091,7 +1094,7 @@ After `complete-milestone`, or when the user wants to start a new version cycle 
 
 | Sub-skill | Trigger | State Files Written |
 |---|---|---|
-| `map-codebase` | Before brainstorming on existing project | `docs/plans/YYYY-MM-DD-codebase-map.md` |
+| `map-codebase` | Before brainstorming on existing project | `docs/superpowers/specs/YYYY-MM-DD-codebase-map.md` |
 | `init-conventions` | Kickoff via `plan-roadmap`; self-heal when CONVENTIONS.md is missing; on demand when a convention changes | `docs/planning/CONVENTIONS.md` |
 | `progress` | "where are we?" / session start | None (read-only) |
 | `add-phase` | "add a phase" | `docs/planning/ROADMAP.md`, `docs/planning/MILESTONE.md` |
@@ -1103,7 +1106,7 @@ After `complete-milestone`, or when the user wants to start a new version cycle 
 | `resume-work` | "resume" / session start — chains to `start-next-phase` | None (read-only) |
 | `start-next-phase` | After `resume-work`, or on "continue" / "next" | None (read-only — routes to brainstorming/writing-plans/executing-plans) |
 | `complete-phase` | After `executing-plans` finishes a phase, or "mark phase N.M complete" | `docs/planning/ROADMAP.md`, `docs/planning/MILESTONE.md` (single phase: active → complete) |
-| `audit-milestone` | "verify milestone is done" | `docs/plans/YYYY-MM-DD-milestone-N-audit.md` |
+| `audit-milestone` | "verify milestone is done" | `docs/superpowers/reviews/YYYY-MM-DD-milestone-N-audit.md` |
 | `complete-milestone` | After audit PASS | `docs/planning/ROADMAP.md`, `docs/planning/MILESTONE.md`, git tag *(only when conventions say so)* |
 | `plan-roadmap` | "plan the roadmap" / first project setup, no ROADMAP.md yet | `docs/superpowers/specs/YYYY-MM-DD-roadmap-design.md`, `docs/planning/ROADMAP.md`, `docs/planning/MILESTONE.md` |
 | `new-milestone` | After `complete-milestone` — chains through `superpowers:brainstorming` | `docs/superpowers/specs/YYYY-MM-DD-milestone-N-design.md`, `docs/planning/MILESTONE.md`, `docs/planning/ROADMAP.md` |
@@ -1124,6 +1127,6 @@ After `complete-milestone`, or when the user wants to start a new version cycle 
 | `decision-tracker` | Independent but complementary. Three integration points: (1) `resume-work` triggers decision-tracker recall at session start. (2) `Surface: UI` pre-plan hook runs a recall for `tags=[ui, design]` so prior UI conventions inform the contract. (3) `Surface: Refactor` pre-plan hook runs a recall for `tags=[architecture, naming]` so prior structural decisions inform the impact analysis. All three are best-effort — recall failures (MCP unavailable, no matching tags) are not chain failures. | decision-tracker handles cross-cutting decisions; project-orchestration handles project state and lifecycle. **Project conventions are deliberately a local file (`docs/planning/CONVENTIONS.md`) rather than a decision-tracker memory**, and the best-effort clause above is the reason: a recall failure is explicitly not a chain failure, so conventions stored as memories would silently go absent whenever the MCP server is down. The Commit & Release Protocol cannot be best-effort — it must either read the conventions or stop, never guess a format or a release mechanism from a failed recall. A file is either on disk or it is not, and `init-conventions` self-heals the "not". Record the *rationale* for a convention in decision-tracker if it is worth remembering; the protocol still reads the file. |
 | `pre-push-review` | `audit-milestone` checks tests and regression, but does NOT cover code quality review (security, YAGNI, dead code, naming). Run `pre-push-review` on each feature branch before `audit-milestone` for complete coverage. | No direct invocation — they operate at different scopes (branch vs milestone). |
 | `ui-design-system` | `start-next-phase`'s **Surface pre-plan hook** invokes `ui-design-system` for `Surface: UI` phases when `docs/design/MASTER.md` is missing. Runs once per project (the design system is global), then `ui-phase` consumes it for every subsequent UI phase. | Surface-driven dispatch — the phase declares `**Surface:** UI` in ROADMAP.md and the hook handles the rest. No manual invocation needed. |
-| `ui-workflow` (`ui-phase` and `ui-review`) | Two hook points for `Surface: UI` phases. **Pre-plan:** `start-next-phase` runs `ui-phase` after `ui-design-system` (if needed) to produce `docs/plans/*-<phase>-*-ui-contract.md` BEFORE chaining to `superpowers:writing-plans`. **Post-implementation:** when `executing-plans` returns clean, `start-next-phase` runs `ui-review` to audit the implementation against that same contract before `complete-phase` runs. Without the post-impl hook, the contract becomes write-only and the audit value is lost. | The contract is the bridge between design spec and implementation plan for UI work — and the audit target after implementation. `ui-review` requires the Playwright MCP (via `regression-test`); the chain degrades gracefully (logs and skips) when MCP is unavailable. |
-| `refactor-analysis` | For `Surface: Refactor` phases, the **Surface pre-plan hook** runs `refactor-analysis` (Phases 1–7) to produce `docs/plans/*-<phase>-*-impact-analysis.md` BEFORE chaining to `superpowers:writing-plans`. The analysis feeds writing-plans the safe execution order, transitive dependency map, and risk register. | Surface-driven dispatch — phases that involve restructuring existing code declare `**Surface:** Refactor` and get impact analysis automatically rather than relying on the agent to remember. |
-| `gh` CLI / GitHub | External tool, not a sibling skill — `init-github-sync`, `sync-github`, and the embedded `detect-external-signals` shell out to `gh` to project local state onto GitHub. Files in `docs/planning/` are the source of truth; GitHub is a one-way visibility target written by `sync-github` from `pause-work` and `complete-phase`. External signals (closes/edits performed directly on GitHub) are surfaced as advisory comments — never copied back into ROADMAP.md. See [`docs/plans/2026-05-06-github-sync-design.md`](../../../../docs/plans/2026-05-06-github-sync-design.md) for the full projection model and rationale. | Hybrid signal handling: outbound writes are authoritative (ROADMAP.md → GitHub); inbound is advisory only (GitHub closes/edits → comment, maintainer decides). Sync failures must never block local state writes — `sync-github` logs and skips when `gh` is unavailable, mis-authenticated, or rate-limited. |
+| `ui-workflow` (`ui-phase` and `ui-review`) | Two hook points for `Surface: UI` phases. **Pre-plan:** `start-next-phase` runs `ui-phase` after `ui-design-system` (if needed) to produce `docs/superpowers/specs/*-<phase>-*-ui-contract.md` BEFORE chaining to `superpowers:writing-plans`. **Post-implementation:** when `executing-plans` returns clean, `start-next-phase` runs `ui-review` to audit the implementation against that same contract before `complete-phase` runs. Without the post-impl hook, the contract becomes write-only and the audit value is lost. | The contract is the bridge between design spec and implementation plan for UI work — and the audit target after implementation. `ui-review` requires the Playwright MCP (via `regression-test`); the chain degrades gracefully (logs and skips) when MCP is unavailable. |
+| `refactor-analysis` | For `Surface: Refactor` phases, the **Surface pre-plan hook** runs `refactor-analysis` (Phases 1–7) to produce `docs/superpowers/specs/*-<phase>-*-impact-analysis.md` BEFORE chaining to `superpowers:writing-plans`. The analysis feeds writing-plans the safe execution order, transitive dependency map, and risk register. | Surface-driven dispatch — phases that involve restructuring existing code declare `**Surface:** Refactor` and get impact analysis automatically rather than relying on the agent to remember. |
+| `gh` CLI / GitHub | External tool, not a sibling skill — `init-github-sync`, `sync-github`, and the embedded `detect-external-signals` shell out to `gh` to project local state onto GitHub. Files in `docs/planning/` are the source of truth; GitHub is a one-way visibility target written by `sync-github` from `pause-work` and `complete-phase`. External signals (closes/edits performed directly on GitHub) are surfaced as advisory comments — never copied back into ROADMAP.md. See [`docs/superpowers/specs/2026-05-06-github-sync-design.md`](../../../../docs/superpowers/specs/2026-05-06-github-sync-design.md) for the full projection model and rationale. | Hybrid signal handling: outbound writes are authoritative (ROADMAP.md → GitHub); inbound is advisory only (GitHub closes/edits → comment, maintainer decides). Sync failures must never block local state writes — `sync-github` logs and skips when `gh` is unavailable, mis-authenticated, or rate-limited. |

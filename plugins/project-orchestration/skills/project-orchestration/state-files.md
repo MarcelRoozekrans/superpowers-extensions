@@ -46,7 +46,7 @@ Tracks all milestones, their phases, and completion status.
 **Goal:** One sentence
 **Surface:** UI | Backend | Refactor | Data | Infra | Docs | Mixed
 **HelpWanted:** yes | no
-**Plan:** `docs/plans/YYYY-MM-DD-<phase>.md`
+**Plan:** `docs/superpowers/plans/YYYY-MM-DD-<phase>.md`
 **Issue:** #N (when github sync is enabled)
 **Completed:** YYYY-MM-DD (when status: complete)
 
@@ -109,11 +109,11 @@ After:  ### Phase 1.2: Auth [status: active]
 ```markdown
 Before: ### Phase 1.2: Auth [status: active]
         **Goal:** Add JWT auth with refresh tokens
-        **Plan:** `docs/plans/2026-04-12-auth.md`
+        **Plan:** `docs/superpowers/plans/2026-04-12-auth.md`
 
 After:  ### Phase 1.2: Auth [status: complete]
         **Goal:** Add JWT auth with refresh tokens
-        **Plan:** `docs/plans/2026-04-12-auth.md`
+        **Plan:** `docs/superpowers/plans/2026-04-12-auth.md`
         **Completed:** 2026-05-04
 ```
 
@@ -156,7 +156,7 @@ Session handoff document. Written by `pause-work`, read by `resume-work`.
 ## Current Position
 - **Milestone:** <N> — <Name>
 - **Phase:** <N.M> — <Name>
-- **Last completed task:** Task N from `docs/plans/<plan-file>.md`
+- **Last completed task:** Task N from `docs/superpowers/plans/<plan-file>.md`
 - **Next task:** Task N+1 — <task title>
 
 ## Open Decisions

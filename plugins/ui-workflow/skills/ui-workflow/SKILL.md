@@ -8,7 +8,7 @@ description: Use for frontend phase work in two modes. (1) ui-phase before imple
 <HARD-GATE>
 Three invariants apply to every step in this skill that produces or consumes a `ui-contract.md`:
 
-1. **The contract is the source of truth.** Both `ui-phase` and `ui-review` operate against `docs/plans/*-ui-contract.md` on disk. Conversation memory is not the contract; the file is. If the file does not exist, neither sub-skill can proceed.
+1. **The contract is the source of truth.** Both `ui-phase` and `ui-review` operate against `docs/superpowers/specs/*-ui-contract.md` on disk. Conversation memory is not the contract; the file is. If the file does not exist, neither sub-skill can proceed.
 2. **State changes use the `Write` or `Edit` tool, not narration.** Saying "I've drafted the contract" without a tool call leaves nothing on disk. Every save MUST be a tool call followed by a `Read`-tool VERIFY pass that confirms the expected sections are present, and only then a commit.
 3. **Order is Write → Verify → Commit → Status check → Announce → (optional) chain.** A `git commit` issued before VERIFY will commit the wrong state or fail with no diff. An announcement before the commit lets the user think state changed when it didn't. Chaining to `writing-plans` or `regression-test` before VERIFY proceeds on faith — re-confirm the artifact via `Glob`/`Read` before reading the next skill file end-to-end.
 
@@ -65,12 +65,12 @@ Do NOT invoke for:
 - [ ] **Interaction states** — loading, empty, error, success per component and page
 - [ ] **Accessibility** — ARIA roles, keyboard nav, contrast requirements
 - [ ] **Open questions** — unresolved decisions flagged for the user
-- [ ] **Save contract** — written to `docs/plans/YYYY-MM-DD-<phase>-ui-contract.md`
+- [ ] **Save contract** — written to `docs/superpowers/specs/YYYY-MM-DD-<phase>-ui-contract.md`
 - [ ] **User approval** — contract reviewed and approved before implementation
 
 ### Process
 
-1. **Read the design doc** — read the relevant `docs/plans/YYYY-MM-DD-*-design.md` to understand the approved design. If no design doc exists yet, proceed from the brainstorming conversation context or ask the user to summarize the approved design intent before continuing.
+1. **Read the design doc** — read the relevant `docs/superpowers/specs/YYYY-MM-DD-*-design.md` (or the legacy `docs/plans/`) to understand the approved design. If no design doc exists yet, proceed from the brainstorming conversation context or ask the user to summarize the approved design intent before continuing.
 
 2. **Identify UI surface area** — list all pages, routes, and components the phase will produce.
 
@@ -97,20 +97,20 @@ Do NOT invoke for:
 
 8. **Present each section to the user** — ask "does this look right?" after each major section. Be ready to revise.
 
-9. **Save the contract** — **use the `Write` tool** to create `docs/plans/YYYY-MM-DD-<phase-name>-ui-contract.md`, structured per [ui-contract-template.md](ui-contract-template.md). Do NOT narrate the contract content in conversation as a substitute — the file is the artifact. Saying "I've drafted the contract" without a Write tool call leaves nothing on disk for ui-review or writing-plans to read.
+9. **Save the contract** — **use the `Write` tool** to create `docs/superpowers/specs/YYYY-MM-DD-<phase-name>-ui-contract.md`, structured per [ui-contract-template.md](ui-contract-template.md). Do NOT narrate the contract content in conversation as a substitute — the file is the artifact. Saying "I've drafted the contract" without a Write tool call leaves nothing on disk for ui-review or writing-plans to read.
 
 10. **VERIFY the contract** — re-read the file with the `Read` tool and confirm every required section is present (Components, Layouts at all three breakpoints, Interaction states, Design system tokens, Accessibility, Open questions). If any section is missing, the write was incomplete — re-write before committing.
 
 11. **Commit:**
 
     ```bash
-    git add docs/plans/YYYY-MM-DD-<phase>-ui-contract.md
+    git add docs/superpowers/specs/YYYY-MM-DD-<phase>-ui-contract.md
     git commit -m "docs(ui): add ui contract for phase N.M — <name>"
     ```
 
     Run `git status` and confirm a clean tree before continuing.
 
-12. **Transition to writing-plans** — only after VERIFY and a clean commit. **Confirm the contract file exists** with one final Glob before chaining (`docs/plans/*-ui-contract.md`). Then **read** the `superpowers:writing-plans` skill file and follow it end-to-end. Do not loosely "invoke" — read the actual skill body.
+12. **Transition to writing-plans** — only after VERIFY and a clean commit. **Confirm the contract file exists** with one final Glob before chaining (`docs/superpowers/specs/*-ui-contract.md`). Then **read** the `superpowers:writing-plans` skill file and follow it end-to-end. Do not loosely "invoke" — read the actual skill body.
 
 ---
 
@@ -136,7 +136,7 @@ Do NOT invoke when:
 
 ### Checklist
 
-- [ ] **Find the ui-contract** — locate the relevant `docs/plans/*-ui-contract.md`
+- [ ] **Find the ui-contract** — locate the relevant `docs/superpowers/specs/*-ui-contract.md`
 - [ ] **Invoke regression-test** — get screenshots at desktop, tablet, mobile for all pages
 - [ ] **Evaluate against contract** — check each contract criterion against screenshots + code
 - [ ] **Design system adherence** — colors, typography, spacing match the contract tokens
@@ -146,11 +146,11 @@ Do NOT invoke when:
 - [ ] **Accessibility** — ARIA roles, keyboard nav, contrast present as contracted
 - [ ] **Anti-slop scan** — implementation does not exhibit common AI-generated UI patterns
 - [ ] **5-dimension critique** — score the implementation against Philosophy / Hierarchy / Execution / Specificity / Restraint
-- [ ] **Produce audit report** — saved to `docs/plans/YYYY-MM-DD-ui-review-<phase>.md`
+- [ ] **Produce audit report** — saved to `docs/superpowers/reviews/YYYY-MM-DD-ui-review-<phase>.md`
 
 ### Process
 
-1. **Find the ui-contract** — glob for `docs/plans/*-ui-contract.md`, match to the current phase by date or name. **HARD GATE:** if no contract is found, STOP. Do not proceed to regression-test — there is nothing to compare screenshots against. Announce: "No ui-contract found for this phase. Run `ui-phase` first to produce a contract, or fall back to bare `regression-test` if no design audit is needed." If multiple contracts exist, present the list and ask the user which applies.
+1. **Find the ui-contract** — glob for `docs/superpowers/specs/*-ui-contract.md` (and the legacy `docs/plans/*-ui-contract.md`), match to the current phase by date or name. **HARD GATE:** if no contract is found, STOP. Do not proceed to regression-test — there is nothing to compare screenshots against. Announce: "No ui-contract found for this phase. Run `ui-phase` first to produce a contract, or fall back to bare `regression-test` if no design audit is needed." If multiple contracts exist, present the list and ask the user which applies.
 
 2. **Read the ui-contract** — extract: components list, layout spec, design system tokens, interaction states, accessibility requirements. **VERIFY:** the file was readable and contains the expected sections — an empty or malformed contract is equivalent to no contract.
 
@@ -211,7 +211,7 @@ Do NOT invoke when:
 8. **Produce audit report:**
 
    ```text
-   docs/plans/YYYY-MM-DD-ui-review-<phase>.md
+   docs/superpowers/reviews/YYYY-MM-DD-ui-review-<phase>.md
    ```
 
    Report structure:
@@ -220,7 +220,7 @@ Do NOT invoke when:
    # UI Review: Phase N.M — <Name>
 
    **Date:** YYYY-MM-DD
-   **Contract:** `docs/plans/YYYY-MM-DD-<phase>-ui-contract.md`
+   **Contract:** `docs/superpowers/specs/YYYY-MM-DD-<phase>-ui-contract.md`
    **Verdict:** PASS | PARTIAL | FAIL
 
    ## Screenshots
@@ -293,7 +293,7 @@ Do NOT invoke when:
 10. **Commit the report:**
 
     ```bash
-    git add docs/plans/YYYY-MM-DD-ui-review-<phase>.md
+    git add docs/superpowers/reviews/YYYY-MM-DD-ui-review-<phase>.md
     git commit -m "docs(ui-review): add ui-review report for phase N.M — <name>"
     ```
 
@@ -330,14 +330,14 @@ Do NOT invoke when:
 
 | Sub-skill | Trigger | Output |
 |---|---|---|
-| `ui-phase` | Before implementing a frontend phase | `docs/plans/YYYY-MM-DD-<phase>-ui-contract.md` |
-| `ui-review` | After implementing a frontend phase | `docs/plans/YYYY-MM-DD-ui-review-<phase>.md` + regression-test screenshots |
+| `ui-phase` | Before implementing a frontend phase | `docs/superpowers/specs/YYYY-MM-DD-<phase>-ui-contract.md` |
+| `ui-review` | After implementing a frontend phase | `docs/superpowers/reviews/YYYY-MM-DD-ui-review-<phase>.md` + regression-test screenshots |
 
 ## Relationship to Superpowers Skills
 
 | Superpowers Skill | Relationship | Notes |
 |---|---|---|
-| `superpowers:brainstorming` | `ui-phase` runs after brainstorming approves a frontend design — it translates the approved design into a concrete visual spec. | Brainstorming establishes what to build; ui-phase establishes how it should look. |
+| `superpowers:brainstorming` | `ui-phase` runs after brainstorming approves a frontend design — it translates the approved design into a concrete visual spec. | Brainstorming establishes what to build; ui-phase establishes how it should look. Upstream brainstorming (superpowers v7+) ends with "invoke superpowers:writing-plans and no other skill", so it will not route here by itself. Run `ui-phase` when writing-plans starts on a frontend spec and no contract exists yet; it only writes a document, so brainstorming's gate still holds. `project-orchestration` runs it for `Surface: UI` phases. |
 | `superpowers:writing-plans` | The ui-contract is referenced in the implementation plan as the visual specification. Tasks reference contract components by name. | Invoke writing-plans after ui-phase completes. |
 | `regression-test` | `ui-review` delegates all browser automation and screenshot capture to the regression-test skill. | regression-test handles authentication, Playwright MCP, and screenshot storage. ui-review handles contract comparison. |
 | `pre-push-review` | `ui-review` can be invoked by pre-push-review Phase 5 for branches containing frontend work. | pre-push-review optionally invokes ui-review when a ui-contract is detected for the current branch. |
