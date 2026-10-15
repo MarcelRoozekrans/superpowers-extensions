@@ -746,7 +746,7 @@ repo root with skills resolved via `./plugins/`.
 
 ### Option A: Install as Claude Code Plugin (Recommended)
 
-Install directly from GitHub -- this single command pulls in superpowers core skills, LongtermMemory-MCP, and roslyn-codelens-mcp as transitive dependencies:
+Install directly from GitHub -- this single command pulls in superpowers core skills, LongtermMemory-MCP, roslyn-codelens-mcp and memorylens-mcp as transitive dependencies:
 
 ```bash
 claude install gh:MarcelRoozekrans/superpowers-extensions
@@ -879,8 +879,8 @@ cp -r plugins/logo-design/skills/logo-design ~/.claude/skills/logo-design
 **Note:** Some plugins require companion MCP servers. Install them separately:
 
 - **decision-tracker:** `claude mcp add longterm-memory -- npx -y longterm-memory-mcp`
-- **roslyn-codelens-integration:** `dotnet tool install -g roslyn-codelens-mcp && claude mcp add roslyn-codelens -- roslyn-codelens-mcp`
-- **memorylens-integration:** `dotnet tool install -g memorylens-mcp && claude mcp add memorylens -- memorylens-mcp`
+- **roslyn-codelens-integration:** `claude install gh:MarcelRoozekrans/roslyn-codelens-mcp`. That plugin ships the MCP server; don't also add it with `claude mcp add`, or every session starts two servers that both load the solution.
+- **memorylens-integration:** `claude install gh:MarcelRoozekrans/memorylens-mcp`. Same: that plugin ships the server.
 
 ### Optional Playwright Flags
 
