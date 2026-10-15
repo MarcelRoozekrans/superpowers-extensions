@@ -64,7 +64,7 @@ The pre-push review skill provides a comprehensive, structured branch review to 
 
 The review covers four dimensions:
 
-1. **Plan Adherence** -- Verifies that planned work was completed and nothing unplanned snuck in. Compares the diff against plan documents found in `docs/plans/`.
+1. **Plan Adherence** -- Verifies that planned work was completed and nothing unplanned snuck in. Compares the diff against plan documents found in `docs/superpowers/plans/` (and the legacy `docs/plans/`).
 2. **Code Quality** -- Reviews the diff against 7 code quality rules: security (OWASP Top 10), YAGNI/over-engineering, debug/temporary code, dead code/unused imports, error handling, naming/readability, and test coverage.
 3. **Commit Hygiene** -- Checks commits for secrets, large files, unintended files (node_modules, build artifacts), merge conflict markers, and commit message quality.
 4. **Regression Testing** -- Runs existing test suites and optionally invokes browser-based regression testing via the regression-test skill.
@@ -139,7 +139,7 @@ Invoke the skill by asking Claude:
 
 The skill produces:
 
-- **Impact analysis document** saved to `docs/plans/YYYY-MM-DD-<topic>-impact-analysis.md` with summary table, dependency graph, annotated file list, risk register, and execution order
+- **Impact analysis document** saved to `docs/superpowers/specs/YYYY-MM-DD-<topic>-impact-analysis.md` with summary table, dependency graph, annotated file list, risk register, and execution order
 - **Conversation summary** with refactor type, affected file counts by classification, top risks, and document path
 
 ---
@@ -234,7 +234,7 @@ The project-orchestration skill provides GSD-inspired project lifecycle manageme
 
 | Sub-skill | Trigger | What It Does |
 |---|---|---|
-| `map-codebase` | Before brainstorming on an existing project | Analyzes structure, entry points, dependencies, and patterns; saves a codebase map to `docs/plans/` |
+| `map-codebase` | Before brainstorming on an existing project | Analyzes structure, entry points, dependencies, and patterns; saves a codebase map to `docs/superpowers/specs/` |
 | `init-conventions` | Kickoff via `plan-roadmap`; self-heal when `CONVENTIONS.md` is missing; on demand when a convention changes | Detects the project's stack, commit format, branching model, release mechanism, and deploy target from the repo, proposes them for confirmation, then records the confirmed set in `docs/planning/CONVENTIONS.md`. Every commit and tag the skill makes is rendered from that file |
 | `plan-roadmap` | "plan the roadmap" / first project setup, no `ROADMAP.md` yet | Brainstorms the project at roadmap scope (3-7 milestones with rough phase outlines), writes initial `ROADMAP.md` + `MILESTONE.md` for milestone 1. Runs `init-conventions` first so stack and release decisions are settled before the brainstorm |
 | `progress` | "where are we?" / session start | Reads `docs/planning/` state files and presents milestone/phase status |
@@ -315,7 +315,7 @@ When invoked, the skill:
 
 The skill REFUSES to operate on:
 
-- `docs/plans/**` — plan documents read literally by `executing-plans`, `subagent-driven-development`
+- `docs/superpowers/**` and the legacy `docs/plans/**` — specs, plans, and reports read literally by `writing-plans`, `executing-plans`, `subagent-driven-development`
 - `*ui-contract*` — UI contracts audited by `ui-workflow:ui-review`
 - `*impact-analysis*` — refactor impact analyses with nuanced risk register prose
 - `*-design.md` — brainstorm design documents
@@ -380,7 +380,7 @@ The ui-workflow skill provides two complementary capabilities that close the des
 - Interaction states: loading, empty, error, success
 - Accessibility requirements (ARIA roles, keyboard nav, contrast targets)
 
-The contract is saved to `docs/plans/YYYY-MM-DD-<phase>-ui-contract.md` and becomes the implementation spec.
+The contract is saved to `docs/superpowers/specs/YYYY-MM-DD-<phase>-ui-contract.md` and becomes the implementation spec.
 
 **`ui-review`** — Run after implementing a frontend phase. Audits the result against the ui-contract using regression-test screenshots. Three-layer grading:
 
@@ -396,7 +396,7 @@ Final verdict is the worst of the three sub-verdicts:
 | Anti-slop | All 9 patterns Pass | n/a | Any pattern Fail |
 | 5-dimension critique | Floor ≥ 3, average ≥ 3.5 | Floor = 3 | Floor ≤ 2 |
 
-A contract-clean implementation with critique floor 2 (e.g. specificity = 2/5) still fails — anti-slop and critique-floor are hard floors regardless of contract match. The audit report is saved to `docs/plans/YYYY-MM-DD-ui-review-<phase>.md`.
+A contract-clean implementation with critique floor 2 (e.g. specificity = 2/5) still fails — anti-slop and critique-floor are hard floors regardless of contract match. The audit report is saved to `docs/superpowers/reviews/YYYY-MM-DD-ui-review-<phase>.md`.
 
 ### Usage
 
@@ -675,8 +675,32 @@ detects which harness is running it via env vars (`CURSOR_PLUGIN_ROOT`,
 `CLAUDE_PLUGIN_ROOT`, `COPILOT_CLI`) and emits the JSON shape that
 harness expects (`additional_context` for Cursor, `hookSpecificOutput`
 for Claude Code, top-level `additionalContext` for SDK-standard hosts
-including Copilot CLI). [`hooks/run-hook.cmd`](hooks/run-hook.cmd) is the
+including Copilot CLI). Only Cursor registers it today, through
+[`hooks/hooks-cursor.json`](hooks/hooks-cursor.json). Claude Code
+installs each plugin under `plugins/` separately and lists every
+installed skill natively, so it needs no session-start injection and the
+repo root is not a Claude Code plugin. [`hooks/run-hook.cmd`](hooks/run-hook.cmd) is the
 Windows polyglot wrapper that routes to Git Bash on Windows hosts.
+
+### Upstream compatibility
+
+The suite builds on [`obra/superpowers`](https://github.com/obra/superpowers)
+and is pinned to the release in
+[`.github/upstream-superpowers.json`](.github/upstream-superpowers.json)
+(currently `v7.0.0`).
+
+- **CI** runs `npm run check:upstream`, which clones the pinned release
+  and fails if any `superpowers:<skill>` the suite names is missing, or if
+  upstream text the suite relies on has moved. That covers the spec and plan
+  locations under `docs/superpowers/`, brainstorming's hand-off to
+  writing-plans, and the writing-plans steps squad hooks into.
+- **[`upstream-watch.yml`](.github/workflows/upstream-watch.yml)** checks
+  daily for a new upstream release. For each one it opens a single
+  `upstream-superpowers` issue with the release notes, a diff stat of
+  upstream's skills and hooks, and the result of `check-upstream` against
+  the new release. Bump the pin in the PR that adapts the suite.
+- **Projects started before superpowers v6** keep specs and plans in
+  `docs/plans/`. Every skill that reads them checks there as a fallback.
 
 ### What is **not** supported
 

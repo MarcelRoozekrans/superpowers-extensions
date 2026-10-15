@@ -34,7 +34,7 @@ This is **input token compression**. Caveman-style output speech is explicitly N
 
 This skill REFUSES the following files (see [safety-rules.md](safety-rules.md) for the full denylist):
 
-- Any file under `docs/plans/` — these are plan documents read literally by downstream skills
+- Any file under `docs/superpowers/` or the legacy `docs/plans/` — these are specs, plans, and reports read literally by downstream skills
 - `*-design.md`, `*-impact-analysis*`, `*ui-contract*`, `*-review-*.md` — contracts between skills
 - `MILESTONE.md` — rewritten on milestone transitions, not pause-work
 - `CONVENTIONS.md` — machine-read before every commit and tag; its fields are prose, so compression can break them while validation still passes

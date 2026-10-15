@@ -134,12 +134,12 @@ Lead synthesis is one extra subagent dispatch — wall-clock cost ~= one additio
 
 ### brainstorming
 
-Squad integrates into the clarifying-questions phase. When brainstorming raises a question that a specialist can answer from project knowledge, squad intercepts it:
+Squad integrates into brainstorming's conversation, where it asks one question per message, and into the builder check, where questions are sorted into "answered already", "minor", and "theirs". When brainstorming is about to ask a question that a specialist can answer from project knowledge, squad intercepts it before it reaches the user:
 
 1. Route the question using the routing algorithm. Result is a list of specialists.
 2. Run tiered lookup for each specialist in parallel.
 3. **Dispatch all relevant specialists in parallel** as Task subagents (one assistant message, multiple `Task` tool calls).
-4. Brainstorming receives the integrated response and treats it as the resolved answer.
+4. Brainstorming receives the integrated response and treats it as answered already. Play the answer back to the user as part of the next message, marked as coming from the squad, so a wrong guess can still be caught.
 5. User may override — if the user corrects the agent's answer, update routing or history accordingly.
 
 For multi-part questions that span specialty areas, default to light-touch synthesis (present each subagent's prefixed response). Use Lead synthesis only when brainstorming needs a single recommendation.
@@ -182,13 +182,13 @@ after CSRF audit]. I'd extend that rather than introduce a new mechanism.
 
 ### writing-plans
 
-After the plan is drafted:
+After writing-plans' own Self-Review and before its Execution Handoff:
 
 1. **Dispatch Tester and Scribe in parallel** as Task subagents in a single assistant message. Each gets the full plan as input plus their own charter + tier-1 history.
    - Tester reviews the plan for missing test coverage.
    - Scribe checks for undocumented decisions or convention drift against `decisions.md`.
 2. When both subagents return, append both findings to the plan as a `## Squad Review` section.
-3. If Tester or Scribe surfaces a blocker (missing critical coverage, contradiction with a recorded decision), pause for user confirmation before saving the plan.
+3. If Tester or Scribe surfaces a blocker (missing critical coverage, contradiction with a recorded decision), raise it with the user alongside the handoff, before an execution method is chosen.
 
 This is two parallel subagents, not a sequential review chain — wall-clock cost is one Task dispatch, not two.
 
