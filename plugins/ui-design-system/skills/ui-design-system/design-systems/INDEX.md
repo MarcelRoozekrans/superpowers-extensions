@@ -1,6 +1,6 @@
 # Design Systems Catalog — Index
 
-74 vendored design systems organized by category. Each entry points at a
+84 vendored design systems organized by category. Each entry points at a
 `<system>/DESIGN.md` file with a 9-section spec (visual theme, color palette,
 typography, layout, components, motion, imagery, voice, edge cases) extracted
 from real production CSS.
@@ -26,6 +26,7 @@ For attribution and licensing, see [NOTICE.md](NOTICE.md).
 | [elevenlabs](elevenlabs/DESIGN.md) | Audio-first, waveform aesthetic |
 | [runwayml](runwayml/DESIGN.md) | Video-AI, dark editorial |
 | [replicate](replicate/DESIGN.md) | Model marketplace, scientific minimalism |
+| [jobright](jobright/DESIGN.md) | AI job hunting, spring-mint green, condensed display, black pills |
 
 ## Developer tools / infrastructure
 
@@ -84,6 +85,10 @@ For attribution and licensing, see [NOTICE.md](NOTICE.md).
 | [meta](meta/DESIGN.md) | Multi-app blue, social-platform corporate |
 | [playstation](playstation/DESIGN.md) | Gaming, cinematic dark, console identity |
 | [nintendo-2001](nintendo-2001/DESIGN.md) | Y2K console chrome, beveled metal plates, amber glow (period piece) |
+| [aljazeera](aljazeera/DESIGN.md) | Hard-news editorial, flat white, orange eyebrow bars, live-red breaking badges |
+| [dji](dji/DESIGN.md) | Drone showroom, square studio-photo tiles, engineering-blue pills |
+| [oura](oura/DESIGN.md) | Wellness, warm paper, editorial serif, cream-and-earth palette |
+| [1win](1win/DESIGN.md) | Crypto casino and sportsbook, dense dark game-tile rails, green and blue CTAs |
 
 ## Fintech / commerce
 
@@ -96,6 +101,9 @@ For attribution and licensing, see [NOTICE.md](NOTICE.md).
 | [wise](wise/DESIGN.md) | Cross-border money, warm-yellow |
 | [binance](binance/DESIGN.md) | Crypto exchange, gold-on-black |
 | [kraken](kraken/DESIGN.md) | Crypto, deep-purple maritime |
+| [mercury](mercury/DESIGN.md) | Startup banking, ink-violet night meets pale day, one indigo pill |
+| [nerdwallet](nerdwallet/DESIGN.md) | Personal-finance comparison, deep green and mint ladder, dense tables |
+| [mydealz](mydealz/DESIGN.md) | Deals community, dense card feed, hot/cold vote control |
 
 ## Auto / luxury
 
@@ -119,6 +127,8 @@ For attribution and licensing, see [NOTICE.md](NOTICE.md).
 | [clay](clay/DESIGN.md) | B2B sales-intelligence, content-rich |
 | [hp](hp/DESIGN.md) | Enterprise-consumer white paper, electric-blue chevrons |
 | [dell-1996](dell-1996/DESIGN.md) | Catalog-era flat color blocks, GIF-sticker web (period piece) |
+| [oracle](oracle/DESIGN.md) | Warm grey ladder, charcoal actions, red kept for the wordmark |
+| [sap](sap/DESIGN.md) | Quiet application frame, white with two greys and one blue |
 
 ## Picking a system
 

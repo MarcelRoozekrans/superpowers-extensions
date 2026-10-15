@@ -32,7 +32,7 @@ systems, brand marks, and memory compression:
 - memorylens-integration — .NET memory snapshot analysis during debugging
 - project-orchestration — multi-session project lifecycle (resume / pause / milestones)
 - ui-workflow           — UI design contracts + 3-layer audit (anti-slop + critique)
-- ui-design-system      — design system from 70 vendored references or 5 OKLch directions
+- ui-design-system      — design system from 84 vendored references or 5 OKLch directions
 - squad                 — persistent AI agent team that grows across sessions
 - compress-memory       — compress memory files to cut replayed input tokens
 - logo-design           — brand mark as SVG, from brief to favicon

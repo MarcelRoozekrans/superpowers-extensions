@@ -13,7 +13,7 @@ Extension skills for the [superpowers](https://github.com/obra/superpowers) suit
 - **memorylens-integration** -- Superpowers integration for [MemoryLens](https://github.com/MarcelRoozekrans/memorylens-mcp) memory profiling. Enhances `systematic-debugging` with .NET memory snapshot analysis, leak detection, and before/after fix validation. Direct triggers on "memory leak", "OOM", "high GC pressure". Inert on non-.NET projects.
 - **project-orchestration** -- GSD-inspired project lifecycle management for larger multi-session projects. Brownfield codebase mapping, milestone tracking, phase management, session pause/resume, milestone audit, release cycle management, and a `start-next-phase` routing hub that mechanically chains brainstorming → writing-plans → executing-plans for the next non-complete phase.
 - **ui-workflow** -- Frontend design contracts and visual auditing. Generates structured UI design contracts before implementing frontend phases (`ui-phase`) and performs visual audits afterwards (`ui-review`) using a three-layer grading: contract adherence, anti-slop scan, and 5-dimension critique.
-- **ui-design-system** -- Generates a complete design system before frontend implementation. Three modes: **curated** (pick from 74 vendored real-world references — Stripe, Linear, Vercel, Notion, Apple, Figma, Supabase, Cursor, Claude, …), **guided** (7 questions), or **quick** (inline one-liner). Includes 5 hand-tuned OKLch design directions and an anti-slop checklist. Auto-detects Blazor, React, Vue, Astro stacks. Outputs `docs/design/MASTER.md`.
+- **ui-design-system** -- Generates a complete design system before frontend implementation. Three modes: **curated** (pick from 84 vendored real-world references — Stripe, Linear, Vercel, Notion, Apple, Figma, Supabase, Cursor, Claude, …), **guided** (7 questions), or **quick** (inline one-liner). Includes 5 hand-tuned OKLch design directions and an anti-slop checklist. Auto-detects Blazor, React, Vue, Astro stacks. Outputs `docs/design/MASTER.md`.
 - **logo-design** -- Generates brand marks as hand-authored SVG and audits existing ones. Two sub-skills: `logo-concept` draws a mark (or derives the variant set for one that already exists) and `logo-review` audits one across three layers — reproduction hazards, a ten-pattern anti-slop scan, and a five-dimension critique. Ships four mark types (geometric, monogram, wordmark, abstract) and **refuses pictorial, mascot, and illustrative-emblem marks** by design. Reads `docs/design/MASTER.md` for palette and typography when present. Outputs `docs/design/LOGO.md`, seven SVG variants through to a redrawn favicon, a contact sheet, and an eight-file raster icon set exported from those SVGs — recorded `UNRUN` rather than failed when no SVG rasteriser is installed.
 - **squad** -- Persistent AI agent teams (Lead, Backend Engineer, Frontend Engineer, Tester, Scribe) **dispatched as parallel `Task` subagents** during brainstorming and planning workflows. Each specialist runs in an isolated context window with its own charter and tier-1 history, so they cannot anchor on each other's reasoning. Per-role `history.md` files accumulate project-specific knowledge across sessions; tiered context lookup (semantic search → grep → recent history) keeps each subagent's prompt lean.
 
@@ -417,7 +417,7 @@ The ui-design-system skill generates a complete design system before frontend im
 
 ### Modes
 
-**Curated mode** — Pick a real-world reference from the 74-system vendored catalog (Stripe, Linear, Vercel, Notion, Apple, Figma, Supabase, Cursor, Claude, Cohere, Mistral, Notion, Airbnb, Spotify, and more). The skill loads the reference's `DESIGN.md` (real CSS tokens, fonts, shadow values extracted from production sites), asks 3 adaptation questions, and writes `MASTER.md` with explicit `Inspired by:` attribution and a `Deviations from reference:` section.
+**Curated mode** — Pick a real-world reference from the 84-system vendored catalog (Stripe, Linear, Vercel, Notion, Apple, Figma, Supabase, Cursor, Claude, Cohere, Mistral, Notion, Airbnb, Spotify, and more). The skill loads the reference's `DESIGN.md` (real CSS tokens, fonts, shadow values extracted from production sites), asks 3 adaptation questions, and writes `MASTER.md` with explicit `Inspired by:` attribution and a `Deviations from reference:` section.
 
 - `ui-design-system: like linear`
 - `ui-design-system: based on stripe`
@@ -432,7 +432,7 @@ The ui-design-system skill generates a complete design system before frontend im
 
 ### Curated catalog
 
-74 real-world design systems vendored from [VoltAgent/awesome-design-md](https://github.com/VoltAgent/awesome-design-md) (MIT) and categorized in [`design-systems/INDEX.md`](plugins/ui-design-system/skills/ui-design-system/design-systems/INDEX.md):
+84 real-world design systems vendored from [VoltAgent/awesome-design-md](https://github.com/VoltAgent/awesome-design-md) (MIT) and categorized in [`design-systems/INDEX.md`](plugins/ui-design-system/skills/ui-design-system/design-systems/INDEX.md):
 
 | Category | Systems |
 |---|---|
@@ -723,7 +723,7 @@ instruction/prompt files at the project level.
   agents to invoke skills via the Skill tool. Install
   `obra/superpowers` alongside (it is already a marketplace dependency
   of this repo).
-- **The 74 vendored design systems** under
+- **The 84 vendored design systems** under
   [`plugins/ui-design-system/skills/ui-design-system/design-systems/`](plugins/ui-design-system/skills/ui-design-system/design-systems/)
   travel with each harness — they are plain markdown, every harness
   reads them.
@@ -965,7 +965,7 @@ When building or redesigning UI:
 
 ```text
 ui-design-system       → generate design tokens and component patterns (once per project)
-                         curated mode: pick from 74 vendored references (Stripe, Linear, …)
+                         curated mode: pick from 84 vendored references (Stripe, Linear, …)
                          guided mode: 7 questions
                          quick mode: inline one-liner
 logo-design            → brand mark as SVG, from brief to favicon (once per product)
@@ -1124,7 +1124,7 @@ superpowers-extensions/
 │   │           ├── SKILL.md                # curated / guided / quick modes
 │   │           ├── domains/                # SaaS / admin / marketing domain rules
 │   │           ├── stacks/                 # Astro / Blazor / generic-web / React / Vue stack notes
-│   │           └── design-systems/         # 74 vendored real-world DESIGN.md references (MIT)
+│   │           └── design-systems/         # 84 vendored real-world DESIGN.md references (MIT)
 │   │               ├── INDEX.md            # Categorized catalog with vibe one-liners
 │   │               ├── NOTICE.md           # Attribution + refresh instructions
 │   │               ├── stripe/DESIGN.md    # Real CSS tokens from production sites
