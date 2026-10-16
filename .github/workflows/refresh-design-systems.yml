@@ -7,10 +7,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
-  pull-requests: write
-  # To start lint.yml on the PR head; see the last step.
-  actions: write
+  contents: read
 
 jobs:
   refresh:
@@ -65,18 +62,28 @@ jobs:
             echo "- [ ] Spot-check changed \`DESIGN.md\` files for unexpected content; large delete-and-add patterns deserve a closer look than small edits"
             echo "- [ ] For each added system, decide whether it belongs in the catalog"
             echo
-            echo "Lint is started on this PR's head commit by the workflow, so its checks appear here."
-            echo "If the branch is updated by hand, the push triggers CI as usual."
-            echo
             echo "🤖 Opened by \`.github/workflows/refresh-design-systems.yml\`"
           } > "$RUNNER_TEMP/pr-body.md"
           cat "$RUNNER_TEMP/pr-body.md"
+
+      # Pushes and PRs made with GITHUB_TOKEN do not trigger workflows, so the
+      # PR would never get its required checks. A token minted from the release
+      # bot GitHub App acts as the App, and its pushes trigger CI normally.
+      - name: Mint a release bot token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.RELEASE_BOT_CLIENT_ID }}
+          private-key: ${{ secrets.RELEASE_BOT_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
+          permission-issues: write
 
       - name: Open PR with refreshed catalog
         id: cpr
         uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ steps.app-token.outputs.token }}
           branch: ${{ env.BRANCH }}
           delete-branch: true
           commit-message: |
@@ -89,13 +96,3 @@ jobs:
           labels: |
             automation
             ui-design-system
-
-      # Pushes made with GITHUB_TOKEN do not trigger pull_request workflows, so
-      # the PR would otherwise show no checks at all. workflow_dispatch is the
-      # one event GITHUB_TOKEN may start; the run's check results attach to the
-      # head commit, which is what the PR shows.
-      - name: Run lint on the PR head
-        if: steps.cpr.outputs.pull-request-operation == 'created' || steps.cpr.outputs.pull-request-operation == 'updated'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh workflow run lint.yml --ref "$BRANCH"
