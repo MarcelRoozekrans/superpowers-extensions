@@ -26,3 +26,6 @@ docs/pre-push-review-*.md
 
 # Node
 node_modules/
+
+# Screenshots and page snapshots the Playwright MCP server writes into the working directory.
+.playwright-mcp/
