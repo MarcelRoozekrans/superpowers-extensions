@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.23.0](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.22.2...superpowers-extensions-v1.23.0) (2026-10-16)
+
+
+### Features
+
+* **decision-tracker:** harvest plan-run rulings before the workspace is deleted ([#138](https://github.com/MarcelRoozekrans/superpowers-extensions/issues/138)) ([b47594b](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/b47594b5ec02a6eaaf8d029040078ed8829dbfb0))
+
+
+### Bug Fixes
+
+* **suite:** stop the integration plugins from starting a second MCP server ([#140](https://github.com/MarcelRoozekrans/superpowers-extensions/issues/140)) ([73d13d3](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/73d13d3ade744b919b8560d3780b8a4f3f69deaf))
+* **ui-design-system:** check contrast, fix broken output, delegate commits ([#141](https://github.com/MarcelRoozekrans/superpowers-extensions/issues/141)) ([9004892](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/9004892f5859805f6399337056216977affb1879))
+
 ## [1.22.2](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.22.1...superpowers-extensions-v1.22.2) (2026-10-15)
 
 
