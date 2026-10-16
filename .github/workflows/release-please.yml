@@ -5,34 +5,27 @@ on:
     branches: [master]
 
 permissions:
-  contents: write
-  pull-requests: write
-  # To start lint.yml on the release PR branch; see the last step.
-  actions: write
+  contents: read
 
 jobs:
   release-please:
     runs-on: ubuntu-latest
     steps:
+      # Pushes and PRs made with GITHUB_TOKEN do not trigger workflows, so the
+      # PR would never get its required checks. A token minted from the release
+      # bot GitHub App acts as the App, and its pushes trigger CI normally.
+      - name: Mint a release bot token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.RELEASE_BOT_CLIENT_ID }}
+          private-key: ${{ secrets.RELEASE_BOT_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
+          permission-issues: write
+
       - uses: googleapis/release-please-action@v5
         with:
+          token: ${{ steps.app-token.outputs.token }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
-
-      # release-please pushes its branch with GITHUB_TOKEN, which cannot trigger
-      # pull_request workflows, so the release PR never gets the required checks
-      # and stays blocked until someone updates the branch by hand.
-      # workflow_dispatch is the one event GITHUB_TOKEN may start, and the run's
-      # checks attach to the branch head, which is what the PR shows. Same fix as
-      # refresh-design-systems.yml.
-      - name: Run lint on the open release PR
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          BRANCH: release-please--branches--master--components--superpowers-extensions
-        run: |
-          open=$(gh pr list --repo "$GITHUB_REPOSITORY" --head "$BRANCH" --state open --json number --jq length)
-          if [ "$open" = "0" ]; then
-            echo "No open release PR; nothing to check."
-          else
-            gh workflow run lint.yml --repo "$GITHUB_REPOSITORY" --ref "$BRANCH"
-          fi
