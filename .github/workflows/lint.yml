@@ -5,9 +5,6 @@ on:
     branches: [master]
   pull_request:
     branches: [master]
-  # Started by refresh-design-systems.yml on its PR branch, whose
-  # GITHUB_TOKEN push cannot trigger pull_request runs.
-  workflow_dispatch:
 
 jobs:
   markdown-lint:
