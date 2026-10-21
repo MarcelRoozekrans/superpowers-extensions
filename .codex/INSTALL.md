@@ -2,7 +2,7 @@
 
 Codex auto-discovers skills under `~/.agents/skills/`. Each plugin in this
 suite is a separate skill bundle, so installation is a clone followed by
-twelve symlinks (one per plugin).
+thirteen symlinks (one per plugin).
 
 ## Prerequisites
 
