@@ -179,17 +179,26 @@ Invoke before `brainstorming` when starting work on an existing codebase the age
 
 5. **Identify patterns** — grep for: framework indicators (React, ASP.NET, FastAPI, Rails), architectural patterns (repositories, services, controllers, handlers), test framework config.
 
-6. **Summarize** — present a codebase map with:
+6. **Detect traps** — find what bites people later, so planned work does not walk into it:
+   - **Large or complex files:** note what each owns, and that nothing should be added to it blindly. On .NET, when roslyn-codelens tools are available, use `get_complexity_metrics` and `find_god_objects` instead of line counts.
+   - **Change hotspots:** the files git history shows changing most often, overall and in `fix:` commits (for example `git log --name-only --pretty=format: | sort | uniq -c | sort -rn | head`).
+   - **Hidden coupling:** shared mutable or global state, circular dependencies (on .NET, when roslyn-codelens tools are available, `find_circular_dependencies`), and environment variables read with no default.
+   - **Known-broken spots:** TODO, FIXME and HACK markers. Leave them alone unless the planned work is about them.
+   - **Test baseline:** run the test suite once and record the tests that already fail, so later work neither "fixes" them by accident nor gets blamed for them. When the suite is too slow or needs services that are not available, record that instead of running it.
+   - **Critical files:** auth, migrations, schema, CI configuration and similar. Flag them "read fully before changing".
+
+7. **Summarize** — present a codebase map with:
    - Tech stack and framework
    - Directory layout and purpose of each major directory
    - Entry points and how the application starts
    - Test structure and framework
    - Key patterns and conventions observed
-   - Recommended starting points for the planned work
+   - Traps: the findings from step 6
+   - Recommended starting points for the planned work, referencing the traps that touch it
 
-7. **Save to:** `docs/superpowers/specs/YYYY-MM-DD-codebase-map.md`
+8. **Save to:** `docs/superpowers/specs/YYYY-MM-DD-codebase-map.md`
 
-8. **Transition** — invoke `brainstorming` with the codebase map as context.
+9. **Transition** — invoke `brainstorming` with the codebase map as context.
 
 ---
 
