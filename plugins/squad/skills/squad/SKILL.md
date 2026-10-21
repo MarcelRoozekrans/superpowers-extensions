@@ -86,7 +86,7 @@ When a question arises during any superpowers workflow:
 6. Wait for all subagent responses to return. Integrate them into a single answer for the calling workflow:
    - Single specialist → present the subagent's response with the agent's name and emoji prefix.
    - Multiple specialists with non-conflicting answers → present each with its prefix, in a stable order (Lead, Backend, Frontend, Tester, Scribe).
-   - Multiple specialists with conflicting answers → either let Lead reconcile (dispatch one more subagent with all prior outputs as input) or surface the conflict to the user with each side's reasoning.
+   - Multiple specialists with conflicting answers → either let Lead reconcile (dispatch one more subagent with all prior outputs as input, `model: opus` since it reconciles a conflict) or surface the conflict to the user with each side's reasoning.
 7. Return control to the calling workflow.
 
 ## Parallel Subagent Dispatch
@@ -119,6 +119,18 @@ collected — design doc paragraph, plan excerpt, diff hunk, etc.}
   can pick it up.
 ```
 
+### Model for every specialist
+
+Every specialist dispatch names `model` explicitly. A `general-purpose` dispatch with no `model` is denied by the context-budget hook. The suite-wide rule is the `## Model Choice` section of the `context-budget` skill. This covers every dispatch site in this file, including the writing-plans, pre-push-review, plan-roadmap and squad-ask dispatches below. For squad:
+
+- Specialists default to `sonnet`.
+- Lead uses `opus` only when reconciling conflicting specialist answers. Lead's role charter does not change that.
+- Never Fable.
+
+```text
+Task(subagent_type: "general-purpose", model: "sonnet", description: "Backend Engineer: auth approach", prompt: <four blocks above>)
+```
+
 When dispatching multiple specialists for one question, include all `Task` tool calls in the same assistant message — that is what causes them to run in parallel. Do NOT call them sequentially in separate messages.
 
 ## Lead synthesis
@@ -128,7 +140,7 @@ For questions that span 2+ specialty areas (e.g. an API change that affects back
 - **Light-touch synthesis (default).** Main conversation receives the parallel responses and presents them in stable order with prefixes. The user is the integrator.
 - **Lead-as-final-subagent.** When you want a coordinated recommendation rather than a list, dispatch Lead **after** the parallel specialists return. Lead's prompt receives the specialists' outputs as input plus its own charter and history. Lead emits a single synthesized verdict with cited specialist inputs. Use this when the workflow expects one answer (e.g. "should we ship this?").
 
-Lead synthesis is one extra subagent dispatch — wall-clock cost ~= one additional Task call. Use it only when the workflow needs a single answer, not when the user can read multiple opinions.
+Lead synthesis is one extra subagent dispatch, on `opus` only when it reconciles conflicting specialist answers, otherwise `sonnet` (see "Model for every specialist") — wall-clock cost ~= one additional Task call. Use it only when the workflow needs a single answer, not when the user can read multiple opinions.
 
 ## Integration with Superpowers Skills
 
@@ -149,8 +161,8 @@ For multi-part questions that span specialty areas, default to light-touch synth
 ```text
 > [Brainstorming] How should authentication work?
 
-[squad dispatches Task subagent: Backend Engineer with charter + auth-related
- history slice + the question]
+[squad dispatches Task subagent, model: sonnet: Backend Engineer with charter +
+ auth-related history slice + the question]
 
 🔧 Backend Engineer: We're using JWT with 1h expiry and httpOnly refresh
 tokens — see AuthService. [history: 2026-04-12 — adopted httpOnly refresh
@@ -164,7 +176,8 @@ after CSRF audit]. I'd extend that rather than introduce a new mechanism.
 ```text
 > [Brainstorming] We're adding a "share to Slack" feature. How should it work?
 
-[squad dispatches three subagents in parallel: Backend, Frontend, Tester]
+[squad dispatches three subagents in parallel, each model: sonnet: Backend,
+ Frontend, Tester]
 
 🔧 Backend Engineer: Use the existing webhook abstraction in NotificationService.
    New Slack provider implements INotificationProvider. ~80 lines. [history:
@@ -317,8 +330,8 @@ The user can also `@-mention` multiple agents in one message (e.g. `@backend @fr
 ```text
 User: @tester what areas of this codebase are most likely to regress?
 
-[squad dispatches Tester as a Task subagent with full charter + tier-1
- history matching "regression" / "risk" / "flaky"]
+[squad dispatches Tester as a Task subagent, model: sonnet, with full charter +
+ tier-1 history matching "regression" / "risk" / "flaky"]
 
 🧪 Tester: Based on history — the payment flow and the auth token refresh
 logic have had regressions before. I'd prioritize integration tests there

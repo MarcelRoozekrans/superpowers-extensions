@@ -2,7 +2,7 @@
 
 [![GitHub Sponsors](https://img.shields.io/github/sponsors/MarcelRoozekrans?style=flat&logo=githubsponsors&color=ea4aaa&label=Sponsor)](https://github.com/sponsors/MarcelRoozekrans)
 
-Extension skills for the [superpowers](https://github.com/obra/superpowers) suite, providing quality gates, development workflow skills, and project lifecycle management for web application development. It includes twelve skills:
+Extension skills for the [superpowers](https://github.com/obra/superpowers) suite, providing quality gates, development workflow skills, and project lifecycle management for web application development. It includes thirteen skills:
 
 - **regression-test** -- Comprehensive regression testing using the [Microsoft Playwright MCP server](https://github.com/microsoft/playwright-mcp), combining existing test suite execution with AI-powered visual and functional browser testing.
 - **pre-push-review** -- A structured branch review that diffs against the base branch and gates on plan adherence, code quality, commit hygiene, and regression testing, producing a PASS/FAIL verdict with a prioritized remediation plan on failure.
@@ -15,6 +15,7 @@ Extension skills for the [superpowers](https://github.com/obra/superpowers) suit
 - **ui-workflow** -- Frontend design contracts and visual auditing. Generates structured UI design contracts before implementing frontend phases (`ui-phase`) and performs visual audits afterwards (`ui-review`) using a three-layer grading: contract adherence, anti-slop scan, and 5-dimension critique.
 - **ui-design-system** -- Generates a complete design system before frontend implementation. Three modes: **curated** (pick from 84 vendored real-world references — Stripe, Linear, Vercel, Notion, Apple, Figma, Supabase, Cursor, Claude, …), **guided** (7 questions), or **quick** (inline one-liner). Includes 5 hand-tuned OKLch design directions and an anti-slop checklist. Auto-detects Blazor, React, Vue, Astro stacks. Outputs `docs/design/MASTER.md`.
 - **logo-design** -- Generates brand marks as hand-authored SVG and audits existing ones. Two sub-skills: `logo-concept` draws a mark (or derives the variant set for one that already exists) and `logo-review` audits one across three layers — reproduction hazards, a ten-pattern anti-slop scan, and a five-dimension critique. Ships four mark types (geometric, monogram, wordmark, abstract) and **refuses pictorial, mascot, and illustrative-emblem marks** by design. Reads `docs/design/MASTER.md` for palette and typography when present. Outputs `docs/design/LOGO.md`, seven SVG variants through to a redrawn favicon, a contact sheet, and an eight-file raster icon set exported from those SVGs — recorded `UNRUN` rather than failed when no SVG rasteriser is installed.
+- **context-budget** -- Keeps long sessions cheap. A `UserPromptSubmit` hook measures the session's context size and suggests a fresh session at a natural break; a `PreToolUse` hook requires an explicit non-Fable `model` on general-purpose subagent dispatches. The skill states the suite-wide model rule (Sonnet by default, Opus for marked tasks, retries and the final review, Haiku for lookups) and the fresh-session handoff recipe.
 - **squad** -- Persistent AI agent teams (Lead, Backend Engineer, Frontend Engineer, Tester, Scribe) **dispatched as parallel `Task` subagents** during brainstorming and planning workflows. Each specialist runs in an isolated context window with its own charter and tier-1 history, so they cannot anchor on each other's reasoning. Per-role `history.md` files accumulate project-specific knowledge across sessions; tiered context lookup (semantic search → grep → recent history) keeps each subagent's prompt lean.
 
 ---
@@ -368,6 +369,35 @@ Inspired by [caveman-compress](https://github.com/JuliusBrussee/caveman) (MIT). 
 
 ---
 
+## Context Budget Skill
+
+The context-budget skill keeps long sessions cheap. Two hooks do the measuring and checking; the skill holds the rules and the handoff recipe.
+
+### What It Does
+
+- **Size reminder.** A `UserPromptSubmit` hook reads the session transcript and, once the context passes 200000 tokens, adds a reminder. It turns firm at 400000 tokens and re-arms every further 50000 tokens. The count resets only when the size drops by at least 50000 tokens, for example after a compaction. After a compaction the hook measures the size from the compaction record. The hook only ever adds a suggestion.
+- **Dispatch check.** A `PreToolUse` hook on the `Agent` and `Task` tools denies any Fable `model`. It also denies a missing `model` on general-purpose dispatches, so every such subagent runs on a model chosen on purpose. `fork` and every other agent type pass.
+- **Model rule.** Haiku, Sonnet and Opus only. Implementers and reviewers default to Sonnet; Opus is for a plan task marked `**Model:** opus`, a stuck-implementer retry and the final whole-branch review; Haiku is only for lookups and searches. The rule holds in every run, including plain `subagent-driven-development` and `executing-plans`.
+- **Fresh-session handoff.** At a natural break, and only when the next work needs nothing from the current context, Claude offers a fresh session. A big context that the work needs is fine, and Claude then says nothing. With `docs/planning/STATE.md` present the handoff uses `pause-work`; otherwise Claude writes `.claude/handoff.md` and gives you one line to paste into the new session.
+
+Hooks never fail a turn. On any error they exit silently.
+
+### Configuration
+
+Optional `.claude/context-budget.json` in the project:
+
+```json
+{ "nudge": 200000, "firm": 400000, "enforceDispatchModel": true }
+```
+
+A missing or invalid file means the defaults shown.
+
+### Prerequisites
+
+Node.js, which Claude Code already requires. The hooks run on Linux, macOS and Windows.
+
+---
+
 ## UI Workflow Skill
 
 The ui-workflow skill provides two complementary capabilities that close the design-implementation gap in frontend work.
@@ -674,7 +704,7 @@ per harness; only how the harness loads them.
 | **OpenAI Codex CLI / App** | [`.codex-plugin/plugin.json`](.codex-plugin/plugin.json) + [`.codex/INSTALL.md`](.codex/INSTALL.md) | Clone-and-symlink each plugin into `~/.agents/skills/`; instructions and a copy-paste loop in [`.codex/INSTALL.md`](.codex/INSTALL.md) |
 | **Gemini CLI** | [`gemini-extension.json`](gemini-extension.json) + [`GEMINI.md`](GEMINI.md) | `GEMINI.md` lists each SKILL.md via `@./plugins/.../SKILL.md` import syntax |
 | **GitHub Copilot CLI** | Reuses [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json) + [`.copilot-cli/INSTALL.md`](.copilot-cli/INSTALL.md) | `copilot plugin marketplace add MarcelRoozekrans/superpowers-extensions`, then install individual plugins |
-| **OpenCode.ai** | [`.opencode/plugins/superpowers-extensions.js`](.opencode/plugins/superpowers-extensions.js) | JS plugin registers all twelve plugin skill paths via OpenCode's `config.skills.paths` array — no symlinks needed |
+| **OpenCode.ai** | [`.opencode/plugins/superpowers-extensions.js`](.opencode/plugins/superpowers-extensions.js) | JS plugin registers all thirteen plugin skill paths via OpenCode's `config.skills.paths` array — no symlinks needed |
 
 The polymorphic [`hooks/session-start`](hooks/session-start) script
 detects which harness is running it via env vars (`CURSOR_PLUGIN_ROOT`,
@@ -740,7 +770,7 @@ The multi-provider mechanism here is adapted directly from
 [`obra/superpowers`](https://github.com/obra/superpowers) (MIT). Their
 session-start hook was the model for ours; their per-harness manifest
 pattern is what enables one shared markdown tree to load natively in
-each host. Differences: we are a marketplace of twelve plugins (versus
+each host. Differences: we are a marketplace of thirteen plugins (versus
 their single-plugin layout), so our manifests target the suite at the
 repo root with skills resolved via `./plugins/`.
 
@@ -772,6 +802,7 @@ claude plugin install ui-design-system
 claude plugin install squad
 claude plugin install compress-memory
 claude plugin install logo-design
+claude plugin install context-budget
 ```
 
 The regression-test plugin automatically configures the Playwright MCP server with `--caps=testing`. The pre-push-review plugin requires only git and no additional MCP servers for its core review.
@@ -878,6 +909,12 @@ xcopy /E /I plugins\logo-design\skills\logo-design %USERPROFILE%\.claude\skills\
 
 # macOS / Linux -- logo-design
 cp -r plugins/logo-design/skills/logo-design ~/.claude/skills/logo-design
+
+# Windows -- context-budget
+xcopy /E /I plugins\context-budget\skills\context-budget %USERPROFILE%\.claude\skills\context-budget
+
+# macOS / Linux -- context-budget
+cp -r plugins/context-budget/skills/context-budget ~/.claude/skills/context-budget
 ```
 
 **Note:** Some plugins require companion MCP servers. Install them separately:
@@ -898,7 +935,7 @@ claude mcp add playwright -- npx @playwright/mcp@latest --caps=testing,pdf,visio
 
 ### Verify Installation
 
-In Claude Code, the skills should appear when you type `/regression-test`, `/pre-push-review`, `/refactor-analysis`, `/decision-tracker`, `/roslyn-codelens-integration`, `/memorylens-integration`, `/project-orchestration`, `/ui-workflow`, `/ui-design-system`, `/squad`, `/compress-memory`, or `/logo-design`, or when you ask Claude to perform regression testing, a pre-push review, a refactor impact analysis, decision tracking, .NET code graph analysis, .NET memory profiling, project lifecycle management, UI design contract work, design system generation, to activate your agent team, to compress a memory file, or to design or audit a brand mark.
+In Claude Code, the skills should appear when you type `/regression-test`, `/pre-push-review`, `/refactor-analysis`, `/decision-tracker`, `/roslyn-codelens-integration`, `/memorylens-integration`, `/project-orchestration`, `/ui-workflow`, `/ui-design-system`, `/squad`, `/compress-memory`, `/logo-design`, or `/context-budget`, or when you ask Claude to perform regression testing, a pre-push review, a refactor impact analysis, decision tracking, .NET code graph analysis, .NET memory profiling, project lifecycle management, UI design contract work, design system generation, to activate your agent team, to compress a memory file, or to design or audit a brand mark.
 
 ---
 
@@ -1160,15 +1197,24 @@ superpowers-extensions/
 │   │           ├── compression-rules.md    # Drop / Replace / Preserve / Compress rules
 │   │           ├── safety-rules.md         # Denylist, backup invariant, validation
 │   │           └── NOTICE.md               # Attribution to caveman (MIT)
-│   └── logo-design/                        # Brand marks as SVG (12th plugin)
+│   ├── logo-design/                        # Brand marks as SVG (12th plugin)
+│   │   ├── .claude-plugin/
+│   │   │   └── plugin.json
+│   │   └── skills/
+│   │       └── logo-design/
+│   │           ├── SKILL.md                # logo-concept and logo-review sub-skills + refusal gate
+│   │           ├── references/             # construction / mark-types / reproduction / anti-slop
+│   │           ├── templates/              # LOGO.md skeleton + contact-sheet render harness
+│   │           └── scripts/                # export-raster.mjs — SVG-to-PNG/ICO icon exporter
+│   └── context-budget/                     # Model rule and fresh-session handoff (13th plugin)
 │       ├── .claude-plugin/
 │       │   └── plugin.json
+│       ├── hooks/
+│       │   └── hooks.json                  # UserPromptSubmit size check, PreToolUse dispatch check
 │       └── skills/
-│           └── logo-design/
-│               ├── SKILL.md                # logo-concept and logo-review sub-skills + refusal gate
-│               ├── references/             # construction / mark-types / reproduction / anti-slop
-│               ├── templates/              # LOGO.md skeleton + contact-sheet render harness
-│               └── scripts/                # export-raster.mjs — SVG-to-PNG/ICO icon exporter
+│           └── context-budget/
+│               ├── SKILL.md                # Model Choice, Fresh-Session Handoff, Configuration
+│               └── scripts/                # size-check.mjs, dispatch-check.mjs and shared helpers
 └── docs/
     ├── planning/                           # Project lifecycle state (ROADMAP, MILESTONE, STATE, CONVENTIONS)
     └── plans/                              # Design documents and phase plans
