@@ -10,3 +10,4 @@
 @./plugins/squad/skills/squad/SKILL.md
 @./plugins/compress-memory/skills/compress-memory/SKILL.md
 @./plugins/logo-design/skills/logo-design/SKILL.md
+@./plugins/context-budget/skills/context-budget/SKILL.md

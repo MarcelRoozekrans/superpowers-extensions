@@ -22,7 +22,8 @@
     "ui-design-system",
     "squad",
     "compress-memory",
-    "logo-design"
+    "logo-design",
+    "context-budget"
   ],
   "skills": "./plugins/"
 }

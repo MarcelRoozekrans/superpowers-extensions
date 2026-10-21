@@ -24,7 +24,8 @@ const PLUGINS = [
   'ui-design-system',
   'squad',
   'compress-memory',
-  'logo-design'
+  'logo-design',
+  'context-budget'
 ];
 
 const skillPaths = PLUGINS.map(name =>
