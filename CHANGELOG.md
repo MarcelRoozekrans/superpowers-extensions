@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.24.0](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.23.0...superpowers-extensions-v1.24.0) (2026-10-21)
+
+
+### Features
+
+* **context-budget:** cheaper runs and trap detection ([#149](https://github.com/MarcelRoozekrans/superpowers-extensions/issues/149)) ([781967b](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/781967b2bf5c25dc95359d23a2993f171a06c39d))
+
 ## [1.23.0](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.22.2...superpowers-extensions-v1.23.0) (2026-10-16)
 
 
