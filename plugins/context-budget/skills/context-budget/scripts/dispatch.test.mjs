@@ -68,3 +68,13 @@ test('entry script denies a model-less dispatch', () => {
   assert.equal(r.status, 0);
   assert.equal(JSON.parse(r.stdout).hookSpecificOutput.permissionDecision, 'deny');
 });
+
+test('treats a whitespace-only model as missing', () => {
+  assert.equal(checkDispatch({ subagent_type: 'general-purpose', model: '  ' }, DEFAULTS).deny, true);
+});
+
+test('general-purpose with fable gets the Fable reason, not the missing-model one', () => {
+  const r = checkDispatch({ subagent_type: 'general-purpose', model: 'fable' }, DEFAULTS);
+  assert.equal(r.deny, true);
+  assert.match(r.reason, /fable is not used/i);
+});

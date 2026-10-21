@@ -8,6 +8,6 @@ export function checkDispatch(toolInput, config) {
   if (!config.enforceDispatchModel) return { deny: false };
   const type = typeof input.subagent_type === 'string' ? input.subagent_type : '';
   const inherits = type === '' || type === 'general-purpose';
-  if (inherits && model === '') return { deny: true, reason: NAME_A_MODEL };
+  if (inherits && model.trim() === '') return { deny: true, reason: NAME_A_MODEL };
   return { deny: false };
 }
