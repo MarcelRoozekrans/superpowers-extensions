@@ -181,7 +181,7 @@ Invoke before `brainstorming` when starting work on an existing codebase the age
 
 6. **Detect traps** — find what bites people later, so planned work does not walk into it:
    - **Large or complex files:** note what each owns, and that nothing should be added to it blindly. On .NET, when roslyn-codelens tools are available, use `get_complexity_metrics` and `find_god_objects` instead of line counts.
-   - **Change hotspots:** the files git history shows changing most often, overall and in `fix:` commits (for example `git log --name-only --pretty=format: | sort | uniq -c | sort -rn | head`).
+   - **Change hotspots:** the files git history shows changing most often, overall and in `fix:` commits (for example `git log --name-only --pretty=format: | sort | uniq -c | sort -rn | head`, and the same with `--grep='^fix'` added to `git log` for the fix hotspots).
    - **Hidden coupling:** shared mutable or global state, circular dependencies (on .NET, when roslyn-codelens tools are available, `find_circular_dependencies`), and environment variables read with no default.
    - **Known-broken spots:** TODO, FIXME and HACK markers. Leave them alone unless the planned work is about them.
    - **Test baseline:** run the test suite once and record the tests that already fail, so later work neither "fixes" them by accident nor gets blamed for them. When the suite is too slow or needs services that are not available, record that instead of running it.
