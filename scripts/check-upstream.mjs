@@ -83,6 +83,16 @@ const ANCHORS = [
     text: '.superpowers/sdd',
     users: 'decision-tracker globs .superpowers/sdd/*/progress.md for leftover ledgers',
   },
+  {
+    file: 'skills/subagent-driven-development/SKILL.md',
+    text: '## Model Selection',
+    users: 'context-budget model rule overrides this',
+  },
+  {
+    file: 'skills/subagent-driven-development/SKILL.md',
+    text: 'R≥4 fresh implementer, more capable model',
+    users: 'context-budget model rule overrides this',
+  },
 ];
 
 // Vendored third-party content is not ours to keep in step with upstream.
