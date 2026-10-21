@@ -18,6 +18,11 @@ export function readContextSize(transcriptPath) {
     for (let i = lines.length - 1; i >= 0; i--) {
       let e;
       try { e = JSON.parse(lines[i]); } catch { continue; }
+      if (e && e.type === 'system' && e.subtype === 'compact_boundary') {
+        // Earlier assistant usage predates the compaction, so stop here.
+        const post = e.compactMetadata && e.compactMetadata.postTokens;
+        return Number.isFinite(post) && post > 0 ? post : null;
+      }
       if (!e || e.type !== 'assistant' || e.isSidechain === true) continue;
       const u = e.message && e.message.usage;
       if (!u) continue;
@@ -49,7 +54,7 @@ export function loadConfig(cwd) {
 
 export function decide(size, last, config) {
   if (size < config.nudge) return { level: 'none', remember: null };
-  if (last === null || last === undefined || size < last || size >= last + config.step) {
+  if (last === null || last === undefined || size <= last - config.step || size >= last + config.step) {
     return { level: size >= config.firm ? 'firm' : 'nudge', remember: size };
   }
   return { level: 'none', remember: last };

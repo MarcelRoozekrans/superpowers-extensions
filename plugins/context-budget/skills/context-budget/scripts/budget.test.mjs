@@ -35,6 +35,24 @@ test('readContextSize sums the input-side tokens of the newest assistant usage',
   assert.equal(readContextSize(p), 250000);
 });
 
+const boundary = (postTokens) => JSON.stringify({
+  type: 'system', subtype: 'compact_boundary',
+  compactMetadata: { trigger: 'auto', preTokens: 958000, ...(postTokens === undefined ? {} : { postTokens }) },
+});
+
+test('readContextSize returns postTokens for a compact_boundary after a high-usage entry', () => {
+  assert.equal(readContextSize(transcript([entry(usage250k), boundary(11000)])), 11000);
+});
+
+test('readContextSize returns null for a compact_boundary without a usable postTokens', () => {
+  assert.equal(readContextSize(transcript([entry(usage250k), boundary()])), null);
+});
+
+test('readContextSize uses an assistant entry written after a compact_boundary', () => {
+  const small = { input_tokens: 5, cache_creation_input_tokens: 0, cache_read_input_tokens: 15000 };
+  assert.equal(readContextSize(transcript([entry(usage250k), boundary(11000), entry(small)])), 15005);
+});
+
 test('readContextSize ignores sidechain entries', () => {
   const p = transcript([
     entry(usage250k),
@@ -104,6 +122,7 @@ test('decide', () => {
   assert.deepEqual(d(260000, 210000), { level: 'nudge', remember: 260000 });
   assert.deepEqual(d(420000, 360000), { level: 'firm', remember: 420000 });
   assert.deepEqual(d(220000, 300000), { level: 'nudge', remember: 220000 });
+  assert.deepEqual(d(280000, 300000), { level: 'none', remember: 300000 });
   assert.deepEqual(d(120000, 300000), { level: 'none', remember: null });
 });
 

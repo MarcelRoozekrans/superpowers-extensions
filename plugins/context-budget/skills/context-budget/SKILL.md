@@ -63,4 +63,4 @@ Optional file `.claude/context-budget.json` in the project:
 | `firm` | `400000` | Context tokens at which the reminder turns firm. Must exceed `nudge`. |
 | `enforceDispatchModel` | `true` | When `false`, a general-purpose dispatch without `model` is allowed. Fable is denied regardless. |
 
-A missing or invalid file means the defaults. After a reminder, the next one appears only once the context has grown by a further 50000 tokens, and the count resets when the size drops, for example after a compaction.
+A missing or invalid file means the defaults. After a reminder, the next one appears only once the context has grown by a further 50000 tokens, and the count resets only when the size drops by at least 50000 tokens, for example after a compaction. A smaller dip keeps the count.
