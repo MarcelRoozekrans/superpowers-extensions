@@ -121,7 +121,7 @@ collected — design doc paragraph, plan excerpt, diff hunk, etc.}
 
 ### Model for every specialist
 
-Every specialist dispatch names `model` explicitly. A `general-purpose` dispatch with no `model` is denied by the context-budget hook. The suite-wide rule is in [`## Model Choice`](../../../context-budget/skills/context-budget/SKILL.md) of the `context-budget` skill. For squad:
+Every specialist dispatch names `model` explicitly. A `general-purpose` dispatch with no `model` is denied by the context-budget hook. The suite-wide rule is the `## Model Choice` section of the `context-budget` skill. This covers every dispatch site in this file, including the writing-plans, pre-push-review, plan-roadmap and squad-ask dispatches below. For squad:
 
 - Specialists default to `sonnet`.
 - Lead uses `opus` only when reconciling conflicting specialist answers. Lead's role charter does not change that.
