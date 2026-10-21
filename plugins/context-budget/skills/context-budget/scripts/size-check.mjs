@@ -10,8 +10,9 @@ try {
   if (size !== null && session_id) {
     const dir = process.env.CLAUDE_PLUGIN_DATA || tmpdir();
     const id = basename(String(session_id));
-    const { level, remember } = decide(size, loadState(dir, id), loadConfig(cwd || process.cwd()));
-    saveState(dir, id, remember);
+    const last = loadState(dir, id);
+    const { level, remember } = decide(size, last, loadConfig(cwd || process.cwd()));
+    if (remember !== last) saveState(dir, id, remember);
     if (level !== 'none') {
       process.stdout.write(JSON.stringify({
         hookSpecificOutput: { hookEventName: 'UserPromptSubmit', additionalContext: reminderText(level, size) },

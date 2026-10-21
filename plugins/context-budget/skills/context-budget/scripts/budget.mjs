@@ -21,7 +21,8 @@ export function readContextSize(transcriptPath) {
       if (!e || e.type !== 'assistant' || e.isSidechain === true) continue;
       const u = e.message && e.message.usage;
       if (!u) continue;
-      return (u.input_tokens || 0) + (u.cache_creation_input_tokens || 0) + (u.cache_read_input_tokens || 0);
+      const sum = (u.input_tokens || 0) + (u.cache_creation_input_tokens || 0) + (u.cache_read_input_tokens || 0);
+      if (sum > 0) return sum; // synthetic API-error entries carry zero usage
     }
     return null;
   } catch {
