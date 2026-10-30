@@ -6,12 +6,15 @@
 <button id="go">Analyse</button>
 <p id="out"></p>
 <input id="name" placeholder="Naam" style="font-size:28px">
+<button id="off" disabled>Uitgeschakeld</button>
+<p id="lang"></p>
 <p><a href="/second.html" target="_blank">Dashboard openen</a></p>
 <script>
 document.getElementById('go').addEventListener('click', () => {
   const out = document.getElementById('out');
   out.textContent = 'Bezig…';
-  setTimeout(() => { out.textContent = 'Resultaat: klaar'; }, 2000);
+  const delay = Number(new URLSearchParams(location.search).get('delay')) || 2000;
+  setTimeout(() => { out.textContent = 'Resultaat: klaar'; }, delay);
 });
 </script>
 </body></html>

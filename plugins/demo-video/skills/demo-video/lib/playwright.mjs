@@ -4,18 +4,21 @@ import { createRequire } from 'node:module';
 import { promisify } from 'node:util';
 
 const run = promisify(execFile);
-const HINT = 'Playwright not found globally: npm i -g playwright && npx playwright install chromium';
+const BROWSER_INSTALL =
+  process.platform === 'linux' ? 'npx playwright install --with-deps chromium' : 'npx playwright install chromium';
+export const PLAYWRIGHT_HINT = `npm i -g playwright && ${BROWSER_INSTALL}`;
 
+let requireGlobal;
 async function globalRequire() {
-  const { stdout } = await run('npm', ['root', '-g']);
-  return createRequire(stdout.trim() + '/');
+  requireGlobal ??= run('npm', ['root', '-g']).then(({ stdout }) => createRequire(stdout.trim() + '/'));
+  return requireGlobal;
 }
 
 export async function loadPlaywright() {
   try {
     return (await globalRequire())('playwright');
-  } catch {
-    throw new Error(HINT);
+  } catch (err) {
+    throw new Error(`Playwright not found globally: ${PLAYWRIGHT_HINT} (${err.message.split('\n')[0]})`);
   }
 }
 

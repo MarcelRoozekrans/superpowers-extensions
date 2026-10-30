@@ -1,11 +1,11 @@
 // Drives a headless Chromium through a storyboard at human pace, records video,
 // writes timeline.json (version 1) and runs the post-processor.
-import { mkdir, rename, writeFile } from 'node:fs/promises';
+import { mkdir, readdir, rename, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { performance } from 'node:perf_hooks';
 import { postprocess } from './postprocess.mjs';
 import { loadExpect, loadPlaywright } from './playwright.mjs';
-import { slugify } from './timeline.mjs';
+import { chapterSlug } from './timeline.mjs';
 
 export const DEFAULT_PACE = {
   mouseSteps: 25,
@@ -14,6 +14,7 @@ export const DEFAULT_PACE = {
   reading: 1200,
   readingAfterWait: 2500,
   expectTimeout: 30000,
+  waitTimeout: 120000,
 };
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -44,23 +45,26 @@ const CURSOR_SCRIPT = `
 })();
 `;
 
-// Resolves after `frames` animation frames. With `nudge` it also flips the root opacity by a
-// hair first, so the screencast gets a changed frame even when the page painted before the
-// recorder attached to it.
-function paint(page, frames, nudge = false) {
-  return page.evaluate(
+// Resolves after `frames` animation frames, or after 2 s when the tab is throttled and never
+// paints. With `nudge` it also flips the root opacity by a hair first, so the screencast gets
+// a changed frame even when the page painted before the recorder attached to it.
+async function paint(page, frames, nudge = false) {
+  const painted = page.evaluate(
     ([n, flip]) => new Promise((resolve) => {
       const root = document.documentElement;
+      const before = root.style.opacity;
       if (flip) root.style.opacity = '0.99';
       const tick = (left) => requestAnimationFrame(() => {
         if (left > 1) return tick(left - 1);
-        if (flip) root.style.opacity = '';
+        if (flip) root.style.opacity = before;
         resolve();
       });
       tick(n);
     }),
     [frames, nudge],
   );
+  painted.catch(() => {});
+  await Promise.race([painted, sleep(2000)]);
 }
 
 async function pollText(locator, text, timeout) {
@@ -80,23 +84,52 @@ async function pollText(locator, text, timeout) {
   }
 }
 
+// A run that fails must not leave the videos of an earlier run next to a new raw folder.
+async function clearOldOutputs(folder) {
+  let names = [];
+  try {
+    names = await readdir(folder);
+  } catch {
+    // first run: the folder does not exist yet
+  }
+  for (const name of names) {
+    if (/^\d{2}-.*\.mp4$/.test(name) || ['demo.mp4', 'demo.gif', 'timeline.json'].includes(name)) {
+      await rm(path.join(folder, name));
+    }
+  }
+  await rm(path.join(folder, 'frames'), { recursive: true, force: true });
+  try {
+    for (const name of await readdir(path.join(folder, 'raw'))) {
+      if (name.endsWith('.webm')) await rm(path.join(folder, 'raw', name));
+    }
+  } catch {
+    // no raw folder yet
+  }
+}
+
 export async function record(spec) {
   if (!Array.isArray(spec.chapters) || spec.chapters.length === 0) {
     throw new Error('No chapters to record: fill in the storyboard steps in record.mjs first.');
+  }
+  for (const chapter of spec.chapters) {
+    if (!Array.isArray(chapter.steps) || chapter.steps.length === 0) {
+      throw new Error(`Chapter "${chapter.title}" has no steps: fill in its steps in record.mjs first.`);
+    }
   }
   const pace = { ...DEFAULT_PACE, ...spec.pace };
   const folder = path.resolve(spec.folder);
   const rawDir = path.join(folder, 'raw');
   const quick = spec.mode === 'quick';
-  await mkdir(rawDir, { recursive: true });
 
   const playwright = await loadPlaywright();
   const expectFn = await loadExpect();
+  await clearOldOutputs(folder);
+  await mkdir(rawDir, { recursive: true });
   const browser = await playwright.chromium.launch({ headless: true });
 
   const pages = [];
   const tabs = new Map();
-  const state = { active: null };
+  const state = { active: null, timeout: pace.expectTimeout };
   let t0;
   const now = () => (performance.now() - t0) / 1000;
   const register = (page) => {
@@ -110,9 +143,12 @@ export async function record(spec) {
   try {
     t0 = performance.now();
     context = await browser.newContext({
+      ...spec.contextOptions,
       viewport: { width: 1920, height: 1080 },
       recordVideo: { dir: rawDir, size: { width: 1920, height: 1080 } },
-      ...(spec.storageState ? { storageState: spec.storageState } : {}),
+      ...(spec.locale ? { locale: spec.locale } : {}),
+      ...(spec.timezoneId ? { timezoneId: spec.timezoneId } : {}),
+      ...(spec.storageState ? { storageState: path.resolve(folder, spec.storageState) } : {}),
     });
     await context.addInitScript(CURSOR_SCRIPT);
     context.on('page', register);
@@ -123,12 +159,25 @@ export async function record(spec) {
     state.active = first;
 
     const url = (p) => new URL(p, spec.baseUrl).href;
+    const activate = async (name, page) => {
+      register(page);
+      tabs.set(name, page);
+      state.active = page;
+      await page.bringToFront();
+    };
+    // A fresh tab records white until it repaints, so wait for real frames.
+    const settle = async (page) => {
+      await paint(page, 2, true);
+      await sleep(300);
+    };
     const h = {
       get page() {
         return state.active;
       },
       goto: (p) => state.active.goto(url(p)),
       async click(locator) {
+        // Playwright's actionability checks (visible, enabled, stable, not covered) without clicking.
+        await locator.click({ trial: true, timeout: pace.expectTimeout });
         await locator.scrollIntoViewIfNeeded();
         const box = await locator.boundingBox();
         if (!box) throw new Error('click target has no bounding box');
@@ -149,14 +198,19 @@ export async function record(spec) {
       },
       async openTab(name, p) {
         const page = await context.newPage();
-        register(page);
-        tabs.set(name, page);
-        state.active = page;
-        await page.bringToFront();
+        await activate(name, page);
         await page.goto(url(p), { waitUntil: 'load' });
-        // A fresh tab records white until it repaints, so wait for real frames.
-        await paint(page, 2, true);
-        await sleep(300);
+        await settle(page);
+      },
+      // Click a link that opens a popup, for example target=_blank, and follow it into the new tab.
+      async clickToTab(name, locator) {
+        const opened = context.waitForEvent('page', { timeout: pace.expectTimeout });
+        opened.catch(() => {});
+        await h.click(locator);
+        const page = await opened;
+        await activate(name, page);
+        await page.waitForLoadState('load');
+        await settle(page);
       },
       async switchTab(name) {
         const page = tabs.get(name);
@@ -165,9 +219,10 @@ export async function record(spec) {
         state.active = page;
         await paint(page, 1, true);
       },
-      async expectText(locator, text) {
-        if (expectFn) await expectFn(locator, { timeout: pace.expectTimeout }).toContainText(text);
-        else await pollText(locator, text, pace.expectTimeout);
+      // Inside waitFor the default timeout is pace.waitTimeout, elsewhere pace.expectTimeout.
+      async expectText(locator, text, { timeout = state.timeout } = {}) {
+        if (expectFn) await expectFn(locator).toContainText(text, { timeout });
+        else await pollText(locator, text, timeout);
       },
     };
 
@@ -183,7 +238,7 @@ export async function record(spec) {
     const steps = [];
     for (const [ci, chapter] of spec.chapters.entries()) {
       const id = `c${ci + 1}`;
-      chapters.push({ id, title: chapter.title, slug: slugify(chapter.title) });
+      chapters.push({ id, title: chapter.title, slug: chapterSlug(chapter.title, ci + 1) });
       for (const [si, step] of chapter.steps.entries()) {
         const index = si + 1;
         const rec = { chapter: id, index, caption: step.caption };
@@ -198,7 +253,12 @@ export async function record(spec) {
           rec.page = pages.find((p) => p.page === state.active).id;
           if (step.waitFor) {
             const wait = { start: now() };
-            await step.waitFor(h);
+            state.timeout = pace.waitTimeout;
+            try {
+              await step.waitFor(h);
+            } finally {
+              state.timeout = pace.expectTimeout;
+            }
             wait.end = now();
             rec.wait = wait;
           }
@@ -212,8 +272,9 @@ export async function record(spec) {
       }
     }
 
-    await context.close();
+    const closing = context;
     context = null;
+    await closing.close();
     const timelinePages = [];
     for (const p of pages) {
       const file = path.join('raw', `${p.id}.webm`);
@@ -238,6 +299,10 @@ export async function record(spec) {
   } catch (err) {
     try {
       if (context) await context.close();
+    } catch {
+      // already closed
+    }
+    try {
       await browser.close();
     } catch {
       // already closed
