@@ -139,3 +139,17 @@ test('verify reports a truncated chapter video', { skip }, async () => {
   assert.equal(result.ok, false);
   assert.ok(result.problems.some((p) => p.includes('01-first-chapter.mp4') && /duration/.test(p)), result.problems.join('\n'));
 });
+
+test('verify flags a blank step frame', { skip }, async () => {
+  const dir = folderWith(timeline());
+  execFileSync('ffmpeg', [
+    '-hide_banner', '-loglevel', 'error',
+    '-f', 'lavfi', '-i', 'color=c=white:size=1920x1080:rate=30',
+    '-t', '12', '-c:v', 'libvpx-vp9', '-deadline', 'realtime', '-cpu-used', '8',
+    '-y', path.join(dir, 'raw', 'p0.webm'),
+  ]);
+  await postprocess(dir);
+  const result = await verify(dir);
+  assert.equal(result.ok, false);
+  assert.ok(result.problems.some((p) => /step 1\.1 frame is blank \(uniform color\)/.test(p)), result.problems.join('\n'));
+});

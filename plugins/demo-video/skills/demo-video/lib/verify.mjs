@@ -23,6 +23,19 @@ async function probe(file) {
   return { ...stream, duration: Number(json.format?.duration) };
 }
 
+const BLANK_LUMA_RANGE = 8;
+
+// The crop leaves out the caption band at the bottom and the speed marker at the top right,
+// which are drawn over blank recordings too.
+async function lumaRange(image) {
+  const { stderr } = await run('ffmpeg', [
+    '-hide_banner', '-i', image, '-vf', 'crop=iw*0.8:ih*0.85:0:0,signalstats,metadata=print', '-f', 'null', '-',
+  ]);
+  const min = Number(/YMIN=(\d+)/.exec(stderr)?.[1]);
+  const max = Number(/YMAX=(\d+)/.exec(stderr)?.[1]);
+  return Number.isFinite(min) && Number.isFinite(max) ? max - min : Infinity;
+}
+
 export async function verify(folder) {
   folder = path.resolve(folder);
   const timeline = JSON.parse(await readFile(path.join(folder, 'timeline.json'), 'utf8'));
@@ -70,8 +83,12 @@ export async function verify(folder) {
           '-i', path.join(folder, file.name),
           '-frames:v', '1', '-y', out,
         ]);
-        if ((await readdir(framesDir)).includes(path.basename(out))) frames.push(out);
-        else problems.push(`${path.basename(out)}: no frame at ${(at + seconds / 2).toFixed(2)}s`);
+        if ((await readdir(framesDir)).includes(path.basename(out))) {
+          frames.push(out);
+          if ((await lumaRange(out)) < BLANK_LUMA_RANGE) {
+            problems.push(`step ${Number(file.chapter.number)}.${step.index} frame is blank (uniform color)`);
+          }
+        } else problems.push(`${path.basename(out)}: no frame at ${(at + seconds / 2).toFixed(2)}s`);
       } catch (err) {
         problems.push(`${path.basename(out)}: frame extraction failed (${(err.stderr || err.message).toString().trim()})`);
       }
