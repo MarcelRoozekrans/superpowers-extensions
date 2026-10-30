@@ -102,6 +102,19 @@ test('polished recording with two chapters, a second tab and a wait', { skip, ti
   // A step's page is the one active once its run has finished.
   assert.equal(tl.steps[1].page, 'p1');
   assert.equal(tl.steps[2].page, 'p0');
+  // The new tab has painted by the time its step starts: no frame of the step is uniform.
+  const open = tl.steps[1];
+  const lumaRange = (t) => {
+    const out = spawnSync('ffmpeg', [
+      '-hide_banner', '-ss', String(t), '-i', path.join(folder, 'raw', 'p1.webm'),
+      '-frames:v', '1', '-vf', 'signalstats,metadata=print', '-f', 'null', '-',
+    ], { encoding: 'utf8' }).stderr;
+    return Number(/YMAX=(\d+)/.exec(out)?.[1]) - Number(/YMIN=(\d+)/.exec(out)?.[1]);
+  };
+  for (const f of [0, 0.25, 0.5, 0.75]) {
+    const t = open.start + (open.end - open.start) * f - tl.pages[1].openedAt;
+    assert.ok(lumaRange(t) > 20, `new tab frame at step fraction ${f} is uniform`);
+  }
   const result = await verify(folder);
   assert.equal(result.ok, true, JSON.stringify(result));
 });

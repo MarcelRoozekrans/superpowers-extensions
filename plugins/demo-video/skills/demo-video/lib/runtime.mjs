@@ -41,6 +41,16 @@ const CURSOR_SCRIPT = `
 })();
 `;
 
+function paint(page, frames) {
+  return page.evaluate(
+    (n) => new Promise((resolve) => {
+      const tick = (left) => requestAnimationFrame(() => (left > 1 ? tick(left - 1) : resolve()));
+      tick(n);
+    }),
+    frames,
+  );
+}
+
 async function pollText(locator, text, timeout) {
   const deadline = Date.now() + timeout;
   let last = null;
@@ -130,13 +140,17 @@ export async function record(spec) {
         register(page);
         tabs.set(name, page);
         state.active = page;
-        await page.goto(url(p));
+        await page.goto(url(p), { waitUntil: 'load' });
+        // A fresh tab records white until it repaints, so wait for real frames.
+        await paint(page, 2);
+        await sleep(300);
       },
       async switchTab(name) {
         const page = tabs.get(name);
         if (!page) throw new Error(`unknown tab "${name}"`);
         await page.bringToFront();
         state.active = page;
+        await paint(page, 1);
       },
       async expectText(locator, text) {
         if (expectFn) await expectFn(locator, { timeout: pace.expectTimeout }).toContainText(text);
