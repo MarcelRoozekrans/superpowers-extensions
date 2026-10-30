@@ -176,3 +176,34 @@ test('an empty storyboard throws before launching a browser', async () => {
   );
   assert.ok(!existsSync(path.join(root, 'empty')));
 });
+
+test('the cursor overlay stays hidden until the first mouse move', { skip, timeout: 180000 }, async () => {
+  const seen = [];
+  const display = (h) => h.page.evaluate(() => document.getElementById('__demo_cursor')?.style.display);
+  await record({
+    folder: path.join(root, 'cursor'),
+    baseUrl,
+    mode: 'polished',
+    title: 'Demo',
+    endCard: 'Klaar',
+    pace: FAST,
+    setup: (h) => h.goto('/'),
+    chapters: [
+      {
+        title: 'Cursor',
+        steps: [
+          { caption: 'Wacht', run: async (h) => { seen.push(await display(h)); } },
+          {
+            caption: 'Klik',
+            run: async (h) => {
+              await h.click(h.page.getByRole('button', { name: 'Analyse' }));
+              seen.push(await display(h));
+            },
+          },
+        ],
+      },
+    ],
+  });
+  assert.notEqual(seen[0], 'block');
+  assert.equal(seen[1], 'block');
+});

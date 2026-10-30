@@ -27,9 +27,12 @@ const CURSOR_SCRIPT = `
     dot.style.cssText = 'position:fixed;left:0;top:0;width:24px;height:24px;margin:-12px 0 0 -12px;' +
       'border-radius:50%;background:rgba(255,70,70,0.85);border:2px solid #fff;' +
       'box-shadow:0 0 6px rgba(0,0,0,0.6);z-index:2147483647;pointer-events:none;' +
-      'transition:transform 120ms ease-out;transform:scale(1);';
+      'transition:transform 120ms ease-out;transform:scale(1);display:none;';
     document.documentElement.appendChild(dot);
     window.addEventListener('mousemove', (e) => {
+      // Chromium fires a synthetic move at 0,0 after layout; that is not a real cursor position.
+      if (!e.clientX && !e.clientY) return;
+      dot.style.display = 'block';
       dot.style.left = e.clientX + 'px';
       dot.style.top = e.clientY + 'px';
     }, true);
