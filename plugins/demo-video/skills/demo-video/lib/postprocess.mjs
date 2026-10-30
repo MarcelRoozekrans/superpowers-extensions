@@ -6,24 +6,34 @@ import { mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
-import { slugify, segmentsForChapter } from './timeline.mjs';
+import { chapterSlug, segmentsForChapter } from './timeline.mjs';
 import { buildChapterArgs, buildConcatArgs, buildGifArgs } from './ffmpeg-graph.mjs';
 
 const run = promisify(execFile);
-const MAC_FONT = '/System/Library/Fonts/Supplemental/Arial.ttf';
+const MAC_FONTS = [
+  '/System/Library/Fonts/Supplemental/Arial Unicode.ttf',
+  '/Library/Fonts/Arial Unicode.ttf',
+  '/System/Library/Fonts/Supplemental/Arial.ttf',
+];
 export const CARD_SECONDS = 2.5;
 
-export async function findFont() {
-  try {
-    const { stdout } = await run('fc-match', ['-f', '%{file}', 'DejaVu Sans']);
-    const file = stdout.trim();
-    if (file && existsSync(file)) return file;
-  } catch {
-    // fc-match missing: fall through to the macOS font
+// The speed marker needs U+25B6 and U+00D7, so only a font that covers both will do.
+// `command` and `macFonts` can be replaced, for tests.
+export async function findFont({ command = 'fc-list', macFonts = MAC_FONTS } = {}) {
+  for (const pattern of ['DejaVu Sans:charset=25b6 d7', ':charset=25b6 d7']) {
+    try {
+      const { stdout } = await run(command, ['-f', '%{file}\\n', pattern]);
+      const files = stdout.split('\n').map((l) => l.trim()).filter((l) => l && existsSync(l));
+      const file = files.find((l) => !/bold|oblique|italic/i.test(l)) ?? files[0];
+      if (file) return file;
+    } catch {
+      // fontconfig missing: fall through to the macOS fonts
+    }
   }
-  if (existsSync(MAC_FONT)) return MAC_FONT;
+  const mac = macFonts.find((f) => existsSync(f));
+  if (mac) return mac;
   throw new Error(
-    'No usable font found: install DejaVu Sans (fontconfig must be able to find it) or use macOS Arial.',
+    'No usable font found: install DejaVu Sans (fontconfig must find a font covering U+25B6) or use macOS Arial Unicode.',
   );
 }
 
@@ -37,7 +47,7 @@ export function planOutputs(timeline, { captions } = {}) {
   const chapters = timeline.chapters.map((c, i) => ({
     ...c,
     number: String(i + 1).padStart(2, '0'),
-    slug: c.slug || slugify(c.title),
+    slug: c.slug || chapterSlug(c.title, i + 1),
   }));
   if (chapters.length === 1) {
     return {
@@ -82,7 +92,10 @@ export function stepDurations(timeline, chapterId) {
 
 export function expectedDuration(timeline, file) {
   const steps = stepDurations(timeline, file.chapter.id).reduce((a, d) => a + d.seconds, 0);
-  return steps + CARD_SECONDS * ((file.titleCard != null) + (file.endCard != null));
+  let cards = 0;
+  if (file.titleCard) cards += 1;
+  if (file.endCard) cards += 1;
+  return steps + CARD_SECONDS * cards;
 }
 
 async function ffmpeg(args) {
@@ -116,7 +129,6 @@ export async function postprocess(folder, { captions } = {}) {
     captions: plan.captions,
     pages: timeline.pages.map((p) => ({ ...p, file: path.resolve(folder, p.file) })),
   };
-  const factor = timeline.speedFactor;
   const written = [];
 
   for (const file of plan.chapterFiles) {
@@ -128,7 +140,6 @@ export async function postprocess(folder, { captions } = {}) {
         endCard: file.endCard,
         fontFile,
         out,
-        factor,
       },
       textDir,
     );
@@ -140,7 +151,7 @@ export async function postprocess(folder, { captions } = {}) {
     const temp = [];
     const card = async (name, text) => {
       const out = path.join(folder, 'raw', name);
-      await render({ segments: [], titleCard: text, fontFile, out, factor }, textDir);
+      await render({ segments: [], titleCard: text, fontFile, out }, textDir);
       temp.push(out);
       return out;
     };

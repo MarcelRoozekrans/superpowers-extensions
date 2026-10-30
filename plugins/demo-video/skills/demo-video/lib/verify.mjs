@@ -1,6 +1,7 @@
 // Checks the MP4s next to a timeline.json and extracts one frame per step.
 import { execFile } from 'node:child_process';
-import { mkdir, readFile, readdir } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
+import { mkdir, readFile, rm, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
@@ -69,11 +70,16 @@ export async function verify(folder) {
     await check(file.name, expected);
   }
   if (plan.combined) await check(plan.combined.name, combinedExpected);
+  if (plan.quick) {
+    const gif = await stat(path.join(folder, 'demo.gif')).catch(() => null);
+    if (!gif || gif.size === 0) problems.push('demo.gif: missing or empty');
+  }
 
   const framesDir = path.join(folder, 'frames');
+  await rm(framesDir, { recursive: true, force: true });
   await mkdir(framesDir, { recursive: true });
   for (const file of plan.chapterFiles) {
-    let at = file.titleCard != null ? CARD_SECONDS : 0;
+    let at = file.titleCard ? CARD_SECONDS : 0;
     for (const { step, seconds } of stepDurations(timeline, file.chapter.id)) {
       const out = path.join(framesDir, `${file.chapter.number}-step-${step.index}.png`);
       try {
@@ -83,10 +89,10 @@ export async function verify(folder) {
           '-i', path.join(folder, file.name),
           '-frames:v', '1', '-y', out,
         ]);
-        if ((await readdir(framesDir)).includes(path.basename(out))) {
+        if (existsSync(out)) {
           frames.push(out);
           if ((await lumaRange(out)) < BLANK_LUMA_RANGE) {
-            problems.push(`step ${Number(file.chapter.number)}.${step.index} frame is blank (uniform color)`);
+            problems.push(`step ${Number(file.chapter.number)}.${step.index} frame looks blank (uniform color) — view it`);
           }
         } else problems.push(`${path.basename(out)}: no frame at ${(at + seconds / 2).toFixed(2)}s`);
       } catch (err) {

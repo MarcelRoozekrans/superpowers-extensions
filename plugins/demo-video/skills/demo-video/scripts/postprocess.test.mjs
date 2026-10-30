@@ -4,7 +4,7 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import { existsSync, mkdtempSync, mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { postprocess } from '../lib/postprocess.mjs';
+import { findFont, postprocess } from '../lib/postprocess.mjs';
 import { verify } from '../lib/verify.mjs';
 
 const hasFfmpeg = spawnSync('ffmpeg', ['-version']).status === 0;
@@ -112,6 +112,9 @@ test('captions option false still renders cards', { skip }, async () => {
   await postprocess(dir, { captions: false });
   const result = await verify(dir);
   assert.deepEqual(result.problems, []);
+  const texts = readdirSync(path.join(dir, 'raw', 'text'));
+  assert.ok(texts.some((n) => n.startsWith('card-')), texts.join());
+  assert.ok(!texts.some((n) => n.startsWith('caption-')), texts.join());
 });
 
 test('verify passes for a good run and extracts one frame per step', { skip }, async () => {
@@ -151,5 +154,62 @@ test('verify flags a blank step frame', { skip }, async () => {
   await postprocess(dir);
   const result = await verify(dir);
   assert.equal(result.ok, false);
-  assert.ok(result.problems.some((p) => /step 1\.1 frame is blank \(uniform color\)/.test(p)), result.problems.join('\n'));
+  assert.ok(result.problems.some((p) => /step 1\.1 frame looks blank \(uniform color\) — view it/.test(p)), result.problems.join('\n'));
+});
+
+test('quick mode verify reports a missing demo.gif', { skip }, async () => {
+  const tl = timeline({
+    mode: 'quick',
+    chapters: [{ id: 'c1', title: 'Only', slug: 'only' }],
+    steps: timeline().steps.filter((s) => s.chapter === 'c1'),
+  });
+  const dir = folderWith(tl);
+  await postprocess(dir);
+  rmSync(path.join(dir, 'demo.gif'));
+  const result = await verify(dir);
+  assert.ok(result.problems.some((p) => p.startsWith('demo.gif')), result.problems.join('\n'));
+});
+
+test('verify clears frames of an earlier run', { skip }, async () => {
+  const dir = folderWith(timeline());
+  await postprocess(dir);
+  mkdirSync(path.join(dir, 'frames'));
+  writeFileSync(path.join(dir, 'frames', '09-step-9.png'), 'stale');
+  const result = await verify(dir);
+  assert.ok(!result.frames.some((f) => f.endsWith('09-step-9.png')));
+  assert.equal(existsSync(path.join(dir, 'frames', '09-step-9.png')), false);
+});
+
+test('a chapter title without latin letters gets a chapter-N file name', { skip }, async () => {
+  const tl = timeline();
+  tl.chapters = [
+    { id: 'c1', title: '日本語', slug: '' },
+    { id: 'c2', title: 'Second chapter', slug: 'second-chapter' },
+  ];
+  const dir = folderWith(tl);
+  await postprocess(dir);
+  assert.deepEqual(names(dir), ['01-chapter-1.mp4', '02-second-chapter.mp4', 'demo.mp4']);
+});
+
+test('findFont returns an existing font file that covers the speed marker', async (t) => {
+  let font;
+  try {
+    font = await findFont();
+  } catch (err) {
+    t.skip(err.message);
+    return;
+  }
+  assert.ok(existsSync(font), font);
+  const covered = spawnSync('fc-list', ['-f', '%{file}\n', ':charset=25b6 d7'], { encoding: 'utf8' });
+  if (covered.status === 0) assert.ok(covered.stdout.split('\n').includes(font), font);
+});
+
+test('findFont names the problem when no font can be found', async () => {
+  await assert.rejects(findFont({ command: 'no-such-fc-command', macFonts: ['/nonexistent/font.ttf'] }), /No usable font found/);
+});
+
+test('findFont falls back to a macOS font when fontconfig is missing', async () => {
+  const fake = path.join(root ?? tmpdir(), 'fake-font.ttf');
+  writeFileSync(fake, 'x');
+  assert.equal(await findFont({ command: 'no-such-fc-command', macFonts: ['/nonexistent.ttf', fake] }), fake);
 });
