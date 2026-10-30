@@ -59,6 +59,9 @@ async function pollText(locator, text, timeout) {
 }
 
 export async function record(spec) {
+  if (!Array.isArray(spec.chapters) || spec.chapters.length === 0) {
+    throw new Error('No chapters to record: fill in the storyboard steps in record.mjs first.');
+  }
   const pace = { ...DEFAULT_PACE, ...spec.pace };
   const folder = path.resolve(spec.folder);
   const rawDir = path.join(folder, 'raw');

@@ -152,3 +152,11 @@ test('a failing step rejects, writes no MP4 and keeps raw', { skip, timeout: 180
   assert.deepEqual(mp4s(folder), []);
   assert.ok(existsSync(path.join(folder, 'raw')));
 });
+
+test('an empty storyboard throws before launching a browser', async () => {
+  await assert.rejects(
+    record({ folder: path.join(root, 'empty'), baseUrl: 'http://localhost:3000', mode: 'polished', chapters: [] }),
+    /fill in the storyboard steps/i,
+  );
+  assert.ok(!existsSync(path.join(root, 'empty')));
+});
