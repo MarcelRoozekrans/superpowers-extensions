@@ -2,7 +2,7 @@
 
 [![GitHub Sponsors](https://img.shields.io/github/sponsors/MarcelRoozekrans?style=flat&logo=githubsponsors&color=ea4aaa&label=Sponsor)](https://github.com/sponsors/MarcelRoozekrans)
 
-Extension skills for the [superpowers](https://github.com/obra/superpowers) suite, providing quality gates, development workflow skills, and project lifecycle management for web application development. It includes thirteen skills:
+Extension skills for the [superpowers](https://github.com/obra/superpowers) suite, providing quality gates, development workflow skills, and project lifecycle management for web application development. It includes fourteen skills:
 
 - **regression-test** -- Comprehensive regression testing using the [Microsoft Playwright MCP server](https://github.com/microsoft/playwright-mcp), combining existing test suite execution with AI-powered visual and functional browser testing.
 - **pre-push-review** -- A structured branch review that diffs against the base branch and gates on plan adherence, code quality, commit hygiene, and regression testing, producing a PASS/FAIL verdict with a prioritized remediation plan on failure.
@@ -16,6 +16,7 @@ Extension skills for the [superpowers](https://github.com/obra/superpowers) suit
 - **ui-design-system** -- Generates a complete design system before frontend implementation. Three modes: **curated** (pick from 84 vendored real-world references — Stripe, Linear, Vercel, Notion, Apple, Figma, Supabase, Cursor, Claude, …), **guided** (7 questions), or **quick** (inline one-liner). Includes 5 hand-tuned OKLch design directions and an anti-slop checklist. Auto-detects Blazor, React, Vue, Astro stacks. Outputs `docs/design/MASTER.md`.
 - **logo-design** -- Generates brand marks as hand-authored SVG and audits existing ones. Two sub-skills: `logo-concept` draws a mark (or derives the variant set for one that already exists) and `logo-review` audits one across three layers — reproduction hazards, a ten-pattern anti-slop scan, and a five-dimension critique. Ships four mark types (geometric, monogram, wordmark, abstract) and **refuses pictorial, mascot, and illustrative-emblem marks** by design. Reads `docs/design/MASTER.md` for palette and typography when present. Outputs `docs/design/LOGO.md`, seven SVG variants through to a redrawn favicon, a contact sheet, and an eight-file raster icon set exported from those SVGs — recorded `UNRUN` rather than failed when no SVG rasteriser is installed.
 - **context-budget** -- Keeps long sessions cheap. A `UserPromptSubmit` hook measures the session's context size and hands off to a fresh session at a natural break; a `PreToolUse` hook requires an explicit non-Fable `model` on general-purpose subagent dispatches. The skill states the suite-wide model rule (Sonnet by default, Opus for marked tasks, retries and the final review, Haiku for lookups) and the fresh-session handoff recipe.
+- **anti-slop** -- Rewrites AI prose tics out of text Claude is about to publish, in English and Dutch: commit messages, PR and issue text, comments, READMEs, docs and release notes. Each language has a pattern catalogue in four families (vocabulary, structure, tone, substance), and every entry pairs a bad example with a plain rewrite. Claude publishes the clean version with no report; on demand it edits a file in place and leaves a diff.
 - **squad** -- Persistent AI agent teams (Lead, Backend Engineer, Frontend Engineer, Tester, Scribe) **dispatched as parallel `Task` subagents** during brainstorming and planning workflows. Each specialist runs in an isolated context window with its own charter and tier-1 history, so they cannot anchor on each other's reasoning. Per-role `history.md` files accumulate project-specific knowledge across sessions; tiered context lookup (semantic search → grep → recent history) keeps each subagent's prompt lean.
 
 ---
@@ -398,6 +399,33 @@ Node.js, which Claude Code already requires. The hooks run on Linux, macOS and W
 
 ---
 
+## Anti-Slop Skill
+
+The anti-slop skill rewrites AI prose tics out of text Claude is about to publish on your behalf. It has no hook; it fires from its description.
+
+### What It Does
+
+- **Fires on publishable text.** Commit messages, PR titles and bodies, issues, issue, PR and review comments, READMEs, docs, specs, CHANGELOG prose and release notes. It skips chat replies, code and wording you dictated verbatim.
+- **Two catalogues.** `references/patterns-en.md` and `references/patterns-nl.md`, picked by the draft's language (the dominant one for a mixed draft). Entries fall in four families: vocabulary, structure, tone and substance. Each has the tell, a bad example, a plain rewrite and the reason it reads as machine-written.
+- **Silent rewrite.** On a hit Claude rewrites the draft and publishes the clean version with no report. Facts, numbers, paths, links, code spans, template headings, conventional-commit headers and `Closes #N` lines stay intact.
+- **On demand.** "De-slop this" or "anti-slop this file" edits the file in place and leaves the change as a diff.
+
+### Scanner
+
+`scripts/scan.mjs` checks the catalogue entries that carry a fixed wording against files:
+
+```bash
+node plugins/anti-slop/skills/anti-slop/scripts/scan.mjs plugins/anti-slop/skills/anti-slop/references/patterns-en.md FILE
+```
+
+It exits 1 on hits, 0 when clean and 2 on an error. A hit is a prompt to check the sentence, not an automatic edit.
+
+### Prerequisites
+
+Node.js for the scanner. The skill itself is pure markdown.
+
+---
+
 ## UI Workflow Skill
 
 The ui-workflow skill provides two complementary capabilities that close the design-implementation gap in frontend work.
@@ -704,7 +732,7 @@ per harness; only how the harness loads them.
 | **OpenAI Codex CLI / App** | [`.codex-plugin/plugin.json`](.codex-plugin/plugin.json) + [`.codex/INSTALL.md`](.codex/INSTALL.md) | Clone-and-symlink each plugin into `~/.agents/skills/`; instructions and a copy-paste loop in [`.codex/INSTALL.md`](.codex/INSTALL.md) |
 | **Gemini CLI** | [`gemini-extension.json`](gemini-extension.json) + [`GEMINI.md`](GEMINI.md) | `GEMINI.md` lists each SKILL.md via `@./plugins/.../SKILL.md` import syntax |
 | **GitHub Copilot CLI** | Reuses [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json) + [`.copilot-cli/INSTALL.md`](.copilot-cli/INSTALL.md) | `copilot plugin marketplace add MarcelRoozekrans/superpowers-extensions`, then install individual plugins |
-| **OpenCode.ai** | [`.opencode/plugins/superpowers-extensions.js`](.opencode/plugins/superpowers-extensions.js) | JS plugin registers all thirteen plugin skill paths via OpenCode's `config.skills.paths` array — no symlinks needed |
+| **OpenCode.ai** | [`.opencode/plugins/superpowers-extensions.js`](.opencode/plugins/superpowers-extensions.js) | JS plugin registers all fourteen plugin skill paths via OpenCode's `config.skills.paths` array — no symlinks needed |
 
 The polymorphic [`hooks/session-start`](hooks/session-start) script
 detects which harness is running it via env vars (`CURSOR_PLUGIN_ROOT`,
@@ -770,7 +798,7 @@ The multi-provider mechanism here is adapted directly from
 [`obra/superpowers`](https://github.com/obra/superpowers) (MIT). Their
 session-start hook was the model for ours; their per-harness manifest
 pattern is what enables one shared markdown tree to load natively in
-each host. Differences: we are a marketplace of thirteen plugins (versus
+each host. Differences: we are a marketplace of fourteen plugins (versus
 their single-plugin layout), so our manifests target the suite at the
 repo root with skills resolved via `./plugins/`.
 
@@ -803,6 +831,7 @@ claude plugin install squad
 claude plugin install compress-memory
 claude plugin install logo-design
 claude plugin install context-budget
+claude plugin install anti-slop
 ```
 
 The regression-test plugin automatically configures the Playwright MCP server with `--caps=testing`. The pre-push-review plugin requires only git and no additional MCP servers for its core review.
@@ -915,6 +944,12 @@ xcopy /E /I plugins\context-budget\skills\context-budget %USERPROFILE%\.claude\s
 
 # macOS / Linux -- context-budget
 cp -r plugins/context-budget/skills/context-budget ~/.claude/skills/context-budget
+
+# Windows -- anti-slop
+xcopy /E /I plugins\anti-slop\skills\anti-slop %USERPROFILE%\.claude\skills\anti-slop
+
+# macOS / Linux -- anti-slop
+cp -r plugins/anti-slop/skills/anti-slop ~/.claude/skills/anti-slop
 ```
 
 **Note:** Some plugins require companion MCP servers. Install them separately:
@@ -935,7 +970,7 @@ claude mcp add playwright -- npx @playwright/mcp@latest --caps=testing,pdf,visio
 
 ### Verify Installation
 
-In Claude Code, the skills should appear when you type `/regression-test`, `/pre-push-review`, `/refactor-analysis`, `/decision-tracker`, `/roslyn-codelens-integration`, `/memorylens-integration`, `/project-orchestration`, `/ui-workflow`, `/ui-design-system`, `/squad`, `/compress-memory`, `/logo-design`, or `/context-budget`, or when you ask Claude to perform regression testing, a pre-push review, a refactor impact analysis, decision tracking, .NET code graph analysis, .NET memory profiling, project lifecycle management, UI design contract work, design system generation, to activate your agent team, to compress a memory file, or to design or audit a brand mark.
+In Claude Code, the skills should appear when you type `/regression-test`, `/pre-push-review`, `/refactor-analysis`, `/decision-tracker`, `/roslyn-codelens-integration`, `/memorylens-integration`, `/project-orchestration`, `/ui-workflow`, `/ui-design-system`, `/squad`, `/compress-memory`, `/logo-design`, `/context-budget`, or `/anti-slop`, or when you ask Claude to perform regression testing, a pre-push review, a refactor impact analysis, decision tracking, .NET code graph analysis, .NET memory profiling, project lifecycle management, UI design contract work, design system generation, to activate your agent team, to compress a memory file, to design or audit a brand mark, or to rewrite AI prose tics out of a draft.
 
 ---
 
@@ -1206,15 +1241,23 @@ superpowers-extensions/
 │   │           ├── references/             # construction / mark-types / reproduction / anti-slop
 │   │           ├── templates/              # LOGO.md skeleton + contact-sheet render harness
 │   │           └── scripts/                # export-raster.mjs — SVG-to-PNG/ICO icon exporter
-│   └── context-budget/                     # Model rule and fresh-session handoff (13th plugin)
+│   ├── context-budget/                     # Model rule and fresh-session handoff (13th plugin)
+│   │   ├── .claude-plugin/
+│   │   │   └── plugin.json
+│   │   ├── hooks/
+│   │   │   └── hooks.json                  # UserPromptSubmit size check, PreToolUse dispatch check
+│   │   └── skills/
+│   │       └── context-budget/
+│   │           ├── SKILL.md                # Model Choice, Fresh-Session Handoff, Configuration
+│   │           └── scripts/                # size-check.mjs, dispatch-check.mjs and shared helpers
+│   └── anti-slop/                          # AI prose tics rewritten out of published text (14th plugin)
 │       ├── .claude-plugin/
 │       │   └── plugin.json
-│       ├── hooks/
-│       │   └── hooks.json                  # UserPromptSubmit size check, PreToolUse dispatch check
 │       └── skills/
-│           └── context-budget/
-│               ├── SKILL.md                # Model Choice, Fresh-Session Handoff, Configuration
-│               └── scripts/                # size-check.mjs, dispatch-check.mjs and shared helpers
+│           └── anti-slop/
+│               ├── SKILL.md                # Trigger, procedure, guardrails, on-demand file mode
+│               ├── references/             # patterns-en.md and patterns-nl.md catalogues
+│               └── scripts/                # scan.mjs vocabulary scanner
 └── docs/
     ├── planning/                           # Project lifecycle state (ROADMAP, MILESTONE, STATE, CONVENTIONS)
     └── plans/                              # Design documents and phase plans

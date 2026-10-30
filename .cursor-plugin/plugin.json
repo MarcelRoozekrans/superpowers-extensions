@@ -23,7 +23,8 @@
     "squad",
     "compress-memory",
     "logo-design",
-    "context-budget"
+    "context-budget",
+    "anti-slop"
   ],
   "skills": "./plugins/"
 }

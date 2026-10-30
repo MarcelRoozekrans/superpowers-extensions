@@ -31,6 +31,7 @@ copilot plugin install squad
 copilot plugin install compress-memory
 copilot plugin install logo-design
 copilot plugin install context-budget
+copilot plugin install anti-slop
 ```
 
 ## Tool name mapping
@@ -53,10 +54,10 @@ In a Copilot CLI session, ask:
 
 > What skills do you have loaded?
 
-The agent should list the thirteen skills from this suite (regression-test,
+The agent should list the fourteen skills from this suite (regression-test,
 pre-push-review, refactor-analysis, decision-tracker,
 roslyn-codelens-integration, memorylens-integration, project-orchestration,
-ui-workflow, ui-design-system, squad, compress-memory, logo-design, context-budget).
+ui-workflow, ui-design-system, squad, compress-memory, logo-design, context-budget, anti-slop).
 
 ## Updating
 

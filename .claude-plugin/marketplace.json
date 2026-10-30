@@ -142,6 +142,16 @@
       },
       "source": "./plugins/context-budget",
       "category": "productivity"
+    },
+    {
+      "name": "anti-slop",
+      "description": "Rewrites AI prose tics out of text Claude is about to publish, in English and Dutch. Commit messages, PR and issue text, comments, READMEs and docs are checked against a pattern catalogue and published in their plain form, with no report.",
+      "version": "1.25.0",
+      "author": {
+        "name": "Marcel Roozekrans"
+      },
+      "source": "./plugins/anti-slop",
+      "category": "productivity"
     }
   ]
 }

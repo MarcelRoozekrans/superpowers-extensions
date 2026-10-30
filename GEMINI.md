@@ -11,3 +11,4 @@
 @./plugins/compress-memory/skills/compress-memory/SKILL.md
 @./plugins/logo-design/skills/logo-design/SKILL.md
 @./plugins/context-budget/skills/context-budget/SKILL.md
+@./plugins/anti-slop/skills/anti-slop/SKILL.md
