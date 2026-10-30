@@ -168,7 +168,8 @@ export async function record(spec) {
     // A fresh tab records white until it repaints, so wait for real frames.
     const settle = async (page) => {
       await paint(page, 2, true);
-      await sleep(300);
+      // Under load the screencast lags behind the page, so leave it time to catch up.
+      await sleep(600);
     };
     const h = {
       get page() {
