@@ -112,6 +112,8 @@ De oorzaak zit waarschijnlijk in `src/feestdagen.ts`. Daar ontbreekt nieuwjaarsd
 
 The vocabulary entries must catch something the drafts did produce. The scan runs against the raw draft files, because the fences above hide the drafts from the scanner. Draft 4 is Dutch and is covered by the Dutch catalogue.
 
+The raw drafts lived in an uncommitted workspace and are reproduced verbatim in the fenced blocks above. The commands below are a record of what was run, not something to reproduce from the repository.
+
 ```bash
 node plugins/anti-slop/skills/anti-slop/scripts/scan.mjs plugins/anti-slop/skills/anti-slop/references/patterns-en.md .superpowers/sdd/2026-10-30-anti-slop/red-1.md .superpowers/sdd/2026-10-30-anti-slop/red-2.md .superpowers/sdd/2026-10-30-anti-slop/red-3.md
 ```
@@ -125,6 +127,8 @@ Output (exit 1):
 ## Vocabulary check (Dutch)
 
 Draft 4 scanned against the Dutch catalogue, on the raw draft file because the fences above hide the draft from the scanner.
+
+The raw drafts lived in an uncommitted workspace and are reproduced verbatim in the fenced blocks above. The commands below are a record of what was run, not something to reproduce from the repository.
 
 ```bash
 node plugins/anti-slop/skills/anti-slop/scripts/scan.mjs plugins/anti-slop/skills/anti-slop/references/patterns-nl.md .superpowers/sdd/2026-10-30-anti-slop/red-4.md

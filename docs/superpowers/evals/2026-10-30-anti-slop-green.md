@@ -1,6 +1,6 @@
 # Anti-slop GREEN pressure test
 
-How the outputs were produced: four fresh Sonnet subagents, one per brief in `2026-10-30-anti-slop-briefs.md`. Each was told to read `plugins/anti-slop/skills/anti-slop/SKILL.md` and follow it while drafting its brief. The outputs below are verbatim. The controller ran the grading and the trigger check, and the raw outputs sit in the SDD workspace for this task.
+How the outputs were produced: four fresh Sonnet subagents, one per brief in `2026-10-30-anti-slop-briefs.md`. Each was told to read `plugins/anti-slop/skills/anti-slop/SKILL.md` and follow it while drafting its brief. The outputs below are verbatim. The controller ran the grading and the trigger check, and the raw outputs lived in an uncommitted workspace. They are reproduced verbatim in the fenced blocks, so the scanner runs named below are records, not something to reproduce from the repository.
 
 Result: all four outputs passed both layers. No REFACTOR round was needed, so `SKILL.md` and the catalogues are unchanged.
 
