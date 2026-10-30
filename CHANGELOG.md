@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.25.0](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.24.0...superpowers-extensions-v1.25.0) (2026-10-30)
+
+
+### Features
+
+* **context-budget:** start the fresh session and close the old one where create_session exists ([#152](https://github.com/MarcelRoozekrans/superpowers-extensions/issues/152)) ([2b59de3](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/2b59de355438226337f589ef53f817900bf48eba))
+
+
+### Bug Fixes
+
+* **context-budget:** hand off without asking, never mid-plan ([#156](https://github.com/MarcelRoozekrans/superpowers-extensions/issues/156)) ([cb742ae](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/cb742ae931a86217a022397bfff801898df46b8d))
+
 ## [1.24.0](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.23.0...superpowers-extensions-v1.24.0) (2026-10-21)
 
 
