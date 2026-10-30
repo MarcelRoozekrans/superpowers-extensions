@@ -43,7 +43,7 @@ test('scanText ignores fenced code and keeps line numbers', () => {
 
 test('scanText ignores Bad and Match lines', () => {
   assert.equal(scanText('**Bad:** we delve', patterns).length, 0);
-  assert.equal(scanText('**Match:** `delve`', patterns).length, 0);
+  assert.equal(scanText('**Match:** delve here', patterns).length, 0);
 });
 
 test('scanText matches curly apostrophes', () => {
@@ -63,4 +63,40 @@ test('CLI exits 0 on clean file and 1 on dirty file', () => {
   assert.equal(bad.status, 1);
   assert.match(bad.stdout, /Delve/);
   assert.match(bad.stdout, /dirty\.md:1/);
+});
+
+test('longer fence is not closed by a shorter fence line', () => {
+  const text = '````\n```\nwe delve\n```\n````\nthen delve here';
+  assert.deepEqual(scanText(text, patterns), [
+    { name: 'Delve', match: 'delve', line: 6 },
+  ]);
+});
+
+test('lookaround patterns handle non-ASCII words', () => {
+  const [p] = parseCatalogue(
+    '### Een\n\n**Match:** `(?<![\\p{L}\\p{N}])één(?![\\p{L}\\p{N}])`\n',
+  );
+  assert.equal(scanText('één keer', [p]).length, 1);
+  assert.equal(scanText('geéén', [p]).length, 0);
+});
+
+test('parseCatalogue throws on Match line before any heading', () => {
+  assert.throws(() => parseCatalogue('intro\n**Match:** `x`'), /line 2/);
+});
+
+test('parseCatalogue throws on invalid regex', () => {
+  assert.throws(() => parseCatalogue('### A\n**Match:** `(`'), /line 2.*invalid regex/);
+});
+
+test('CLI exits 2 on missing catalogue and on bad catalogue', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'scan-'));
+  const file = join(dir, 'a.md');
+  const bad = join(dir, 'bad.md');
+  writeFileSync(file, 'text\n');
+  writeFileSync(bad, '**Match:** `x`\n');
+  const script = join(here, 'scan.mjs');
+  const missing = spawnSync('node', [script, join(dir, 'nope.md'), file], { encoding: 'utf8' });
+  assert.equal(missing.status, 2);
+  assert.match(missing.stderr, /scan:/);
+  assert.equal(spawnSync('node', [script, bad, file], { encoding: 'utf8' }).status, 2);
 });
