@@ -24,7 +24,8 @@
     "compress-memory",
     "logo-design",
     "context-budget",
-    "anti-slop"
+    "anti-slop",
+    "demo-video"
   ],
   "skills": "./plugins/"
 }

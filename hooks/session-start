@@ -20,9 +20,9 @@
 set -euo pipefail
 
 context_body=$(cat <<'CONTEXT'
-You have superpowers-extensions skills loaded. Fourteen skills cover quality
+You have superpowers-extensions skills loaded. Fifteen skills cover quality
 gates, refactor analysis, project orchestration, frontend workflow, design
-systems, brand marks, memory compression, and prose hygiene:
+systems, brand marks, memory compression, prose hygiene, and demo recordings:
 
 - regression-test       — UI/web regression with Playwright MCP
 - pre-push-review       — branch review before push or PR
@@ -38,6 +38,7 @@ systems, brand marks, memory compression, and prose hygiene:
 - logo-design           — brand mark as SVG, from brief to favicon
 - context-budget        — model rule for subagents and fresh-session handoff at natural breaks
 - anti-slop             — rewrites AI prose tics out of published text, English and Dutch
+- demo-video            — records a finished web feature as a captioned browser walkthrough video
 
 Each skill triggers on specific phrases described in its frontmatter.
 Invoke via the host's native skill mechanism (Claude Code Skill tool,
