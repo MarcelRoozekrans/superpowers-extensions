@@ -232,7 +232,7 @@ test('expectText honours the expectTimeout of the pace', { skip, timeout: 180000
         },
       ],
     }),
-    /Step 1\.1/,
+    /Step 1\.1.*(Timeout|1000ms)/s,
   );
 });
 
@@ -287,7 +287,7 @@ test('a click on a disabled button rejects instead of clicking blindly', { skip,
       setup: (h) => h.goto('/'),
       chapters: [{ title: 'T', steps: [{ caption: 'x', run: (h) => h.click(h.page.locator('#off')) }] }],
     }),
-    /Step 1\.1/,
+    /Step 1\.1.*(disabled|not enabled|Timeout)/s,
   );
 });
 
@@ -426,4 +426,42 @@ test('clickToTab follows a target blank link into a new tab', { skip, timeout: 1
   assert.equal(tl.steps[0].page, 'p1');
   assert.ok(tl.steps[0].start >= tl.pages[1].openedAt);
   assert.equal(tl.steps[1].page, 'p0');
+});
+
+test('waitFor outlasts a short expectTimeout, so it uses waitTimeout', { skip, timeout: 180000 }, async () => {
+  await record({
+    folder: path.join(root, 'wait-vs-expect'),
+    baseUrl,
+    mode: 'quick',
+    pace: { ...SPEEDY, expectTimeout: 1000 },
+    setup: (h) => h.goto('/'),
+    chapters: [
+      {
+        title: 'T',
+        steps: [{ caption: 'x', run: analyse, waitFor: (h) => h.expectText(h.page.locator('#out'), 'Resultaat') }],
+      },
+    ],
+  });
+});
+
+test('a relative storageState inside contextOptions is resolved against the folder', { skip, timeout: 180000 }, async () => {
+  const folder = path.join(root, 'storage-ctx');
+  mkdirSync(path.join(folder, '.auth'), { recursive: true });
+  writeFileSync(
+    path.join(folder, '.auth', 'state.json'),
+    JSON.stringify({ cookies: [], origins: [{ origin: baseUrl, localStorage: [{ name: 'k', value: 'w' }] }] }),
+  );
+  const seen = {};
+  await record({
+    folder,
+    baseUrl,
+    mode: 'quick',
+    pace: FAST,
+    contextOptions: { storageState: '.auth/state.json' },
+    setup: (h) => h.goto('/'),
+    chapters: [
+      { title: 'T', steps: [{ caption: 'x', run: async (h) => { seen.k = await h.page.evaluate(() => localStorage.getItem('k')); } }] },
+    ],
+  });
+  assert.equal(seen.k, 'w');
 });

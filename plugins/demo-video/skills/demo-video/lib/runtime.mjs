@@ -141,9 +141,13 @@ export async function record(spec) {
 
   let context;
   try {
+    const contextOptions = { ...spec.contextOptions };
+    if (typeof contextOptions.storageState === 'string') {
+      contextOptions.storageState = path.resolve(folder, contextOptions.storageState);
+    }
     t0 = performance.now();
     context = await browser.newContext({
-      ...spec.contextOptions,
+      ...contextOptions,
       viewport: { width: 1920, height: 1080 },
       recordVideo: { dir: rawDir, size: { width: 1920, height: 1080 } },
       ...(spec.locale ? { locale: spec.locale } : {}),
@@ -168,8 +172,8 @@ export async function record(spec) {
     // A fresh tab records white until it repaints, so wait for real frames.
     const settle = async (page) => {
       await paint(page, 2, true);
-      // Under load the screencast lags behind the page, so leave it time to catch up.
-      await sleep(600);
+      // The screencast can still lag the page; postprocess clamps each page to its first painted frame.
+      await sleep(300);
     };
     const h = {
       get page() {
