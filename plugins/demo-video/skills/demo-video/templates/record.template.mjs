@@ -43,5 +43,8 @@ await record({
   folder: dirname(fileURLToPath(import.meta.url)),
   baseUrl: 'http://localhost:3000',
   mode: 'polished',
+  // title: 'Video title',
+  // endCard: 'End card line',
+  // captions: false,
   chapters: [],
 });

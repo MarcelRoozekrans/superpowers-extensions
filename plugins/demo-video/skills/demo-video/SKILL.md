@@ -24,7 +24,7 @@ Ask which mode if the request does not say. Both modes are unmistakable:
 |-|-----------|--------------|
 | For | a PR or chat, reviewers and teammates | a launch, a talk or a fallback recording |
 | Storyboard approval | none: record straight away and show the storyboard with the result | **required before anything runs** |
-| Captions, title and end card | none | yes; captions can be switched off with `--no-captions` |
+| Captions, title and end card | none | yes; to switch captions off, set `captions: false` in `record.mjs`, or re-encode with `node <folder>/lib/postprocess.mjs <folder> --no-captions` |
 | Output | `demo.mp4` and `demo.gif` | one MP4 per chapter, plus a combined `demo.mp4` when there are several chapters |
 
 **Polished mode approval gate:** write `storyboard.md`, show it to the user and stop. Explore, scaffold and record only after the user approves or edits it. A silent "looks fine" from yourself is not approval.
@@ -39,14 +39,14 @@ Paths below are relative to this skill's directory. The output folder is `docs/d
 4. **Polished mode: wait for approval.** See the gate above. Quick mode skips this step.
 5. **Explore every step live** with the Playwright MCP tools, on the real app. Confirm each step works and pick stable locators: role and name first, then test id, then CSS. Note which element shows that each slow call has finished. If a step cannot be made to work, stop and report it. **Never record around a failing step.**
 6. **Scaffold.** Run `node scripts/scaffold.mjs <repoRoot> <folder>`. It copies `lib/` and a `record.mjs` template into the folder and adds the Git LFS and ignore rules to `.gitattributes` and `.gitignore`.
-7. **Fill in `record.mjs`.** Set `baseUrl`, `mode`, `title` and `endCard`, then turn the storyboard into `chapters`; the mapping is in [references/storyboard.md](references/storyboard.md). Put login in `setup` or a `storageState` file, never in a step.
+7. **Fill in `record.mjs`.** Set `baseUrl`, `mode`, `title` and `endCard`; set `captions: false` in the `record({...})` call for cards without captions. Then turn the storyboard into `chapters`; the mapping is in [references/storyboard.md](references/storyboard.md). Put login in `setup` or a `storageState` file, never in a step.
 8. **Record.** Run `node <folder>/record.mjs`. It records, writes `timeline.json` and post-processes in one command. A failed step exits non-zero and produces no video.
 9. **Verify.** Run `node <folder>/lib/verify.mjs <folder>`, then do the frame review from the gate.
 10. **Report** the paths of the videos, their durations, the storyboard, and the re-record command `node <folder>/record.mjs`. Show the `.gitattributes` and `.gitignore` diff.
 
 **Never commit.** Not the videos, not the folder, not the `.gitattributes` and `.gitignore` changes. The user reviews the diff and commits.
 
-To change only captions or cards after a fix, `node <folder>/lib/postprocess.mjs <folder> [--no-captions]` re-encodes from the existing raw videos without recording again.
+To switch captions off or on after a fix without recording again, `node <folder>/lib/postprocess.mjs <folder> [--no-captions]` re-encodes from the existing raw videos without recording again.
 
 ## Rules
 

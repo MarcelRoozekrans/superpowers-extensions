@@ -56,6 +56,7 @@ End card: Try it at /catalogue
 |------------|--------------|
 | `# Title` | `title` in the `record()` call |
 | `End card:` | `endCard` in the `record()` call |
+| captions off | `captions: false` in the `record()` call; the default is on in polished mode and off in quick mode |
 | `## Chapter` | one object in `chapters`, with `title` |
 | a numbered step | one object in that chapter's `steps` |
 | **Caption** | `caption` |
