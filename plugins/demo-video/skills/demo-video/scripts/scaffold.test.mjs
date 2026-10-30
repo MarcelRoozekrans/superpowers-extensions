@@ -4,7 +4,8 @@ import { spawnSync } from 'node:child_process';
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { checkFonts, checkGitLfs, checkNode, preflight } from './preflight.mjs';
+import { checkFfmpeg, checkFfprobe, checkFonts, checkGitLfs, checkNode, checkUrl, preflight } from './preflight.mjs';
+import { loadPlaywright } from '../lib/playwright.mjs';
 import { scaffold } from './scaffold.mjs';
 
 const tmp = () => mkdtempSync(path.join(tmpdir(), 'demo-scaffold-'));
@@ -83,23 +84,29 @@ test('the scaffold CLI prints a summary', () => {
   }
 });
 
-test('preflight reports an unreachable url as a failed check', async () => {
-  const r = await preflight({ url: 'http://127.0.0.1:1' });
-  const check = r.checks.find((c) => c.name === 'url');
+test('the url check reports an unreachable url as failed', async () => {
+  const check = await checkUrl('http://127.0.0.1:1');
+  assert.equal(check.name, 'url');
   assert.equal(check.ok, false);
-  assert.equal(r.ok, false);
 });
 
-test('preflight omits the url check when no url is given', async () => {
-  const r = await preflight({});
-  assert.ok(!r.checks.some((c) => c.name === 'url'));
+test('the ffmpeg and ffprobe checks pass on this machine', { skip: hasFfmpeg ? false : 'ffmpeg not installed' }, async () => {
+  assert.equal((await checkFfmpeg()).ok, true);
+  assert.equal((await checkFfprobe()).ok, true);
 });
 
-test('preflight finds ffmpeg on this machine', { skip: hasFfmpeg ? false : 'ffmpeg not installed' }, async () => {
-  const r = await preflight({});
-  for (const name of ['ffmpeg', 'ffprobe']) {
-    assert.equal(r.checks.find((c) => c.name === name).ok, true, name);
+let skipFull = hasFfmpeg ? false : 'ffmpeg not installed';
+if (!skipFull) {
+  try {
+    const pw = await loadPlaywright();
+    if (!existsSync(pw.chromium.executablePath())) skipFull = 'Chromium is not installed';
+  } catch (err) {
+    skipFull = err.message;
   }
+}
+test('the full preflight smoke test lists every check and omits url without one', { skip: skipFull }, async () => {
+  const r = await preflight({});
+  assert.deepEqual(r.checks.map((c) => c.name), ['node', 'playwright', 'ffmpeg', 'ffprobe', 'git-lfs', 'fonts']);
 });
 
 test('appended lines follow the CRLF line ending of the file', () => {
