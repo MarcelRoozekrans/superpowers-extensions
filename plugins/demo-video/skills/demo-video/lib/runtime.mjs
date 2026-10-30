@@ -41,13 +41,22 @@ const CURSOR_SCRIPT = `
 })();
 `;
 
-function paint(page, frames) {
+// Resolves after `frames` animation frames. With `nudge` it also flips the root opacity by a
+// hair first, so the screencast gets a changed frame even when the page painted before the
+// recorder attached to it.
+function paint(page, frames, nudge = false) {
   return page.evaluate(
-    (n) => new Promise((resolve) => {
-      const tick = (left) => requestAnimationFrame(() => (left > 1 ? tick(left - 1) : resolve()));
+    ([n, flip]) => new Promise((resolve) => {
+      const root = document.documentElement;
+      if (flip) root.style.opacity = '0.99';
+      const tick = (left) => requestAnimationFrame(() => {
+        if (left > 1) return tick(left - 1);
+        if (flip) root.style.opacity = '';
+        resolve();
+      });
       tick(n);
     }),
-    frames,
+    [frames, nudge],
   );
 }
 
@@ -140,9 +149,10 @@ export async function record(spec) {
         register(page);
         tabs.set(name, page);
         state.active = page;
+        await page.bringToFront();
         await page.goto(url(p), { waitUntil: 'load' });
         // A fresh tab records white until it repaints, so wait for real frames.
-        await paint(page, 2);
+        await paint(page, 2, true);
         await sleep(300);
       },
       async switchTab(name) {
@@ -150,7 +160,7 @@ export async function record(spec) {
         if (!page) throw new Error(`unknown tab "${name}"`);
         await page.bringToFront();
         state.active = page;
-        await paint(page, 1);
+        await paint(page, 1, true);
       },
       async expectText(locator, text) {
         if (expectFn) await expectFn(locator, { timeout: pace.expectTimeout }).toContainText(text);
