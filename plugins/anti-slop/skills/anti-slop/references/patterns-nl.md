@@ -60,7 +60,9 @@ Een treffer is een aanleiding om de zin te controleren, geen automatische correc
 
 **Tell:** `duiken` of `duik` plus `in` voor het bespreken van een onderwerp, vaak met `dieper`.
 
-**Match:** `\b(?:duiken|duik|duikt)\s+(?:we\s+|je\s+)?(?:dieper\s+)?in\b`
+**Match:** `\bduik(?:en|t)?\s+(?:we|je)\s+(?:dieper\s+)?in\b`
+
+**Match:** `\b(?:dieper\s+duik(?:en|t)?|duik(?:en|t)?\s+dieper)\s+in\b`
 
 **Bad:** Laten we dieper duiken in de werking van de cache.
 
@@ -78,7 +80,7 @@ Een treffer is een aanleiding om de zin te controleren, geen automatische correc
 
 **Rewrite:** De module leest de bestaande index. Opzoekingen worden daardoor sneller.
 
-**Why:** Drie woorden voor een werkwoord vullen de zin op zonder betekenis toe te voegen.
+**Why:** Drie woorden voor een werkwoord vullen de zin op zonder betekenis toe te voegen. Alleen een tic waar het een gewoon werkwoord vervangt: bij een zin als "hij heeft er geen gebruik van gemaakt" past het wel.
 
 ### Stock-openers over het tijdperk
 
@@ -88,7 +90,7 @@ Een treffer is een aanleiding om de zin te controleren, geen automatische correc
 
 **Match:** `\bin het digitale tijdperk\b`
 
-**Match:** `\bin de (?:snel|steeds) (?:veranderende|evoluerende) (?:wereld|landschap)\b`
+**Match:** `\bin (?:de|een) (?:snel|steeds) (?:veranderende|evoluerende) (?:wereld|landschap)\b`
 
 **Match:** `\bin de wereld van (?:vandaag|tegenwoordig)\b`
 
@@ -132,7 +134,7 @@ Een treffer is een aanleiding om de zin te controleren, geen automatische correc
 
 **Match:** `(?:^|[.!?]\s+)(?:daarnaast|bovendien|tevens),`
 
-**Match:** `\btevens\b`
+**Match:** `(?:^|[.!?]\s+)tevens\s`
 
 **Bad:** Daarnaast toont het commando een samenvatting. Bovendien schrijft het een logbestand.
 
@@ -142,9 +144,9 @@ Een treffer is een aanleiding om de zin te controleren, geen automatische correc
 
 ### Opgeblazen woordkeus
 
-**Tell:** Grote woorden voor gewone dingen, zoals `baanbrekend`, `stroomlijnen`, `veelzijdig` of `hoogwaardig`.
+**Tell:** Grote woorden voor gewone dingen, zoals `baanbrekend` of `stroomlijnen`.
 
-**Match:** `\b(?:baanbrekende?|stroomlijn(?:en|t|ing)|veelzijdige?|hoogwaardige?)\b`
+**Match:** `\b(?:baanbrekende?|stroomlijn(?:en|t|ing))\b`
 
 **Match:** `\b(?:benut|benutten)\s+(?:het|de)\s+(?:volledige\s+)?(?:potentieel|kracht|mogelijkheden)\b`
 
@@ -174,7 +176,7 @@ Een treffer is een aanleiding om de zin te controleren, geen automatische correc
 
 **Bad:** Kortom, deze wijziging lost de crash op door de naam te trimmen voor het splitsen.
 
-**Rewrite:** De tekst eindigt op de oplossing en de test. De samenvattende zin is weg, want de tekst zei het al.
+**Rewrite:** De naam wordt nu getrimd voor het splitsen. Een test dekt de naam met een spatie aan het eind.
 
 **Why:** Een samenvatting past bij een lange tekst die een lezer overvliegt. In een korte tekst herhaalt ze alleen.
 
@@ -184,7 +186,7 @@ Een treffer is een aanleiding om de zin te controleren, geen automatische correc
 
 **Bad:** Een PR-beschrijving met een kopje "Samenvatting" en vier opsommingstekens voor één fix.
 
-**Rewrite:** Twee zinnen: de crash met zijn oorzaak, dan de oplossing. Op de laatste regel staat welk issue dit sluit.
+**Rewrite:** De sorteerfunctie crashte op bestandsnamen met een spatie voor de extensie, omdat de extensie uit de ongetrimde naam kwam. Nu wordt de naam eerst getrimd en een test dekt het geval. Sluit #214.
 
 **Why:** Opmaak van lange documenten laat een kort bericht klinken als een rapport. Houd kopjes alleen waar een sjabloon of commitgrammatica ze eist.
 
@@ -240,7 +242,7 @@ Een treffer is een aanleiding om de zin te controleren, geen automatische correc
 
 **Bad:** Goede vraag! Ik help je graag verder.
 
-**Rewrite:** De vlag staat standaard uit. Zet hem aan met `--cache`. Het antwoord komt eerst, zonder begroeting.
+**Rewrite:** De vlag staat standaard uit. Zet hem aan met `--cache`.
 
 **Why:** In gepubliceerde tekst valt geen gesprek op te warmen. De vrolijkheid is vulling en leest als een script.
 
@@ -248,7 +250,7 @@ Een treffer is een aanleiding om de zin te controleren, geen automatische correc
 
 **Tell:** Een gedwongen tweezijdig kader terwijl de schrijver een mening heeft of de feiten één kant op wijzen, zoals `enerzijds ... anderzijds`.
 
-**Match:** `\b(?:enerzijds|anderzijds)\b`
+**Match:** `\benerzijds\b[^\n]*\banderzijds\b`
 
 **Bad:** Enerzijds is caching snel, anderzijds maakt het alles ingewikkelder.
 
@@ -268,7 +270,7 @@ Een treffer is een aanleiding om de zin te controleren, geen automatische correc
 
 **Bad:** Ik heb hieronder een samenvatting opgesteld. Ik hoop dat dit je helpt!
 
-**Rewrite:** Samenvatting: de crash kwam van een ongetrimde naam en de fix trimt die. De verwijzing naar wie het schreef is weg.
+**Rewrite:** De crash kwam van een ongetrimde naam. De fix trimt die voor het splitsen.
 
 **Why:** Gepubliceerde tekst spreekt namens het project. Commentaar op het schrijven is ruis voor de lezer.
 
@@ -304,9 +306,9 @@ Een treffer is een aanleiding om de zin te controleren, geen automatische correc
 
 ### Vage versterkers
 
-**Tell:** Graadwoorden die een bewering opdrijven zonder haar te meten, zoals `zeer`, `uiterst`, `ongelooflijk`, `buitengewoon` of `bijzonder`.
+**Tell:** Graadwoorden die een bewering opdrijven zonder haar te meten, zoals `zeer`, `uiterst`, `ongelooflijk` of `buitengewoon`.
 
-**Match:** `(?<![\p{L}\p{N}])(?:zeer|uiterst|ongelooflijk|buitengewoon|bijzonder|ontzettend)\s+\p{L}{3,}`
+**Match:** `(?<![\p{L}\p{N}])(?:zeer(?!\s+wel\b)|uiterst|ongelooflijk|buitengewoon|ontzettend)\s+\p{L}{3,}`
 
 **Bad:** De nieuwe index is zeer snel en uiterst eenvoudig te onderhouden.
 
@@ -320,6 +322,6 @@ Een treffer is een aanleiding om de zin te controleren, geen automatische correc
 
 **Bad:** De oorzaak zit in de feestdagenlijst. Daar ontbreekt nieuwjaarsdag, dus een datum in december ziet 1 januari niet als feestdag.
 
-**Rewrite:** De feestdagenlijst mist nieuwjaarsdag voor het jaar na de opgegeven datum. Eén keer gezegd, op de plek waar de lezer het zoekt.
+**Rewrite:** De oorzaak zit in de feestdagenlijst: nieuwjaarsdag ontbreekt voor het jaar na de opgegeven datum.
 
 **Why:** Herhaling in een korte tekst geeft de lezer niets nieuws en maakt de tekst langer dan de feiten. Kies de plek waar de uitleg het meest helpt en schrap de andere.

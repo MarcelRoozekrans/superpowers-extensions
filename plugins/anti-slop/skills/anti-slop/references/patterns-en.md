@@ -158,7 +158,7 @@ A hit is a prompt to check the sentence, not an automatic edit: some matches are
 
 **Bad:** In summary, this change fixes the crash by trimming the name before the split.
 
-**Rewrite:** The body ends on the fix and its test. The recap sentence is gone, because the body already said it.
+**Rewrite:** The name is now trimmed before the split. A test covers a name with a trailing space.
 
 **Why:** A recap suits a long text a reader may skim. In a short one it only repeats.
 
@@ -168,7 +168,7 @@ A hit is a prompt to check the sentence, not an automatic edit: some matches are
 
 **Bad:** A PR body with a "Summary" heading and four bullets for one fix.
 
-**Rewrite:** Two sentences: the crash and its cause, then the fix. Closes the issue on the last line.
+**Rewrite:** The sorter crashed on file names with a space before the extension, because the extension was read from the untrimmed name. The name is now trimmed first and a test covers the case. Closes #214.
 
 **Why:** Formatting borrowed from long documents makes a short note look like a report. Keep headings only where a template or a commit grammar requires them.
 
@@ -222,7 +222,7 @@ A hit is a prompt to check the sentence, not an automatic edit: some matches are
 
 **Bad:** Great question! I'd be happy to help with that.
 
-**Rewrite:** The flag is off by default. Turn it on with `--cache`. The answer comes first, with no greeting.
+**Rewrite:** The flag is off by default. Turn it on with `--cache`.
 
 **Why:** In published text there is no conversation to warm up. The cheerfulness is filler and reads as a script.
 
@@ -250,7 +250,7 @@ A hit is a prompt to check the sentence, not an automatic edit: some matches are
 
 **Bad:** I've drafted a summary below. I hope this helps!
 
-**Rewrite:** Summary: the crash came from an untrimmed name, and the fix trims it. The framing about who wrote it is gone.
+**Rewrite:** Summary: the crash came from an untrimmed name, and the fix trims it.
 
 **Why:** Published text speaks for the project. Meta commentary about the writing is noise to the reader.
 

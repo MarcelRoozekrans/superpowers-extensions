@@ -130,9 +130,6 @@ Draft 4 scanned against the Dutch catalogue, on the raw draft file because the f
 node plugins/anti-slop/skills/anti-slop/scripts/scan.mjs plugins/anti-slop/skills/anti-slop/references/patterns-nl.md .superpowers/sdd/2026-10-30-anti-slop/red-4.md
 ```
 
-Output (exit 0):
-
-```text
-```
+Output (exit 0): (no output)
 
 No vocabulary hit. The draft's tics are structural (the cause and the expected result each stated twice), which the catalogue covers under "Dubbel uitleggen" and "Samenvatting die de tekst herhaalt" without a regex. The single hedge `waarschijnlijk` marks a cause that is not yet proven, so it is honest and the catalogue does not match it.
