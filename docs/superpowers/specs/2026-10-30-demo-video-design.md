@@ -48,7 +48,7 @@ Its first real use, which sets the bar for v1, is the incident-triage-demo's fal
 | What to show | Claude writes a storyboard from the plan and diff. The user approves it in polished mode. Quick mode records it straight away |
 | Sound | Captions only, no voiceover in v1 |
 | Output location | `docs/demo-videos/YYYY-MM-DD-<feature>/` in the project repo, videos tracked with **Git LFS** |
-| Slow calls | Sped up, not cut: the spinner stays visible at high speed with a ⏩ marker |
+| Slow calls | Sped up, not cut: the spinner stays visible at high speed with a `▶▶ N×` marker |
 | Approach | B: explore with Playwright MCP, then generate and run a Playwright script |
 | Where it lives | A new `demo-video` plugin in this repo (Claude's proposal, not objected to) |
 | Platform | Linux first, headless included (remote agent machines). macOS gets install hints in preflight |
@@ -113,7 +113,7 @@ Multi-tab recording: Playwright writes one video file per page. The template rec
 A post-process script that ships with the skill reads `timeline.json` and the raw page videos, then:
 
 - concatenates the active-tab segments;
-- speeds up each marked wait (default 10×, with a minimum on-screen time of about 1 s) and overlays a ⏩ marker during it;
+- speeds up each marked wait (default 10×, with a minimum on-screen time of about 1 s) and overlays a `▶▶ N×` marker during it, with N the real rounded speed of that wait and no marker below 1.5×;
 - in polished mode, burns in each step's caption for that step's duration, and adds a title card and an end card. Captions can be switched off, so a fallback video the presenter talks over can carry only the cards;
 - encodes an H.264 MP4 that plays anywhere (`-movflags +faststart`, yuv420p);
 - in quick mode, also makes a GIF (lower frame rate, scaled to 1280 wide) for embedding in a PR.
