@@ -23,7 +23,7 @@ This will ship in version 2.3.1.
 **Observed:**
 
 - A heading on a PR body of five short sentences (headers on short text).
-- The sentence "It failed before the fix and passes now." proves nothing the test line has not already said (a mild recap).
+- The sentence `It failed before the fix and passes now.` proves nothing the test line has not already said (a mild recap).
 - Otherwise facts only; no vocabulary tics.
 
 ## Draft 2: Commit message
@@ -43,8 +43,8 @@ Closes #214
 
 **Observed:**
 
-- The body sentence "The extension was read from the untrimmed name." is repeated in the second paragraph as "Trim the base name first" (a light restatement of the subject line).
-- No vocabulary, tone or structure tics otherwise.
+- No tic found. The imperative "Trim the base name first" is the fix itself, not a restatement, and the draft is clean.
+- The structure is right for a commit: subject, short cause, fix, issue reference.
 
 ## Draft 3: README section
 
@@ -80,8 +80,8 @@ pip install quillcache
 
 **Observed:**
 
-- A reflex setup reminder at the end ("If you have not installed the library yet"): content nobody asked for, aimed at a reader who has not been described.
-- A recap sentence: "Entries from this function expire an hour after they are stored" restates the decorator line above it.
+- A reflex setup reminder at the end (`If you have not installed the library yet`): content nobody asked for, aimed at a reader who has not been described.
+- A recap sentence: `Entries from this function expire an hour after they are stored` restates the decorator line above it.
 - A heading and code blocks on a section of about ten lines; acceptable for a README, but the install block is padding.
 
 ## Draft 4: Dutch issue comment
@@ -104,6 +104,20 @@ De oorzaak zit waarschijnlijk in `src/feestdagen.ts`. Daar ontbreekt nieuwjaarsd
 
 **Observed:**
 
-- The cause is explained twice: once in the opening paragraph, again in the closing sentence ("dus een datum in december ziet ... niet als feestdag"), which is a recap.
-- The expected result is stated twice (first paragraph, then "terwijl 2027-01-04 hoort te komen").
+- The cause is explained twice: once in the opening paragraph, again in the closing sentence (`dus een datum in december ziet ... niet als feestdag`), which is a recap.
+- The expected result is stated twice (first paragraph, then `terwijl 2027-01-04 hoort te komen`).
 - Fully formal Dutch with no stock phrases; the Dutch catalogue will rely on the spec list.
+
+## Vocabulary check
+
+The vocabulary entries must catch something the drafts did produce. The scan runs against the raw draft files, because the fences above hide the drafts from the scanner. Draft 4 is Dutch and is covered by the Dutch catalogue.
+
+```bash
+node plugins/anti-slop/skills/anti-slop/scripts/scan.mjs plugins/anti-slop/skills/anti-slop/references/patterns-en.md .superpowers/sdd/2026-10-30-anti-slop/red-1.md .superpowers/sdd/2026-10-30-anti-slop/red-2.md .superpowers/sdd/2026-10-30-anti-slop/red-3.md
+```
+
+Output (exit 1):
+
+```text
+.superpowers/sdd/2026-10-30-anti-slop/red-3.md:23  Reflex setup reminder  "If you have not installed"
+```

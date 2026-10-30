@@ -4,7 +4,7 @@ This catalogue lists the tics that make English prose read as machine-written. E
 
 **Bad:** lines quote a pattern on purpose, so the scanner skips them. Vocabulary entries also carry one or more **Match:** lines, each holding a regex in backticks. `scripts/scan.mjs` compiles those regexes with the flags `giu`, strips fenced code, inline code spans and the **Bad:** and **Match:** lines from the text under test, and reports every hit with its pattern name and line. Outside those lines, this file names banned words only inside inline code spans, so it passes its own scan.
 
-A hit marks a place to rewrite, not a word to swap. Rebuild the sentence around the fact it was hiding.
+A hit is a prompt to check the sentence, not an automatic edit: some matches are fine in context, such as a file that really is locked. When a hit is real, rewrite instead of swapping a word. Rebuild the sentence around the fact it was hiding.
 
 ## Vocabulary
 
@@ -90,7 +90,9 @@ A hit marks a place to rewrite, not a word to swap. Rebuild the sentence around 
 
 **Tell:** Grand words for ordinary things: `tapestry`, `testament`, `pivotal`, `crucial`, `comprehensive`, `streamline`, `elevate`, `unlock`, `empower`, `showcase`.
 
-**Match:** `\b(?:tapestry|testament|pivotal|streamlines?|streamlined|elevates?|unlocks?|empowers?|showcases?)\b`
+**Match:** `\b(?:tapestry|testament|pivotal|streamlines?|streamlined|elevates?|empowers?|showcases?)\b`
+
+**Match:** `\bunlock(?:s|ed|ing)?\s+(?:the\s+|your\s+|its\s+)?(?:full\s+)?(?:potential|power|value|possibilities|capabilities)\b`
 
 **Match:** `\b(?:crucial|comprehensive)\b`
 
@@ -130,7 +132,7 @@ A hit marks a place to rewrite, not a word to swap. Rebuild the sentence around 
 
 **Tell:** A closing line that tells the reader what to do if they have not yet done the obvious step, such as installing the library, when nobody asked.
 
-**Match:** `\bif you (?:have not|haven't|have yet to) (?:installed|set up|configured)\b`
+**Match:** `\bif you (?:have not|haven(?:'|’)t|have yet to)(?: yet)? (?:install(?:ed)?|set up|configur(?:e|ed))\b`
 
 **Bad:** If you have not installed the library yet, run the command below.
 
@@ -156,7 +158,7 @@ A hit marks a place to rewrite, not a word to swap. Rebuild the sentence around 
 
 **Bad:** In summary, this change fixes the crash by trimming the name before the split.
 
-**Rewrite:** Delete the sentence. The body already said it.
+**Rewrite:** The body ends on the fix and its test. The recap sentence is gone, because the body already said it.
 
 **Why:** A recap suits a long text a reader may skim. In a short one it only repeats.
 
@@ -216,9 +218,11 @@ A hit marks a place to rewrite, not a word to swap. Rebuild the sentence around 
 
 **Match:** `\bhappy to help\b`
 
+**Match:** `\bi(?:'|’)d be (?:happy|glad|delighted) to\b`
+
 **Bad:** Great question! I'd be happy to help with that.
 
-**Rewrite:** Start with the answer.
+**Rewrite:** The flag is off by default. Turn it on with `--cache`. The answer comes first, with no greeting.
 
 **Why:** In published text there is no conversation to warm up. The cheerfulness is filler and reads as a script.
 
@@ -246,7 +250,7 @@ A hit marks a place to rewrite, not a word to swap. Rebuild the sentence around 
 
 **Bad:** I've drafted a summary below. I hope this helps!
 
-**Rewrite:** Publish the summary. Leave out the framing.
+**Rewrite:** Summary: the crash came from an untrimmed name, and the fix trims it. The framing about who wrote it is gone.
 
 **Why:** Published text speaks for the project. Meta commentary about the writing is noise to the reader.
 
@@ -282,7 +286,7 @@ A hit marks a place to rewrite, not a word to swap. Rebuild the sentence around 
 
 **Tell:** Degree words that push a claim without measuring it, such as `very`, `really`, `extremely`, `incredibly`, `highly`, `truly`.
 
-**Match:** `\b(?:very|really|extremely|incredibly|highly|truly|massively|vastly)\b`
+**Match:** `\b(?:very|really|extremely|incredibly|highly|truly|massively|vastly)\s+(?:[a-z]+ly|[a-z]{3,})\b`
 
 **Bad:** The new index is extremely fast and really easy to maintain.
 
