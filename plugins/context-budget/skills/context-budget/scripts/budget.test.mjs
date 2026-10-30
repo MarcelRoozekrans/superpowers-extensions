@@ -133,6 +133,8 @@ test('reminderText', () => {
   assert.doesNotMatch(reminderText('nudge', 250000), /costly/);
   assert.doesNotMatch(reminderText('firm', 420000), /stop/i);
   assert.doesNotMatch(reminderText('nudge', 250000), /stop/i);
+  assert.match(reminderText('nudge', 250000), /plan task is not/);
+  assert.doesNotMatch(reminderText('nudge', 250000), /offer/i);
 });
 
 test('state round-trip', () => {

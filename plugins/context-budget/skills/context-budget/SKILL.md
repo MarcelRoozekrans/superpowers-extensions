@@ -29,41 +29,33 @@ Always pass `model` explicitly on a dispatch. The dispatch hook denies any Fable
 
 ## Fresh-Session Handoff
 
-### When to offer a fresh session
+### When to hand off
 
-Offer one only at a natural break, and only when the next work needs nothing from the current context.
+Hand off only at a natural break, and only when the next work needs nothing from the current context.
 
-- A natural break is a finished plan task, a finished phase or PR, or a delivered result.
+- A natural break is a finished phase or PR, or a delivered result.
+- A finished plan task is not a natural break. A `subagent-driven-development` or `executing-plans` run goes on to the last task and its final review in this session; implementer subagents already keep this context small.
 - If the next work needs what is in the current context, carry on. A big context that the work needs is fine.
 - Outside a natural break, or when the next work depends on the current context, say nothing and carry on silently. A context-budget reminder is a prompt to check these conditions, not an instruction to stop.
 
-### When `docs/planning/STATE.md` exists
+### Record the handoff
 
-Use `project-orchestration` `pause-work`. It records the position in `STATE.md`, and the new session resumes with `resume-work`.
+- **When `docs/planning/STATE.md` exists:** use `project-orchestration` `pause-work`. It records the position in `STATE.md`, and the new session resumes with `resume-work`.
+- **Otherwise:** write `.claude/handoff.md` with these headings: `## Goal`, `## Current state`, `## Decisions made`, `## Next step`, `## Files in play`.
 
-### Otherwise
+### Start the new session yourself
 
-Write `.claude/handoff.md` with these headings:
+If the `create_session` tool is available (Claude Code Remote, including a Remote Control server on the user's own machine), start the new session and close this one without asking. The user does not open sessions by hand.
 
-- `## Goal`
-- `## Current state`
-- `## Decisions made`
-- `## Next step`
-- `## Files in play`
-
-Then give the user one line to paste into the new session, for example: `Read .claude/handoff.md and continue from Next step.`
-
-### When you can start the session yourself
-
-If the `create_session` tool is available (Claude Code Remote, including a Remote Control server on the user's own machine), offer to start the new session and close this one, instead of giving a line to paste. Ask once; on yes:
-
-1. **Leave nothing behind.** Commit and push work in progress, or say what is uncommitted. Archiving this session can remove its worktree.
-2. **Make the handoff self-contained.** A new session may get its own worktree, where this one's `.claude/handoff.md` does not exist. Put the full handoff, with the same five headings, in the new session's first message, with absolute paths, and end it with `Continue from Next step.` Write the file as well, as a record.
-3. **Start it.** Call `create_session` with `prompt` set to that handoff and a short `title` naming the next step. Leave `environment_id` and `permission_mode` unset, so it runs where this session runs, with the same permissions.
+1. **Leave nothing behind.** Commit and push work in progress, including the handoff record, or say what is uncommitted. Archiving this session can remove its worktree.
+2. **Make the first message self-contained.** A new session may get its own worktree, where this one's uncommitted files do not exist. With `STATE.md`, the message says to run `resume-work` and names the branch and the first step. Otherwise it holds the full handoff with the five headings above, with absolute paths, and ends with `Continue from Next step.`
+3. **Start it.** Call `create_session` with `prompt` set to that message and a short `title` naming the next step. Leave `environment_id` and `permission_mode` unset, so it runs where this session runs, with the same permissions.
 4. **Check it is running.** Call `get_session` on the new id until `status_bucket` is `working`, and read its latest events with `list_events` (`kinds: ["assistant"]`) to see it picked up the handoff. If it is `failed`, or shows no assistant turn after a few checks, keep this session open and tell the user.
-5. **Close this one.** Tell the user the new session's title, then call `archive_session` with this session's own id, from `get_session` without a `session_id`. The final message names the new session; nothing runs after the archive.
+5. **Close this one.** Tell the user the new session's title and id, then call `archive_session` with this session's own id, from `get_session` without a `session_id`. The final message names the new session; nothing runs after the archive.
 
-Without `create_session`, or if the user declines, give the paste line as above.
+### Without `create_session`
+
+If the tool is missing, or `create_session` is refused (for example at a session lineage limit), give the user one line to paste into a new session, for example `Read .claude/handoff.md and continue from Next step.` or `Run resume-work on branch <branch>.`, and leave this session open.
 
 ## Configuration
 
