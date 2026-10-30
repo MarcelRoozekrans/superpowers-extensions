@@ -16,6 +16,36 @@ function drawtext(fontFile, textPath, position, extra = '') {
   );
 }
 
+const CAPTION_WIDTH = 60;
+const MARKER_MIN_SPEED = 1.5;
+
+// Breaks text into lines of at most `width` characters on word boundaries; drawtext honours
+// the newlines. A single word longer than `width` stays on its own line.
+export function wrapCaption(text, width = CAPTION_WIDTH) {
+  const lines = [];
+  let line = '';
+  for (const word of text.split(/\s+/).filter(Boolean)) {
+    if (line && line.length + 1 + word.length > width) {
+      lines.push(line);
+      line = word;
+    } else {
+      line = line ? `${line} ${word}` : word;
+    }
+  }
+  if (line) lines.push(line);
+  return lines.join('\n');
+}
+
+// One frame of drawtext with the glyphs the speed marker needs, for the preflight check.
+export function fontCheckArgs(fontFile) {
+  return [
+    '-hide_banner', '-loglevel', 'error',
+    '-f', 'lavfi', '-i', 'color=c=black:s=320x180:d=0.1',
+    '-vf', `drawtext=fontfile=${filterValue(fontFile)}:text='▶▶ 10×':fontsize=24:fontcolor=white`,
+    '-frames:v', '1', '-f', 'null', '-',
+  ];
+}
+
 const CAPTION_STYLE = ':fontsize=40:fontcolor=white:box=1:boxcolor=black@0.6:boxborderw=14';
 const MARKER_STYLE = ':fontsize=48:fontcolor=white:box=1:boxcolor=black@0.6:boxborderw=10';
 const CARD_STYLE = ':fontsize=72:fontcolor=white';
@@ -30,8 +60,10 @@ export function buildChapterArgs({
   width = 1920,
   height = 1080,
   fps = 30,
-  factor = 10,
 }) {
+  if (segments.length === 0 && !titleCard && !endCard) {
+    throw new Error('Nothing to render: no segments and no cards');
+  }
   const files = [...new Set(segments.map((s) => s.file))];
   const uses = new Map(files.map((f) => [f, segments.filter((s) => s.file === f).length]));
   const textFiles = [];
@@ -43,10 +75,12 @@ export function buildChapterArgs({
 
   const inputArgs = files.flatMap((f) => ['-i', f]);
   const cardInput = `color=c=black:s=${width}x${height}:r=${fps}:d=${CARD_SECONDS}`;
-  const cards = [];
-  if (titleCard != null) cards.push({ name: 'card-title', text: titleCard, first: true });
-  if (endCard != null) cards.push({ name: 'card-end', text: endCard, first: false });
-  cards.forEach(() => inputArgs.push('-f', 'lavfi', '-i', cardInput));
+  const cardIndex = new Map();
+  for (const card of [titleCard && 'title', endCard && 'end']) {
+    if (!card) continue;
+    cardIndex.set(card, files.length + cardIndex.size);
+    inputArgs.push('-f', 'lavfi', '-i', cardInput);
+  }
 
   const parts = [];
   const sources = new Map();
@@ -64,24 +98,14 @@ export function buildChapterArgs({
     `scale=${width}:${height}:force_original_aspect_ratio=decrease,` +
     `pad=${width}:${height}:(ow-iw)/2:(oh-ih)/2,fps=${fps},setsar=1`;
 
-  const cardChain = (card, index) => {
-    const path = addText(`${card.name}.txt`, card.text);
-    const draw = drawtext(fontFile, path, 'x=(w-text_w)/2:y=(h-text_h)/2', CARD_STYLE);
-    return { index, chain: `${draw},format=yuv420p` };
-  };
-
   const labels = [];
-  const segmentLabel = (n) => `[v${n}]`;
-  const cardIndex = (card) => files.length + cards.indexOf(card);
-
-  let n = 0;
-  const title = cards.find((c) => c.first);
-  const end = cards.find((c) => !c.first);
-  if (title) {
-    const { index, chain } = cardChain(title, cardIndex(title));
-    parts.push(`[${index}:v]${chain}${segmentLabel(n)}`);
-    labels.push(segmentLabel(n++));
-  }
+  const addCard = (kind, text) => {
+    const textPath = addText(`card-${kind}.txt`, text);
+    const draw = drawtext(fontFile, textPath, 'x=(w-text_w)/2:y=(h-text_h)/2', CARD_STYLE);
+    parts.push(`[${cardIndex.get(kind)}:v]${draw},format=yuv420p[v${labels.length}]`);
+    labels.push(`[v${labels.length}]`);
+  };
+  if (titleCard) addCard('title', titleCard);
   const nextUse = new Map(files.map((f) => [f, 0]));
   segments.forEach((s, i) => {
     const src = sources.get(s.file)[nextUse.get(s.file)];
@@ -92,22 +116,19 @@ export function buildChapterArgs({
       fit,
     ];
     if (s.caption) {
-      const path = addText(`caption-${i}.txt`, s.caption);
+      const path = addText(`caption-${i}.txt`, wrapCaption(s.caption));
       chain.push(drawtext(fontFile, path, 'x=(w-text_w)/2:y=h-text_h-60', CAPTION_STYLE));
     }
-    if (s.marker) {
-      const path = addText('marker.txt', `▶▶ ${factor}×`);
+    if (s.marker && s.speed >= MARKER_MIN_SPEED) {
+      const rounded = Math.round(s.speed);
+      const path = addText(`marker-${rounded}.txt`, `▶▶ ${rounded}×`);
       chain.push(drawtext(fontFile, path, 'x=w-text_w-40:y=40', MARKER_STYLE));
     }
     chain.push('format=yuv420p');
-    parts.push(`${src}${chain.join(',')}${segmentLabel(n)}`);
-    labels.push(segmentLabel(n++));
+    parts.push(`${src}${chain.join(',')}[v${labels.length}]`);
+    labels.push(`[v${labels.length}]`);
   });
-  if (end) {
-    const { index, chain } = cardChain(end, cardIndex(end));
-    parts.push(`[${index}:v]${chain}${segmentLabel(n)}`);
-    labels.push(segmentLabel(n++));
-  }
+  if (endCard) addCard('end', endCard);
   parts.push(`${labels.join('')}concat=n=${labels.length}:v=1:a=0[out]`);
 
   const args = [

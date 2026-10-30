@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { buildChapterArgs, buildConcatArgs, buildGifArgs } from '../lib/ffmpeg-graph.mjs';
+import { buildChapterArgs, buildConcatArgs, buildGifArgs, fontCheckArgs, wrapCaption } from '../lib/ffmpeg-graph.mjs';
 
 const seg = (over = {}) => ({
   file: 'a.webm', from: 1, to: 4, speed: 1, caption: null, marker: false, ...over,
@@ -59,10 +59,10 @@ test('speed becomes a setpts divisor', () => {
   assert.ok(filterOf(args).includes('trim=start=1:end=4'));
 });
 
-test('marker adds a drawtext with the factor, no marker adds none', () => {
-  const on = build({ segments: [seg({ marker: true })], factor: 10 });
-  assert.ok(on.textFiles.some((t) => t.text === '▶▶ 10×'));
-  assert.match(filterOf(on.args), /drawtext=.*marker\.txt/);
+test('marker shows the real rounded speed, no marker adds none', () => {
+  const on = build({ segments: [seg({ marker: true, speed: 6.4 })] });
+  assert.ok(on.textFiles.some((t) => t.text === '▶▶ 6×'));
+  assert.match(filterOf(on.args), /drawtext=.*marker-6\.txt/);
   const off = build();
   assert.ok(!off.textFiles.some((t) => t.text.includes('▶▶')));
   assert.ok(!filterOf(off.args).includes('drawtext'));
@@ -110,4 +110,56 @@ test('buildGifArgs uses a palette', () => {
   const f = args[args.indexOf('-vf') + 1];
   assert.ok(f.includes('fps=12') && f.includes('palettegen') && f.includes('paletteuse'));
   assert.deepEqual(args.slice(-2), ['-y', 'out.gif']);
+});
+
+test('each distinct marker speed gets its own text file', () => {
+  const { textFiles } = build({
+    segments: [seg({ marker: true, speed: 3.1 }), seg({ marker: true, speed: 10 }), seg({ marker: true, speed: 3.2 })],
+  });
+  assert.deepEqual(
+    textFiles.map((t) => t.text),
+    ['▶▶ 3×', '▶▶ 10×'],
+  );
+});
+
+test('a wait that is hardly sped up shows no marker', () => {
+  const { args, textFiles } = build({ segments: [seg({ marker: true, speed: 1.2 })] });
+  assert.equal(textFiles.length, 0);
+  assert.ok(!filterOf(args).includes('drawtext'));
+});
+
+test('long captions are wrapped on word boundaries', () => {
+  const caption = 'Open het dashboard in een tweede tabblad en kijk naar de resultaten van de analyse';
+  const wrapped = wrapCaption(caption);
+  assert.ok(wrapped.includes('\n'));
+  for (const line of wrapped.split('\n')) assert.ok(line.length <= 60, line);
+  assert.equal(wrapped.replace(/\n/g, ' '), caption);
+  assert.equal(wrapCaption('kort'), 'kort');
+  assert.equal(wrapCaption('x'.repeat(80)), 'x'.repeat(80));
+  const { textFiles } = build({ segments: [seg({ caption })] });
+  assert.ok(textFiles.some((t) => t.text === wrapped));
+});
+
+test('no segments and no cards is a clear error, not concat=n=0', () => {
+  assert.throws(() => build({ segments: [] }), /Nothing to render/);
+});
+
+test('an empty string card is no card', () => {
+  const { args } = build({ titleCard: '', endCard: '' });
+  assert.match(filterOf(args), /concat=n=2/);
+  assert.ok(!inputsOf(args).some((i) => i.startsWith('color=')));
+});
+
+test('title and end card get consecutive inputs after the video files', () => {
+  const { args } = build({ titleCard: 'A', endCard: 'B' });
+  const f = filterOf(args);
+  assert.match(f, /\[2:v\]drawtext=[^;]*card-title\.txt[^;]*\[v0\]/);
+  assert.match(f, /\[3:v\]drawtext=[^;]*card-end\.txt[^;]*\[v3\]/);
+});
+
+test('fontCheckArgs renders the marker glyphs with the given font', () => {
+  const args = fontCheckArgs('/fonts/x.ttf');
+  const vf = args[args.indexOf('-vf') + 1];
+  assert.ok(vf.includes("fontfile='/fonts/x.ttf'") && vf.includes('▶') && vf.includes('×'));
+  assert.deepEqual(args.slice(-3), ['-f', 'null', '-']);
 });
