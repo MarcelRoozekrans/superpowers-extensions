@@ -73,6 +73,7 @@ Its first real use, which sets the bar for v1, is the incident-triage-demo's fal
 ### 1. Preflight
 
 Check before any work, and stop with install instructions if anything required is missing. Linux is the primary target, headless included, and preflight gives macOS install hints where they differ:
+
 - Node with a globally installed `playwright` package resolvable, and a Chromium it can launch.
 - `ffmpeg` and `ffprobe` on PATH, needed for both modes.
 - `git lfs` installed, and LFS initialised in the repo.
@@ -81,6 +82,7 @@ Check before any work, and stop with install instructions if anything required i
 ### 2. Storyboard
 
 Claude reads the feature's plan, spec and diff, plus any demo script the project already has. It writes `storyboard.md` in the output folder:
+
 - A title and an end-card line.
 - A numbered list of steps. Each step has one browser action (navigate, click, fill or paste, switch tab, wait for a result, scroll to) and a caption line written in the storyboard's language.
 - Each step that waits on a slow call marks that wait explicitly ("wait for the search results").
@@ -96,6 +98,7 @@ Claude walks the storyboard live with the Playwright MCP tools (the same `.mcp.j
 ### 4. Generate the script
 
 Claude writes `record.mjs` in the output folder from a template that ships with the skill. The template owns the mechanics, and the generated part is only the step list:
+
 - It launches Chromium with `recordVideo` at a fixed size (default 1920×1080), one browser context, and any extra tabs opened in that same context.
 - A visible cursor overlay is injected, because headless recordings show no mouse pointer. Movement and typing are slowed to a human pace. Pasting fills the field in one go, the way a real paste looks.
 - After each step there's a reading pause, longer after a result appears.
@@ -108,6 +111,7 @@ Multi-tab recording: Playwright writes one video file per page. The template rec
 ### 5. Post-process (ffmpeg)
 
 A post-process script that ships with the skill reads `timeline.json` and the raw page videos, then:
+
 - concatenates the active-tab segments;
 - speeds up each marked wait (default 10×, with a minimum on-screen time of about 1 s) and overlays a ⏩ marker during it;
 - in polished mode, burns in each step's caption for that step's duration, and adds a title card and an end card. Captions can be switched off, so a fallback video the presenter talks over can carry only the cards;
@@ -134,6 +138,7 @@ Re-record later: `node docs/demo-videos/<folder>/record.mjs` re-runs the steps a
 ### 7. Verify before announcing
 
 In the style of `regression-test`'s hard gate, before the skill says the video is done:
+
 - `ffprobe` confirms the MP4 exists, its duration is plausible against `timeline.json`, and it has the expected resolution.
 - Claude extracts a frame from the middle of each step and looks at it: the right page is showing, no error state, no secret visible, the caption is legible.
 - Only then does it report the file path, the duration and the storyboard.
