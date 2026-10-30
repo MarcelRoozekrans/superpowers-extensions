@@ -16,9 +16,9 @@ Een treffer is een aanleiding om de zin te controleren, geen automatische correc
 
 **Match:** `\bnaadlo{1,2}[sz]e?\b`
 
-**Bad:** De plug-in sluit naadloos aan op je bestaande werkwijze.
+**Bad:** De plug-in sluit naadloos aan op je bestaande configuratie en er is geen migratiestap.
 
-**Rewrite:** De plug-in leest de configuratie die je al hebt. Er is geen migratiestap.
+**Rewrite:** De plug-in werkt met de configuratie die je al hebt. Er is geen migratiestap.
 
 **Why:** Het woord claimt een resultaat zonder bewijs. Het concrete gedrag benoemen vervangt de claim.
 
@@ -28,7 +28,7 @@ Een treffer is een aanleiding om de zin te controleren, geen automatische correc
 
 **Match:** `\brobuust(?:e|er|ere|heid)?\b`
 
-**Bad:** Deze wijziging maakt de parser robuuster.
+**Bad:** Deze wijziging maakt de parser robuuster. Hij geeft nu een foutmelding bij een leeg bestand in plaats van te crashen.
 
 **Rewrite:** De parser geeft nu een foutmelding bij een leeg bestand in plaats van te crashen.
 
@@ -52,7 +52,7 @@ Een treffer is een aanleiding om de zin te controleren, geen automatische correc
 
 **Match:** `\been scala (?:aan|van)\b`
 
-**Bad:** De bibliotheek biedt een scala aan opties voor het formatteren van datums.
+**Bad:** De bibliotheek biedt een scala aan opties voor het formatteren van datums: kort, lang, ISO en relatief.
 
 **Rewrite:** De bibliotheek kent vier datumnotaties: kort, lang, ISO en relatief.
 
@@ -124,9 +124,9 @@ Een treffer is een aanleiding om de zin te controleren, geen automatische correc
 
 **Match:** `\bdeze (?:handleiding|gids) (?:neemt|leidt) (?:je|u)\b`
 
-**Bad:** In dit gedeelte gaan we bekijken hoe verlopen werkt.
+**Bad:** In dit gedeelte gaan we bekijken hoe verlopen werkt: een item verdwijnt zodra de sleutel de eerstvolgende keer wordt gelezen.
 
-**Rewrite:** Verlopen gebeurt lui: een item verdwijnt zodra de sleutel de eerstvolgende keer wordt gelezen.
+**Rewrite:** Een verlopen item verdwijnt zodra de sleutel de eerstvolgende keer wordt gelezen.
 
 **Why:** De aankondiging vertraagt de inhoud met een zin. Een schrijver begint met de inhoud.
 
@@ -224,7 +224,7 @@ Een treffer is een aanleiding om de zin te controleren, geen automatische correc
 
 **Match:** `\bhet lijkt erop dat\b`
 
-**Bad:** Dit zou mogelijk in sommige gevallen kunnen leiden tot een mislukte opzoeking.
+**Bad:** Dit zou mogelijk in sommige gevallen kunnen leiden tot een mislukte opzoeking, bijvoorbeeld bij een naam met een spatie aan het eind.
 
 **Rewrite:** De opzoeking mislukt als de naam een spatie aan het eind heeft.
 
@@ -242,7 +242,7 @@ Een treffer is een aanleiding om de zin te controleren, geen automatische correc
 
 **Match:** `\bik help (?:je|u) graag\b`
 
-**Bad:** Goede vraag! Ik help je graag verder.
+**Bad:** Goede vraag! Ik help je graag verder. De vlag staat standaard uit en zet je aan met `--cache`.
 
 **Rewrite:** De vlag staat standaard uit. Zet hem aan met `--cache`.
 
@@ -270,7 +270,7 @@ Een treffer is een aanleiding om de zin te controleren, geen automatische correc
 
 **Match:** `\bik heb (?:hieronder )?(?:een |de )?(?:samenvatting|conceptversie|concept) (?:opgesteld|geschreven|gemaakt)\b`
 
-**Bad:** Ik heb hieronder een samenvatting opgesteld. Ik hoop dat dit je helpt!
+**Bad:** Ik heb hieronder een samenvatting opgesteld. De crash kwam van een ongetrimde naam en de fix trimt die voor het splitsen. Ik hoop dat dit je helpt!
 
 **Rewrite:** De crash kwam van een ongetrimde naam. De fix trimt die voor het splitsen.
 
@@ -302,7 +302,7 @@ Een treffer is een aanleiding om de zin te controleren, geen automatische correc
 
 **Bad:** Het spreekt voor zich dat we de naam trimmen, gezien het feit dat spaties de splitsing braken.
 
-**Rewrite:** Het trimmen van de naam voorkomt de crash die een spatie aan het eind in de splitsing veroorzaakte.
+**Rewrite:** Het trimmen van de naam voorkomt de crash die spaties in de splitsing veroorzaakten.
 
 **Why:** Elke vulfrase kost de lezer een tel. Test: schrap hem, en als de betekenis blijft staan was het vulling.
 
@@ -324,6 +324,6 @@ Een treffer is een aanleiding om de zin te controleren, geen automatische correc
 
 **Bad:** De oorzaak zit in de feestdagenlijst. Daar ontbreekt nieuwjaarsdag, dus een datum in december ziet 1 januari niet als feestdag.
 
-**Rewrite:** De oorzaak zit in de feestdagenlijst: nieuwjaarsdag ontbreekt voor het jaar na de opgegeven datum.
+**Rewrite:** De oorzaak zit in de feestdagenlijst: nieuwjaarsdag ontbreekt.
 
 **Why:** Herhaling in een korte tekst geeft de lezer niets nieuws en maakt de tekst langer dan de feiten. Kies de plek waar de uitleg het meest helpt en schrap de andere.

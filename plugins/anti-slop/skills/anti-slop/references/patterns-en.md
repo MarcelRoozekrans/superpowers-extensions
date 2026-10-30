@@ -28,9 +28,9 @@ A hit is a prompt to check the sentence, not an automatic edit: some matches are
 
 **Match:** `\bseamless(?:ly)?\b`
 
-**Bad:** The plugin integrates seamlessly with your existing workflow.
+**Bad:** The plugin integrates seamlessly with your existing config, and there is no migration step.
 
-**Rewrite:** The plugin reads the config you already have. No migration step.
+**Rewrite:** The plugin works with the config you already have. There is no migration step.
 
 **Why:** The word claims a result and shows no evidence. Naming the concrete behaviour replaces the claim.
 
@@ -40,7 +40,7 @@ A hit is a prompt to check the sentence, not an automatic edit: some matches are
 
 **Match:** `\brobust(?:ness)?\b`
 
-**Bad:** This change makes the parser more robust.
+**Bad:** This change makes the parser more robust. It now returns an error for an empty file instead of throwing.
 
 **Rewrite:** The parser now returns an error for an empty file instead of throwing.
 
@@ -112,9 +112,9 @@ A hit is a prompt to check the sentence, not an automatic edit: some matches are
 
 **Match:** `\bthis (?:guide|document|section) will (?:walk|take) you\b`
 
-**Bad:** In this section, we will walk through how expiry works.
+**Bad:** In this section, we will walk through how expiry works: an entry is removed the next time its key is read.
 
-**Rewrite:** Expiry is lazy: an entry is removed the next time its key is read.
+**Rewrite:** An expired entry is removed the next time its key is read.
 
 **Why:** The announcement delays the content by a sentence. A human writer starts with the content.
 
@@ -126,7 +126,7 @@ A hit is a prompt to check the sentence, not an automatic edit: some matches are
 
 **Bad:** Additionally, the command prints a summary.
 
-**Rewrite:** The command prints a summary when it finishes.
+**Rewrite:** The command prints a summary.
 
 **Why:** The connective adds a stiff tone and no logic. If the points relate, say how; if not, start a new paragraph.
 
@@ -136,7 +136,7 @@ A hit is a prompt to check the sentence, not an automatic edit: some matches are
 
 **Match:** `\bif you (?:have not|haven(?:'|’)t|have yet to)(?: yet)? (?:install(?:ed)?|set up|configur(?:e|ed))\b`
 
-**Bad:** If you have not installed the library yet, run the command below.
+**Bad:** If you have not installed the library yet, run the command below: `pip install quillcache`.
 
 **Rewrite:** Install it with `pip install quillcache`.
 
@@ -206,9 +206,9 @@ A hit is a prompt to check the sentence, not an automatic edit: some matches are
 
 **Match:** `\bit (?:seems|appears) (?:that|to be)\b`
 
-**Bad:** This may potentially cause the lookup to fail in some cases.
+**Bad:** This may potentially cause the lookup to fail in some cases, such as a name with a trailing space.
 
-**Rewrite:** The lookup fails when the name has a trailing space.
+**Rewrite:** The lookup fails on a name with a trailing space.
 
 **Why:** Stacked qualifiers dodge being wrong. State what is known, and say plainly what is not known.
 
@@ -224,7 +224,7 @@ A hit is a prompt to check the sentence, not an automatic edit: some matches are
 
 **Match:** `\bi(?:'|’)d be (?:happy|glad|delighted) to\b`
 
-**Bad:** Great question! I'd be happy to help with that.
+**Bad:** Great question! I'd be happy to help with that. The flag is off by default; turn it on with `--cache`.
 
 **Rewrite:** The flag is off by default. Turn it on with `--cache`.
 
@@ -252,7 +252,7 @@ A hit is a prompt to check the sentence, not an automatic edit: some matches are
 
 **Match:** `\bi(?:'|’)ve (?:drafted|prepared|put together)\b`
 
-**Bad:** I've drafted a summary below. I hope this helps!
+**Bad:** I've drafted a summary below. The crash came from an untrimmed name, and the fix trims it. I hope this helps!
 
 **Rewrite:** Summary: the crash came from an untrimmed name, and the fix trims it.
 
@@ -282,7 +282,7 @@ A hit is a prompt to check the sentence, not an automatic edit: some matches are
 
 **Bad:** In order to avoid the crash, we trim the name, due to the fact that spaces broke the split.
 
-**Rewrite:** Trimming the name avoids the crash that a trailing space caused in the split.
+**Rewrite:** Trimming the name avoids the crash that spaces caused in the split.
 
 **Why:** Each filler phrase costs the reader a beat. A test: delete it, and if the meaning holds, it was filler.
 
