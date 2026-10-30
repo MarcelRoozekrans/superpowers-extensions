@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="nl"><head><meta charset="utf-8"><title>App</title>
+<style>body{font:32px sans-serif;margin:80px;background:#fff}button{font-size:32px;padding:16px 32px}</style></head>
+<body>
+<h1>Demo app</h1>
+<button id="go">Analyse</button>
+<p id="out"></p>
+<input id="name" placeholder="Naam" style="font-size:28px">
+<p><a href="/second.html" target="_blank">Dashboard openen</a></p>
+<script>
+document.getElementById('go').addEventListener('click', () => {
+  const out = document.getElementById('out');
+  out.textContent = 'Bezig…';
+  setTimeout(() => { out.textContent = 'Resultaat: klaar'; }, 2000);
+});
+</script>
+</body></html>
