@@ -11,7 +11,7 @@ function filterValue(value) {
 
 function drawtext(fontFile, textPath, position, extra = '') {
   return (
-    `drawtext=fontfile=${filterValue(fontFile)}:textfile=${filterValue(textPath)}` +
+    `drawtext=fontfile=${filterValue(fontFile)}:textfile=${filterValue(textPath)}:expansion=none` +
     `:${position}${extra}`
   );
 }

@@ -45,6 +45,14 @@ test('caption text lives in a text file, never in the filter', () => {
   assert.match(f, /drawtext=fontfile='\/fonts\/x\.ttf':textfile='\/tmp\/caps\/caption-0\.txt'/);
 });
 
+test('drawtext disables percent expansion so literal % in text survives', () => {
+  const { args } = build({ segments: [seg({ caption: '100%' })], titleCard: 'T' });
+  const f = filterOf(args);
+  const draws = f.match(/drawtext=[^\[;]*/g);
+  assert.equal(draws.length, 2);
+  for (const d of draws) assert.ok(d.includes(':expansion=none'), d);
+});
+
 test('speed becomes a setpts divisor', () => {
   const { args } = build({ segments: [seg({ speed: 3.1 })] });
   assert.ok(filterOf(args).includes('setpts=(PTS-STARTPTS)/3.1'));
