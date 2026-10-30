@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.26.0](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.25.0...superpowers-extensions-v1.26.0) (2026-10-30)
+
+
+### Features
+
+* **anti-slop:** add a skill that rewrites AI prose tics before publishing ([#161](https://github.com/MarcelRoozekrans/superpowers-extensions/issues/161)) ([bf2661b](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/bf2661b24c3c744f519dade9c3d47c450d2ba605))
+
+
+### Bug Fixes
+
+* **context-budget:** give the paste line in Remote Control sessions ([#157](https://github.com/MarcelRoozekrans/superpowers-extensions/issues/157)) ([6591a90](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/6591a90785061d6017854c6c5c4413d1f650f901))
+
 ## [1.25.0](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.24.0...superpowers-extensions-v1.25.0) (2026-10-30)
 
 
