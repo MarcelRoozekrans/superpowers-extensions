@@ -970,7 +970,7 @@ claude mcp add playwright -- npx @playwright/mcp@latest --caps=testing,pdf,visio
 
 ### Verify Installation
 
-In Claude Code, the skills should appear when you type `/regression-test`, `/pre-push-review`, `/refactor-analysis`, `/decision-tracker`, `/roslyn-codelens-integration`, `/memorylens-integration`, `/project-orchestration`, `/ui-workflow`, `/ui-design-system`, `/squad`, `/compress-memory`, `/logo-design`, or `/context-budget`, or `/anti-slop`, or when you ask Claude to perform regression testing, a pre-push review, a refactor impact analysis, decision tracking, .NET code graph analysis, .NET memory profiling, project lifecycle management, UI design contract work, design system generation, to activate your agent team, to compress a memory file, to design or audit a brand mark, or to rewrite AI prose tics out of a draft.
+In Claude Code, the skills should appear when you type `/regression-test`, `/pre-push-review`, `/refactor-analysis`, `/decision-tracker`, `/roslyn-codelens-integration`, `/memorylens-integration`, `/project-orchestration`, `/ui-workflow`, `/ui-design-system`, `/squad`, `/compress-memory`, `/logo-design`, `/context-budget`, or `/anti-slop`, or when you ask Claude to perform regression testing, a pre-push review, a refactor impact analysis, decision tracking, .NET code graph analysis, .NET memory profiling, project lifecycle management, UI design contract work, design system generation, to activate your agent team, to compress a memory file, to design or audit a brand mark, or to rewrite AI prose tics out of a draft.
 
 ---
 
@@ -1241,15 +1241,15 @@ superpowers-extensions/
 │   │           ├── references/             # construction / mark-types / reproduction / anti-slop
 │   │           ├── templates/              # LOGO.md skeleton + contact-sheet render harness
 │   │           └── scripts/                # export-raster.mjs — SVG-to-PNG/ICO icon exporter
-│   └── context-budget/                     # Model rule and fresh-session handoff (13th plugin)
-│       ├── .claude-plugin/
-│       │   └── plugin.json
-│       ├── hooks/
-│       │   └── hooks.json                  # UserPromptSubmit size check, PreToolUse dispatch check
-│       └── skills/
-│           └── context-budget/
-│               ├── SKILL.md                # Model Choice, Fresh-Session Handoff, Configuration
-│               └── scripts/                # size-check.mjs, dispatch-check.mjs and shared helpers
+│   ├── context-budget/                     # Model rule and fresh-session handoff (13th plugin)
+│   │   ├── .claude-plugin/
+│   │   │   └── plugin.json
+│   │   ├── hooks/
+│   │   │   └── hooks.json                  # UserPromptSubmit size check, PreToolUse dispatch check
+│   │   └── skills/
+│   │       └── context-budget/
+│   │           ├── SKILL.md                # Model Choice, Fresh-Session Handoff, Configuration
+│   │           └── scripts/                # size-check.mjs, dispatch-check.mjs and shared helpers
 │   └── anti-slop/                          # AI prose tics rewritten out of published text (14th plugin)
 │       ├── .claude-plugin/
 │       │   └── plugin.json
