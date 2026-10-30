@@ -1,7 +1,7 @@
 # Demo Video Skill — Design
 
 Date: 2026-10-30
-Status: awaiting approval
+Status: approved
 
 ## Intent
 
