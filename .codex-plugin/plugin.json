@@ -23,13 +23,14 @@
     "squad",
     "compress-memory",
     "logo-design",
-    "context-budget"
+    "context-budget",
+    "anti-slop"
   ],
   "skills": "./plugins/",
   "interface": {
     "displayName": "Superpowers Extensions",
     "shortDescription": "Quality gates, refactor analysis, project lifecycle, UI workflow, and design systems for the superpowers suite.",
-    "longDescription": "Thirteen extension skills that compose with obra/superpowers: regression-test (Playwright UI testing), pre-push-review (branch quality gate), refactor-analysis (transitive impact analysis), decision-tracker (cross-session memory), roslyn-codelens-integration (.NET semantic intelligence), memorylens-integration (.NET memory profiling), project-orchestration (multi-session lifecycle with brainstorm-first milestones), ui-workflow (design contracts + 3-layer audit), ui-design-system (84 vendored references + 5 OKLch directions), squad (persistent AI agent teams), compress-memory (memory file compression), logo-design (brand marks as SVG), and context-budget (subagent model rule and fresh-session handoff). Source-of-truth markdown skills work across Claude Code, Cursor, Codex, Gemini, Copilot CLI, and OpenCode.",
+    "longDescription": "Fourteen extension skills that compose with obra/superpowers: regression-test (Playwright UI testing), pre-push-review (branch quality gate), refactor-analysis (transitive impact analysis), decision-tracker (cross-session memory), roslyn-codelens-integration (.NET semantic intelligence), memorylens-integration (.NET memory profiling), project-orchestration (multi-session lifecycle with brainstorm-first milestones), ui-workflow (design contracts + 3-layer audit), ui-design-system (84 vendored references + 5 OKLch directions), squad (persistent AI agent teams), compress-memory (memory file compression), logo-design (brand marks as SVG), context-budget (subagent model rule and fresh-session handoff), and anti-slop (AI prose tics rewritten out of published text). Source-of-truth markdown skills work across Claude Code, Cursor, Codex, Gemini, Copilot CLI, and OpenCode.",
     "developerName": "Marcel Roozekrans",
     "category": "Coding",
     "capabilities": [
