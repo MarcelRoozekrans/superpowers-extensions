@@ -477,7 +477,7 @@ docs/demo-videos/YYYY-MM-DD-<feature>/
 
 ### Prerequisites
 
-Node 20 or newer, a global `playwright` install with Chromium (`npm i -g playwright && npx playwright install chromium`), `ffmpeg` and `ffprobe`, and `git lfs`. `scripts/preflight.mjs` checks all of them and prints install hints for Linux and macOS.
+Node 20 or newer, a global `playwright` install with Chromium (`npm i -g playwright && npx playwright install chromium`, on Linux `npx playwright install --with-deps chromium`), `ffmpeg` and `ffprobe`, `git lfs` initialised with `git lfs install`, and a font that covers the speed marker (DejaVu Sans on Linux). `node scripts/preflight.mjs [url] [--repo <root>]` checks all of them, renders one test frame with the font, and prints install hints for Linux and macOS. `--repo` makes it check the LFS setup of that repository.
 
 ---
 

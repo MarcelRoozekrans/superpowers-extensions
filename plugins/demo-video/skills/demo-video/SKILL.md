@@ -34,14 +34,21 @@ Ask which mode if the request does not say. Both modes are unmistakable:
 Paths below are relative to this skill's directory. The output folder is `docs/demo-videos/YYYY-MM-DD-<feature>/` in the user's repo, and `<folder>` stands for it.
 
 1. **Pick the mode.** See Modes.
-2. **Preflight.** Run `node scripts/preflight.mjs <app-url>`. It checks Node 20 or newer, a global `playwright` with a launchable Chromium, `ffmpeg`, `ffprobe`, `git lfs` and that the URL answers. On any `FAIL`, show the install hint and stop.
+2. **Preflight.** Run `node scripts/preflight.mjs <app-url> --repo <repoRoot>`. It checks Node 20 or newer, a global `playwright` with a launchable Chromium, `ffmpeg`, `ffprobe`, `git lfs` with its filter initialised in that repo (`git lfs install`), a font that covers the speed marker with a one-frame `drawtext` render, and that the URL answers. On any `FAIL`, show the install hint and stop.
 3. **Write `storyboard.md`** in `<folder>` from the feature's plan, spec and diff, plus any demo script the project already has. Follow [references/storyboard.md](references/storyboard.md) for the format. Mark every slow call with **Wait for**. Use invented demo data only.
 4. **Polished mode: wait for approval.** See the gate above. Quick mode skips this step.
-5. **Explore every step live** with the Playwright MCP tools, on the real app. If the Playwright MCP tools are missing or cannot launch a browser, explore the steps with a short throwaway script that uses the global Playwright, the same one `record.mjs` uses, and delete it afterwards. Confirm each step works and pick stable locators: role and name first, then test id, then CSS. Note which element shows that each slow call has finished. If a step cannot be made to work, stop and report it. **Never record around a failing step.**
-6. **Scaffold.** Run `node scripts/scaffold.mjs <repoRoot> <folder>`. It copies `lib/` and a `record.mjs` template into the folder and adds the Git LFS and ignore rules to `.gitattributes` and `.gitignore`.
-7. **Fill in `record.mjs`.** Set `baseUrl`, `mode`, `title` and `endCard`; set `captions: false` in the `record({...})` call for cards without captions. Then turn the storyboard into `chapters`; the mapping is in [references/storyboard.md](references/storyboard.md). Put login in `setup` or a `storageState` file, never in a step.
+5. **Scaffold.** Run `node scripts/scaffold.mjs <repoRoot> <folder>`. It copies `lib/` and a `record.mjs` template into the folder and adds the Git LFS and ignore rules to `.gitattributes` and `.gitignore`, in the line ending the files already use. Scaffolding first gives the explore fallback below its `lib/`. When you re-record an older folder after a plugin update, run `scaffold.mjs` again first: it overwrites `lib/` with the current version and keeps your `record.mjs`.
+6. **Explore every step live** with the Playwright MCP tools, on the real app. If the Playwright MCP tools are missing or cannot launch a browser, explore the steps with a short throwaway script and delete it afterwards. Load Playwright in it with `import { loadPlaywright } from '<folder>/lib/playwright.mjs'`, the loader `record.mjs` uses. Confirm each step works and pick stable locators: role and name first, then test id, then CSS. Note which element shows that each slow call has finished. If a step cannot be made to work, stop and report it. **Never record around a failing step.**
+7. **Fill in `record.mjs`.** Set these fields of the `record({...})` call:
+   - `baseUrl`, `mode`, `title` and `endCard`;
+   - `locale`, from the storyboard's language (`'nl-NL'` for a Dutch storyboard), so the app renders in the same language as the captions; `timezoneId` and `contextOptions` when the app needs them;
+   - `captions: false` for cards without captions;
+   - `setup`, with a silent login for an app that needs one, or `storageState`, a path relative to the folder, such as `.auth/state.json`;
+   - `pace`, `speedFactor` and `minWait` only when the defaults do not suit the app.
+
+   Then turn the storyboard into `chapters`; the mapping is in [references/storyboard.md](references/storyboard.md). Put login in `setup` or a `storageState` file, never in a step.
 8. **Record.** Run `node <folder>/record.mjs`. It records, writes `timeline.json` and post-processes in one command. A failed step exits non-zero and produces no video.
-9. **Verify.** Run `node <folder>/lib/verify.mjs <folder>`, then do the frame review from the gate.
+9. **Verify.** Run `node <folder>/lib/verify.mjs <folder>`, then do the frame review from the gate. A `frame looks blank` problem can be a false positive on a page that is mostly a footer or a sidebar: view the frame. If it shows the right page, carry on; do not re-record in a loop.
 10. **Report** the paths of the videos, their durations, the storyboard, and the re-record command `node <folder>/record.mjs`. Show the `.gitattributes` and `.gitignore` diff.
 
 **Never commit.** Not the videos, not the folder, not the `.gitattributes` and `.gitignore` changes. The user reviews the diff and commits.
