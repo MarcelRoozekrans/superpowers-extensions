@@ -58,7 +58,7 @@ Een treffer is een aanleiding om de zin te controleren, geen automatische correc
 
 ### Het werkwoord `duiken`
 
-**Tell:** `duiken` of `duik` plus `in` voor het bespreken van een onderwerp, vaak met `dieper`.
+**Tell:** `duiken` plus `in` voor het bespreken van een onderwerp, vaak met `dieper`. De Match dekt alleen de vormen met `we` of `je` en de vormen met `dieper`; kale vormen zoals een koers die duikt blijven buiten beeld.
 
 **Match:** `\bduik(?:en|t)?\s+(?:we|je)\s+(?:dieper\s+)?in\b`
 
@@ -80,7 +80,7 @@ Een treffer is een aanleiding om de zin te controleren, geen automatische correc
 
 **Rewrite:** De module leest de bestaande index. Opzoekingen worden daardoor sneller.
 
-**Why:** Drie woorden voor een werkwoord vullen de zin op zonder betekenis toe te voegen. Alleen een tic waar het een gewoon werkwoord vervangt: bij een zin als "hij heeft er geen gebruik van gemaakt" past het wel.
+**Why:** Drie woorden voor een werkwoord vullen de zin op zonder betekenis toe te voegen. Alleen een tic waar het een gewoon werkwoord vervangt: in `zij maken gebruik van hun recht op inzage` is de uitdrukking gewoon Nederlands.
 
 ### Stock-openers over het tijdperk
 
@@ -186,7 +186,7 @@ Een treffer is een aanleiding om de zin te controleren, geen automatische correc
 
 **Bad:** Een PR-beschrijving met een kopje "Samenvatting" en vier opsommingstekens voor één fix.
 
-**Rewrite:** De sorteerfunctie crashte op bestandsnamen met een spatie voor de extensie, omdat de extensie uit de ongetrimde naam kwam. Nu wordt de naam eerst getrimd en een test dekt het geval. Sluit #214.
+**Rewrite:** De sorteerfunctie crashte op bestandsnamen met een spatie voor de extensie, omdat de extensie uit de ongetrimde naam kwam. Nu wordt de naam eerst getrimd en een test dekt het geval. Closes #214.
 
 **Why:** Opmaak van lange documenten laat een kort bericht klinken als een rapport. Houd kopjes alleen waar een sjabloon of commitgrammatica ze eist.
 
