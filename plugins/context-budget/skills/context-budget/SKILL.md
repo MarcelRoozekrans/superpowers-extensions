@@ -45,7 +45,9 @@ Hand off only at a natural break, and only when the next work needs nothing from
 
 ### Start the new session yourself
 
-If the `create_session` tool is available (Claude Code Remote, including a Remote Control server on the user's own machine), start the new session and close this one without asking. The user does not open sessions by hand.
+If the `create_session` tool is available in a cloud session (Claude Code Remote), start the new session and close this one without asking. The user does not open sessions by hand.
+
+First call `get_session` without a `session_id`. If `environment_kind` is `bridge`, this is a Remote Control session on the user's own machine. There `create_session` is refused with `MCP tool call requires approval`, even in bypass permissions mode and with the tool on the allow list, because the remote-session service asks for an approval this session cannot give. Skip the steps below and follow [Without `create_session`](#without-create_session).
 
 1. **Leave nothing behind.** Commit and push work in progress, including the handoff record, or say what is uncommitted. Archiving this session can remove its worktree.
 2. **Make the first message self-contained.** A new session may get its own worktree, where this one's uncommitted files do not exist. With `STATE.md`, the message says to run `resume-work` and names the branch and the first step. Otherwise it holds the full handoff with the five headings above, with absolute paths, and ends with `Continue from Next step.`
@@ -55,7 +57,7 @@ If the `create_session` tool is available (Claude Code Remote, including a Remot
 
 ### Without `create_session`
 
-If the tool is missing, or `create_session` is refused (for example at a session lineage limit), give the user one line to paste into a new session, for example `Read .claude/handoff.md and continue from Next step.` or `Run resume-work on branch <branch>.`, and leave this session open.
+If the tool is missing, this is a `bridge` session, or `create_session` is refused (for example at a session lineage limit, or with `requires approval`), give the user one line to paste into a new session, for example `Read .claude/handoff.md and continue from Next step.` or `Run resume-work on branch <branch>.`, and leave this session open. Do not retry a refused `create_session`: the same call gets the same refusal.
 
 ## Configuration
 
