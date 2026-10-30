@@ -8,6 +8,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadPlaywright } from '../lib/playwright.mjs';
 import { record } from '../lib/runtime.mjs';
+import { verify } from '../lib/verify.mjs';
 
 const fixtures = path.join(path.dirname(fileURLToPath(import.meta.url)), 'fixtures');
 const FAST = { mouseSteps: 5, beforeClick: 50, keyDelay: 10, reading: 300, readingAfterWait: 300, expectTimeout: 2000 };
@@ -98,9 +99,11 @@ test('polished recording with two chapters, a second tab and a wait', { skip, ti
   assert.equal(s1.chapter, 'c1');
   assert.equal(s1.page, 'p0');
   assert.ok(Math.abs(s1.wait.end - s1.wait.start - 2) <= 0.5, JSON.stringify(s1.wait));
-  // A step's page is the one active when the step starts.
-  assert.equal(tl.steps[1].page, 'p0');
-  assert.equal(tl.steps[2].page, 'p1');
+  // A step's page is the one active once its run has finished.
+  assert.equal(tl.steps[1].page, 'p1');
+  assert.equal(tl.steps[2].page, 'p0');
+  const result = await verify(folder);
+  assert.equal(result.ok, true, JSON.stringify(result));
 });
 
 test('setup time is not part of the output', { skip, timeout: 180000 }, async () => {

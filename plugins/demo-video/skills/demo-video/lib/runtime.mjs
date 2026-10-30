@@ -159,10 +159,16 @@ export async function record(spec) {
       chapters.push({ id, title: chapter.title, slug: slugify(chapter.title) });
       for (const [si, step] of chapter.steps.entries()) {
         const index = si + 1;
-        const rec = { chapter: id, index, caption: step.caption, page: pages.find((p) => p.page === state.active).id };
+        const rec = { chapter: id, index, caption: step.caption };
         try {
+          const before = state.active;
           rec.start = now();
           await step.run(h);
+          // A step belongs to the page that is active once run has finished, because
+          // waitFor, expect and the reading pause happen there. When run switched tabs,
+          // start only now, so the segment holds no frames of the old tab.
+          if (state.active !== before) rec.start = now();
+          rec.page = pages.find((p) => p.page === state.active).id;
           if (step.waitFor) {
             const wait = { start: now() };
             await step.waitFor(h);
