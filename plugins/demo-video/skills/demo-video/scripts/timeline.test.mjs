@@ -136,3 +136,17 @@ test('a wait that starts at the step start or ends at the step end drops that si
   assert.deepEqual(at({ start: 2, end: 8 }).map((s) => s.marker), [true, false]);
   assert.deepEqual(at({ start: 6, end: 12 }).map((s) => s.marker), [false, true]);
 });
+
+test('segments are clamped to the first painted frame and an emptied segment is dropped', () => {
+  const t = timeline({
+    pages: [{ id: 'p0', file: 'raw/p0.webm', openedAt: 10, firstPaint: 1 }, { id: 'p1', file: 'raw/p1.webm', openedAt: 0 }],
+    steps: [
+      { chapter: 'c1', index: 1, caption: 'A', page: 'p0', start: 10, end: 14 },
+      { chapter: 'c1', index: 2, caption: 'B', page: 'p0', start: 10, end: 10.5 },
+    ],
+  });
+  const segs = segmentsForChapter(t, 'c1');
+  assert.equal(segs.length, 1);
+  assert.equal(segs[0].from, 1);
+  assert.equal(segs[0].to, 4);
+});

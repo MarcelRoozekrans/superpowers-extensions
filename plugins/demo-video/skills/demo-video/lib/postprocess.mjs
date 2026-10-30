@@ -6,6 +6,7 @@ import { mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
+import { withFirstPaint } from './firstpaint.mjs';
 import { chapterSlug, segmentsForChapter } from './timeline.mjs';
 import { buildChapterArgs, buildConcatArgs, buildGifArgs } from './ffmpeg-graph.mjs';
 
@@ -13,7 +14,6 @@ const run = promisify(execFile);
 const MAC_FONTS = [
   '/System/Library/Fonts/Supplemental/Arial Unicode.ttf',
   '/Library/Fonts/Arial Unicode.ttf',
-  '/System/Library/Fonts/Supplemental/Arial.ttf',
 ];
 export const CARD_SECONDS = 2.5;
 
@@ -33,7 +33,7 @@ export async function findFont({ command = 'fc-list', macFonts = MAC_FONTS } = {
   const mac = macFonts.find((f) => existsSync(f));
   if (mac) return mac;
   throw new Error(
-    'No usable font found: install DejaVu Sans (fontconfig must find a font covering U+25B6) or use macOS Arial Unicode.',
+    'No usable font found: install DejaVu Sans (fontconfig must find a font covering U+25B6) or use macOS with Arial Unicode.',
   );
 }
 
@@ -124,10 +124,11 @@ export async function postprocess(folder, { captions } = {}) {
     }
   }
 
+  const measured = await withFirstPaint(timeline, folder);
   const tl = {
     ...timeline,
     captions: plan.captions,
-    pages: timeline.pages.map((p) => ({ ...p, file: path.resolve(folder, p.file) })),
+    pages: measured.pages.map((p) => ({ ...p, file: path.resolve(folder, p.file) })),
   };
   const written = [];
 

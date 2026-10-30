@@ -4,7 +4,8 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import { existsSync, mkdtempSync, mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { findFont, postprocess } from '../lib/postprocess.mjs';
+import { firstPaintedFrame } from '../lib/firstpaint.mjs';
+import { expectedDuration, findFont, planOutputs, postprocess } from '../lib/postprocess.mjs';
 import { verify } from '../lib/verify.mjs';
 
 const hasFfmpeg = spawnSync('ffmpeg', ['-version']).status === 0;
@@ -212,4 +213,51 @@ test('findFont falls back to a macOS font when fontconfig is missing', async () 
   const fake = path.join(root ?? tmpdir(), 'fake-font.ttf');
   writeFileSync(fake, 'x');
   assert.equal(await findFont({ command: 'no-such-fc-command', macFonts: ['/nonexistent.ttf', fake] }), fake);
+});
+
+function blankStartVideo(dir, whiteSeconds) {
+  const file = path.join(dir, 'raw', 'p0.webm');
+  execFileSync('ffmpeg', [
+    '-hide_banner', '-loglevel', 'error',
+    '-f', 'lavfi', '-i', `color=c=white:size=1920x1080:rate=30:d=${whiteSeconds}`,
+    '-f', 'lavfi', '-i', 'testsrc=size=1920x1080:rate=30:d=8',
+    '-filter_complex', '[0:v][1:v]concat=n=2:v=1:a=0',
+    '-c:v', 'libvpx-vp9', '-deadline', 'realtime', '-cpu-used', '8', '-y', file,
+  ]);
+  return file;
+}
+
+test('firstPaintedFrame finds the first non-uniform frame of a blank-start clip', { skip }, async () => {
+  const dir = folderWith(timeline());
+  const t = await firstPaintedFrame(blankStartVideo(dir, 1));
+  assert.ok(t >= 0.9 && t <= 1.3, String(t));
+  assert.equal(await firstPaintedFrame(rawVideo), 0);
+});
+
+test('postprocess starts a blank-start page at its first painted frame and verify agrees', { skip }, async () => {
+  const tl = timeline({
+    mode: 'quick',
+    chapters: [{ id: 'c1', title: 'Only', slug: 'only' }],
+    steps: [{ chapter: 'c1', index: 1, caption: 'A', page: 'p0', start: 0, end: 4 }],
+  });
+  const dir = folderWith(tl);
+  blankStartVideo(dir, 1);
+  await postprocess(dir);
+  const out = Number(
+    execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', path.join(dir, 'demo.mp4')]).toString(),
+  );
+  // 4 s step minus about 1 s of white
+  assert.ok(out > 2.7 && out < 3.3, String(out));
+  const result = await verify(dir);
+  assert.deepEqual(result.problems, []);
+  assert.equal(result.frames.length, 1);
+});
+
+test('a page that paints at once is not clamped', { skip }, async () => {
+  const dir = folderWith(timeline());
+  const { withFirstPaint } = await import('../lib/firstpaint.mjs');
+  const measured = await withFirstPaint(timeline(), dir);
+  assert.equal(measured.pages[0].firstPaint, 0);
+  const plan = planOutputs(measured);
+  assert.ok(expectedDuration(measured, plan.chapterFiles[0]) > 0);
 });

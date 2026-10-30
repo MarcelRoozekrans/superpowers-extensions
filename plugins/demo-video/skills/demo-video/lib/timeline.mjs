@@ -35,10 +35,14 @@ export function segmentsForChapter(timeline, chapterId) {
     }
     const caption = timeline.captions ? step.caption : null;
     const push = (from, to, speed, marker) => {
+      // Nothing before the page's first painted frame is used; a segment left empty is dropped.
+      const start = Math.max(from - page.openedAt, page.firstPaint ?? 0);
+      const end = to - page.openedAt;
+      if (end <= start) return;
       segments.push({
         file: page.file,
-        from: from - page.openedAt,
-        to: to - page.openedAt,
+        from: start,
+        to: end,
         speed,
         caption,
         marker,

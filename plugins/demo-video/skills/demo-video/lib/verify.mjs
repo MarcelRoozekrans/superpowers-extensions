@@ -5,6 +5,7 @@ import { mkdir, readFile, rm, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
+import { BLANK_LUMA_RANGE, lumaRange, withFirstPaint } from './firstpaint.mjs';
 import { CARD_SECONDS, expectedDuration, planOutputs, stepDurations } from './postprocess.mjs';
 
 const run = promisify(execFile);
@@ -24,22 +25,11 @@ async function probe(file) {
   return { ...stream, duration: Number(json.format?.duration) };
 }
 
-const BLANK_LUMA_RANGE = 8;
-
-// The crop leaves out the caption band at the bottom and the speed marker at the top right,
-// which are drawn over blank recordings too.
-async function lumaRange(image) {
-  const { stderr } = await run('ffmpeg', [
-    '-hide_banner', '-i', image, '-vf', 'crop=iw*0.8:ih*0.85:0:0,signalstats,metadata=print', '-f', 'null', '-',
-  ]);
-  const min = Number(/YMIN=(\d+)/.exec(stderr)?.[1]);
-  const max = Number(/YMAX=(\d+)/.exec(stderr)?.[1]);
-  return Number.isFinite(min) && Number.isFinite(max) ? max - min : Infinity;
-}
-
 export async function verify(folder) {
   folder = path.resolve(folder);
-  const timeline = JSON.parse(await readFile(path.join(folder, 'timeline.json'), 'utf8'));
+  const recorded = JSON.parse(await readFile(path.join(folder, 'timeline.json'), 'utf8'));
+  // The same clamped timeline postprocess renders, so expected durations cannot drift.
+  const timeline = await withFirstPaint(recorded, folder);
   const plan = planOutputs(timeline);
   const problems = [];
   const frames = [];
