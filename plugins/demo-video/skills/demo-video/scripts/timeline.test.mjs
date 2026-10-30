@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { waitOutputDuration, segmentsForChapter, slugify } from '../lib/timeline.mjs';
+import { chapterSlug, waitOutputDuration, segmentsForChapter, slugify } from '../lib/timeline.mjs';
 
 const near = (a, b) => Math.abs(a - b) < 1e-9;
 
@@ -87,4 +87,52 @@ test('slugify', () => {
   assert.equal(slugify('Melding 2: persoonsgegevens!'), 'melding-2-persoonsgegevens');
   assert.equal(slugify('Één'), 'een');
   assert.equal(slugify('a'.repeat(50)).length, 40);
+});
+
+test('chapterSlug falls back to chapter-N when the title has no slug', () => {
+  assert.equal(slugify('日本語'), '');
+  assert.equal(chapterSlug('日本語', 3), 'chapter-3');
+  assert.equal(chapterSlug('Één', 1), 'een');
+});
+
+test('a wait with no length gives one normal segment, not NaN', () => {
+  const t = timeline({
+    steps: [{ chapter: 'c1', index: 1, caption: 'A', page: 'p0', start: 1, end: 4, wait: { start: 2, end: 2 } }],
+  });
+  const segs = segmentsForChapter(t, 'c1');
+  assert.equal(segs.length, 1);
+  assert.equal(segs[0].speed, 1);
+  assert.equal(segs[0].marker, false);
+});
+
+test('a wait that ends before it starts is an error', () => {
+  const t = timeline({
+    steps: [{ chapter: 'c1', index: 2, caption: 'A', page: 'p0', start: 1, end: 4, wait: { start: 3, end: 2 } }],
+  });
+  assert.throws(() => segmentsForChapter(t, 'c1'), /Step c1\.2 has a wait that ends before it starts/);
+});
+
+test('an unknown page id is a clear error', () => {
+  const t = timeline({ steps: [{ chapter: 'c1', index: 1, caption: 'A', page: 'p9', start: 1, end: 4 }] });
+  assert.throws(() => segmentsForChapter(t, 'c1'), /Step c1\.1 refers to unknown page "p9"/);
+});
+
+test('a wait on the step boundaries gives only the sped-up segment', () => {
+  const t = timeline({
+    steps: [{ chapter: 'c1', index: 1, caption: 'A', page: 'p0', start: 2, end: 12, wait: { start: 2, end: 12 } }],
+  });
+  const segs = segmentsForChapter(t, 'c1');
+  assert.equal(segs.length, 1);
+  assert.equal(segs[0].marker, true);
+  assert.ok(near(segs[0].speed, 10 / 1.0));
+});
+
+test('a wait that starts at the step start or ends at the step end drops that side', () => {
+  const at = (wait) =>
+    segmentsForChapter(
+      timeline({ steps: [{ chapter: 'c1', index: 1, caption: 'A', page: 'p0', start: 2, end: 12, wait }] }),
+      'c1',
+    );
+  assert.deepEqual(at({ start: 2, end: 8 }).map((s) => s.marker), [true, false]);
+  assert.deepEqual(at({ start: 6, end: 12 }).map((s) => s.marker), [false, true]);
 });
