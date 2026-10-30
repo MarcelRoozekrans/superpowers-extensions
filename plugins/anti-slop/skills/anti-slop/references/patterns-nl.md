@@ -2,7 +2,9 @@
 
 Deze catalogus somt de gewoonten op waardoor Nederlandse tekst klinkt alsof een machine hem schreef. Elke vermelding geeft het kenmerk, een slecht voorbeeld, een herschrijving die de vorm van de zin verandert, en de reden waarom het patroon de tekst verraadt. De catalogus beschrijft Nederlandse gewoonten. Het is geen vertaling van de Engelse lijst: een patroon staat hier alleen als het in Nederlandse tekst echt voorkomt.
 
-**Bad:** regels citeren een patroon met opzet, dus de scanner slaat ze over. Vocabulaire-vermeldingen hebben ook een of meer **Match:** regels met een regex tussen backticks. `scripts/scan.mjs` compileert die regexes met de vlaggen `giu`, haalt omheinde code, inline codefragmenten en de **Bad:** en **Match:** regels uit de te controleren tekst, en meldt elke treffer met patroonnaam en regelnummer. Buiten die regels noemt dit bestand verboden woorden alleen binnen inline codefragmenten, zodat het zijn eigen controle doorstaat. De labels Bad, Match, Tell, Rewrite en Why blijven Engels, omdat de scanner erop leest en de bestanden zo gelijk lopen.
+**Bad:** regels citeren een patroon met opzet, dus de scanner slaat ze over. Vermeldingen met een vaste formulering hebben een of meer **Match:** regels met een regex tussen backticks. Vermeldingen die oordeel vragen hebben er geen. `scripts/scan.mjs` compileert die regexes met de vlaggen `giu`, haalt omheinde code, inline codefragmenten en de **Bad:** en **Match:** regels uit de te controleren tekst, en meldt elke treffer met patroonnaam en regelnummer. Buiten die regels noemt dit bestand verboden woorden alleen binnen inline codefragmenten, zodat het zijn eigen controle doorstaat. De labels Bad, Match, Tell, Rewrite en Why blijven Engels, omdat de scanner erop leest en de bestanden zo gelijk lopen.
+
+De herschrijvingen gaan ervan uit dat het concept of de context het concrete feit al bevat. Is dat niet zo, schrap dan de bewering of noem alleen wat bekend is. Verzin nooit een getal, een naam of een aanbeveling.
 
 Een treffer is een aanleiding om de zin te controleren, geen automatische correctie: sommige treffers zijn in de context gewoon goed Nederlands. Is de treffer terecht, herschrijf dan in plaats van een woord te ruilen. Bouw de zin om het feit heen dat het woord verborg.
 
@@ -38,7 +40,7 @@ Een treffer is een aanleiding om de zin te controleren, geen automatische correc
 
 **Match:** `\bcrucia(?:al|le)\b`
 
-**Bad:** Een goede foutafhandeling is cruciaal voor de stabiliteit.
+**Bad:** Een goede foutafhandeling is cruciaal voor de stabiliteit. Zonder stopt de import bij de eerste ongeldige rij en gaan de overige 900 rijen verloren.
 
 **Rewrite:** Zonder foutafhandeling stopt de import bij de eerste ongeldige rij en gaan de overige 900 rijen verloren.
 
@@ -64,7 +66,7 @@ Een treffer is een aanleiding om de zin te controleren, geen automatische correc
 
 **Match:** `\b(?:dieper\s+duik(?:en|t)?|duik(?:en|t)?\s+dieper)\s+in\b`
 
-**Bad:** Laten we dieper duiken in de werking van de cache.
+**Bad:** Laten we dieper duiken in de werking van de cache. Een item verdwijnt zodra de sleutel opnieuw wordt geschreven, en gelijktijdige schrijfacties en verlopen items vragen aandacht.
 
 **Rewrite:** De cache verwijdert een item zodra de sleutel opnieuw wordt geschreven. Twee gevallen vragen aandacht: gelijktijdige schrijfacties en verlopen items.
 
@@ -94,7 +96,7 @@ Een treffer is een aanleiding om de zin te controleren, geen automatische correc
 
 **Match:** `\bin de wereld van (?:vandaag|tegenwoordig)\b`
 
-**Bad:** In het huidige digitale landschap worden tests steeds belangrijker.
+**Bad:** In het huidige digitale landschap worden tests steeds belangrijker. De testsuite faalde vorige week twee keer op wijzigingen die niemand had getest en deze PR voegt de ontbrekende test toe.
 
 **Rewrite:** De testsuite faalde vorige week twee keer op wijzigingen die niemand had getest. Deze PR voegt de ontbrekende test toe.
 
@@ -132,9 +134,9 @@ Een treffer is een aanleiding om de zin te controleren, geen automatische correc
 
 **Tell:** Zinnen die openen met `Daarnaast,`, `Bovendien,` of `Tevens,` om een punt erbij te plakken.
 
-**Match:** `(?:^|[.!?]\s+)(?:daarnaast|bovendien|tevens),`
+**Match:** `(?:^\s*(?:[-*+>]|\d+\.)?\s*|[.!?]\s+)(?:daarnaast|bovendien|tevens),`
 
-**Match:** `(?:^|[.!?]\s+)tevens\s`
+**Match:** `(?:^\s*(?:[-*+>]|\d+\.)?\s*|[.!?]\s+)tevens\s`
 
 **Bad:** Daarnaast toont het commando een samenvatting. Bovendien schrijft het een logbestand.
 
@@ -150,7 +152,7 @@ Een treffer is een aanleiding om de zin te controleren, geen automatische correc
 
 **Match:** `\b(?:benut|benutten)\s+(?:het|de)\s+(?:volledige\s+)?(?:potentieel|kracht|mogelijkheden)\b`
 
-**Bad:** Deze release biedt een baanbrekende toolkit en stroomlijnt het inwerken.
+**Bad:** Deze release biedt een baanbrekende toolkit en stroomlijnt het inwerken. Er komen drie importcommando's bij en een nieuw project zet je op met één commando.
 
 **Rewrite:** Deze release voegt drie importcommando's toe. Een nieuw project zet je nu op met één commando.
 
@@ -162,7 +164,7 @@ Een treffer is een aanleiding om de zin te controleren, geen automatische correc
 
 **Tell:** Lijstjes van precies drie bijvoeglijke naamwoorden, voordelen of voorbeelden, ook als de feiten er twee of vier zijn.
 
-**Bad:** De tool is snel, betrouwbaar en eenvoudig in het gebruik.
+**Bad:** De tool is snel, betrouwbaar en eenvoudig in het gebruik. Hij sorteert 10.000 bestanden in twee seconden en start met één commando.
 
 **Rewrite:** De tool sorteert 10.000 bestanden in twee seconden. Je start hem met één commando.
 
@@ -172,9 +174,9 @@ Een treffer is een aanleiding om de zin te controleren, geen automatische correc
 
 **Tell:** Een slotzin of slotalinea die herhaalt wat er net stond, vaak met `kortom`, `al met al`, `samenvattend` of `tot slot`. Ook korte teksten noemen oorzaak of resultaat twee keer, zoals de Nederlandse issue-reactie in de RED-baseline.
 
-**Match:** `(?:^|[.!?]\s+)(?:kortom|al met al|samenvattend|concluderend|tot slot),`
+**Match:** `(?:^\s*(?:[-*+>]|\d+\.)?\s*|[.!?]\s+)(?:kortom|al met al|samenvattend|concluderend|tot slot),`
 
-**Bad:** Kortom, deze wijziging lost de crash op door de naam te trimmen voor het splitsen.
+**Bad:** Kortom, deze wijziging lost de crash op door de naam te trimmen voor het splitsen. Een test dekt de naam met een spatie aan het eind.
 
 **Rewrite:** De naam wordt nu getrimd voor het splitsen. Een test dekt de naam met een spatie aan het eind.
 
@@ -184,7 +186,7 @@ Een treffer is een aanleiding om de zin te controleren, geen automatische correc
 
 **Tell:** Een kopje, een lijst of vetgedrukte labels bij een tekst van minder dan ongeveer tien regels, waar twee of drie gewone zinnen volstaan.
 
-**Bad:** Een PR-beschrijving met een kopje "Samenvatting" en vier opsommingstekens voor één fix.
+**Bad:** Een PR-beschrijving met een kopje "Samenvatting" en vier opsommingstekens voor één fix: de sorteerfunctie crashte op bestandsnamen met een spatie voor de extensie, de extensie kwam uit de ongetrimde naam, de naam wordt nu eerst getrimd, een test dekt het geval, Closes #214.
 
 **Rewrite:** De sorteerfunctie crashte op bestandsnamen met een spatie voor de extensie, omdat de extensie uit de ongetrimde naam kwam. Nu wordt de naam eerst getrimd en een test dekt het geval. Closes #214.
 
@@ -252,9 +254,9 @@ Een treffer is een aanleiding om de zin te controleren, geen automatische correc
 
 **Match:** `\benerzijds\b[^\n]*\banderzijds\b`
 
-**Bad:** Enerzijds is caching snel, anderzijds maakt het alles ingewikkelder.
+**Bad:** Enerzijds brengt caching het rapport terug van vier seconden naar 200 ms, anderzijds is er één plek meer om te laten verlopen. Wij raden het aan.
 
-**Rewrite:** Caching brengt het rapport terug van vier seconden naar 200 ms. De prijs is één plek meer om te laten verlopen. Doe het.
+**Rewrite:** Caching brengt het rapport terug van vier seconden naar 200 ms. De prijs is één plek meer om te laten verlopen.
 
 **Why:** Evenwicht is een reflex en geen analyse. Het verbergt de aanbeveling waarvoor de lezer kwam.
 
@@ -286,7 +288,7 @@ Een treffer is een aanleiding om de zin te controleren, geen automatische correc
 
 **Match:** `\b(?:verbeter|verbetert|verbeteren|verhoogt|verhogen)\s+(?:de\s+)?(?:algehele\s+)?(?:prestaties|betrouwbaarheid|kwaliteit|gebruikerservaring)\b`
 
-**Bad:** Deze wijziging verbetert de prestaties aanzienlijk.
+**Bad:** Deze wijziging verbetert de prestaties aanzienlijk. Het opstarten gaat van 1,8 s naar 0,6 s op de voorbeeldrepo.
 
 **Rewrite:** Het opstarten gaat van 1,8 s naar 0,6 s op de voorbeeldrepo.
 
@@ -310,7 +312,7 @@ Een treffer is een aanleiding om de zin te controleren, geen automatische correc
 
 **Match:** `(?<![\p{L}\p{N}])(?:zeer(?!\s+wel\b)|uiterst|ongelooflijk|buitengewoon|ontzettend)\s+\p{L}{3,}`
 
-**Bad:** De nieuwe index is zeer snel en uiterst eenvoudig te onderhouden.
+**Bad:** De nieuwe index is zeer snel en uiterst eenvoudig te onderhouden. Een opzoeking duurt minder dan een milliseconde en het bouwscript is 20 regels.
 
 **Rewrite:** De nieuwe index beantwoordt een opzoeking in minder dan een milliseconde en het bouwscript is 20 regels.
 

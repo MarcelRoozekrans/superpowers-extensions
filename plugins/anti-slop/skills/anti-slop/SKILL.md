@@ -25,8 +25,8 @@ Do NOT use when:
 
 1. **Detect the language.** English or Dutch. For a mixed draft, take the dominant language.
 2. **Read the matching catalogue.** `references/patterns-en.md` or `references/patterns-nl.md`.
-3. **Check the draft against every entry,** in all four families: Vocabulary, Structure, Tone, Substance. Only Vocabulary has regexes. The other three need reading the draft, so read it.
-4. **Rewrite.** Fix the habit, not only the word. Swapping a banned word for its synonym while the sentence stays empty is a failure. Rebuild the sentence around the fact it was hiding, using each entry's plain rewrite as the model.
+3. **Check the draft against every entry,** in all four families: Vocabulary, Structure, Tone, Substance. Entries with a fixed wording carry **Match:** lines the scanner can check, but many Tone, Substance and Structure entries have none. Those need reading the draft, so read it.
+4. **Rewrite.** Fix the habit, not only the word. Swapping a banned word for its synonym while the sentence stays empty is a failure. Rebuild the sentence around the fact it was hiding, using each entry's plain rewrite as the model. The rewrites assume the draft or its context already holds the specific fact. When it does not, cut the claim or state only what is known. Never invent a figure, a name or a recommendation.
 5. **Check the rewrite against the guardrails** below.
 6. **Publish only the clean version.** Add no report, no list of changes and no note that the text was cleaned.
 
@@ -53,17 +53,17 @@ When the user names a file:
 
 1. Edit the file in place, following the same procedure.
 2. Leave the change as a diff for the user to review. Give no report.
-3. On a long file, run the vocabulary scan first to find candidates:
+3. On a long file, run the scan first to find candidates:
 
 ```bash
-node scripts/scan.mjs references/patterns-en.md FILE
-node scripts/scan.mjs references/patterns-nl.md FILE
+node <this skill's directory>/scripts/scan.mjs <this skill's directory>/references/patterns-en.md FILE
+node <this skill's directory>/scripts/scan.mjs <this skill's directory>/references/patterns-nl.md FILE
 ```
 
-The scanner exits 1 on hits, 0 when clean and 2 on an error. It skips fenced code, inline code and the **Bad:** and **Match:** lines. A hit is a prompt to check the sentence, not an automatic edit, and a clean scan proves nothing about Structure, Tone or Substance.
+The scanner exits 1 on hits, 0 when clean and 2 on an error, which is a failed run and not a hit list. It skips fenced code, inline code and the **Bad:** and **Match:** lines. A hit is a prompt to check the sentence, not an automatic edit, and a clean scan proves nothing about the entries that have no **Match:** line.
 
 ## Reference Index
 
 - [references/patterns-en.md](references/patterns-en.md): the English catalogue
 - [references/patterns-nl.md](references/patterns-nl.md): the Dutch catalogue
-- [scripts/scan.mjs](scripts/scan.mjs): the vocabulary scanner
+- [scripts/scan.mjs](scripts/scan.mjs): the scanner

@@ -2,7 +2,9 @@
 
 This catalogue lists the tics that make English prose read as machine-written. Each entry gives the tell, a bad example, a rewrite that changes the sentence's shape, and the reason the pattern gives the text away.
 
-**Bad:** lines quote a pattern on purpose, so the scanner skips them. Vocabulary entries also carry one or more **Match:** lines, each holding a regex in backticks. `scripts/scan.mjs` compiles those regexes with the flags `giu`, strips fenced code, inline code spans and the **Bad:** and **Match:** lines from the text under test, and reports every hit with its pattern name and line. Outside those lines, this file names banned words only inside inline code spans, so it passes its own scan.
+**Bad:** lines quote a pattern on purpose, so the scanner skips them. Entries with a fixed wording carry one or more **Match:** lines, each holding a regex in backticks. Entries that need judgement carry none. `scripts/scan.mjs` compiles those regexes with the flags `giu`, strips fenced code, inline code spans and the **Bad:** and **Match:** lines from the text under test, and reports every hit with its pattern name and line. Outside those lines, this file names banned words only inside inline code spans, so it passes its own scan.
+
+The Rewrites assume that the draft or its context already holds the specific fact. When it does not, cut the claim or state only what is known, and never invent a figure, a name or a recommendation.
 
 A hit is a prompt to check the sentence, not an automatic edit: some matches are fine in context, such as a file that really is locked. When a hit is real, rewrite instead of swapping a word. Rebuild the sentence around the fact it was hiding.
 
@@ -14,7 +16,7 @@ A hit is a prompt to check the sentence, not an automatic edit: some matches are
 
 **Match:** `\bdelv(?:e|es|ed|ing)\b`
 
-**Bad:** Let's delve into how the cache handles invalidation.
+**Bad:** Let's delve into how the cache handles invalidation. An entry is dropped when its key is written again, and concurrent writes and expired entries need care.
 
 **Rewrite:** The cache drops an entry when its key is written again. Two cases need care: concurrent writes and expired entries.
 
@@ -80,7 +82,7 @@ A hit is a prompt to check the sentence, not an automatic edit: some matches are
 
 **Match:** `\bin the (?:digital age|modern world)\b`
 
-**Bad:** In today's fast-paced development landscape, tests matter more than ever.
+**Bad:** In today's fast-paced development landscape, tests matter more than ever. The suite failed twice last week on changes nobody had tested, and this PR adds the missing test.
 
 **Rewrite:** The suite failed twice last week on changes nobody had tested. This PR adds the missing test.
 
@@ -96,7 +98,7 @@ A hit is a prompt to check the sentence, not an automatic edit: some matches are
 
 **Match:** `\b(?:crucial|comprehensive)\b`
 
-**Bad:** This release unlocks a comprehensive toolkit and streamlines onboarding.
+**Bad:** This release unlocks a comprehensive toolkit and streamlines onboarding. It adds three import commands, and a new project takes one command to set up.
 
 **Rewrite:** This release adds three import commands. A new project now takes one command to set up.
 
@@ -120,7 +122,7 @@ A hit is a prompt to check the sentence, not an automatic edit: some matches are
 
 **Tell:** A sentence that opens with `Additionally,`, `Moreover,` or `Furthermore,` to bolt on a point.
 
-**Match:** `(?:^|[.!?]\s+)(?:additionally|moreover|furthermore),`
+**Match:** `(?:^\s*(?:[-*+>]|\d+\.)?\s*|[.!?]\s+)(?:additionally|moreover|furthermore),`
 
 **Bad:** Additionally, the command prints a summary.
 
@@ -146,7 +148,7 @@ A hit is a prompt to check the sentence, not an automatic edit: some matches are
 
 **Tell:** Lists of exactly three adjectives, benefits or examples, even when the facts number two or four.
 
-**Bad:** The tool is fast, reliable, and easy to use.
+**Bad:** The tool is fast, reliable, and easy to use. It sorts 10,000 files in two seconds and runs with one command.
 
 **Rewrite:** The tool sorts 10,000 files in two seconds. Use it with one command.
 
@@ -156,7 +158,9 @@ A hit is a prompt to check the sentence, not an automatic edit: some matches are
 
 **Tell:** A final sentence or paragraph that restates what the text just said, often opening with `in summary`, `overall` or `to sum up`. Short texts also restate the cause or the result twice, as the Dutch comment and the README section did in the RED baseline.
 
-**Bad:** In summary, this change fixes the crash by trimming the name before the split.
+**Match:** `(?:^\s*(?:[-*+>]|\d+\.)?\s*|[.!?]\s+)(?:in summary|to sum up|in conclusion),`
+
+**Bad:** In summary, this change fixes the crash by trimming the name before the split. A test covers a name with a trailing space.
 
 **Rewrite:** The name is now trimmed before the split. A test covers a name with a trailing space.
 
@@ -166,7 +170,7 @@ A hit is a prompt to check the sentence, not an automatic edit: some matches are
 
 **Tell:** A heading, a bullet list or bold labels on text under about ten lines, where two or three plain sentences would do. The PR body in the RED baseline opened with a heading above five sentences.
 
-**Bad:** A PR body with a "Summary" heading and four bullets for one fix.
+**Bad:** A PR body with a "Summary" heading and four bullets for one fix: the sorter crashed on file names with a space before the extension, the extension was read from the untrimmed name, the name is now trimmed first, a test covers the case, closes #214.
 
 **Rewrite:** The sorter crashed on file names with a space before the extension, because the extension was read from the untrimmed name. The name is now trimmed first and a test covers the case. Closes #214.
 
@@ -232,9 +236,9 @@ A hit is a prompt to check the sentence, not an automatic edit: some matches are
 
 **Match:** `\bon the (?:one|other) hand\b`
 
-**Bad:** On the one hand, caching is fast; on the other hand, it adds complexity.
+**Bad:** On the one hand, caching cuts the report from four seconds to 200 ms; on the other hand, it adds one more place to invalidate. We recommend it.
 
-**Rewrite:** Caching cuts the report from four seconds to 200 ms. The price is one more place to invalidate. Take it.
+**Rewrite:** Caching cuts the report from four seconds to 200 ms. The price is one more place to invalidate.
 
 **Why:** Balance is a reflex, not an analysis. It hides the recommendation the reader came for.
 
@@ -264,7 +268,7 @@ A hit is a prompt to check the sentence, not an automatic edit: some matches are
 
 **Match:** `\b(?:improves?|enhances?) (?:overall )?(?:performance|reliability|quality|the user experience)\b`
 
-**Bad:** This change significantly improves performance.
+**Bad:** This change significantly improves performance. Startup drops from 1.8 s to 0.6 s on the sample repo.
 
 **Rewrite:** Startup drops from 1.8 s to 0.6 s on the sample repo.
 
@@ -288,7 +292,7 @@ A hit is a prompt to check the sentence, not an automatic edit: some matches are
 
 **Match:** `\b(?:very|really|extremely|incredibly|highly|truly|massively|vastly)\s+(?:[a-z]+ly|[a-z]{3,})\b`
 
-**Bad:** The new index is extremely fast and really easy to maintain.
+**Bad:** The new index is extremely fast and really easy to maintain. A lookup takes under a millisecond and the build script is 20 lines.
 
 **Rewrite:** The new index answers a lookup in under a millisecond, and its build script is 20 lines.
 

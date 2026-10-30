@@ -412,7 +412,7 @@ The anti-slop skill rewrites AI prose tics out of text Claude is about to publis
 
 ### Scanner
 
-`scripts/scan.mjs` checks the vocabulary entries of a catalogue against files:
+`scripts/scan.mjs` checks the catalogue entries that carry a fixed wording against files:
 
 ```bash
 node plugins/anti-slop/skills/anti-slop/scripts/scan.mjs plugins/anti-slop/skills/anti-slop/references/patterns-en.md FILE
