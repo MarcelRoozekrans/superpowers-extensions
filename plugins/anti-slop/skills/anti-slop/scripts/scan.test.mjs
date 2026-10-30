@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync, mkdtempSync, writeFileSync } from 'node:fs';
+import { readFileSync, mkdtempSync, writeFileSync, symlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -63,6 +63,17 @@ test('CLI exits 0 on clean file and 1 on dirty file', () => {
   assert.equal(bad.status, 1);
   assert.match(bad.stdout, /Delve/);
   assert.match(bad.stdout, /dirty\.md:1/);
+});
+
+test('CLI runs through a symlinked path and still exits 1 on a dirty file', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'scan-link-'));
+  const dirty = join(dir, 'dirty.md');
+  const link = join(dir, 'scan-link.mjs');
+  writeFileSync(dirty, 'We delve deep.\n');
+  symlinkSync(join(here, 'scan.mjs'), link);
+  const bad = spawnSync('node', [link, cataloguePath, dirty], { encoding: 'utf8' });
+  assert.equal(bad.status, 1);
+  assert.match(bad.stdout, /Delve/);
 });
 
 test('longer fence is not closed by a shorter fence line', () => {
