@@ -62,7 +62,7 @@ export function decide(size, last, config) {
 
 export function reminderText(level, size) {
   const k = Math.round(size / 1000);
-  const base = `This session's context is about ${k}k tokens. At a natural break, if the next work needs nothing from this context, offer the user a fresh session; otherwise carry on silently.`;
+  const base = `This session's context is about ${k}k tokens. At a natural break (a finished phase, PR or result; a finished plan task is not one), if the next work needs nothing from this context, hand off to a fresh session as the context-budget skill describes; otherwise carry on silently.`;
   return level === 'firm' ? `${base} Every turn is now costly at this size.` : base;
 }
 

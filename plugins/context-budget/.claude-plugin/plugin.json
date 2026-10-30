@@ -1,6 +1,6 @@
 {
   "name": "context-budget",
-  "description": "Keeps long sessions cheap. A UserPromptSubmit hook measures the session's context size and suggests a fresh session at a natural break; a PreToolUse hook requires an explicit non-Fable model on general-purpose subagent dispatches. The skill states the suite-wide model rule: Sonnet by default, Opus for marked tasks, retries and the final review, Haiku for lookups.",
+  "description": "Keeps long sessions cheap. A UserPromptSubmit hook measures the session's context size and hands off to a fresh session at a natural break; a PreToolUse hook requires an explicit non-Fable model on general-purpose subagent dispatches. The skill states the suite-wide model rule: Sonnet by default, Opus for marked tasks, retries and the final review, Haiku for lookups.",
   "author": {
     "name": "Marcel Roozekrans"
   }
