@@ -18,8 +18,9 @@ function appendMissing(file, lines) {
   const have = new Set(existing.split('\n').map((l) => l.trim()));
   const added = lines.filter((l) => !have.has(l));
   if (added.length > 0) {
-    const lead = existing === '' || existing.endsWith('\n') ? '' : '\n';
-    appendFileSync(file, lead + added.join('\n') + '\n');
+    const eol = existing.includes('\r\n') ? '\r\n' : '\n';
+    const lead = existing === '' || existing.endsWith('\n') ? '' : eol;
+    appendFileSync(file, lead + added.join(eol) + eol);
   }
   return added;
 }
