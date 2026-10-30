@@ -52,7 +52,7 @@ A hit is a prompt to check the sentence, not an automatic edit: some matches are
 
 **Match:** `\bleverag(?:e|es|ed|ing)\b`
 
-**Bad:** We leverage the existing index to speed up lookups.
+**Bad:** We leverage the existing index to read entries faster during lookups.
 
 **Rewrite:** Lookups read the existing index.
 

@@ -78,7 +78,7 @@ Een treffer is een aanleiding om de zin te controleren, geen automatische correc
 
 **Match:** `\b(?:maak|maakt|maken|gemaakt)\s+gebruik\s+van\b`
 
-**Bad:** De module maakt gebruik van de bestaande index om opzoekingen te versnellen.
+**Bad:** De module maakt gebruik van de bestaande index om bij opzoekingen sneller te lezen.
 
 **Rewrite:** De module leest de bestaande index. Opzoekingen worden daardoor sneller.
 
@@ -206,7 +206,7 @@ Een treffer is een aanleiding om de zin te controleren, geen automatische correc
 
 **Tell:** Drie of meer opeenvolgende zinnen die met hetzelfde woord of dezelfde constructie beginnen, zoals `Dit`, `Het` of `We`.
 
-**Bad:** Dit past de naam aan. Dit voorkomt de crash. Dit voegt ook een test toe.
+**Bad:** Dit trimt de naam. Dit voorkomt de crash. Dit voegt ook een test toe.
 
 **Rewrite:** Het trimmen van de naam voorkomt de crash. Een nieuwe test dekt dat af.
 
