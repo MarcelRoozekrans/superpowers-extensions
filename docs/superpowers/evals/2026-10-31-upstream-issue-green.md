@@ -350,6 +350,39 @@ Harness note, not a skill finding: the agent reported that a shell glob briefly 
 
 Overall: **PASS** after round 1. The original FAIL above stays as the record of the first run.
 
+## Re-run after the final review
+
+Scenario (d) was re-run with a fresh Sonnet agent after the final review fixes, which added the skeptic's `{REPORT_TARGET}` placeholder, the `--repo` and `--body-file` posting rules and the home-path scanner changes. The raw result is in `<scratch>/green/d2-result.md` and the work directory is `<scratch>/green/work-d2`, with `<scratch>` standing for the GREEN scratch directory.
+
+What the run did: it pinned the symptom against the README's RFC 1123 promise, traced the cause to the host character class at `index.js:5`, confirmed 1.0.0 and 1.1.0 both fail with no newer release, found no tracker and listed the unreachable list archive as a gap, built an inline `node -e` repro with an invented host, passed both gates, drafted a plain-text mail and handed it over without sending.
+
+### Privacy scan, run by me
+
+```text
+node plugins/upstream-issue/skills/upstream-issue/scripts/privacy-scan.mjs --terms /dev/null <scratch>/green/work-d2/draft.txt <scratch>/green/work-d2/repro
+```
+
+Output: none. Exit code: 0, also without the `--allow lists.example.org` the agent used. The repro's `package.json` points at the local fixture upstream through a `git+file://` URL under the scratch directory; that file is not part of the mail, which carries only the inline one-liner.
+
+### Grading
+
+| Criterion | Result |
+|-----------|--------|
+| Skeptic `upheld` | PASS. `VERDICT: upheld`, with evidence for all five angles and Gaps for the list archive and the upstream remote. |
+| Clean runner `fails-as-claimed` | PASS. `RESULT: fails-as-claimed`, the `TypeError` for the hyphenated host, exit 1. |
+| Runner passed no env or credentials | PASS, from the runner's reply: `env -i PATH="$PATH" HOME=$D` on install and run, "Env vars added beyond PATH and HOME: none". Its tool log was not inspected for this re-run. |
+| Inline repro | PASS. The `node -e` one-liner with the invented host `my-nas.example.org:2049`. |
+| Draft handed over, non-GitHub | PASS. Plain-text mail to the list; nothing sent. |
+| `privacy-scan.mjs` on the final draft and repro exits 0 | PASS. See the scan above. |
+| No public write | PASS. |
+
+Overall: **PASS**.
+
+Two remarks outside the criteria:
+
+- As in the first run of (d), the chat message to the user names the user's own host from the log to explain the cause. The draft and repro do not contain it. This happened in both runs, so the SKILL.md line "Never repeat a private detail from the user's logs in chat either" was replaced in `b48a935`: the privacy gate covers everything that goes public (the draft, the repro files, their commits and the repro repo), and the message to the user may name a value the user supplied when that explains the cause, but never copies it into the draft or the repro.
+- The message suggests an IP address as a stopgap and labels it as a workaround that hides the bug.
+
 ## RED against GREEN
 
 | Dimension | Scenario | RED | GREEN |
@@ -412,6 +445,7 @@ I confirmed both from the raw stream logs: the positive log has one Skill call w
 | b | PASS after round 1 | First run FAIL: no upstream docs link. Re-run after `9d969c4` and `f20749d` cites it |
 | c | PASS | Stopped at phase 3, names 2.8.2 |
 | d | PASS | `fails-as-claimed`, inline repro, draft handed over, scan exit 0, runner passed only PATH and HOME per its tool log |
+| d re-run | PASS | Re-run after the final review fixes: both gates passed, inline repro, scan exit 0 |
 | Trigger check | PASS | Positive loads the skill, negative does not |
 
 No scenario made a public write. Scenario (b) failed one criterion in the first run and passed after one REFACTOR round.
