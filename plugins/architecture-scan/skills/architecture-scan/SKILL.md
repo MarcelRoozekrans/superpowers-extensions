@@ -35,7 +35,7 @@ Run the script at `<skill dir>/scripts/hotspots.mjs`: `node <skill dir>/scripts/
 
 Keep the counts; the report shows them.
 
-**Hot files, not only hot directories.** A directory can be hot because of one file. Take the per-file change counts from the script's `files` field; it already covers only the scope directories.
+**Hot files, not only hot directories.** A directory can be hot because of one file. Take the per-file change counts from the script's `files` field; it covers the top five `dirs`, which are the scope unless `scattered` is true. In that case rerun with `--under <source root>` (such as `src/`, or `.` when there is none) to get the files for the widened scope; `filesTruncated` may then be true.
 
 A card's files must be among the files this history changes repeatedly. Every card's Files line shows each file's change count in the window, so a file with one or two changes is visible on the card. A candidate whose files changed only once or twice each gets no card, even when it is shallow and its directory is hot.
 

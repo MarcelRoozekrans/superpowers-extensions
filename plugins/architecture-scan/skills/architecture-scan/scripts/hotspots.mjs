@@ -113,7 +113,7 @@ function main(argv) {
     console.error(`not a git repo: ${opts.repo}`);
     return 2;
   }
-  const result = countHotspots(history.paths, { depth: opts.depth, under: opts.under.replace(/^\.\//, '') });
+  const result = countHotspots(history.paths, { depth: opts.depth, under: opts.under === '.' ? '' : opts.under.replace(/^\.\//, '') });
   console.log(JSON.stringify({ ...result, commits: history.commits }));
   return 0;
 }

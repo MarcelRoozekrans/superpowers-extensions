@@ -191,6 +191,22 @@ test('CLI --under limits the counts to the named area', () => {
   }
 });
 
+test('CLI --under . and ./ mean the whole repo', () => {
+  const repo = makeRepo();
+  try {
+    write(repo, 'src/a.js', '1');
+    write(repo, 'lib/b.js', '1');
+    commit(repo, 'one', '2026-01-01T00:00:00Z');
+    for (const under of ['.', './']) {
+      const r = runCli(['--repo', repo, '--under', under]);
+      assert.equal(r.status, 0, r.stderr);
+      assert.equal(JSON.parse(r.stdout).total, 2, under);
+    }
+  } finally {
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
 test('CLI reports per-file counts that match the commits', () => {
   const repo = makeRepo();
   try {
