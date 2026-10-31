@@ -14,7 +14,7 @@ Some setup steps only a person can do: clicking through a third-party dashboard,
 - Keep upstream's behaviour: scope → map each stage's journey → author from the template → verify and hand off.
 - Two changes from upstream:
   1. Every point where upstream asks the user goes through AskUserQuestion with labelled options and one marked "(Recommended)".
-  2. Text that gets published goes through `anti-slop` (see [Anti-slop scope](#anti-slop-scope)).
+  2. Text that gets published goes through `anti-slop` (scope in the decisions table below).
 - Turn upstream's step-4 checklist into one deterministic command, `scripts/check.mjs`, with tests.
 - Credit Matt Pocock under MIT: a `NOTICE.md` with the licence text, plus a README line.
 
@@ -91,7 +91,7 @@ Follows upstream's four steps and its "Done when" bars. Changes:
 | Library intact | the text above the `STAGES` marker differs from the vendored `template.sh` |
 | Stage count | `TOTAL_STAGES=` differs from the number of `stage` calls inside `run_wizard` |
 | Example removed | the template's example stage (`Stripe: API keys` banner/stage) is still present |
-| Secret names | a `set_secret NAME` has no `secrets.NAME` in `<repo>/.github/workflows/*.yml|yaml`; `skip` when there is no workflows directory |
+| Secret names | a `set_secret NAME` has no `secrets.NAME` in the workflow files (`.yml` or `.yaml`) under `.github/workflows` in the repo; `skip` when there is no workflows directory |
 | Executable | the file is not executable |
 
 It also prints, as a warning that does not fail, every `secrets.*` in the workflows (except `GITHUB_TOKEN`) that the wizard never sets. A workflow may read secrets set some other way, so this is a prompt to look, not a failure.
