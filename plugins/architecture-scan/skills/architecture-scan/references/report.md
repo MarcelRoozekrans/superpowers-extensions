@@ -93,12 +93,12 @@ Pick the pattern that fits each candidate and vary them across the cards: a repo
 
 ### Mermaid graph
 
-The workhorse for call flow and dependencies: "X calls Y calls Z, and look at the mess". Sequence diagrams suit "before: 6 round-trips; after: 1". The after diagram shows the single deep module as one node. Colour the leak edge with `linkStyle`; this is the one place a literal colour is allowed, because Mermaid cannot read the CSS tokens. Use the leak red `#c2372d`. The index in `linkStyle` counts edges from 0 in source order.
+The workhorse for call flow and dependencies: "X calls Y calls Z, and look at the mess". Sequence diagrams suit "before: 6 round-trips; after: 1". The after diagram shows the single deep module as one node. Colour the leak edge with `linkStyle`; this is the one place a literal colour is allowed, because Mermaid cannot read the CSS tokens. Use the leak red `#c2372d`. The index in `linkStyle` counts edges from 0 in source order. A chain of four or more modules is drawn top to bottom (`graph TD`), because a left-to-right chain in a half-width Before/After panel renders too small to read.
 
 ```html
 <div class="panel"><span class="eyebrow">Before</span>
 <pre class="mermaid">
-flowchart LR
+graph TD
   H[Handler] --> V[Validator]
   V --> N[Normalizer]
   N --> M[Mapper]
