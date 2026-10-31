@@ -98,12 +98,18 @@ test('countHotspots honours custom depth, topN and threshold', () => {
     ],
     total: 4,
     scattered: true,
+    files: [
+      { path: 'a/x/1.js', count: 1 },
+      { path: 'a/y/2.js', count: 1 },
+      { path: 'b/z.js', count: 1 },
+      { path: 'c/z.js', count: 1 },
+    ],
   });
   assert.equal(countHotspots(paths, { depth: 1, topN: 1, threshold: 0.5 }).scattered, false);
 });
 
 test('empty input is total 0 and scattered', () => {
-  assert.deepEqual(countHotspots([]), { dirs: [], total: 0, scattered: true });
+  assert.deepEqual(countHotspots([]), { dirs: [], total: 0, scattered: true, files: [] });
 });
 
 test('CLI counts A and M paths over a short history', () => {
@@ -126,6 +132,40 @@ test('CLI counts A and M paths over a short history', () => {
       { dir: 'src/a/', count: 3 },
       { dir: 'src/b/', count: 1 },
     ]);
+  } finally {
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
+test('countHotspots counts files after exclusion, by count then path', () => {
+  const result = countHotspots(['src/b.js', 'src/a.js', 'src/b.js', 'yarn.lock', 'src/c.js', 'src/a.js']);
+  assert.deepEqual(result.files, [
+    { path: 'src/a.js', count: 2 },
+    { path: 'src/b.js', count: 2 },
+    { path: 'src/c.js', count: 1 },
+  ]);
+});
+
+test('CLI reports per-file counts that match the commits', () => {
+  const repo = makeRepo();
+  try {
+    write(repo, 'src/a/one.js', '1');
+    write(repo, 'package-lock.json', '{}');
+    commit(repo, 'one', '2026-01-01T00:00:00Z');
+    write(repo, 'src/a/one.js', '2');
+    write(repo, 'package-lock.json', '{"a":1}');
+    commit(repo, 'two', '2026-01-02T00:00:00Z');
+    write(repo, 'src/a/one.js', '3');
+    write(repo, 'src/b/two.js', '1');
+    commit(repo, 'three', '2026-01-03T00:00:00Z');
+    const r = runCli(['--repo', repo]);
+    assert.equal(r.status, 0, r.stderr);
+    const { files } = JSON.parse(r.stdout);
+    assert.deepEqual(files, [
+      { path: 'src/a/one.js', count: 3 },
+      { path: 'src/b/two.js', count: 1 },
+    ]);
+    assert.equal(files.some((f) => f.path === 'package-lock.json'), false);
   } finally {
     rmSync(repo, { recursive: true, force: true });
   }

@@ -28,17 +28,14 @@ Recall decisions with `decision-tracker`. It recalls once per session: if it alr
 
 ### 2. Scope
 
-- **The user named an area, a module or a pain point:** that is the scope. Skip the hot-spot count.
-- **Otherwise:** run the script at `<skill dir>/scripts/hotspots.mjs`: `node <skill dir>/scripts/hotspots.mjs --repo <root>`. It prints `{dirs:[{dir,count}], total, scattered, commits}` for the last 200 commits, counted per directory at most three levels deep, without lockfiles, generated files, `CHANGELOG.md` and docs. The scope is the **top five directories** in `dirs` with their counts. When `scattered` is true, the top five hold less than 30% of the changes: widen the scope to the whole source tree and say so in the report. Exit code 2 means `<root>` is not a git repo: ask the user for an area instead.
+Run the script at `<skill dir>/scripts/hotspots.mjs`: `node <skill dir>/scripts/hotspots.mjs --repo <root>`. It prints `{dirs:[{dir,count}], total, scattered, files:[{path,count}], commits}` for the last 200 commits: `dirs` counted per directory at most three levels deep, `files` per file, both without lockfiles, generated files, `CHANGELOG.md` and docs. Exit code 2 means `<root>` is not a git repo: ask the user for an area instead.
+
+- **The user named an area, a module or a pain point:** that is the scope. Do not pick directories from `dirs`.
+- **Otherwise:** the scope is the **top five directories** in `dirs` with their counts. When `scattered` is true, the top five hold less than 30% of the changes: widen the scope to the whole source tree and say so in the report.
 
 Keep the counts; the report shows them.
 
-**Hot files, not only hot directories.** A directory can be hot because of one file. Get the per-file change counts for the scope:
-
-```bash
-git -C <root> log -n 200 --no-renames --name-status --pretty=format: -- <scope dirs> \
-  | awk '$1=="A" || $1=="M" {print $2}' | sort | uniq -c | sort -rn
-```
+**Hot files, not only hot directories.** A directory can be hot because of one file. Take the per-file change counts from the script's `files` field, filtered to the scope directories.
 
 A card's files must be among the files this history changes repeatedly. Every card's Files line shows each file's change count in the window, so a file with one or two changes is visible on the card. A candidate whose files changed only once or twice each gets no card, even when it is shallow and its directory is hot.
 
@@ -50,7 +47,7 @@ If the repo has a glossary (`GLOSSARY.md`, `CONTEXT.md` or similar) or an ADR fo
 
 Dispatch **one** `general-purpose` subagent with `model: sonnet` passed explicitly (`context-budget`: never Fable, never an inherited model). One agent keeps the comparison across hot spots in one context. Its brief contains:
 
-1. **The scope:** the hot-spot directories with their counts and the per-file counts, or the named area.
+1. **The scope:** the hot-spot directories with their counts, or the named area, plus the per-file counts from `files` inside it.
 2. **The vocabulary:** "Load the `codebase-design` skill and use its terms exactly; never component, service, unit, API, signature, boundary, layer or wrapper."
 3. **The recorded rejections**, each with its reason: "Do not return these. Match by what the candidate does and the area it covers, not by file path: a rejected module that was renamed or moved is still rejected. List each one you skip and why it matches."
 4. **The glossary terms**, if step 3 found any.
@@ -172,7 +169,7 @@ Chain: `architecture-scan` → `superpowers:brainstorming` → `superpowers:writ
 |------|----------|
 | [references/report.md](references/report.md) | Filling the template, publishing, the scope and card markup, diagram patterns, the top recommendation, tone |
 | `templates/report.template.html` | The report page and its stylesheet, with light and dark tokens |
-| `scripts/hotspots.mjs` | Hot-spot counts per directory from git history |
+| `scripts/hotspots.mjs` | Change counts per directory and per file from git history |
 | [../codebase-design/SKILL.md](../codebase-design/SKILL.md) | Vocabulary and principles |
 | [../codebase-design/references/deepening.md](../codebase-design/references/deepening.md) | Dependency categories, seam discipline, testing |
 | [../codebase-design/references/design-it-twice.md](../codebase-design/references/design-it-twice.md) | The parallel-subagent pattern for alternative interfaces |

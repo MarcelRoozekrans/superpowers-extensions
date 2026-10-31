@@ -44,7 +44,7 @@ The template carries no other script and no Tailwind. The report is static apart
 Each row is three cells: the directory, a `.bar` and the count. The bar width is a percentage of the top count, so the top directory is `100%`:
 
 ```html
-<p class="meta">Hot spots from the last 300 commits; files touched most often pull attention first.</p>
+<p class="meta">Hot spots from the last 200 commits; files touched most often pull attention first.</p>
 <div class="hot mono">
   <span>src/orders/intake/</span><span class="bar" style="width:100%"></span><span class="n">64</span>
   <span>src/pricing/</span><span class="bar" style="width:72%"></span><span class="n">46</span>
@@ -60,7 +60,7 @@ One `<article id="cN">` per candidate. The field order is fixed:
 
 1. Title in `<h3>`, inside `.head`: `N · <short name of the deepening>`, for example "1 · Collapse the Order intake pipeline".
 2. Badges in `.badges`, also inside `.head`: strength (`b-strong` for Strong, `b-explore` for Worth exploring, `b-spec` for Speculative) and a plain `.badge` for the dependency category (`in-process`, `local-substitutable`, `ports &amp; adapters`, `mock`).
-3. Files as `<ul class="files mono">`.
+3. Files as `<ul class="files mono">`, each with its change count in the window from the script's `files` field.
 4. The before/after pair: `.pair` holding a `.panel` and a `.panel.after`, each opened by `<span class="eyebrow">`.
 5. Problem, Solution and Wins as a `.fields` list. Problem and Solution are one sentence each. Wins are bullets of six words or fewer, in `.wins`.
 6. The ADR or decision callout, `<p class="adr">`, only when the candidate conflicts with a recorded decision.
@@ -71,7 +71,7 @@ One `<article id="cN">` per candidate. The field order is fixed:
     <h3>1 · Collapse the Order intake pipeline</h3>
     <div class="badges"><span class="badge b-strong">Strong</span><span class="badge">in-process</span></div>
   </div>
-  <ul class="files mono"><li>orders/intake/handler.ts</li><li>orders/repo.ts</li></ul>
+  <ul class="files mono"><li>orders/intake/handler.ts · 10 changes</li><li>orders/repo.ts · 1 change</li></ul>
   <div class="pair">
     <div class="panel"><span class="eyebrow">Before</span> ... </div>
     <div class="panel after"><span class="eyebrow">After</span> ... </div>

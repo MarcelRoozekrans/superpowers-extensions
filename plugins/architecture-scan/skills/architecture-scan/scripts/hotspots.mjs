@@ -27,19 +27,26 @@ export function isExcluded(path) {
 
 export function countHotspots(paths, { depth = 3, topN = 5, threshold = 0.3 } = {}) {
   const counts = new Map();
+  const fileCounts = new Map();
   let total = 0;
   for (const path of paths) {
     if (isExcluded(path)) continue;
     const dirSegments = path.split('/').slice(0, -1).slice(0, depth);
     const dir = dirSegments.length ? `${dirSegments.join('/')}/` : './';
     counts.set(dir, (counts.get(dir) ?? 0) + 1);
+    fileCounts.set(path, (fileCounts.get(path) ?? 0) + 1);
     total += 1;
   }
+  const byCountThenName = (key) => (a, b) =>
+    b.count - a.count || (a[key] < b[key] ? -1 : a[key] > b[key] ? 1 : 0);
   const dirs = [...counts]
     .map(([dir, count]) => ({ dir, count }))
-    .sort((a, b) => b.count - a.count || (a.dir < b.dir ? -1 : a.dir > b.dir ? 1 : 0));
+    .sort(byCountThenName('dir'));
+  const files = [...fileCounts]
+    .map(([path, count]) => ({ path, count }))
+    .sort(byCountThenName('path'));
   const top = dirs.slice(0, topN).reduce((sum, d) => sum + d.count, 0);
-  return { dirs, total, scattered: total === 0 || top < threshold * total };
+  return { dirs, total, scattered: total === 0 || top < threshold * total, files };
 }
 
 function readHistory(repo, commits) {
