@@ -33,7 +33,7 @@ Do NOT use when:
 
 ## Phases
 
-Each phase ends with an exit condition. When a phase fails, give the user its stop message with the evidence and end the run. A failed phase never falls through to drafting.
+Each phase ends with an exit condition. When a phase fails, give the user its stop message with the evidence and end the run. Every stop message carries the URLs behind its evidence: the docs page, the release or commit, the existing issue. Naming a README section or an option without its link is not enough. A failed phase never falls through to drafting.
 
 Paths below are relative to this skill's directory. Work in the session scratchpad, never in the user's project.
 
@@ -51,7 +51,7 @@ Show the cause lies in upstream code. Trace into the upstream source, reproduce 
 
 **Exit:** the upstream file and function the behaviour comes from, linked, or a reproduction with no user code in it.
 
-**Stop:** "This looks like it comes from your code or config, not from upstream", with the evidence.
+**Stop:** "This looks like it comes from your code or config, not from upstream", with the evidence and the upstream docs URL from phase 1 that documents the behaviour.
 
 ### 3. Check latest
 
