@@ -1,0 +1,2 @@
+{"type":"assistant","timestamp":"2026-10-31T10:01:00.000Z","message":{"id":"s1","model":"claude-sub","content":[{"type":"tool_use","id":"u1","name":"Read","input":{"file_path":"/r/x.md"}}],"usage":{"input_tokens":10,"output_tokens":20,"cache_read_input_tokens":30,"cache_creation_input_tokens":40}}}
+{"type":"user","timestamp":"2026-10-31T10:02:00.000Z","message":{"role":"user","content":[{"type":"tool_result","tool_use_id":"u1","content":"x"}]}}
