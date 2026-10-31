@@ -1,0 +1,10 @@
+name: ci
+on: push
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - run: npm test
+        env:
+          SECRET_KEY: ${{secrets.SECRET_KEY}}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

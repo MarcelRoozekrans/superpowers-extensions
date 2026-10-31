@@ -172,6 +172,16 @@
       },
       "source": "./plugins/retro",
       "category": "workflow"
+    },
+    {
+      "name": "wizard",
+      "description": "Generates an interactive bash script that walks a person through setup steps only they can do: dashboards, API keys, .env values, GitHub secrets and variables, one-off migrations. Claude scopes the steps from the repo, writes the script from a shared template and checks it with one command. Adapted from Matt Pocock's wizard skill (MIT).",
+      "version": "1.27.1",
+      "author": {
+        "name": "Marcel Roozekrans"
+      },
+      "source": "./plugins/wizard",
+      "category": "workflow"
     }
   ]
 }
