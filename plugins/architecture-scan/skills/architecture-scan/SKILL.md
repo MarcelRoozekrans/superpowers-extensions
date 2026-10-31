@@ -20,20 +20,27 @@ Never write component, service or unit for module; API or signature for interfac
 
 ## Procedure
 
-Paths below are relative to this skill's directory. `<root>` is the repo root (`git rev-parse --show-toplevel`).
+`<skill dir>` is the directory holding this SKILL.md; commands run from the user's repo, so give script paths in full. `<root>` is the repo root (`git rev-parse --show-toplevel`).
 
 ### 1. Recall rejected candidates
 
-Recall decisions with `decision-tracker`. It recalls once per session: if it already ran, reuse its list. Collect every decision tagged `rejected-candidate`, or call `search_by_tags` with `["rejected-candidate", "project:<name>"]`. Add any rejection the user states in the conversation. These go to the subagent in step 4 and to the report's scope section.
+Recall decisions with `decision-tracker`. It recalls once per session: if it already ran, reuse its list. Otherwise do its two steps: call `search_by_tags` with `["decision", "project:<name>"]`, then keep the results that also carry the `rejected-candidate` tag. Add any rejection the user states in the conversation. These go to the subagent in step 4 and to the report's scope section.
 
 ### 2. Scope
 
 - **The user named an area, a module or a pain point:** that is the scope. Skip the hot-spot count.
-- **Otherwise:** run `node scripts/hotspots.mjs --repo <root>`. It prints `{dirs:[{dir,count}], total, scattered, commits}` for the last 200 commits, counted per directory at most three levels deep, without lockfiles, generated files, `CHANGELOG.md` and docs. The scope is the **top five directories** in `dirs` with their counts. When `scattered` is true, the top five hold less than 30% of the changes: widen the scope to the whole source tree and say so in the report. Exit code 2 means `<root>` is not a git repo: ask the user for an area instead.
+- **Otherwise:** run the script at `<skill dir>/scripts/hotspots.mjs`: `node <skill dir>/scripts/hotspots.mjs --repo <root>`. It prints `{dirs:[{dir,count}], total, scattered, commits}` for the last 200 commits, counted per directory at most three levels deep, without lockfiles, generated files, `CHANGELOG.md` and docs. The scope is the **top five directories** in `dirs` with their counts. When `scattered` is true, the top five hold less than 30% of the changes: widen the scope to the whole source tree and say so in the report. Exit code 2 means `<root>` is not a git repo: ask the user for an area instead.
 
 Keep the counts; the report shows them.
 
-**Cold code gets no card.** A directory is hot, not every file in it. Get the per-file counts inside the scope with `git -C <root> log -n 200 --no-renames --name-status --pretty=format:` (count lines with status `A` or `M`). A file is cold when it changed fewer times than a tenth of the top directory's count. A candidate whose files are mostly cold gets no card, even when it is shallow and its directory is hot: a hot directory can be hot because of one file.
+**Hot files, not only hot directories.** A directory can be hot because of one file. Get the per-file change counts for the scope:
+
+```bash
+git -C <root> log -n 200 --no-renames --name-status --pretty=format: -- <scope dirs> \
+  | awk '$1=="A" || $1=="M" {print $2}' | sort | uniq -c | sort -rn
+```
+
+A card's files must be among the files this history changes repeatedly. Every card's Files line shows each file's change count in the window, so a file with one or two changes is visible on the card. A candidate whose files changed only once or twice each gets no card, even when it is shallow and its directory is hot.
 
 ### 3. Read the project's glossary and ADRs
 
@@ -50,7 +57,7 @@ Dispatch **one** `general-purpose` subagent with `model: sonnet` passed explicit
 5. **On .NET** (`*.sln`, `*.slnx` or `*.csproj` present) **with roslyn-codelens tools available:** "Back each finding with `get_complexity_metrics`, `find_callers` (fan-in), `get_public_api_surface` (interface size), and `get_type_hierarchy` and `find_circular_dependencies` where relevant, as `roslyn-codelens-integration` describes. Use them instead of Grep for structural questions."
 6. **What to look for**, from upstream: where understanding one concept means bouncing between many small modules; where modules are shallow, with an interface nearly as complex as the implementation; where pure functions were extracted for testability but the bugs hide in how they are called (no locality); where coupled modules leak across their seams; what is hard to test through its current interface.
 7. **The deletion test, on every suspect:** "Imagine deleting the module. If complexity vanishes, it was a pass-through: a candidate. If complexity reappears across its callers, it earns its keep: it is deep, and not a candidate. State the result for every suspect, candidate or not."
-8. **The rules:** read-only, edit nothing; no card for cold files (the rule from step 2); never propose an interface (no method names, parameters or entry points); up to six candidates, ranked by strength and then by churn in the area; return fewer when fewer are real, never pad with invented ones.
+8. **The rules:** read-only, edit nothing; a candidate's files must be files the history changes repeatedly, each listed with its change count, and a candidate whose files changed only once or twice each is not returned; never propose an interface (no method names, parameters or entry points); up to six candidates, ranked by strength and then by churn in the area; return fewer when fewer are real, never pad with invented ones.
 9. **The return format**, per candidate:
    - **Title:** a short name for the deepening, such as "Collapse the Order intake pipeline".
    - **Files**, each with its change count in the window.
@@ -64,15 +71,15 @@ Dispatch **one** `general-purpose` subagent with `model: sonnet` passed explicit
    - **Conflict:** a recorded decision or ADR it touches, if any.
    - **Diagram sketch:** which pattern fits (Mermaid graph, hand-built boxes, cross-section, mass diagram, call-graph collapse) and what goes in Before and After.
 
-   And once, after the candidates: the modules found deep by the deletion test, the rejections skipped with the reason each matches, and the cold suspects left out.
+   And once, after the candidates: the modules found deep by the deletion test, the rejections skipped with the reason each matches, and the suspects left out because their files changed only once or twice.
 
 ### 5. Report
 
-Build the report from [references/report.md](references/report.md) and `templates/report.template.html`, from the subagent's return. Check the return first: drop a candidate whose files are cold, and rewrite any drift term or interface proposal before it reaches the page.
+Build the report from [references/report.md](references/report.md) and `templates/report.template.html`, from the subagent's return. Check the return first: drop a candidate whose files changed only once or twice each, and rewrite any drift term or interface proposal before it reaches the page.
 
 - **Where the scan looked** (`{{SCOPE}}`): the hot-spot rows with their counts, the history window, and the `.recalled` line listing every rejection skipped, with its reason. Note there when the rejected module has moved or been renamed since.
 - **One card per candidate**, in ranked order, each with:
-  - a **before/after diagram pair**. Every card has one. Vary the patterns: with two or more cards, use at least two different patterns. The After side shows the shape (one deep module where there were several shallow ones; a narrower interface over a larger implementation), labelled with the module's name only. Leave out method names, even where `report.md`'s markup examples show one such as `accept(order)` or `send(event)`.
+  - a **before/after diagram pair**. Every card has one. Vary the patterns: with two or more cards, use at least two different patterns. The After side shows the shape (one deep module where there were several shallow ones; a narrower interface over a larger implementation), labelled with the module's name, what it owns and which seams remain. No method names, parameter lists or method counts.
   - **Problem** that states the deletion-test result in words, such as "Four shallow modules; deletion test: complexity vanishes, each only forwards the call."
   - **Solution** that says which modules merge or what moves behind the seam, never the new interface.
   - **Wins** in glossary terms.
@@ -84,13 +91,13 @@ Before publishing, check the filled HTML:
 - `grep -niwE "component|service|services|unit|api|signature|boundary|layer|wrapper"` on the file finds nothing in report copy. A hit inside a file or directory name, such as `pricing-api.js`, is fine.
 - No `{{` remains.
 - Every `<article>` holds a `.pair`.
-- No Solution line or After panel names a method or a parameter list.
+- No Solution line or After panel names a method, a parameter list or a method count.
 
 Publish it as an Artifact per `report.md`, or use the fallback below. Then give the URL or the path (the HARD-GATE).
 
 ### 6. Pick
 
-Ask with AskUserQuestion: "Which candidate should go to brainstorming?" One option per candidate, up to the tool's limit, with the top recommendation first and labelled "(Recommended)"; the rest go under Other. Add "None of these". Still no interface in the option labels.
+Ask with AskUserQuestion: "Which candidate should go to brainstorming?" The tool takes about four options. The top recommendation comes first, labelled "(Recommended)"; then the next candidates in rank order; "None of these" always keeps the last slot. Lower-ranked candidates beyond the limit stay reachable through Other: say so in the question. Still no interface in the option labels.
 
 If the user already gave the pick, or a rejection and its reason, use those answers. Do not ask again.
 
@@ -122,7 +129,7 @@ The scan's job ends at the handoff. It does not design the interface, write the 
 
 ## Fallbacks
 
-- **No Artifact tool:** fill `{{MERMAID_SCRIPT}}` with the pinned script line from `report.md` and write the file to the path the user or the brief names, outside the repo; otherwise to `<tmpdir>/architecture-scan-<timestamp>.html`, where `<tmpdir>` is `$TMPDIR`, else `/tmp` (`%TEMP%` on Windows), and `<timestamp>` is `YYYYMMDD-HHMMSS`. Try to open it (`xdg-open`, `open` or `start`); if that fails, the absolute path is enough. Give the path.
+- **No Artifact tool:** fill `{{MERMAID_SCRIPT}}` with the pinned script line from `report.md` and write the file to `<tmpdir>/architecture-scan-<timestamp>.html`, where `<tmpdir>` is `$TMPDIR`, else `/tmp` (`%TEMP%` on Windows), and `<timestamp>` is `YYYYMMDD-HHMMSS`. Try to open it (`xdg-open`, `open` or `start`); if that fails, the absolute path is enough. Give the path.
 - **No AskUserQuestion:** ask a numbered question in text, top recommendation first and marked, "None of these" last:
 
   ```text
@@ -141,7 +148,7 @@ The scan's job ends at the handoff. It does not design the interface, write the 
 
 - **Vocabulary exact.** The ten terms above; never the substitutes.
 - **Never padded.** Up to six cards; three is the aim, but fewer real candidates beat invented ones. No generic advice: every card names its modules, their interface and the deletion-test result.
-- **Only hot code.** Scope comes from the hot spots or the user's named area; cold files get no card.
+- **Only hot code.** Scope comes from the hot spots or the user's named area; a candidate whose files changed only once or twice each gets no card.
 - **No interface before the pick.** See the HARD-GATE.
 - **Writes nothing into the repo.** The report is an Artifact or a temp file; rejections go to long-term memory. No glossary, no ADR, no notes file.
 - **Ends at the handoff.**

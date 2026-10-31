@@ -2,7 +2,7 @@
 
 The scan ends in one HTML report. Build it from `templates/report.template.html`: the template holds the whole stylesheet and the page frame, so this file never repeats CSS. Open the template to see the class definitions.
 
-The report shows the before/after shape of each candidate, never a proposed new interface. The interface is designed after the user picks, in brainstorming.
+The report shows the before/after shape of each candidate, never a proposed new interface. The interface is designed after the user picks, in brainstorming. After-side labels show the shape only: one deep module, what it owns, which seams remain. No method names, parameter lists or method counts.
 
 ## Fill the template
 
@@ -110,7 +110,7 @@ flowchart LR
 <div class="panel after"><span class="eyebrow">After</span>
 <pre class="mermaid">
 flowchart LR
-  H[Handler] --> I[[Order intake<br/>accept order]]
+  H[Handler] --> I[[Order intake<br/>owns validation and mapping]]
   I --> R[OrderRepo]
 </pre>
 </div>
@@ -122,7 +122,7 @@ Use modules as bordered `<div>`s when Mermaid's layout fights the point, for exa
 
 ```html
 <div class="panel after"><span class="eyebrow">After · one deep module</span>
-  <div class="band thick">Order intake · accept(order)</div>
+  <div class="band thick">Order intake · owns validation and mapping</div>
   <div style="border:1px solid var(--rule);border-radius:4px;padding:8px;text-align:center">OrderRepo</div>
 </div>
 ```
@@ -139,27 +139,27 @@ For layered pass-throughs: stack `.band` rows in a `.stack`, one per module a ca
 </div>
 <div class="panel after"><span class="eyebrow">After · one module, one adapter swap</span>
   <div class="stack">
-    <div class="band thick">Notifications · send(event)</div><div class="band">SMTP adapter / fake mailbox</div>
+    <div class="band thick">Notifications · owns routing and templates</div><div class="band">SMTP adapter / fake mailbox</div>
   </div>
 </div>
 ```
 
 ### Mass diagram
 
-For an interface as wide as its implementation. Each module is two rectangles: `.if` for interface surface, `.impl` for implementation, heights in pixels. Before, the interface rectangle is nearly as tall as the implementation (shallow). After, the interface is short and the implementation tall (deep). Put the method count in the `<small>` caption.
+For an interface as wide as its implementation. Each module is two rectangles: `.if` for interface surface, `.impl` for implementation, heights in pixels. Before, the interface rectangle is nearly as tall as the implementation (shallow). After, the interface is short and the implementation tall (deep). The Before caption may give the current method count as evidence. The After caption names the module and what it owns, never a method count: the new interface is designed after the pick.
 
 ```html
 <div class="mass">
   <div class="mod"><div class="if" style="height:96px"></div><div class="impl" style="height:70px"></div><small>Pricing client<br>14 methods</small></div>
 </div>
 <div class="mass">
-  <div class="mod"><div class="if" style="height:22px"></div><div class="impl" style="height:150px"></div><small>Pricing<br>2 methods</small></div>
+  <div class="mod"><div class="if" style="height:22px"></div><div class="impl" style="height:150px"></div><small>Pricing<br>owns rates and rounding</small></div>
 </div>
 ```
 
 ### Call-graph collapse
 
-Before: a tree of function calls as nested bordered boxes inside a `.panel`. After: the same tree collapsed into one `.band.thick` box, with the now-internal calls shown faded inside it in `var(--muted)`. No dedicated classes.
+Before: a tree of function calls as nested bordered boxes inside a `.panel`. After: the same tree collapsed into one `.band.thick` box labelled with the module's name, with the now-internal calls shown faded inside it in `var(--muted)`. No dedicated classes.
 
 ```html
 <div class="panel"><span class="eyebrow">Before</span>
@@ -169,7 +169,7 @@ Before: a tree of function calls as nested bordered boxes inside a `.panel`. Aft
   </div>
 </div>
 <div class="panel after"><span class="eyebrow">After</span>
-  <div class="band thick">accept(order)<br><span style="color:var(--muted)">validate() · normalize()</span></div>
+  <div class="band thick">Order intake<br><span style="color:var(--muted)">validate() · normalize()</span></div>
 </div>
 ```
 
