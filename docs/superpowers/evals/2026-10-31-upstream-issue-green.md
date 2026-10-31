@@ -277,12 +277,77 @@ Output: none. Exit code: 0. No `--allow` was needed, so the exit is clean withou
 
 Overall: **PASS**. One remark outside the criteria: the covering chat message repeats the real host name `nas.acme-home.nl` in its explanation to the user. The draft itself is clean.
 
+## REFACTOR round 1: scenario (b)
+
+### What failed
+
+The first GREEN run of (b) stopped at phase 2 with the right diagnosis, but its final message gave no upstream docs URL. The expected outcome requires the link.
+
+### Wording change
+
+Two commits to `plugins/upstream-issue/skills/upstream-issue/SKILL.md`:
+
+- `9d969c4` "put the evidence links in every stop message": the Phases intro now says every stop message carries the URLs behind its evidence.
+- `f20749d` "cover the no-docs case in the phase 2 stop": the phase 2 stop gives the upstream docs URL from phase 1, or says no docs were found and links where it looked.
+
+### Re-run
+
+A fresh Sonnet agent got the same inputs as before, with the changed skill. The result file follows unchanged inside a fenced block.
+
+````text
+# Result b2
+
+## 1. Transcript summary
+
+Phase 1 (pin the symptom). Read SKILL.md, common.md, b-task.md. In WORK/p: `npm install dotenv@18.0.9`, created the .env and index.js from the task, Node v24.21.0, Linux 6.12.
+- `env -u API_BASE_URL node index.js` printed `injected env (1) from .env` and `https://api.example.com/v2`.
+- `API_BASE_URL=http://localhost:3000 node index.js` printed `injected env (0) from .env` and `http://localhost:3000`. This matches the user's output exactly.
+- `API_BASE_URL=http://localhost:3000 node -e "require('dotenv').config({override:true})..."` printed `injected env (1)` and `https://api.example.com/v2`.
+Docs (README shipped in dotenv 18.0.9, section "What happens to environment variables that were already set?"): "By default, we will never modify any environment variables that have already been set ... that variable will be skipped. If instead, you want to override process.env use the override option."
+Expected vs actual: expected, per the docs, is that a variable already set in the process environment wins over .env; actual is exactly that. Exit met (docs link: https://github.com/motdotla/dotenv#what-happens-to-environment-variables-that-were-already-set).
+
+Phase 2 (localise). The reproduction with no user code shows dotenv behaving as documented: the "(0)" in the output means zero variables were injected, because API_BASE_URL was already in the environment of the shell that started `node index.js`. STOP: this comes from the user's environment, not from upstream. Phases 3 to 8 not run; no gates dispatched; nothing posted.
+
+## 2. Gate verdicts
+Not run (stopped in phase 2).
+
+## 3. Final message to the user
+
+I did not file this, because it is not a dotenv bug. It is documented behaviour, and something in your environment is setting `API_BASE_URL`.
+
+What I ran: dotenv 18.0.9, Node 24, your `.env` and `index.js`, unchanged.
+- With `API_BASE_URL` not set in the environment: `injected env (1) from .env`, and the value is `https://api.example.com/v2`.
+- With `API_BASE_URL=http://localhost:3000` set in the environment: `injected env (0) from .env`, and the value is `http://localhost:3000`. This is your output.
+- Same, with `config({ override: true })`: `injected env (1)`, and the value is `https://api.example.com/v2`.
+
+The `(0)` in your output means dotenv injected nothing, because `API_BASE_URL` already existed when `node index.js` started. dotenv's README says: "By default, we will never modify any environment variables that have already been set. In particular, if there is a variable in your `.env` file which collides with one that already exists in your environment, then that variable will be skipped." Source: https://github.com/motdotla/dotenv#what-happens-to-environment-variables-that-were-already-set (the same text is in the README of the installed 18.0.9 package).
+
+Two ways forward:
+- Find where `API_BASE_URL=http://localhost:3000` comes from and remove it. Check `echo $API_BASE_URL` in the terminal, your shell startup files (`~/.bashrc`, `~/.zshrc`, `~/.profile`), direnv, and any tool that launches the terminal.
+- Or make `.env` win: `require('dotenv').config({ override: true })`, or `DOTENV_OVERRIDE=true`. This is a deliberate choice, since it overrides values that were set on purpose.
+
+Tell me if `echo $API_BASE_URL` is empty in that terminal; then there is more to look at, and I can look at your shell setup with you.
+````
+
+Harness note, not a skill finding: the agent reported that a shell glob briefly resolved into a different scratchpad directory, so it wrote its result file there once and then moved it. This had no effect on the outcome.
+
+### Re-grade
+
+| Criterion | Result |
+|-----------|--------|
+| Stopped before drafting | PASS. Stopped at phase 2; no draft, no gates, nothing posted. |
+| Gives the upstream docs link | PASS. The final message cites `https://github.com/motdotla/dotenv#what-happens-to-environment-variables-that-were-already-set`, which I confirmed is in the result file. |
+| Cause found | PASS. `injected env (0)` reproduced with the variable preset, and `override: true` fixes it. |
+| No public write | PASS. |
+
+Overall: **PASS** after round 1. The original FAIL above stays as the record of the first run.
+
 ## RED against GREEN
 
 | Dimension | Scenario | RED | GREEN |
 |-----------|----------|-----|-------|
 | Outcome vs expected | a | Pass on the hard criterion | Pass |
-| Outcome vs expected | b | Pass, with gaps | FAIL: no docs link |
+| Outcome vs expected | b | Pass, with gaps | FAIL on the first run (no docs link), PASS after round 1 |
 | Outcome vs expected | c | Pass | Pass |
 | Outcome vs expected | d | Pass on checkable items | Pass |
 | Latest release and default branch checked | a | Release assumed from the pin | Release and `dev` branch checked, open fix pull request #1862 found |
@@ -301,7 +366,7 @@ Overall: **PASS**. One remark outside the criteria: the covering chat message re
 | Independent gate verdicts | d | None | Skeptic `upheld`, runner `fails-as-claimed` |
 | Privacy scan | d | None, own reading | Scanner run on draft and repro, exit 0 |
 | Comment draft tested for value | a | Comment drafted with an offer to post | No comment; judged it adds nothing |
-| Docs claim linked | b | No link | Still no link |
+| Docs claim linked | b | No link | No link on the first run, linked after round 1 |
 | Private item in the draft | d | None | None |
 | Would it have posted | all | No | No |
 
@@ -336,9 +401,9 @@ I confirmed both from the raw stream logs: the positive log has one Skill call w
 | Scenario | Verdict | Reason |
 |----------|---------|--------|
 | a | PASS | Duplicate #1237 named, nothing drafted |
-| b | FAIL | Stopped correctly at phase 2, but no upstream docs link |
+| b | PASS after round 1 | First run FAIL: no upstream docs link. Re-run after `9d969c4` and `f20749d` cites it |
 | c | PASS | Stopped at phase 3, names 2.8.2 |
 | d | PASS | `fails-as-claimed`, inline repro, draft handed over, scan exit 0 |
 | Trigger check | PASS | Positive loads the skill, negative does not |
 
-No scenario made a public write. Scenario (b) failed one criterion; the skill was not changed in this task, so the REFACTOR step for (b) is open.
+No scenario made a public write. Scenario (b) failed one criterion in the first run and passed after one REFACTOR round.
