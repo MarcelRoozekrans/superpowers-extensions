@@ -26,13 +26,14 @@
     "context-budget",
     "anti-slop",
     "demo-video",
-    "retro"
+    "retro",
+    "architecture-scan"
   ],
   "skills": "./plugins/",
   "interface": {
     "displayName": "Superpowers Extensions",
     "shortDescription": "Quality gates, refactor analysis, project lifecycle, UI workflow, and design systems for the superpowers suite.",
-    "longDescription": "Sixteen extension skills that compose with obra/superpowers: regression-test (Playwright UI testing), pre-push-review (branch quality gate), refactor-analysis (transitive impact analysis), decision-tracker (cross-session memory), roslyn-codelens-integration (.NET semantic intelligence), memorylens-integration (.NET memory profiling), project-orchestration (multi-session lifecycle with brainstorm-first milestones), ui-workflow (design contracts + 3-layer audit), ui-design-system (84 vendored references + 5 OKLch directions), squad (persistent AI agent teams), compress-memory (memory file compression), logo-design (brand marks as SVG), context-budget (subagent model rule and fresh-session handoff), anti-slop (AI prose tics rewritten out of published text), demo-video (web features recorded as captioned walkthrough videos), and retro (session retrospectives that fix, file or drop setup improvements). Source-of-truth markdown skills work across Claude Code, Cursor, Codex, Gemini, Copilot CLI, and OpenCode.",
+    "longDescription": "Seventeen extension skills that compose with obra/superpowers: regression-test (Playwright UI testing), pre-push-review (branch quality gate), refactor-analysis (transitive impact analysis), decision-tracker (cross-session memory), roslyn-codelens-integration (.NET semantic intelligence), memorylens-integration (.NET memory profiling), project-orchestration (multi-session lifecycle with brainstorm-first milestones), ui-workflow (design contracts + 3-layer audit), ui-design-system (84 vendored references + 5 OKLch directions), squad (persistent AI agent teams), compress-memory (memory file compression), logo-design (brand marks as SVG), context-budget (subagent model rule and fresh-session handoff), anti-slop (AI prose tics rewritten out of published text), demo-video (web features recorded as captioned walkthrough videos), retro (session retrospectives that fix, file or drop setup improvements), and architecture-scan (ranked deepening candidates from git hot spots, with codebase-design). Source-of-truth markdown skills work across Claude Code, Cursor, Codex, Gemini, Copilot CLI, and OpenCode.",
     "developerName": "Marcel Roozekrans",
     "category": "Coding",
     "capabilities": [

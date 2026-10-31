@@ -2,7 +2,7 @@
 
 Codex auto-discovers skills under `~/.agents/skills/`. Each plugin in this
 suite is a separate skill bundle, so installation is a clone followed by
-sixteen symlinks (one per plugin).
+eighteen symlinks (one per skill).
 
 ## Prerequisites
 
@@ -17,7 +17,7 @@ sixteen symlinks (one per plugin).
    git clone https://github.com/MarcelRoozekrans/superpowers-extensions.git ~/.codex/superpowers-extensions
    ```
 
-2. **Symlink each plugin's skill directory into `~/.agents/skills/`:**
+2. **Symlink each plugin's skill directories into `~/.agents/skills/`:**
 
    **macOS / Linux:**
 
@@ -26,8 +26,10 @@ sixteen symlinks (one per plugin).
    REPO=~/.codex/superpowers-extensions
    for plugin in regression-test pre-push-review refactor-analysis decision-tracker \
                  roslyn-codelens-integration memorylens-integration project-orchestration \
-                 ui-workflow ui-design-system squad compress-memory logo-design context-budget anti-slop demo-video retro; do
-     ln -sfn "$REPO/plugins/$plugin/skills/$plugin" "$HOME/.agents/skills/$plugin"
+                 ui-workflow ui-design-system squad compress-memory logo-design context-budget anti-slop demo-video retro architecture-scan; do
+     for skill in "$REPO/plugins/$plugin/skills/"*/; do
+       ln -sfn "${skill%/}" "$HOME/.agents/skills/$(basename "$skill")"
+     done
    done
    ```
 
@@ -39,12 +41,13 @@ sixteen symlinks (one per plugin).
    $plugins = @(
      'regression-test', 'pre-push-review', 'refactor-analysis', 'decision-tracker',
      'roslyn-codelens-integration', 'memorylens-integration', 'project-orchestration',
-     'ui-workflow', 'ui-design-system', 'squad', 'compress-memory', 'logo-design', 'context-budget', 'anti-slop', 'demo-video', 'retro'
+     'ui-workflow', 'ui-design-system', 'squad', 'compress-memory', 'logo-design', 'context-budget', 'anti-slop', 'demo-video', 'retro', 'architecture-scan'
    )
    foreach ($plugin in $plugins) {
-     $src = "$repo\plugins\$plugin\skills\$plugin"
-     $dst = "$env:USERPROFILE\.agents\skills\$plugin"
-     cmd /c mklink /J "$dst" "$src"
+     foreach ($skill in Get-ChildItem -Directory "$repo\plugins\$plugin\skills") {
+       $dst = "$env:USERPROFILE\.agents\skills\$($skill.Name)"
+       cmd /c mklink /J "$dst" "$($skill.FullName)"
+     }
    }
    ```
 
@@ -53,10 +56,10 @@ sixteen symlinks (one per plugin).
 ## Verify
 
 ```bash
-ls -la ~/.agents/skills/ | grep -E '(regression-test|pre-push-review|refactor-analysis|decision-tracker|roslyn-codelens-integration|memorylens-integration|project-orchestration|ui-workflow|ui-design-system|squad|compress-memory|logo-design|context-budget|anti-slop|demo-video|retro)'
+ls -la ~/.agents/skills/ | grep -E '(regression-test|pre-push-review|refactor-analysis|decision-tracker|roslyn-codelens-integration|memorylens-integration|project-orchestration|ui-workflow|ui-design-system|squad|compress-memory|logo-design|context-budget|anti-slop|demo-video|retro|architecture-scan|codebase-design)'
 ```
 
-You should see sixteen symlinks (or junctions on Windows), one per plugin.
+You should see eighteen symlinks (or junctions on Windows), one per skill.
 
 ## Updating
 
@@ -71,8 +74,10 @@ Skills update instantly through the symlinks.
 ```bash
 for plugin in regression-test pre-push-review refactor-analysis decision-tracker \
               roslyn-codelens-integration memorylens-integration project-orchestration \
-              ui-workflow ui-design-system squad compress-memory logo-design context-budget anti-slop demo-video retro; do
-  rm -f "$HOME/.agents/skills/$plugin"
+              ui-workflow ui-design-system squad compress-memory logo-design context-budget anti-slop demo-video retro architecture-scan; do
+  for skill in "$REPO/plugins/$plugin/skills/"*/; do
+    rm -f "$HOME/.agents/skills/$(basename "$skill")"
+  done
 done
 ```
 
@@ -85,6 +90,8 @@ For example, frontend-only:
 
 ```bash
 for plugin in ui-workflow ui-design-system regression-test; do
-  ln -sfn "$REPO/plugins/$plugin/skills/$plugin" "$HOME/.agents/skills/$plugin"
+  for skill in "$REPO/plugins/$plugin/skills/"*/; do
+    ln -sfn "${skill%/}" "$HOME/.agents/skills/$(basename "$skill")"
+  done
 done
 ```

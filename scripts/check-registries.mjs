@@ -33,10 +33,13 @@ const releasePlease = readJson('release-please-config.json');
 const cursor = readJson('.cursor-plugin/plugin.json');
 const codex = readJson('.codex-plugin/plugin.json');
 const gemini = readJson('gemini-extension.json');
+const geminiMd = readText('GEMINI.md');
 const sessionStart = readText('hooks/session-start');
 const opencode = readText('.opencode/plugins/superpowers-extensions.js');
 const commitlint = require(join(root, 'commitlint.config.js'));
 const commitlintScopes = commitlint.rules['scope-enum'][2];
+
+let skillCount = 0;
 
 // ── 1. Every plugin is registered in every registry ───────────────────────────
 for (const name of plugins) {
@@ -50,17 +53,32 @@ for (const name of plugins) {
     }
   }
 
-  const skillPath = `plugins/${name}/skills/${name}/SKILL.md`;
-  if (!existsSync(join(root, skillPath))) {
-    fail(skillPath, `${name}: missing SKILL.md`);
-  } else {
-    const fm = /^---\r?\n([\s\S]*?)\r?\n---/.exec(readText(skillPath));
-    const declared = fm && /^name:\s*(\S+)/m.exec(fm[1]);
-    if (!declared) {
-      fail(skillPath, `${name}: SKILL.md frontmatter has no name field`);
-    } else if (declared[1] !== name) {
-      fail(skillPath, `${name}: SKILL.md declares name "${declared[1]}", expected "${name}"`);
+  // A plugin has at least one skill named after it, and may carry more.
+  // Every skill folder needs a SKILL.md whose name matches its folder, and a
+  // line in GEMINI.md, which has no manifest of its own to discover skills.
+  const mainSkill = `plugins/${name}/skills/${name}`;
+  if (!existsSync(join(root, mainSkill))) {
+    fail(mainSkill, `${name}: missing skills/${name}/ folder`);
+  }
+  const skillsDir = `plugins/${name}/skills`;
+  const skills = existsSync(join(root, skillsDir)) ? dirsIn(skillsDir).sort() : [];
+  for (const skill of skills) {
+    const skillPath = `${skillsDir}/${skill}/SKILL.md`;
+    if (!existsSync(join(root, skillPath))) {
+      fail(skillPath, `${name}/${skill}: missing SKILL.md`);
+    } else {
+      const fm = /^---\r?\n([\s\S]*?)\r?\n---/.exec(readText(skillPath));
+      const declared = fm && /^name:\s*(\S+)/m.exec(fm[1]);
+      if (!declared) {
+        fail(skillPath, `${name}/${skill}: SKILL.md frontmatter has no name field`);
+      } else if (declared[1] !== skill) {
+        fail(skillPath, `${name}/${skill}: SKILL.md declares name "${declared[1]}", expected "${skill}"`);
+      }
     }
+    if (!geminiMd.split(/\r?\n/).includes(`@./${skillPath}`)) {
+      fail('GEMINI.md', `${name}/${skill}: missing the line @./${skillPath}`);
+    }
+    skillCount += 1;
   }
 
   const entry = marketplace.plugins.find((p) => p.name === name);
@@ -168,7 +186,7 @@ if (!claimed) {
 if (failures.length === 0) {
   console.log(
     `check:registries — OK\n` +
-      `  ${plugins.length} plugins registered across 9 registries, all at v${version}\n` +
+      `  ${plugins.length} plugins, ${skillCount} skills registered across 9 registries, all at v${version}\n` +
       `  ${onDisk.length} design systems, all indexed`
   );
   process.exit(0);

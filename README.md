@@ -2,7 +2,7 @@
 
 [![GitHub Sponsors](https://img.shields.io/github/sponsors/MarcelRoozekrans?style=flat&logo=githubsponsors&color=ea4aaa&label=Sponsor)](https://github.com/sponsors/MarcelRoozekrans)
 
-Extension skills for the [superpowers](https://github.com/obra/superpowers) suite, providing quality gates, development workflow skills, and project lifecycle management for web application development. It includes sixteen skills:
+Extension skills for the [superpowers](https://github.com/obra/superpowers) suite, providing quality gates, development workflow skills, and project lifecycle management for web application development. It includes seventeen plugins with eighteen skills:
 
 - **regression-test** -- Comprehensive regression testing using the [Microsoft Playwright MCP server](https://github.com/microsoft/playwright-mcp), combining existing test suite execution with AI-powered visual and functional browser testing.
 - **pre-push-review** -- A structured branch review that diffs against the base branch and gates on plan adherence, code quality, commit hygiene, and regression testing, producing a PASS/FAIL verdict with a prioritized remediation plan on failure.
@@ -19,6 +19,7 @@ Extension skills for the [superpowers](https://github.com/obra/superpowers) suit
 - **anti-slop** -- Rewrites AI prose tics out of text Claude is about to publish, in English and Dutch: commit messages, PR and issue text, comments, READMEs, docs and release notes. Each language has a pattern catalogue in four families (vocabulary, structure, tone, substance), and every entry pairs a bad example with a plain rewrite. Claude publishes the clean version with no report; on demand it edits a file in place and leaves a diff.
 - **demo-video** -- Records a finished web feature as a paced browser walkthrough video. Claude writes a storyboard from the plan and diff, explores it live with Playwright MCP, then generates a `record.mjs` that drives headless Chromium on the real app. ffmpeg turns the recording into chapter MP4s with captions and title cards, speeds up slow waits instead of cutting them, and builds a GIF in quick mode. Two modes: **quick** (no approval, for a PR or chat) and **polished** (storyboard approved first, for a talk or a fallback recording). Re-recording after a UI fix is one command.
 - **retro** -- Session retrospectives that improve the setup around the agent. A digest script turns a Claude Code transcript into sizes, counts and line numbers; one subagent finds setup improvements in six categories (information access, guardrails, reviewer rules, navigation, tool cost, steering files) and ranks them most severe first. Each finding is fixed on a `retro/<date>` branch, filed as a grouped issue or dropped, chosen per finding. Adapted from Matt Pocock's [skills](https://github.com/mattpocock/skills) (MIT).
+- **architecture-scan** -- Finds shallow modules in the areas the git history changes most. A script ranks the hot directories and files of the last 200 commits, one subagent applies the deletion test there, and the ranked report (an Artifact or an HTML file) shows a before/after diagram per candidate. You pick one, and it goes to `superpowers:brainstorming`. The plugin also ships **codebase-design**, the shared deep-module vocabulary (module, interface, depth, seam, leverage, locality). Adapted from Matt Pocock's [skills](https://github.com/mattpocock/skills) (MIT). See [plugins/architecture-scan/NOTICE.md](plugins/architecture-scan/NOTICE.md).
 - **squad** -- Persistent AI agent teams (Lead, Backend Engineer, Frontend Engineer, Tester, Scribe) **dispatched as parallel `Task` subagents** during brainstorming and planning workflows. Each specialist runs in an isolated context window with its own charter and tier-1 history, so they cannot anchor on each other's reasoning. Per-role `history.md` files accumulate project-specific knowledge across sessions; tiered context lookup (semantic search → grep → recent history) keeps each subagent's prompt lean.
 
 ---
@@ -145,6 +146,43 @@ The skill produces:
 
 - **Impact analysis document** saved to `docs/superpowers/specs/YYYY-MM-DD-<topic>-impact-analysis.md` with summary table, dependency graph, annotated file list, risk register, and execution order
 - **Conversation summary** with refactor type, affected file counts by classification, top risks, and document path
+
+---
+
+## Architecture Scan Skill
+
+The architecture-scan skill finds places where shallow modules could become one deep module, before you commit to a refactor. It fires on "find refactor candidates", "architecture review", "where should we refactor" and "find shallow modules". When the refactor is already chosen ("rename X everywhere"), use `refactor-analysis` instead.
+
+### What It Does
+
+1. **Recall.** Candidates you rejected earlier come back from `decision-tracker`, so the scan does not suggest them again.
+2. **Scope.** `scripts/hotspots.mjs` counts changes per directory and per file over the last 200 commits and picks the top five directories, unless you named an area. A candidate's files must be files the history changes repeatedly.
+3. **Explore.** One `sonnet` subagent applies the deletion test to every suspect and returns up to six candidates, strongest first.
+4. **Report.** A ranked report with a before/after diagram pair per candidate. It never names a new interface.
+5. **Pick.** You choose one candidate and the skill hands it to `superpowers:brainstorming`, which designs the interface.
+
+The `codebase-design` skill holds the vocabulary both skills use. It also fires on its own when you design or deepen a module's interface.
+
+### Usage
+
+```text
+find refactor candidates
+where should we refactor in src/orders?
+```
+
+The hot-spot script also runs on its own:
+
+```bash
+node plugins/architecture-scan/skills/architecture-scan/scripts/hotspots.mjs --repo .
+```
+
+### Attribution
+
+Adapted from Matt Pocock's [skills](https://github.com/mattpocock/skills) (MIT). See [plugins/architecture-scan/NOTICE.md](plugins/architecture-scan/NOTICE.md) for the full attribution.
+
+### Prerequisites
+
+Node.js and a git repository. Optional: `decision-tracker` for rejected candidates, and `roslyn-codelens-integration` on .NET.
 
 ---
 
@@ -824,7 +862,7 @@ per harness; only how the harness loads them.
 | **OpenAI Codex CLI / App** | [`.codex-plugin/plugin.json`](.codex-plugin/plugin.json) + [`.codex/INSTALL.md`](.codex/INSTALL.md) | Clone-and-symlink each plugin into `~/.agents/skills/`; instructions and a copy-paste loop in [`.codex/INSTALL.md`](.codex/INSTALL.md) |
 | **Gemini CLI** | [`gemini-extension.json`](gemini-extension.json) + [`GEMINI.md`](GEMINI.md) | `GEMINI.md` lists each SKILL.md via `@./plugins/.../SKILL.md` import syntax |
 | **GitHub Copilot CLI** | Reuses [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json) + [`.copilot-cli/INSTALL.md`](.copilot-cli/INSTALL.md) | `copilot plugin marketplace add MarcelRoozekrans/superpowers-extensions`, then install individual plugins |
-| **OpenCode.ai** | [`.opencode/plugins/superpowers-extensions.js`](.opencode/plugins/superpowers-extensions.js) | JS plugin registers all sixteen plugin skill paths via OpenCode's `config.skills.paths` array — no symlinks needed |
+| **OpenCode.ai** | [`.opencode/plugins/superpowers-extensions.js`](.opencode/plugins/superpowers-extensions.js) | JS plugin registers all eighteen skill paths via OpenCode's `config.skills.paths` array — no symlinks needed |
 
 The polymorphic [`hooks/session-start`](hooks/session-start) script
 detects which harness is running it via env vars (`CURSOR_PLUGIN_ROOT`,
@@ -890,7 +928,7 @@ The multi-provider mechanism here is adapted directly from
 [`obra/superpowers`](https://github.com/obra/superpowers) (MIT). Their
 session-start hook was the model for ours; their per-harness manifest
 pattern is what enables one shared markdown tree to load natively in
-each host. Differences: we are a marketplace of sixteen plugins (versus
+each host. Differences: we are a marketplace of seventeen plugins (versus
 their single-plugin layout), so our manifests target the suite at the
 repo root with skills resolved via `./plugins/`.
 
@@ -926,6 +964,7 @@ claude plugin install context-budget
 claude plugin install anti-slop
 claude plugin install demo-video
 claude plugin install retro
+claude plugin install architecture-scan
 ```
 
 The regression-test plugin automatically configures the Playwright MCP server with `--caps=testing`. The pre-push-review plugin requires only git and no additional MCP servers for its core review.
@@ -1056,6 +1095,12 @@ xcopy /E /I plugins\retro\skills\retro %USERPROFILE%\.claude\skills\retro
 
 # macOS / Linux -- retro
 cp -r plugins/retro/skills/retro ~/.claude/skills/retro
+
+# Windows -- architecture-scan (both skills)
+xcopy /E /I plugins\architecture-scan\skills %USERPROFILE%\.claude\skills
+
+# macOS / Linux -- architecture-scan (both skills)
+cp -r plugins/architecture-scan/skills/. ~/.claude/skills/
 ```
 
 **Note:** Some plugins require companion MCP servers. Install them separately:
@@ -1076,7 +1121,7 @@ claude mcp add playwright -- npx @playwright/mcp@latest --caps=testing,pdf,visio
 
 ### Verify Installation
 
-In Claude Code, the skills should appear when you type `/regression-test`, `/pre-push-review`, `/refactor-analysis`, `/decision-tracker`, `/roslyn-codelens-integration`, `/memorylens-integration`, `/project-orchestration`, `/ui-workflow`, `/ui-design-system`, `/squad`, `/compress-memory`, `/logo-design`, `/context-budget`, `/anti-slop`, `/demo-video`, or `/retro`, or when you ask Claude to perform regression testing, a pre-push review, a refactor impact analysis, decision tracking, .NET code graph analysis, .NET memory profiling, project lifecycle management, UI design contract work, design system generation, to activate your agent team, to compress a memory file, to design or audit a brand mark, to rewrite AI prose tics out of a draft, to record a demo video of a web feature, or to run a retro on a session.
+In Claude Code, the skills should appear when you type `/regression-test`, `/pre-push-review`, `/refactor-analysis`, `/decision-tracker`, `/roslyn-codelens-integration`, `/memorylens-integration`, `/project-orchestration`, `/ui-workflow`, `/ui-design-system`, `/squad`, `/compress-memory`, `/logo-design`, `/context-budget`, `/anti-slop`, `/demo-video`, `/retro`, `/architecture-scan`, or `/codebase-design`, or when you ask Claude to perform regression testing, a pre-push review, a refactor impact analysis, decision tracking, .NET code graph analysis, .NET memory profiling, project lifecycle management, UI design contract work, design system generation, to activate your agent team, to compress a memory file, to design or audit a brand mark, to rewrite AI prose tics out of a draft, to record a demo video of a web feature, to run a retro on a session, to find refactor candidates, or to design a deeper module interface.
 
 ---
 
@@ -1129,6 +1174,14 @@ refactor-analysis      → transitive impact analysis, safe execution order
 writing-plans          → implementation plan scoped to the impact analysis
 subagent-driven-development  → parallel execution per change group
 pre-push-review        → PASS/FAIL gate
+```
+
+When you do not yet know what to refactor, start one step earlier:
+
+```text
+architecture-scan      → ranked deepening candidates from git hot spots, you pick one
+brainstorming          → designs the deeper module's interface
+writing-plans          → implementation plan (run refactor-analysis first for a multi-file change)
 ```
 
 For .NET codebases with `roslyn-codelens-integration` installed, refactor-analysis automatically uses Roslyn semantic queries instead of grep — catching dynamic references and reflection-based coupling that text search misses.
@@ -1218,7 +1271,7 @@ memorylens-integration → snapshot before and after, compare, confirm fix
 | Scenario | Primary skills | Enrichment (auto) |
 |---|---|---|
 | New feature | brainstorming → writing-plans → subagent → pre-push-review | squad, decision-tracker |
-| Refactor | refactor-analysis → writing-plans → subagent → pre-push-review | squad, roslyn-codelens-integration, decision-tracker |
+| Refactor | architecture-scan → brainstorming → writing-plans (refactor-analysis first) → subagent → pre-push-review; with the refactor already chosen, start at refactor-analysis | squad, roslyn-codelens-integration, decision-tracker |
 | Frontend | ui-design-system → logo-design → ui-workflow → subagent → ui-review | squad, regression-test |
 | Bug fix | systematic-debugging → TDD → pre-push-review | squad, memorylens-integration (.NET) |
 | Large project | project-orchestration wrapping any of the above | squad (histories auto-sync on pause) |
@@ -1375,7 +1428,7 @@ superpowers-extensions/
 │   │           ├── templates/              # record.template.mjs
 │   │           ├── lib/                    # runtime, ffmpeg graphs, postprocess, verify
 │   │           └── scripts/                # preflight.mjs, scaffold.mjs and tests
-│   └── retro/                              # Session retrospectives that fix, file or drop setup improvements (16th plugin)
+│   ├── retro/                              # Session retrospectives that fix, file or drop setup improvements
 │       ├── .claude-plugin/
 │       │   └── plugin.json
 │       └── skills/
@@ -1384,6 +1437,19 @@ superpowers-extensions/
 │               ├── NOTICE.md               # Attribution and MIT licence
 │               ├── references/             # categories.md and writing-for-agents.md
 │               └── scripts/                # digest.mjs transcript digest and tests
+│   └── architecture-scan/                  # Deepening candidates from git hot spots (two skills)
+│       ├── .claude-plugin/
+│       │   └── plugin.json
+│       ├── NOTICE.md                       # Attribution to Matt Pocock's skills (MIT)
+│       └── skills/
+│           ├── architecture-scan/
+│           │   ├── SKILL.md                # Procedure: recall, scope, explore, report, pick
+│           │   ├── references/             # report.md report rules
+│           │   ├── templates/              # report.template.html
+│           │   └── scripts/                # hotspots.mjs git hot-spot counts and tests
+│           └── codebase-design/
+│               ├── SKILL.md                # Deep-module vocabulary and principles
+│               └── references/             # deepening.md and design-it-twice.md
 └── docs/
     ├── planning/                           # Project lifecycle state (ROADMAP, MILESTONE, STATE, CONVENTIONS)
     └── plans/                              # Design documents and phase plans

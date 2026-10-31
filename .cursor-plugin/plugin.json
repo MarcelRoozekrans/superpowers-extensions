@@ -26,7 +26,8 @@
     "context-budget",
     "anti-slop",
     "demo-video",
-    "retro"
+    "retro",
+    "architecture-scan"
   ],
   "skills": "./plugins/"
 }

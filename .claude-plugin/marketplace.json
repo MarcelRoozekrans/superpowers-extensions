@@ -172,6 +172,16 @@
       },
       "source": "./plugins/retro",
       "category": "workflow"
+    },
+    {
+      "name": "architecture-scan",
+      "description": "Finds shallow modules in the areas the git history changes most, publishes a ranked report with before/after diagrams, lets you pick one candidate and hands it to brainstorming. Includes codebase-design, the shared deep-module vocabulary for designing and deepening interfaces.",
+      "version": "1.27.1",
+      "author": {
+        "name": "Marcel Roozekrans"
+      },
+      "source": "./plugins/architecture-scan",
+      "category": "code-quality"
     }
   ]
 }

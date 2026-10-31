@@ -1,0 +1,9 @@
+{
+  "name": "architecture-scan",
+  "description": "Finds shallow modules in the areas the git history changes most, publishes a ranked report with before/after diagrams, and hands the chosen candidate to brainstorming. Ships codebase-design, the shared deep-module vocabulary.",
+  "author": {
+    "name": "Marcel Roozekrans"
+  },
+  "license": "MIT",
+  "keywords": ["architecture", "refactoring", "deep-modules", "codebase-design", "architecture-scan"]
+}
