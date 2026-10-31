@@ -9,7 +9,7 @@ const BUILTIN_ALLOW = [
   'nuget.org', 'crates.io', 'pkg.go.dev',
 ];
 const SKIP_DIRS = new Set(['.git', 'node_modules', 'bin', 'obj', 'target', 'dist', '.venv']);
-const HOME_PLACEHOLDERS = new Set(['<user>', 'user', 'runner', '$USER', 'you']);
+const HOME_PLACEHOLDERS = new Set(['<user>', '{user}', 'user', 'runner', '$USER', 'you', 'Shared']);
 
 // A hostname match needs a lowercase TLD label or an all-uppercase name, and no
 // further dotted label after the TLD, so type names such as System.Net.Http,
@@ -32,10 +32,11 @@ const HOSTNAME = new RegExp(
   'gi',
 );
 // The user segment ends at a path separator, whitespace, a quote or backtick,
-// one of :;,) or the end of the line, so /home/alice is caught without a
-// trailing slash too.
-const HOME_END = String.raw`(?=[/\\\s"'\`:;,)]|$)`;
-const HOME_USER = String.raw`([^/\\\s"'\`:;,)]+)`;
+// one of :;,), a sentence-ending dot or the end of the line, so /home/alice
+// is caught without a trailing slash too. A dot inside the name, as in
+// first.last, stays part of it.
+const HOME_END = String.raw`(?=[/\\\s"'\`:;,)]|\.(?:\s|$)|$)`;
+const HOME_USER = String.raw`((?:[^/\\\s"'\`:;,).]|\.(?!\s|$))+)`;
 const HOME_PATH = [
   new RegExp(String.raw`/home/${HOME_USER}${HOME_END}`, 'g'),
   new RegExp(String.raw`/Users/${HOME_USER}${HOME_END}`, 'g'),

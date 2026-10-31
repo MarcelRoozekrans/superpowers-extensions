@@ -72,6 +72,20 @@ test('home-path flags a user segment without a trailing slash', () => {
   assert.deepEqual(kinds('HOME=/home/$USER'), []);
 });
 
+test('home-path stops at a sentence-ending dot and keeps dotted names', () => {
+  assert.deepEqual(kinds('see /home/<user>.'), []);
+  assert.deepEqual(kinds('HOME=/home/$USER. Then run it.'), []);
+  assert.deepEqual(scanText('see /home/alice.'), [{ kind: 'home-path', match: '/home/alice', line: 1 }]);
+  assert.deepEqual(scanText('cd /home/first.last/src'), [{ kind: 'home-path', match: '/home/first.last', line: 1 }]);
+  assert.deepEqual(scanText('home is /Users/first.last. Done'), [{ kind: 'home-path', match: '/Users/first.last', line: 1 }]);
+  assert.deepEqual(kinds('cd C:\\Users\\alice. Done'), ['home-path']);
+});
+
+test('home-path skips the macOS shared folder and {user}', () => {
+  assert.deepEqual(kinds('cp x /Users/Shared/x'), []);
+  assert.deepEqual(kinds('cd /home/{user}/x'), []);
+});
+
 test('token flags secrets, not commit SHAs', () => {
   assert.deepEqual(kinds('t ghp_' + 'a1B2c3D4e5'.repeat(3) + 'abcdef'), ['token']);
   assert.deepEqual(kinds('t github_pat_11ABCDEFG0abcdefghij'), ['token']);

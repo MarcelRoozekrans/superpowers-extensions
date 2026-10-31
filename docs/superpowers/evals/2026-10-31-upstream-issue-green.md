@@ -398,7 +398,7 @@ I confirmed both from the raw stream logs: the positive log has one Skill call w
 
 | Command | Result |
 |---------|--------|
-| `npm test` | PASS. 170 tests, 170 pass, 0 fail. |
+| `npm test` | PASS. 172 tests, 172 pass, 0 fail. |
 | `npm run check:registries` | PASS. 16 plugins registered across 9 registries, all at v1.27.1; 84 design systems, all indexed. |
 | `npm run check:conventions` | PASS. No commit or tag literals outside the protocol; 10 staging sub-skills delegate to it. |
 | `npx markdownlint-cli2` | PASS. Linting 87 files, 0 issues in 0 files. |
