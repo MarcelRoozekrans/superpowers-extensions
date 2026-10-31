@@ -10,7 +10,7 @@
 
 **Spec:** `docs/superpowers/specs/2026-10-31-architecture-scan-design.md`
 
-**Upstream source:** clone `https://github.com/mattpocock/skills` (depth 1) into the scratchpad. The files are `skills/engineering/improve-codebase-architecture/{SKILL.md,HTML-REPORT.md}` and `skills/engineering/codebase-design/{SKILL.md,DEEPENING.md,DESIGN-IT-TWICE.md}`. The approved report sample is `docs/superpowers/evals/2026-10-31-architecture-scan-sample.html` (Task 3 commits it).
+**Upstream source:** clone `https://github.com/mattpocock/skills` (depth 1) into the scratchpad. The files are `skills/engineering/improve-codebase-architecture/{SKILL.md,HTML-REPORT.md}` and `skills/engineering/codebase-design/{SKILL.md,DEEPENING.md,DESIGN-IT-TWICE.md}`. The approved report sample is committed at `docs/superpowers/evals/2026-10-31-architecture-scan-sample.html`.
 
 ## Global Constraints
 
@@ -89,7 +89,6 @@
 
 **Files:**
 
-- Create: `docs/superpowers/evals/2026-10-31-architecture-scan-sample.html` (copy of the approved sample)
 - Create: `plugins/architecture-scan/skills/architecture-scan/templates/report.template.html`
 - Create: `plugins/architecture-scan/skills/architecture-scan/references/report.md`
 - Create: `plugins/architecture-scan/skills/architecture-scan/scripts/report-template.test.mjs`
@@ -98,18 +97,17 @@
 
 - Produces: the template with these placeholders, each appearing exactly once: `{{TITLE}}`, `{{EYEBROW}}`, `{{SCOPE}}`, `{{CANDIDATES}}`, `{{TOP}}`, `{{MERMAID_SCRIPT}}`. `{{MERMAID_SCRIPT}}` is replaced by an empty string in an Artifact and by `<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.esm.min.mjs"; mermaid.initialize({ startOnLoad: true, theme: "neutral" });</script>` in the temp-file fallback. The CSS classes the cards use are those of the sample: `article`, `.head`, `.badges`, `.badge`, `.b-strong`, `.b-explore`, `.b-spec`, `.files`, `.pair`, `.panel`, `.panel.after`, `.fields`, `.wins`, `.adr`, `.stack`, `.band`, `.band.thick`, `.mass`, `.mod`, `.if`, `.impl`, `.hot`, `.bar`, `.recalled`, `.top`.
 
-- [ ] **Step 1: Copy the sample** from the scratchpad path the controller gives (`.../scratchpad/sample/architecture-scan-sample.html`) to the evals path.
-- [ ] **Step 2: Write the failing test** `report-template.test.mjs`:
+- [ ] **Step 1: Write the failing test** `report-template.test.mjs`:
   - each placeholder occurs exactly once;
   - every `var(--name)` used is defined in the first bare `:root {` block;
   - both `@media (prefers-color-scheme: dark)` with `:root:not([data-theme="light"])` and `:root[data-theme="dark"]` exist and redefine the same token set;
   - no `<script src=` in the template, and no `cdn.tailwindcss.com`;
   - `.b-spec` is defined (the sample lacks a `Speculative` badge style).
-- [ ] **Step 3: Run** `node --test plugins/architecture-scan/skills/architecture-scan/scripts/report-template.test.mjs`. Expected: FAIL (file missing).
-- [ ] **Step 4: Write the template** from the sample: keep its `<style>` and structure, replace the header text, scope section, articles and top section with the placeholders, add `.b-spec` (slate-like neutral, tokens only), and put `{{MERMAID_SCRIPT}}` at the end. Mermaid `linkStyle` colours in diagrams are the one literal-colour exception; `report.md` says to use the leak red there.
-- [ ] **Step 5: Write `report.md`.** Sections: how to fill the template (placeholders, Artifact vs fallback, the publish call with `icon: "diagram"` and a one-sentence description, the title `Architecture scan <repo>`); the scope section markup (one `.hot` row per directory with the bar width as a percentage of the top count, and the `.recalled` line listing skipped rejections); the card markup with the field order Title, badges, files, before/after pair, Problem, Solution, Wins, ADR or decision callout; the diagram patterns from upstream HTML-REPORT.md (Mermaid graph, hand-built boxes, cross-section, mass diagram, call-graph collapse) with the sample's markup for each, and the rule to vary them; the top-recommendation block; upstream's tone section with its use-exactly and never-substitute lists. It cites the template rather than repeating its CSS.
-- [ ] **Step 6: Verify.** The test passes. Fill the template with the sample's content into a scratch file, open it in Chromium with Playwright at 400 px and 1280 px wide, light and dark colour schemes: `document.documentElement.scrollWidth <= innerWidth` in all four. `npx markdownlint-cli2 "plugins/architecture-scan/**/*.md"` reports 0 issues.
-- [ ] **Step 7: Commit** `feat(architecture-scan): add the report template and report reference`.
+- [ ] **Step 2: Run** `node --test plugins/architecture-scan/skills/architecture-scan/scripts/report-template.test.mjs`. Expected: FAIL (file missing).
+- [ ] **Step 3: Write the template** from the sample: keep its `<style>` and structure, replace the header text, scope section, articles and top section with the placeholders, add `.b-spec` (slate-like neutral, tokens only), and put `{{MERMAID_SCRIPT}}` at the end. Mermaid `linkStyle` colours in diagrams are the one literal-colour exception; `report.md` says to use the leak red there.
+- [ ] **Step 4: Write `report.md`.** Sections: how to fill the template (placeholders, Artifact vs fallback, the publish call with `icon: "diagram"` and a one-sentence description, the title `Architecture scan <repo>`); the scope section markup (one `.hot` row per directory with the bar width as a percentage of the top count, and the `.recalled` line listing skipped rejections); the card markup with the field order Title, badges, files, before/after pair, Problem, Solution, Wins, ADR or decision callout; the diagram patterns from upstream HTML-REPORT.md (Mermaid graph, hand-built boxes, cross-section, mass diagram, call-graph collapse) with the sample's markup for each, and the rule to vary them; the top-recommendation block; upstream's tone section with its use-exactly and never-substitute lists. It cites the template rather than repeating its CSS.
+- [ ] **Step 5: Verify.** The test passes. Fill the template with the sample's content into a scratch file, open it in Chromium with Playwright at 400 px and 1280 px wide, light and dark colour schemes: `document.documentElement.scrollWidth <= innerWidth` in all four. `npx markdownlint-cli2 "plugins/architecture-scan/**/*.md"` reports 0 issues.
+- [ ] **Step 6: Commit** `feat(architecture-scan): add the report template and report reference`.
 
 ### Task 4: Eval fixture and RED baseline
 
