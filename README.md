@@ -2,7 +2,7 @@
 
 [![GitHub Sponsors](https://img.shields.io/github/sponsors/MarcelRoozekrans?style=flat&logo=githubsponsors&color=ea4aaa&label=Sponsor)](https://github.com/sponsors/MarcelRoozekrans)
 
-Extension skills for the [superpowers](https://github.com/obra/superpowers) suite, providing quality gates, development workflow skills, and project lifecycle management for web application development. It includes fourteen skills:
+Extension skills for the [superpowers](https://github.com/obra/superpowers) suite, providing quality gates, development workflow skills, and project lifecycle management for web application development. It includes fifteen skills:
 
 - **regression-test** -- Comprehensive regression testing using the [Microsoft Playwright MCP server](https://github.com/microsoft/playwright-mcp), combining existing test suite execution with AI-powered visual and functional browser testing.
 - **pre-push-review** -- A structured branch review that diffs against the base branch and gates on plan adherence, code quality, commit hygiene, and regression testing, producing a PASS/FAIL verdict with a prioritized remediation plan on failure.
@@ -17,6 +17,7 @@ Extension skills for the [superpowers](https://github.com/obra/superpowers) suit
 - **logo-design** -- Generates brand marks as hand-authored SVG and audits existing ones. Two sub-skills: `logo-concept` draws a mark (or derives the variant set for one that already exists) and `logo-review` audits one across three layers — reproduction hazards, a ten-pattern anti-slop scan, and a five-dimension critique. Ships four mark types (geometric, monogram, wordmark, abstract) and **refuses pictorial, mascot, and illustrative-emblem marks** by design. Reads `docs/design/MASTER.md` for palette and typography when present. Outputs `docs/design/LOGO.md`, seven SVG variants through to a redrawn favicon, a contact sheet, and an eight-file raster icon set exported from those SVGs — recorded `UNRUN` rather than failed when no SVG rasteriser is installed.
 - **context-budget** -- Keeps long sessions cheap. A `UserPromptSubmit` hook measures the session's context size and hands off to a fresh session at a natural break; a `PreToolUse` hook requires an explicit non-Fable `model` on general-purpose subagent dispatches. The skill states the suite-wide model rule (Sonnet by default, Opus for marked tasks, retries and the final review, Haiku for lookups) and the fresh-session handoff recipe.
 - **anti-slop** -- Rewrites AI prose tics out of text Claude is about to publish, in English and Dutch: commit messages, PR and issue text, comments, READMEs, docs and release notes. Each language has a pattern catalogue in four families (vocabulary, structure, tone, substance), and every entry pairs a bad example with a plain rewrite. Claude publishes the clean version with no report; on demand it edits a file in place and leaves a diff.
+- **demo-video** -- Records a finished web feature as a paced browser walkthrough video. Claude writes a storyboard from the plan and diff, explores it live with Playwright MCP, then generates a `record.mjs` that drives headless Chromium on the real app. ffmpeg turns the recording into chapter MP4s with captions and title cards, speeds up slow waits instead of cutting them, and builds a GIF in quick mode. Two modes: **quick** (no approval, for a PR or chat) and **polished** (storyboard approved first, for a talk or a fallback recording). Re-recording after a UI fix is one command.
 - **squad** -- Persistent AI agent teams (Lead, Backend Engineer, Frontend Engineer, Tester, Scribe) **dispatched as parallel `Task` subagents** during brainstorming and planning workflows. Each specialist runs in an isolated context window with its own charter and tier-1 history, so they cannot anchor on each other's reasoning. Per-role `history.md` files accumulate project-specific knowledge across sessions; tiered context lookup (semantic search → grep → recent history) keeps each subagent's prompt lean.
 
 ---
@@ -426,6 +427,60 @@ Node.js for the scanner. The skill itself is pure markdown.
 
 ---
 
+## Demo Video Skill
+
+The demo-video skill records a finished web feature as a video for an audience. It runs against the live app, on its real services, and nothing is mocked. It fires from its description: "record a demo", "make a demo video", "make a fallback recording".
+
+### What It Does
+
+- **Two modes.** **quick** records straight away, with no captions, for a PR or chat, and also writes a GIF. **polished** writes a `storyboard.md` and waits for your approval before anything runs; it adds captions, a title card and an end card.
+- **Storyboard first.** Claude writes the storyboard from the plan, spec and diff, then walks every step live with Playwright MCP to find stable locators. A step that cannot be made to work stops the skill. It never records around a failure.
+- **Paced recording.** `record.mjs` drives headless Chromium at 1920x1080 with a visible cursor, human typing speed and reading pauses. Several tabs in one video are supported, and the video follows the active tab.
+- **Slow waits are sped up, not cut.** Each marked wait plays at about 10x with a fast-forward marker, so the audience sees that a real call happened.
+- **Chapters.** Each `##` chapter becomes its own MP4 with its own title card, plus a combined `demo.mp4`.
+- **Verify before done.** `verify` checks codec, size and duration, and extracts one frame per step. Claude views every frame for a wrong page, an error state, a visible secret or an unreadable caption before it reports.
+- **Never commits.** It shows the `.gitattributes` and `.gitignore` changes and leaves committing to you.
+
+### Usage
+
+```text
+Record a demo of the new search feature
+Make a quick demo video for this PR
+Make a polished fallback recording of the incident flow, in Dutch
+```
+
+Re-record after a late UI fix, with no Claude session:
+
+```bash
+node docs/demo-videos/2026-10-30-search/record.mjs
+```
+
+Re-encode only, for example without captions for a presenter who talks over it:
+
+```bash
+node docs/demo-videos/2026-10-30-search/lib/postprocess.mjs docs/demo-videos/2026-10-30-search --no-captions
+```
+
+### Output
+
+```text
+docs/demo-videos/YYYY-MM-DD-<feature>/
+  storyboard.md      committed
+  record.mjs         committed: one-command re-record
+  lib/               committed: runtime, post-processing and verify
+  timeline.json      committed: reproduces the post-processing
+  demo.mp4           Git LFS
+  demo.gif           Git LFS, quick mode only
+  NN-<chapter>.mp4   Git LFS, when there are several chapters
+  raw/  .auth/  frames/   gitignored
+```
+
+### Prerequisites
+
+Node 20 or newer, a global `playwright` install with Chromium (`npm i -g playwright && npx playwright install chromium`, on Linux `npx playwright install --with-deps chromium`), `ffmpeg` and `ffprobe`, `git lfs` initialised with `git lfs install`, and a font that covers the speed marker (DejaVu Sans on Linux). `node scripts/preflight.mjs [url] [--repo <root>]` checks all of them, renders one test frame with the font, and prints install hints for Linux and macOS. `--repo` makes it check the LFS setup of that repository.
+
+---
+
 ## UI Workflow Skill
 
 The ui-workflow skill provides two complementary capabilities that close the design-implementation gap in frontend work.
@@ -732,7 +787,7 @@ per harness; only how the harness loads them.
 | **OpenAI Codex CLI / App** | [`.codex-plugin/plugin.json`](.codex-plugin/plugin.json) + [`.codex/INSTALL.md`](.codex/INSTALL.md) | Clone-and-symlink each plugin into `~/.agents/skills/`; instructions and a copy-paste loop in [`.codex/INSTALL.md`](.codex/INSTALL.md) |
 | **Gemini CLI** | [`gemini-extension.json`](gemini-extension.json) + [`GEMINI.md`](GEMINI.md) | `GEMINI.md` lists each SKILL.md via `@./plugins/.../SKILL.md` import syntax |
 | **GitHub Copilot CLI** | Reuses [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json) + [`.copilot-cli/INSTALL.md`](.copilot-cli/INSTALL.md) | `copilot plugin marketplace add MarcelRoozekrans/superpowers-extensions`, then install individual plugins |
-| **OpenCode.ai** | [`.opencode/plugins/superpowers-extensions.js`](.opencode/plugins/superpowers-extensions.js) | JS plugin registers all fourteen plugin skill paths via OpenCode's `config.skills.paths` array — no symlinks needed |
+| **OpenCode.ai** | [`.opencode/plugins/superpowers-extensions.js`](.opencode/plugins/superpowers-extensions.js) | JS plugin registers all fifteen plugin skill paths via OpenCode's `config.skills.paths` array — no symlinks needed |
 
 The polymorphic [`hooks/session-start`](hooks/session-start) script
 detects which harness is running it via env vars (`CURSOR_PLUGIN_ROOT`,
@@ -798,7 +853,7 @@ The multi-provider mechanism here is adapted directly from
 [`obra/superpowers`](https://github.com/obra/superpowers) (MIT). Their
 session-start hook was the model for ours; their per-harness manifest
 pattern is what enables one shared markdown tree to load natively in
-each host. Differences: we are a marketplace of fourteen plugins (versus
+each host. Differences: we are a marketplace of fifteen plugins (versus
 their single-plugin layout), so our manifests target the suite at the
 repo root with skills resolved via `./plugins/`.
 
@@ -832,6 +887,7 @@ claude plugin install compress-memory
 claude plugin install logo-design
 claude plugin install context-budget
 claude plugin install anti-slop
+claude plugin install demo-video
 ```
 
 The regression-test plugin automatically configures the Playwright MCP server with `--caps=testing`. The pre-push-review plugin requires only git and no additional MCP servers for its core review.
@@ -950,6 +1006,12 @@ xcopy /E /I plugins\anti-slop\skills\anti-slop %USERPROFILE%\.claude\skills\anti
 
 # macOS / Linux -- anti-slop
 cp -r plugins/anti-slop/skills/anti-slop ~/.claude/skills/anti-slop
+
+# Windows -- demo-video
+xcopy /E /I plugins\demo-video\skills\demo-video %USERPROFILE%\.claude\skills\demo-video
+
+# macOS / Linux -- demo-video
+cp -r plugins/demo-video/skills/demo-video ~/.claude/skills/demo-video
 ```
 
 **Note:** Some plugins require companion MCP servers. Install them separately:
@@ -970,7 +1032,7 @@ claude mcp add playwright -- npx @playwright/mcp@latest --caps=testing,pdf,visio
 
 ### Verify Installation
 
-In Claude Code, the skills should appear when you type `/regression-test`, `/pre-push-review`, `/refactor-analysis`, `/decision-tracker`, `/roslyn-codelens-integration`, `/memorylens-integration`, `/project-orchestration`, `/ui-workflow`, `/ui-design-system`, `/squad`, `/compress-memory`, `/logo-design`, `/context-budget`, or `/anti-slop`, or when you ask Claude to perform regression testing, a pre-push review, a refactor impact analysis, decision tracking, .NET code graph analysis, .NET memory profiling, project lifecycle management, UI design contract work, design system generation, to activate your agent team, to compress a memory file, to design or audit a brand mark, or to rewrite AI prose tics out of a draft.
+In Claude Code, the skills should appear when you type `/regression-test`, `/pre-push-review`, `/refactor-analysis`, `/decision-tracker`, `/roslyn-codelens-integration`, `/memorylens-integration`, `/project-orchestration`, `/ui-workflow`, `/ui-design-system`, `/squad`, `/compress-memory`, `/logo-design`, `/context-budget`, `/anti-slop`, or `/demo-video`, or when you ask Claude to perform regression testing, a pre-push review, a refactor impact analysis, decision tracking, .NET code graph analysis, .NET memory profiling, project lifecycle management, UI design contract work, design system generation, to activate your agent team, to compress a memory file, to design or audit a brand mark, to rewrite AI prose tics out of a draft, or to record a demo video of a web feature.
 
 ---
 
@@ -1250,14 +1312,25 @@ superpowers-extensions/
 │   │       └── context-budget/
 │   │           ├── SKILL.md                # Model Choice, Fresh-Session Handoff, Configuration
 │   │           └── scripts/                # size-check.mjs, dispatch-check.mjs and shared helpers
-│   └── anti-slop/                          # AI prose tics rewritten out of published text (14th plugin)
+│   ├── anti-slop/                          # AI prose tics rewritten out of published text (14th plugin)
+│   │   ├── .claude-plugin/
+│   │   │   └── plugin.json
+│   │   └── skills/
+│   │       └── anti-slop/
+│   │           ├── SKILL.md                # Trigger, procedure, guardrails, on-demand file mode
+│   │           ├── references/             # patterns-en.md and patterns-nl.md catalogues
+│   │           └── scripts/                # scan.mjs vocabulary scanner
+│   └── demo-video/                         # Web features recorded as walkthrough videos (15th plugin)
 │       ├── .claude-plugin/
 │       │   └── plugin.json
+│       ├── .mcp.json                       # Playwright MCP, same as regression-test
 │       └── skills/
-│           └── anti-slop/
-│               ├── SKILL.md                # Trigger, procedure, guardrails, on-demand file mode
-│               ├── references/             # patterns-en.md and patterns-nl.md catalogues
-│               └── scripts/                # scan.mjs vocabulary scanner
+│           └── demo-video/
+│               ├── SKILL.md                # Modes, procedure, approval gate, hard gate
+│               ├── references/             # storyboard.md format and example
+│               ├── templates/              # record.template.mjs
+│               ├── lib/                    # runtime, ffmpeg graphs, postprocess, verify
+│               └── scripts/                # preflight.mjs, scaffold.mjs and tests
 └── docs/
     ├── planning/                           # Project lifecycle state (ROADMAP, MILESTONE, STATE, CONVENTIONS)
     └── plans/                              # Design documents and phase plans

@@ -1,0 +1,9 @@
+{
+  "name": "demo-video",
+  "description": "Records a finished web feature as a paced browser walkthrough video. A storyboard drives a real Chromium on the running app, then ffmpeg builds chapter MP4s with captions and cards, speeds up slow waits, and checks frames before it reports done. Re-record is one command.",
+  "author": {
+    "name": "Marcel Roozekrans"
+  },
+  "license": "MIT",
+  "keywords": ["demo", "video", "recording", "playwright", "screencast"]
+}
