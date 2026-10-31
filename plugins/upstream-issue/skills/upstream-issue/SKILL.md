@@ -69,7 +69,13 @@ Show the cause lies in upstream code. Trace into the upstream source, reproduce 
 
 ### 4. Search for existing reports
 
-Search open and closed issues, pull requests and discussions by error text, symbol names and the symptom in plain words. An open pull request that fixes the bug counts as an existing report. On GitHub, use `gh search issues` and `gh search prs` against the upstream repo. For any other tracker, search what you can read.
+Search open and closed issues, pull requests and discussions by error text, symbol names and the symptom in plain words. An open pull request that fixes the bug counts as an existing report. On GitHub, use `gh search issues --repo <owner/repo>` and `gh search prs --repo <owner/repo>`, and search discussions through the GraphQL API:
+
+```bash
+gh api graphql -f query='query($q: String!) { search(type: DISCUSSION, query: $q, first: 20) { nodes { ... on Discussion { title url closed } } } }' -f q='repo:<owner/repo> <terms>'
+```
+
+When discussions are disabled or cannot be searched, list that as a gap. For any other tracker, search what you can read.
 
 **Exit:** a list of every query, where it ran and what it returned, plus what could not be searched, such as an unreachable mailing-list archive. Then one of:
 
@@ -147,7 +153,7 @@ Rules:
    node <this skill's directory>/scripts/privacy-scan.mjs --allow <upstream-domain> [--allow <docs-domain>]... <draft> <repro-dir>
    ```
 
-   Exit 1 lists the hits. Fix every hit with a documentation value such as `example.com`, `192.0.2.1` or `<entry_id>`. When a hit seems necessary for the report, keep it only by showing it to the user explicitly at the approval step. Re-run until it exits 0 or only shown hits remain.
+   Exit 1 lists the hits. A public reference the report needs, such as an RFC, the runtime's docs or a third-party tracker, is not private: re-run with its domain in `--allow` instead of editing it. Replace only private values, with a documentation value such as `example.com`, `192.0.2.1` or `<entry_id>`. When a hit seems necessary for the report, keep it only by showing it to the user explicitly at the approval step. Re-run until it exits 0 or only shown hits remain.
 
 Never repeat a private detail from the user's logs in chat either.
 
