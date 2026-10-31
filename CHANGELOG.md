@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.28.0](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.27.1...superpowers-extensions-v1.28.0) (2026-10-31)
+
+
+### Features
+
+* **architecture-scan:** find deepening candidates in git hot spots ([#173](https://github.com/MarcelRoozekrans/superpowers-extensions/issues/173)) ([a981522](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/a981522a72dee6948b0ef505b7edc62ac45b76fa))
+* **retro:** add a session retrospective plugin ([#167](https://github.com/MarcelRoozekrans/superpowers-extensions/issues/167)) ([c327121](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/c3271215c678c5b34da7ff5f04885c114cc0a4e6))
+* **upstream-issue:** prove a bug is upstream before drafting the issue ([#172](https://github.com/MarcelRoozekrans/superpowers-extensions/issues/172)) ([dae90e6](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/dae90e6c3c92ec1d560dbc223bbc1162d8027625))
+* **wizard:** generate interactive bash wizards for manual setup steps ([#166](https://github.com/MarcelRoozekrans/superpowers-extensions/issues/166)) ([8a93fa1](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/8a93fa15f51bc6c8081b5110e85564066558705b))
+
 ## [1.27.1](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.27.0...superpowers-extensions-v1.27.1) (2026-10-31)
 
 
