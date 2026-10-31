@@ -35,7 +35,9 @@ Rules for every run:
 
 ### Expected skill outcome
 
-Phases 1 to 3 pass: the bug is in dayjs, not in the handler, and it reproduces on 1.11.23, the latest release, and on the `dev` branch. Phase 4 finds the existing issue [#1237](https://github.com/iamkun/dayjs/issues/1237), and may also name the older duplicates [#596](https://github.com/iamkun/dayjs/issues/596) and [#2591](https://github.com/iamkun/dayjs/issues/2591). The outcome is "link only", or a comment that adds something the thread lacks and passed both gates. No new issue is drafted.
+Phases 1 to 3 pass: the bug is in dayjs, not in the handler, and it reproduces on 1.11.23, the latest release, and on the `dev` branch. Phase 4 finds the existing issue [#1237](https://github.com/iamkun/dayjs/issues/1237), and may also name the older duplicates [#596](https://github.com/iamkun/dayjs/issues/596) and [#2591](https://github.com/iamkun/dayjs/issues/2591). The outcome is "link only", or a comment draft on #1237.
+
+Hard pass criterion: **no new issue is drafted, and #1237 is named.** A comment draft passes only when it adds something the thread lacks, such as a minimal repro or the current versions it fails on, and the run records the verdicts of both gates.
 
 ### How to run
 
@@ -70,14 +72,18 @@ The agent may `npm install dayjs@1.11.23` in its scratchpad and run `node -e` on
   console.log(process.env.API_BASE_URL);
   ```
 
-- Terminal output of the run:
+- Terminal output of the run, which dotenv 18 prints as is:
 
   ```text
   ◇ injected env (0) from .env
   http://localhost:3000
   ```
 
-- The user's shell history, last lines, pasted when asked for "anything else":
+### Material available only if the agent asks
+
+The eval runner hands this over only when the agent asks about the shell setup, the environment or how the app is started. It is not part of the first message.
+
+- The user's shell history, last lines:
 
   ```text
   cd ~/src/api-client
@@ -88,7 +94,7 @@ The agent may `npm install dayjs@1.11.23` in its scratchpad and run `node -e` on
 
 ### Expected skill outcome
 
-Stops at phase 2, or at a `refuted` verdict from the skeptic. The cause is the user's setup: `API_BASE_URL` is already set in the shell, and dotenv by default never overwrites a variable that is already set; `config({ override: true })` or unsetting the variable fixes it. The skill gives the documentation link below. Nothing is drafted.
+Stops at phase 2, or at a `refuted` verdict from the skeptic. The cause is the user's setup, found by checking the environment or asking for the shell history: `API_BASE_URL` is already set in the shell, and dotenv by default never overwrites a variable that is already set; `config({ override: true })` or unsetting the variable fixes it. The skill gives the documentation link below. Nothing is drafted.
 
 ### How to run
 
@@ -177,7 +183,7 @@ bash docs/superpowers/evals/fixtures/upstream-issue/setup-upstream.sh "<SCRATCH>
 A full run through phase 7:
 
 - Phase 1 places the bug in hostspec: the `HOST_SPEC` pattern in `index.js` lacks `-`, while the README promises any RFC 1123 host name.
-- Phase 3 confirms that `v1.1.0` is the latest tag and that the bug is in both `v1.0.0` and `v1.1.0`.
+- Phase 3 checks the latest release itself, with `git tag` and the default branch in `<UPSTREAM>`, instead of trusting the user's "their latest". It finds `v1.1.0` as the latest tag and the bug in both `v1.0.0` and `v1.1.0`.
 - Phase 4 finds no known report in `CHANGELOG.md` or the git log. The mailing-list archive on `lists.example.org` is unreachable, and the skill says that this part of the duplicate search could not be done.
 - A minimal inline repro with an invented hyphenated host, such as `node -e "require('hostspec').parse('my-host.example.org:8080')"`, installed from the `v1.1.0` tag.
 - The clean runner reports `fails-as-claimed`.
