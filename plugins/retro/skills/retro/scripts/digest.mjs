@@ -10,12 +10,16 @@
 //
 // A field the transcript does not carry is reported as `unknown`, never as 0.
 //
-// Run: node digest.mjs <transcript.jsonl> [--subagents] [--json] [--top N]
+// Run: node digest.mjs <transcript.jsonl> [--subagents[=full]] [--json] [--top N]
+//
+// --subagents adds one line per subagent transcript; --subagents=full prints a
+// whole digest for each. A session with 30 subagents would otherwise put tens
+// of thousands of tokens into the context that reads the digest.
 
-import { createReadStream, existsSync, readdirSync, statSync } from 'node:fs';
+import { createReadStream, existsSync, readFileSync, readdirSync, realpathSync, statSync } from 'node:fs';
 import { createInterface } from 'node:readline';
 import { basename, dirname, join } from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { fileURLToPath } from 'node:url';
 
 const INPUT_MAX = 120;
 const PROMPT_MAX = 200;
@@ -23,9 +27,14 @@ const RETRY_WINDOW = 5;
 const RETRY_PREFIX = 40;
 const CHURN_MIN = 3;
 
-// Record types that carry nothing a retro needs.
-const IGNORED_TYPES = new Set(['attachment', 'queue-operation', 'last-prompt', 'atis-latch', 'system', 'summary']);
-const SEARCH_COMMANDS = new Set(['find', 'grep', 'rg']);
+// Record types that carry nothing a retro needs. Anything else is reported as
+// unknown, so a format change in the transcript shows up instead of hiding.
+const IGNORED_TYPES = new Set([
+  'attachment', 'queue-operation', 'last-prompt', 'atis-latch', 'system', 'summary',
+  'tools-used', 'pr-link', 'mode', 'custom-title', 'agent-name', 'frame-link', 'ai-title', 'bridge-session', 'permission-mode',
+]);
+const IGNORED_PREFIXES = ['file-history'];
+const SEARCH_COMMANDS = new Set(['find', 'grep', 'rg', 'git grep']);
 
 const oneLine = (s, max) => {
   const flat = String(s).replace(/\s+/g, ' ').trim();
@@ -53,8 +62,25 @@ function resultSize(content) {
   );
 }
 
-const isSearch = (call) =>
-  call.tool === 'Grep' || call.tool === 'Glob' || (call.tool === 'Bash' && SEARCH_COMMANDS.has(call.input.split(' ')[0]));
+// A Bash call is a search when any segment of a compound command is one:
+// `cd src && grep …`, `cat x | rg …`, `git grep …`.
+const isSearchCommand = (command) =>
+  command.split(/&&|\|\||;|\|/).some((part) => {
+    const words = part.trim().split(/\s+/);
+    return SEARCH_COMMANDS.has(words[0]) || SEARCH_COMMANDS.has(words.slice(0, 2).join(' '));
+  });
+
+const isSearch = (call) => call.tool === 'Grep' || call.tool === 'Glob' || (call.tool === 'Bash' && isSearchCommand(call.input));
+
+// Reading one file in ranges is what the reading rules ask for, so only the same
+// range read twice counts as a repeated read.
+function readKey(call) {
+  const { offset, limit } = call.raw;
+  if (offset === undefined && limit === undefined) return call.input;
+  return `${call.input} (offset ${offset ?? 'start'}, limit ${limit ?? 'none'})`;
+}
+
+const formatCost = (usd) => (usd >= 0.01 ? usd.toFixed(2) : usd.toPrecision(2));
 
 const similar = (a, b) => b.startsWith(a.slice(0, RETRY_PREFIX)) || a.startsWith(b.slice(0, RETRY_PREFIX));
 
@@ -106,7 +132,7 @@ export function createDigester({ top = 10, longLine = 100000 } = {}) {
         if (msg.usage) usageById.set(msg.id ?? `line-${lineNo}`, msg.usage);
         for (const block of Array.isArray(msg.content) ? msg.content : []) {
           if (block?.type !== 'tool_use') continue;
-          const call = { id: block.id, lineNo, tool: block.name ?? 'unknown', input: summarizeInput(block.name, block.input), raw: block.input ?? {}, size: null, error: false };
+          const call = { id: block.id, lineNo, tool: block.name ?? 'unknown', input: summarizeInput(block.name, block.input), raw: block.input ?? {}, size: null, resultLine: null, error: false };
           calls.push(call);
           if (block.id) byId.set(block.id, call);
         }
@@ -121,6 +147,7 @@ export function createDigester({ top = 10, longLine = 100000 } = {}) {
           const call = byId.get(block.tool_use_id);
           if (!call) continue;
           call.size = resultSize(block.content);
+          call.resultLine = lineNo;
           call.error = block.is_error === true;
         }
         break;
@@ -129,7 +156,7 @@ export function createDigester({ top = 10, longLine = 100000 } = {}) {
         if (typeof record.totalCostUSD === 'number') session.costUSD = record.totalCostUSD;
         break;
       default:
-        if (!IGNORED_TYPES.has(record.type)) {
+        if (!IGNORED_TYPES.has(record.type) && !IGNORED_PREFIXES.some((x) => String(record.type).startsWith(x))) {
           const t = String(record.type ?? 'untyped');
           unknownTypes[t] = (unknownTypes[t] ?? 0) + 1;
         }
@@ -190,8 +217,8 @@ export function createDigester({ top = 10, longLine = 100000 } = {}) {
       biggest: [...answered]
         .sort((a, b) => b.size - a.size)
         .slice(0, top)
-        .map(({ lineNo, tool, input, size }) => ({ lineNo, tool, input, size })),
-      repeatedReads: repeated((c) => c.tool === 'Read', (c) => c.input).map(({ k, count, lines }) => ({ path: k, count, lines })),
+        .map(({ lineNo, resultLine, tool, input, size }) => ({ lineNo, resultLine, tool, input, size })),
+      repeatedReads: repeated((c) => c.tool === 'Read', readKey).map(({ k, count, lines }) => ({ path: k, count, lines })),
       repeatedCommands: repeated((c) => c.tool === 'Bash', (c) => c.input).map(({ k, count, lines }) => ({ command: k, count, lines })),
       failures,
       searchChurn: searchChurn.slice(0, top),
@@ -237,11 +264,11 @@ export function formatDigest(d, label = 'Session digest') {
     `- start: ${s.start}; end: ${s.end}`,
     `- models: ${s.models.length ? s.models.join(', ') : 'unknown'}; turns: ${s.turns}`,
     `- tokens: ${t}`,
-    `- cost: ${s.costUSD === 'unknown' ? 'unknown' : `$${s.costUSD}`}`,
+    `- cost: ${s.costUSD === 'unknown' ? 'unknown' : `$${formatCost(s.costUSD)}`}`,
     `- malformed lines: ${d.malformed}; unknown record types: ${unknown.length ? unknown.map(([k, v]) => `${k} ×${v}`).join(', ') : 'none'}`,
     '',
     '## Biggest tool results',
-    ...rows(d.biggest, (b) => `line ${b.lineNo}: ${b.tool} \`${b.input}\` — ${b.size} chars`),
+    ...rows(d.biggest, (b) => `line ${b.lineNo} (result line ${b.resultLine}): ${b.tool} \`${b.input}\` — ${b.size} chars`),
     '',
     '## Repeated reads',
     ...rows(d.repeatedReads, (r) => `\`${r.path}\` ×${r.count} (lines ${lineList(r.lines)})`),
@@ -267,6 +294,38 @@ export function formatDigest(d, label = 'Session digest') {
   return out.map((l) => (l.length > 300 ? `${l.slice(0, 299)}…` : l)).join('\n');
 }
 
+// One line per subagent transcript, labelled from its `.meta.json` when present.
+export function formatSubagentLine(name, meta, d) {
+  const label = meta?.description ? `${name} — ${oneLine(meta.description, 80)} (${meta.model ?? 'model unset'})` : name;
+  const t = d.session.tokens;
+  const tokens = t === 'unknown' ? 'unknown' : t.input + t.output + t.cacheRead + t.cacheCreate;
+  const biggest = d.biggest.length ? `${d.biggest[0].size} chars` : 'none';
+  return `- ${label}: turns ${d.session.turns}, tokens ${tokens}, failures ${d.failures.length}, biggest result ${biggest}`;
+}
+
+const totalTokens = (d) => {
+  const t = d.session.tokens;
+  return t === 'unknown' ? 0 : t.input + t.output + t.cacheRead + t.cacheCreate;
+};
+
+// The subagent transcripts with the most tokens, one line each; the rest as a count.
+export function formatSubagentSection(entries, top = 10) {
+  const ranked = [...entries].sort((a, b) => totalTokens(b[2]) - totalTokens(a[2]));
+  const lines = ['## Subagent transcripts', ...ranked.slice(0, top).map(([name, meta, d]) => formatSubagentLine(name, meta, d))];
+  if (ranked.length > top) lines.push(`- ${ranked.length - top} more subagent transcripts, fewer tokens each`);
+  return lines.join('\n');
+}
+
+function readMeta(file) {
+  const metaPath = file.replace(/\.jsonl$/, '.meta.json');
+  if (!existsSync(metaPath)) return null;
+  try {
+    return JSON.parse(readFileSync(metaPath, 'utf8'));
+  } catch {
+    return null;
+  }
+}
+
 function subagentFiles(transcript) {
   const dir = join(dirname(transcript), basename(transcript, '.jsonl'), 'subagents');
   if (!existsSync(dir)) return [];
@@ -288,16 +347,34 @@ async function main(argv) {
   const opts = top ? { top } : undefined;
   const digest = await digestFile(path, opts);
   const subs = [];
-  if (args.includes('--subagents')) {
-    for (const f of subagentFiles(path)) subs.push([basename(f, '.jsonl'), await digestFile(f, opts)]);
+  const full = args.includes('--subagents=full');
+  if (full || args.includes('--subagents')) {
+    for (const f of subagentFiles(path)) subs.push([basename(f, '.jsonl'), readMeta(f), await digestFile(f, opts)]);
   }
   if (args.includes('--json')) {
-    console.log(JSON.stringify(subs.length ? { ...digest, subagentTranscripts: Object.fromEntries(subs) } : digest, null, 2));
+    console.log(JSON.stringify(subs.length ? { ...digest, subagentTranscripts: Object.fromEntries(subs.map(([name, , d]) => [name, d])) } : digest, null, 2));
     return;
   }
-  console.log([formatDigest(digest), ...subs.map(([name, d]) => formatDigest(d, `Subagent ${name}`))].join('\n\n'));
+  const parts = [formatDigest(digest)];
+  if (full) {
+    parts.push(...subs.map(([name, meta, d]) => formatDigest(d, `Subagent ${name}${meta?.description ? ` — ${oneLine(meta.description, 80)}` : ''}`)));
+  } else if (subs.length) {
+    parts.push(formatSubagentSection(subs, top));
+  }
+  console.log(parts.join('\n\n'));
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+// Compare real paths: Node resolves import.meta.url through symlinks, argv[1] is
+// left as typed, and an install that links the skill directory would otherwise
+// run nothing and exit 0.
+const isMain = () => {
+  try {
+    return Boolean(process.argv[1]) && realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url));
+  } catch {
+    return false;
+  }
+};
+
+if (isMain()) {
   await main(process.argv);
 }

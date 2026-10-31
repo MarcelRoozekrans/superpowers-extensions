@@ -136,7 +136,7 @@ plugins/retro/
 - **Repeated reads**: the same file read more than once, and the same command run more than once.
 - **Failures**: tool results flagged as errors or non-zero exits, and the retries that followed (same tool, similar input, within a few turns).
 - **Search churn**: runs of Grep/Glob/find calls before the first read of the file that was then used.
-- **Subagents**: dispatches with description, `model` and result size; with `--subagents`, each subagent transcript digested the same way.
+- **Subagents**: dispatches with description, `model` and result size; with `--subagents`, one line per subagent transcript (labelled from its `.meta.json`, top N by tokens, the rest counted); `--subagents=full` digests each in full.
 - **Long lines**: line numbers over 100k characters, so readers avoid them.
 
 Record types it relies on, observed in real transcripts: `assistant` (`message.content[].type === "tool_use"`, `message.usage`), `user` (`message.content[].type === "tool_result"`, `toolUseResult`), `cost-state`. Unknown record types are counted and ignored. A missing field is reported as unknown, never as zero.

@@ -567,7 +567,7 @@ This sub-skill closes the loop that was missing: without it, `executing-plans` f
 
    > "Phase N.M — {name} marked complete in ROADMAP.md and MILESTONE.md. Committed."
 
-   Then offer `retro` once, if it is installed and has not been offered or declined in this session.
+   Then offer `retro`, if it is installed and has not been offered in this session.
 
 ### Why this exists separately from complete-milestone
 
@@ -767,7 +767,7 @@ After `audit-milestone` returns PASS.
 7. Tag the release per the [Commit & Release Protocol](#commit--release-protocol)'s **Tag** step — it decides whether a tag is created at all, renders it in the project's own scheme, resolves collisions and re-runs, verifies it, and announces the outcome. Do not tag here, and do not presume it will tag: where the project's conventions hand releases to an automation, that step correctly performs no git action.
 8. Announce only after the **Tag** step returns: "Milestone N complete. Ready to start Milestone N+1 with `new-milestone`." The **Tag** step has already announced the release outcome — do not restate it and do not add a tag claim of your own. It carries an announce for every outcome it can reach, including the ones where no tag was created; a second announce written here could only drift from it.
 
-   Then offer `retro` once, if it is installed and has not been offered or declined in this session.
+   Then offer `retro`, if it is installed and has not been offered in this session.
 
 ---
 
