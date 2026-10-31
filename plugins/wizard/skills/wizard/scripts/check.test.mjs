@@ -110,3 +110,36 @@ test('shellcheck checks every line when the STAGES marker is missing', { skip: !
   const path = variant((t) => `${t.replace(/^# STAGES:.*$/m, '# stages')}\nsay $PUB_KEY\n`);
   assert.equal(status(checkWizard(path, { repo }), 'shellcheck').status, 'fail');
 });
+
+test('CLI without --repo uses the current directory', () => {
+  const run = spawnSync('node', [join(here, 'check.mjs'), goodPath], { cwd: repo, encoding: 'utf8' });
+  assert.equal(run.status, 0, run.stdout + run.stderr);
+});
+
+test('CLI with a missing --repo directory is a usage error', () => {
+  const run = spawnSync('node', [join(here, 'check.mjs'), goodPath, '--repo', join(repo, 'no-such-dir')], { encoding: 'utf8' });
+  assert.equal(run.status, 2);
+});
+
+test('quoted set_secret name is checked', () => {
+  for (const quoted of ['"STRIPE_KEY"', "'STRIPE_KEY'"]) {
+    const path = variant((t) => t.replace('set_secret SECRET_KEY', `set_secret ${quoted}`));
+    const secrets = status(checkWizard(path, { repo }), 'secrets');
+    assert.equal(secrets.status, 'fail', quoted);
+    assert.match(secrets.detail, /STRIPE_KEY/);
+  }
+});
+
+test('set_secret with a name in a variable is a warning', () => {
+  const path = variant(beforeFinish('set_secret "$NAME" "$PUB_KEY"'));
+  const report = checkWizard(path, { repo });
+  const warn = report.results.find((r) => r.check === 'secrets' && r.status === 'warn' && /\$NAME/.test(r.detail));
+  assert.ok(warn, JSON.stringify(report.results));
+});
+
+test('stage after then or && on one line counts', () => {
+  const path = variant((t) =>
+    beforeFinish('if confirm "x"; then stage "Two"; fi\ntrue && stage "Three"')(t).replace('TOTAL_STAGES=1', 'TOTAL_STAGES=3'),
+  );
+  assert.equal(status(checkWizard(path, { repo }), 'stages').status, 'ok');
+});

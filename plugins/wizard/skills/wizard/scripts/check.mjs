@@ -30,6 +30,10 @@ const markerLine = (text) => {
   return m ? text.slice(0, m.index).split('\n').length : 1;
 };
 
+// A `stage` call at a command position: line start, or after ; & | { then do else.
+const STAGE_CALL = /(?:^|[;&|{]|\b(?:then|do|else))\s*stage\s+["']/g;
+const codeLines = (text) => text.split('\n').filter((l) => !/^\s*#/.test(l));
+
 const runWizardBody = (text) => {
   const start = text.indexOf('run_wizard() {');
   const end = text.indexOf('run_wizard "$@"');
@@ -64,7 +68,7 @@ function checkLibrary(text, templatePath) {
 function checkStages(text) {
   const body = runWizardBody(text);
   const total = /^\s*TOTAL_STAGES=(\d+)/m.exec(body);
-  const calls = body.split('\n').filter((l) => /^\s*stage\s+["']/.test(l)).length;
+  const calls = codeLines(body).reduce((n, l) => n + [...l.matchAll(STAGE_CALL)].length, 0);
   if (!total) return { status: 'fail', detail: 'no TOTAL_STAGES= inside run_wizard' };
   return Number(total[1]) === calls
     ? { status: 'ok', detail: `${calls} stage call${calls === 1 ? '' : 's'}` }
@@ -90,8 +94,10 @@ function workflowSecrets(repo) {
 function checkSecrets(text, repo) {
   const read = workflowSecrets(repo);
   if (read === null) return [{ status: 'skip', detail: `no .github/workflows in ${repo}` }];
-  const code = runWizardBody(text).split('\n').filter((l) => !/^\s*#/.test(l)).join('\n');
-  const set = new Set([...code.matchAll(/\bset_secret\s+([A-Za-z_][A-Za-z0-9_]*)/g)].map((m) => m[1]));
+  const code = codeLines(runWizardBody(text)).join('\n');
+  const args = [...code.matchAll(/\bset_secret\s+(["']?)([^\s"';]+)\1/g)].map((m) => m[2]);
+  const set = new Set(args.filter((a) => /^[A-Za-z_][A-Za-z0-9_]*$/.test(a)));
+  const unresolved = args.filter((a) => !set.has(a));
   const unknown = [...set].filter((n) => !read.has(n));
   const results = [
     unknown.length === 0
@@ -100,6 +106,7 @@ function checkSecrets(text, repo) {
   ];
   const unset = [...read].filter((n) => n !== 'GITHUB_TOKEN' && !set.has(n));
   if (unset.length) results.push({ status: 'warn', detail: `read by a workflow but not set by this wizard: ${unset.join(', ')}` });
+  if (unresolved.length) results.push({ status: 'warn', detail: `set_secret name not a literal, check it by hand: ${unresolved.join(', ')}` });
   return results;
 }
 
@@ -127,8 +134,8 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const args = process.argv.slice(2);
   const repoAt = args.indexOf('--repo');
   const repo = repoAt === -1 ? process.cwd() : args[repoAt + 1];
-  const positional = args.filter((_, i) => i !== repoAt && i !== repoAt + 1);
-  if (positional.length !== 1 || !repo || !existsSync(positional[0])) {
+  const positional = repoAt === -1 ? args : args.filter((_, i) => i !== repoAt && i !== repoAt + 1);
+  if (positional.length !== 1 || !repo || !existsSync(positional[0]) || !existsSync(repo)) {
     console.error('usage: node check.mjs <wizard.sh> [--repo <dir>]');
     process.exit(2);
   }
