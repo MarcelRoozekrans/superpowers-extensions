@@ -2,7 +2,7 @@
 
 Codex auto-discovers skills under `~/.agents/skills/`. Each plugin in this
 suite is a separate skill bundle, so installation is a clone followed by
-fifteen symlinks (one per plugin).
+sixteen symlinks (one per plugin).
 
 ## Prerequisites
 
@@ -26,7 +26,7 @@ fifteen symlinks (one per plugin).
    REPO=~/.codex/superpowers-extensions
    for plugin in regression-test pre-push-review refactor-analysis decision-tracker \
                  roslyn-codelens-integration memorylens-integration project-orchestration \
-                 ui-workflow ui-design-system squad compress-memory logo-design context-budget anti-slop demo-video; do
+                 ui-workflow ui-design-system squad compress-memory logo-design context-budget anti-slop demo-video wizard; do
      ln -sfn "$REPO/plugins/$plugin/skills/$plugin" "$HOME/.agents/skills/$plugin"
    done
    ```
@@ -39,7 +39,7 @@ fifteen symlinks (one per plugin).
    $plugins = @(
      'regression-test', 'pre-push-review', 'refactor-analysis', 'decision-tracker',
      'roslyn-codelens-integration', 'memorylens-integration', 'project-orchestration',
-     'ui-workflow', 'ui-design-system', 'squad', 'compress-memory', 'logo-design', 'context-budget', 'anti-slop', 'demo-video'
+     'ui-workflow', 'ui-design-system', 'squad', 'compress-memory', 'logo-design', 'context-budget', 'anti-slop', 'demo-video', 'wizard'
    )
    foreach ($plugin in $plugins) {
      $src = "$repo\plugins\$plugin\skills\$plugin"
@@ -53,10 +53,10 @@ fifteen symlinks (one per plugin).
 ## Verify
 
 ```bash
-ls -la ~/.agents/skills/ | grep -E '(regression-test|pre-push-review|refactor-analysis|decision-tracker|roslyn-codelens-integration|memorylens-integration|project-orchestration|ui-workflow|ui-design-system|squad|compress-memory|logo-design|context-budget|anti-slop|demo-video)'
+ls -la ~/.agents/skills/ | grep -E '(regression-test|pre-push-review|refactor-analysis|decision-tracker|roslyn-codelens-integration|memorylens-integration|project-orchestration|ui-workflow|ui-design-system|squad|compress-memory|logo-design|context-budget|anti-slop|demo-video|wizard)'
 ```
 
-You should see fifteen symlinks (or junctions on Windows), one per plugin.
+You should see sixteen symlinks (or junctions on Windows), one per plugin.
 
 ## Updating
 
@@ -71,7 +71,7 @@ Skills update instantly through the symlinks.
 ```bash
 for plugin in regression-test pre-push-review refactor-analysis decision-tracker \
               roslyn-codelens-integration memorylens-integration project-orchestration \
-              ui-workflow ui-design-system squad compress-memory logo-design context-budget anti-slop demo-video; do
+              ui-workflow ui-design-system squad compress-memory logo-design context-budget anti-slop demo-video wizard; do
   rm -f "$HOME/.agents/skills/$plugin"
 done
 ```
