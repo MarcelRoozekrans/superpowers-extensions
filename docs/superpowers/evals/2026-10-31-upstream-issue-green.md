@@ -431,10 +431,10 @@ I confirmed both from the raw stream logs: the positive log has one Skill call w
 
 | Command | Result |
 |---------|--------|
-| `npm test` | PASS. 175 tests, 175 pass, 0 fail. |
-| `npm run check:registries` | PASS. 16 plugins registered across 9 registries, all at v1.27.1; 84 design systems, all indexed. |
+| `npm test` | PASS. 224 tests, 220 pass, 4 skipped, 0 fail. |
+| `npm run check:registries` | PASS. 18 plugins registered across 9 registries, all at v1.27.1; 84 design systems, all indexed. |
 | `npm run check:conventions` | PASS. No commit or tag literals outside the protocol; 10 staging sub-skills delegate to it. |
-| `npx markdownlint-cli2` | PASS. Linting 87 files, 0 issues in 0 files. |
+| `npx markdownlint-cli2` | PASS. Linting 101 files, 0 issues in 0 files. |
 | `privacy-scan.mjs --terms /dev/null` on this file | Exit 1 with five hits, all deliberate fixture values from scenario (d): the fixture host name at lines 191, 264 and 286, the fixture private IPv4 address at line 264, and the fixture home path at line 264. They sit in the verbatim result of (d) and in the grading text that names what the draft must not contain. The home-path hit at line 264 is new since the scanner started catching home paths without a trailing slash. |
 
 ## Summary
