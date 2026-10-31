@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.27.0](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.26.0...superpowers-extensions-v1.27.0) (2026-10-31)
+
+
+### Features
+
+* **demo-video:** record paced, captioned demo videos of a finished feature ([#162](https://github.com/MarcelRoozekrans/superpowers-extensions/issues/162)) ([cefc11d](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/cefc11db0edf1ce3c378a59018e59b78c024ce09))
+
 ## [1.26.0](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.25.0...superpowers-extensions-v1.26.0) (2026-10-30)
 
 
