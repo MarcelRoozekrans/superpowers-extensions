@@ -28,10 +28,14 @@ test('template differs from upstream only at line 114', () => {
   assert.ok(!lines.some((l) => l.includes('$e[')), 'a line still contains $e[');
 });
 
-test('template has no shellcheck finding other than SC2317', { skip: !hasShellcheck && 'shellcheck not installed' }, () => {
+// A library helper a wizard does not call is reported as never invoked:
+// SC2317 up to shellcheck 0.10, SC2329 from 0.11. That is by design.
+const UNUSED_HELPER = new Set([2317, 2329]);
+
+test('template has no shellcheck finding other than an unused helper', { skip: !hasShellcheck && 'shellcheck not installed' }, () => {
   const run = spawnSync('shellcheck', ['-f', 'json', templatePath], { encoding: 'utf8' });
   const codes = JSON.parse(run.stdout).map((f) => f.code);
-  assert.deepEqual(codes.filter((c) => c !== 2317), []);
+  assert.deepEqual(codes.filter((c) => !UNUSED_HELPER.has(c)), []);
 });
 
 // A PATH with only the tools the library needs, so gh and tput are absent.

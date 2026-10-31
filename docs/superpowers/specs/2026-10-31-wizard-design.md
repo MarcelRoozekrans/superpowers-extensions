@@ -88,7 +88,7 @@ Follows upstream's four steps and its "Done when" bars. Changes:
 | Check | Fails when |
 |-------|-----------|
 | Syntax | `bash -n` fails |
-| Shellcheck | `shellcheck` is installed and reports a finding on a line below the `STAGES` marker; `skip` when it is not installed. Library lines are covered by the library check, and SC2317 there only means the wizard does not call that helper. |
+| Shellcheck | `shellcheck` is installed and reports a finding on a line below the `STAGES` marker; `skip` when it is not installed. Library lines are covered by the library check, and SC2317 or SC2329 there only means the wizard does not call that helper. |
 | Library intact | the text above the `STAGES` marker differs from the vendored `template.sh` |
 | Stage count | `TOTAL_STAGES=` differs from the number of `stage` calls inside `run_wizard` |
 | Example removed | the template's example marker comment (`Example stage: replace with your real steps`) is still present. A real Stripe wizard may reuse the example's URL and names, so the check looks only at the marker. |
@@ -102,7 +102,7 @@ It also prints, as a warning that does not fail, every `secrets.*` in the workfl
 `check.test.mjs` runs under the existing `npm test` glob:
 
 - The vendored `template.sh` matches the SHA-256 recorded in `NOTICE.md`, so an accidental edit fails CI.
-- When shellcheck is installed (it is on GitHub's Ubuntu runners), the vendored template has no finding other than SC2317.
+- When shellcheck is installed (it is on GitHub's Ubuntu runners), the vendored template has no finding other than an unused helper: SC2317 up to shellcheck 0.10, SC2329 from 0.11.
 - `check.mjs` on a good fixture passes; on fixtures with a stage-count mismatch, an edited library, a leftover example stage, an unknown secret name and a syntax error, it fails with the matching line.
 - A fixture wizard runs with piped stdin and `ENV_FILE` in a temp directory, with `gh` absent from `PATH`. The test asserts the `.env` content and mode 0600, that a re-run keeps an existing value on Enter, and that the summary lists the skipped secret. This guards the library on a future re-vendor.
 
