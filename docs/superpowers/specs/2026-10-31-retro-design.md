@@ -1,7 +1,7 @@
 # Retro Skill — Design
 
 Date: 2026-10-31
-Status: draft
+Status: approved
 
 ## Intent
 
