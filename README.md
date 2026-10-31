@@ -2,9 +2,9 @@
 
 [![GitHub Sponsors](https://img.shields.io/github/sponsors/MarcelRoozekrans?style=flat&logo=githubsponsors&color=ea4aaa&label=Sponsor)](https://github.com/sponsors/MarcelRoozekrans)
 
-Extension skills for the [superpowers](https://github.com/obra/superpowers) suite, providing quality gates, development workflow skills, and project lifecycle management for web application development. It includes seventeen plugins with eighteen skills:
+Extension skills for the [superpowers](https://github.com/obra/superpowers) suite, providing quality gates, development workflow skills, and project lifecycle management for web application development. It includes nineteen plugins with twenty skills:
 
-- **regression-test** -- Comprehensive regression testing using the [Microsoft Playwright MCP server](https://github.com/microsoft/playwright-mcp), combining existing test suite execution with AI-powered visual and functional browser testing.
+- **regression-test** -- Regression testing using the [Microsoft Playwright MCP server](https://github.com/microsoft/playwright-mcp), combining existing test suite execution with AI-powered visual and functional browser testing.
 - **pre-push-review** -- A structured branch review that diffs against the base branch and gates on plan adherence, code quality, commit hygiene, and regression testing, producing a PASS/FAIL verdict with a prioritized remediation plan on failure.
 - **refactor-analysis** -- Transitive impact analysis for complex refactorings. Maps all affected files, classifies breaking vs cosmetic changes, identifies risks, and produces a safe execution order with checkpoint boundaries before writing implementation plans.
 - **decision-tracker** -- Persistent cross-cutting decision tracking using [LongtermMemory-MCP](https://github.com/MarcelRoozekrans/LongtermMemory-MCP). Automatically extracts architectural decisions, conventions, and constraints during brainstorming and planning, persists them to semantic long-term memory, and recalls them at session start and subagent dispatch to prevent decision amnesia.
@@ -19,6 +19,8 @@ Extension skills for the [superpowers](https://github.com/obra/superpowers) suit
 - **anti-slop** -- Rewrites AI prose tics out of text Claude is about to publish, in English and Dutch: commit messages, PR and issue text, comments, READMEs, docs and release notes. Each language has a pattern catalogue in four families (vocabulary, structure, tone, substance), and every entry pairs a bad example with a plain rewrite. Claude publishes the clean version with no report; on demand it edits a file in place and leaves a diff.
 - **demo-video** -- Records a finished web feature as a paced browser walkthrough video. Claude writes a storyboard from the plan and diff, explores it live with Playwright MCP, then generates a `record.mjs` that drives headless Chromium on the real app. ffmpeg turns the recording into chapter MP4s with captions and title cards, speeds up slow waits instead of cutting them, and builds a GIF in quick mode. Two modes: **quick** (no approval, for a PR or chat) and **polished** (storyboard approved first, for a talk or a fallback recording). Re-recording after a UI fix is one command.
 - **retro** -- Session retrospectives that improve the setup around the agent. A digest script turns a Claude Code transcript into sizes, counts and line numbers; one subagent finds setup improvements in six categories (information access, guardrails, reviewer rules, navigation, tool cost, steering files) and ranks them most severe first. Each finding is fixed on a `retro/<date>` branch, filed as a grouped issue or dropped, chosen per finding. Adapted from Matt Pocock's [skills](https://github.com/mattpocock/skills) (MIT).
+- **wizard** -- Writes an interactive bash script that walks a person through setup steps only they can do: dashboards, API keys, `.env` values, GitHub secrets and variables, one-off migrations. The script shows stage progress, asks before irreversible steps, reads secrets with hidden input and ends with a summary. `check.mjs` verifies a generated wizard in one command. Adapted from Matt Pocock's `wizard` skill (MIT).
+- **upstream-issue** -- Reports a bug to an upstream project only after proving it is theirs. Claude pins the symptom against the docs, traces the cause into upstream code, checks the latest release and the default branch, and searches for existing reports, including open fix pull requests. It builds a minimal repro and runs it until it fails. Two fresh subagents then check it independently: a skeptic tries to refute the report, and a clean runner runs the repro from an empty directory. The draft goes through anti-slop and a privacy scanner, and nothing is posted until you approve it.
 - **architecture-scan** -- Finds shallow modules in the areas the git history changes most. A script ranks the hot directories and files of the last 200 commits, one subagent applies the deletion test there, and the ranked report (an Artifact or an HTML file) shows a before/after diagram per candidate. You pick one, and it goes to `superpowers:brainstorming`. The plugin also ships **codebase-design**, the shared deep-module vocabulary (module, interface, depth, seam, leverage, locality). Adapted from Matt Pocock's [skills](https://github.com/mattpocock/skills) (MIT). See [plugins/architecture-scan/NOTICE.md](plugins/architecture-scan/NOTICE.md).
 - **squad** -- Persistent AI agent teams (Lead, Backend Engineer, Frontend Engineer, Tester, Scribe) **dispatched as parallel `Task` subagents** during brainstorming and planning workflows. Each specialist runs in an isolated context window with its own charter and tier-1 history, so they cannot anchor on each other's reasoning. Per-role `history.md` files accumulate project-specific knowledge across sessions; tiered context lookup (semantic search → grep → recent history) keeps each subagent's prompt lean.
 
@@ -63,7 +65,7 @@ The skill produces:
 
 ## Pre-Push Review Skill
 
-The pre-push review skill provides a comprehensive, structured branch review to run before pushing code or creating a pull request. It reviews every change across four dimensions and produces a clear PASS or FAIL verdict.
+The pre-push review skill provides a structured branch review to run before pushing code or creating a pull request. It reviews every change across four dimensions and produces a clear PASS or FAIL verdict.
 
 ### What It Does
 
@@ -556,6 +558,55 @@ Node.js for the digest script. Optional: `decision-tracker` and the longterm-mem
 
 ---
 
+## Wizard Skill
+
+The wizard skill writes a bash script for setup steps only a person can do. Claude reads the repo to find them: `.env.example`, the README, compose files and every `secrets.*` and `vars.*` in `.github/workflows`. It then confirms the stage list with you and writes one stage per step. The person running the script gets one step per screen. It opens each URL, says what to click and copy, reads values back with secrets hidden, writes them to `.env` and to GitHub secrets or variables, asks before irreversible steps and ends with a summary of what was set and what is still to do by hand. A re-run offers the values already in `.env`.
+
+Each wizard starts from the same [template.sh](plugins/wizard/skills/wizard/template.sh). Claude writes only the stages below its `STAGES` marker. Before handing a wizard over, Claude runs the check script:
+
+```bash
+node plugins/wizard/skills/wizard/scripts/check.mjs scripts/setup-wizard.sh --repo .
+```
+
+It fails on a syntax error, a shellcheck finding in the stages (when shellcheck is installed), an edited library, a `TOTAL_STAGES` that does not match the stages, a leftover example stage, a `set_secret` name no workflow reads, or a file that is not executable. A secret a workflow reads but the wizard never sets is a warning.
+
+A wizard is throwaway by default. Claude asks whether to commit it under `scripts/` and link it from the README, and recommends that for setup paths people will run again. The on-screen text of a committed wizard goes through anti-slop.
+
+Adapted from [mattpocock/skills](https://github.com/mattpocock/skills/tree/main/skills/engineering/wizard) (MIT). See [NOTICE.md](plugins/wizard/skills/wizard/NOTICE.md). The one change to the template is a shellcheck fix on line 114.
+
+### Prerequisites
+
+Bash and Node 20 or newer. `gh`, authenticated, for GitHub secrets and variables; without it the wizard lists them as still to do. `shellcheck` is optional.
+
+---
+
+## Upstream Issue Skill
+
+The upstream-issue skill reports a bug to a project you do not own, such as a library, a CLI tool or a plugin, and only once the bug is shown to be theirs. It fires from its description: "report this upstream", "this is a bug in X", "open an issue on their repo", "make a repro".
+
+### What It Does
+
+- **Eight phases, each with an exit condition.** Pin the symptom, localise it in upstream code, check the latest release, search for existing reports, build the repro, run the independent gates, draft, approve and post. A failed phase stops the run with its reason; it never falls through to a draft.
+- **Latest first.** It checks the changelog, the commits since your version and the default branch. A bug fixed in a release, or fixed but not yet released, ends the run with the version or commit.
+- **No duplicates.** It lists every search it ran and what it could not search. An open pull request that fixes the bug counts as an existing report. On a match it drafts a comment only when the comment adds a repro or newly affected versions, never a bare "+1".
+- **Independent gates.** A skeptic subagent, given none of Claude's reasoning, tries to show the report is misuse, documented behaviour, an environment issue, already fixed or a duplicate. A clean-runner subagent runs the repro from an empty directory with no credentials. Both must pass; their verdicts are final, and after two failed rounds the skill stops.
+- **Privacy scan.** `scripts/privacy-scan.mjs` checks the draft and every repro file for private IPs, MAC addresses, hostnames, home paths, tokens, email addresses and your own terms from `~/.claude/privacy-terms.txt`.
+- **Approval before anything public.** You see the draft, the target repo, where the repro will live and the skeptic's open gaps. Only on your yes does it create the repro repo and the issue or comment with `gh`. For trackers other than GitHub it hands you the draft and the repro.
+
+### Usage
+
+```text
+This is a bug in the YAML parser, report it upstream
+Make a repro for this crash and open an issue on their repo
+Add our repro to the existing upstream issue
+```
+
+### Prerequisites
+
+Node.js for the privacy scanner and an authenticated `gh` CLI for searching and posting on GitHub. The skill itself is pure markdown.
+
+---
+
 ## UI Workflow Skill
 
 The ui-workflow skill provides two complementary capabilities that close the design-implementation gap in frontend work.
@@ -862,7 +913,7 @@ per harness; only how the harness loads them.
 | **OpenAI Codex CLI / App** | [`.codex-plugin/plugin.json`](.codex-plugin/plugin.json) + [`.codex/INSTALL.md`](.codex/INSTALL.md) | Clone-and-symlink each plugin into `~/.agents/skills/`; instructions and a copy-paste loop in [`.codex/INSTALL.md`](.codex/INSTALL.md) |
 | **Gemini CLI** | [`gemini-extension.json`](gemini-extension.json) + [`GEMINI.md`](GEMINI.md) | `GEMINI.md` lists each SKILL.md via `@./plugins/.../SKILL.md` import syntax |
 | **GitHub Copilot CLI** | Reuses [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json) + [`.copilot-cli/INSTALL.md`](.copilot-cli/INSTALL.md) | `copilot plugin marketplace add MarcelRoozekrans/superpowers-extensions`, then install individual plugins |
-| **OpenCode.ai** | [`.opencode/plugins/superpowers-extensions.js`](.opencode/plugins/superpowers-extensions.js) | JS plugin registers all eighteen skill paths via OpenCode's `config.skills.paths` array — no symlinks needed |
+| **OpenCode.ai** | [`.opencode/plugins/superpowers-extensions.js`](.opencode/plugins/superpowers-extensions.js) | JS plugin registers all twenty skill paths via OpenCode's `config.skills.paths` array — no symlinks needed |
 
 The polymorphic [`hooks/session-start`](hooks/session-start) script
 detects which harness is running it via env vars (`CURSOR_PLUGIN_ROOT`,
@@ -928,7 +979,7 @@ The multi-provider mechanism here is adapted directly from
 [`obra/superpowers`](https://github.com/obra/superpowers) (MIT). Their
 session-start hook was the model for ours; their per-harness manifest
 pattern is what enables one shared markdown tree to load natively in
-each host. Differences: we are a marketplace of seventeen plugins (versus
+each host. Differences: we are a marketplace of nineteen plugins (versus
 their single-plugin layout), so our manifests target the suite at the
 repo root with skills resolved via `./plugins/`.
 
@@ -964,6 +1015,8 @@ claude plugin install context-budget
 claude plugin install anti-slop
 claude plugin install demo-video
 claude plugin install retro
+claude plugin install wizard
+claude plugin install upstream-issue
 claude plugin install architecture-scan
 ```
 
@@ -1096,6 +1149,17 @@ xcopy /E /I plugins\retro\skills\retro %USERPROFILE%\.claude\skills\retro
 # macOS / Linux -- retro
 cp -r plugins/retro/skills/retro ~/.claude/skills/retro
 
+# Windows -- wizard
+xcopy /E /I plugins\wizard\skills\wizard %USERPROFILE%\.claude\skills\wizard
+
+# macOS / Linux -- wizard
+cp -r plugins/wizard/skills/wizard ~/.claude/skills/wizard
+
+# Windows -- upstream-issue
+xcopy /E /I plugins\upstream-issue\skills\upstream-issue %USERPROFILE%\.claude\skills\upstream-issue
+
+# macOS / Linux -- upstream-issue
+cp -r plugins/upstream-issue/skills/upstream-issue ~/.claude/skills/upstream-issue
 # Windows -- architecture-scan (both skills, each folder carries its NOTICE.md)
 xcopy /E /I plugins\architecture-scan\skills %USERPROFILE%\.claude\skills
 
@@ -1121,7 +1185,7 @@ claude mcp add playwright -- npx @playwright/mcp@latest --caps=testing,pdf,visio
 
 ### Verify Installation
 
-In Claude Code, the skills should appear when you type `/regression-test`, `/pre-push-review`, `/refactor-analysis`, `/decision-tracker`, `/roslyn-codelens-integration`, `/memorylens-integration`, `/project-orchestration`, `/ui-workflow`, `/ui-design-system`, `/squad`, `/compress-memory`, `/logo-design`, `/context-budget`, `/anti-slop`, `/demo-video`, `/retro`, `/architecture-scan`, or `/codebase-design`, or when you ask Claude to perform regression testing, a pre-push review, a refactor impact analysis, decision tracking, .NET code graph analysis, .NET memory profiling, project lifecycle management, UI design contract work, design system generation, to activate your agent team, to compress a memory file, to design or audit a brand mark, to rewrite AI prose tics out of a draft, to record a demo video of a web feature, to run a retro on a session, to find refactor candidates, or to design a deeper module interface.
+In Claude Code, the skills should appear when you type `/regression-test`, `/pre-push-review`, `/refactor-analysis`, `/decision-tracker`, `/roslyn-codelens-integration`, `/memorylens-integration`, `/project-orchestration`, `/ui-workflow`, `/ui-design-system`, `/squad`, `/compress-memory`, `/logo-design`, `/context-budget`, `/anti-slop`, `/demo-video`, `/retro`, `/wizard`, `/upstream-issue`, `/architecture-scan`, or `/codebase-design`, or when you ask Claude to perform regression testing, a pre-push review, a refactor impact analysis, decision tracking, .NET code graph analysis, .NET memory profiling, project lifecycle management, UI design contract work, design system generation, to activate your agent team, to compress a memory file, to design or audit a brand mark, to rewrite AI prose tics out of a draft, to record a demo video of a web feature, to run a retro on a session, to write a setup wizard, to report a bug upstream, to find refactor candidates, or to design a deeper module interface.
 
 ---
 
@@ -1428,16 +1492,35 @@ superpowers-extensions/
 │   │           ├── templates/              # record.template.mjs
 │   │           ├── lib/                    # runtime, ffmpeg graphs, postprocess, verify
 │   │           └── scripts/                # preflight.mjs, scaffold.mjs and tests
-│   ├── retro/                              # Session retrospectives that fix, file or drop setup improvements
-│       ├── .claude-plugin/
-│       │   └── plugin.json
-│       └── skills/
-│           └── retro/
-│               ├── SKILL.md                # Offer rule, scope split, reading rules, workflow, hard rules
-│               ├── NOTICE.md               # Attribution and MIT licence
-│               ├── references/             # categories.md and writing-for-agents.md
-│               └── scripts/                # digest.mjs transcript digest and tests
-│   └── architecture-scan/                  # Deepening candidates from git hot spots (two skills)
+│   ├── retro/                              # Session retrospectives that fix, file or drop setup improvements (16th plugin)
+│   │   ├── .claude-plugin/
+│   │   │   └── plugin.json
+│   │   └── skills/
+│   │       └── retro/
+│   │           ├── SKILL.md                # Offer rule, scope split, reading rules, workflow, hard rules
+│   │           ├── NOTICE.md               # Attribution and MIT licence
+│   │           ├── references/             # categories.md and writing-for-agents.md
+│   │           └── scripts/                # digest.mjs transcript digest and tests
+│   ├── wizard/                             # Bash wizards for manual setup steps (17th plugin)
+│   │   ├── .claude-plugin/
+│   │   │   └── plugin.json
+│   │   └── skills/
+│   │       └── wizard/
+│   │           ├── SKILL.md                # Scope, map, write, verify; ask points and anti-slop
+│   │           ├── NOTICE.md               # Attribution, MIT licence, template SHA-256
+│   │           ├── template.sh             # Upstream template with the line-114 shellcheck fix
+│   │           └── scripts/                # check.mjs and tests
+│   ├── upstream-issue/                     # Upstream bug reports backed by a verified repro (18th plugin)
+│   │   ├── .claude-plugin/
+│   │   │   └── plugin.json
+│   │   └── skills/
+│   │       └── upstream-issue/
+│   │           ├── SKILL.md                # Trigger, eight phases, gates, drafting, approval
+│   │           ├── skeptic-prompt.md       # Brief for the skeptic subagent
+│   │           ├── clean-runner-prompt.md  # Brief for the clean-room runner subagent
+│   │           ├── references/             # repro-shapes.md and issue-body.md
+│   │           └── scripts/                # privacy-scan.mjs, tests and fixtures
+│   └── architecture-scan/                  # Deepening candidates from git hot spots (19th plugin, two skills)
 │       ├── .claude-plugin/
 │       │   └── plugin.json
 │       ├── NOTICE.md                       # Attribution to Matt Pocock's skills (MIT)

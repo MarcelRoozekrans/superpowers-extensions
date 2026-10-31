@@ -1,0 +1,9 @@
+{
+  "name": "wizard",
+  "description": "Generates an interactive bash script that walks a person through setup steps only they can do: dashboards, API keys, .env values, GitHub secrets and variables, one-off migrations. The script shows stage progress, asks before irreversible steps, reads secrets with hidden input and ends with a summary. Adapted from Matt Pocock's wizard skill (MIT).",
+  "author": {
+    "name": "Marcel Roozekrans"
+  },
+  "license": "MIT",
+  "keywords": ["wizard", "setup", "onboarding", "secrets", "env", "bash"]
+}

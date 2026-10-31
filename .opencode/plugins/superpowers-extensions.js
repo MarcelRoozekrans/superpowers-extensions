@@ -30,6 +30,8 @@ const PLUGINS = [
   'anti-slop',
   'demo-video',
   'retro',
+  'wizard',
+  'upstream-issue',
   'architecture-scan'
 ];
 
@@ -44,7 +46,7 @@ const skillPaths = PLUGINS.flatMap(name => {
 
 export const SuperpowersExtensionsPlugin = async ({ client, directory }) => {
   return {
-    // Inject every skill path into OpenCode's skill discovery config so
+    // Inject all twenty skill paths into OpenCode's skill discovery config so
     // each skill is discoverable by description-based matching, the same as
     // OpenCode's native skills behavior. No symlinks required.
     config: async (config) => {

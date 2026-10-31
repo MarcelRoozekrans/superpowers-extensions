@@ -174,6 +174,26 @@
       "category": "workflow"
     },
     {
+      "name": "wizard",
+      "description": "Generates an interactive bash script that walks a person through setup steps only they can do: dashboards, API keys, .env values, GitHub secrets and variables, one-off migrations. Claude scopes the steps from the repo, writes the script from a shared template and checks it with one command. Adapted from Matt Pocock's wizard skill (MIT).",
+      "version": "1.27.1",
+      "author": {
+        "name": "Marcel Roozekrans"
+      },
+      "source": "./plugins/wizard",
+      "category": "workflow"
+    },
+    {
+      "name": "upstream-issue",
+      "description": "Reports a bug to an upstream project only after proving it is theirs. A minimal repro is built and run, a skeptic and a clean-room runner check it independently, and the issue draft passes anti-slop and a privacy scan before the user approves it.",
+      "version": "1.27.1",
+      "author": {
+        "name": "Marcel Roozekrans"
+      },
+      "source": "./plugins/upstream-issue",
+      "category": "workflow"
+    },
+    {
       "name": "architecture-scan",
       "description": "Finds shallow modules in the areas the git history changes most, publishes a ranked report with before/after diagrams, lets you pick one candidate and hands it to brainstorming. Includes codebase-design, the shared deep-module vocabulary for designing and deepening interfaces.",
       "version": "1.27.1",

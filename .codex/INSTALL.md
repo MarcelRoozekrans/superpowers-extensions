@@ -2,7 +2,7 @@
 
 Codex auto-discovers skills under `~/.agents/skills/`. Each plugin in this
 suite is a separate skill bundle, so installation is a clone followed by
-eighteen symlinks (one per skill).
+twenty symlinks (one per skill).
 
 ## Prerequisites
 
@@ -26,7 +26,7 @@ eighteen symlinks (one per skill).
    REPO=~/.codex/superpowers-extensions
    for plugin in regression-test pre-push-review refactor-analysis decision-tracker \
                  roslyn-codelens-integration memorylens-integration project-orchestration \
-                 ui-workflow ui-design-system squad compress-memory logo-design context-budget anti-slop demo-video retro architecture-scan; do
+                 ui-workflow ui-design-system squad compress-memory logo-design context-budget anti-slop demo-video retro wizard upstream-issue architecture-scan; do
      for skill in "$REPO/plugins/$plugin/skills/"*/; do
        ln -sfn "${skill%/}" "$HOME/.agents/skills/$(basename "$skill")"
      done
@@ -41,7 +41,7 @@ eighteen symlinks (one per skill).
    $plugins = @(
      'regression-test', 'pre-push-review', 'refactor-analysis', 'decision-tracker',
      'roslyn-codelens-integration', 'memorylens-integration', 'project-orchestration',
-     'ui-workflow', 'ui-design-system', 'squad', 'compress-memory', 'logo-design', 'context-budget', 'anti-slop', 'demo-video', 'retro', 'architecture-scan'
+     'ui-workflow', 'ui-design-system', 'squad', 'compress-memory', 'logo-design', 'context-budget', 'anti-slop', 'demo-video', 'retro', 'wizard', 'upstream-issue', 'architecture-scan'
    )
    foreach ($plugin in $plugins) {
      foreach ($skill in Get-ChildItem -Directory "$repo\plugins\$plugin\skills") {
@@ -56,10 +56,10 @@ eighteen symlinks (one per skill).
 ## Verify
 
 ```bash
-ls -la ~/.agents/skills/ | grep -E '(regression-test|pre-push-review|refactor-analysis|decision-tracker|roslyn-codelens-integration|memorylens-integration|project-orchestration|ui-workflow|ui-design-system|squad|compress-memory|logo-design|context-budget|anti-slop|demo-video|retro|architecture-scan|codebase-design)'
+ls -la ~/.agents/skills/ | grep -E '(regression-test|pre-push-review|refactor-analysis|decision-tracker|roslyn-codelens-integration|memorylens-integration|project-orchestration|ui-workflow|ui-design-system|squad|compress-memory|logo-design|context-budget|anti-slop|demo-video|retro|wizard|upstream-issue|architecture-scan|codebase-design)'
 ```
 
-You should see eighteen symlinks (or junctions on Windows), one per skill.
+You should see twenty symlinks (or junctions on Windows), one per skill.
 
 ## Updating
 

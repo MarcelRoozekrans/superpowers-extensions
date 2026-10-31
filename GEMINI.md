@@ -14,5 +14,7 @@
 @./plugins/anti-slop/skills/anti-slop/SKILL.md
 @./plugins/demo-video/skills/demo-video/SKILL.md
 @./plugins/retro/skills/retro/SKILL.md
+@./plugins/wizard/skills/wizard/SKILL.md
+@./plugins/upstream-issue/skills/upstream-issue/SKILL.md
 @./plugins/architecture-scan/skills/architecture-scan/SKILL.md
 @./plugins/architecture-scan/skills/codebase-design/SKILL.md

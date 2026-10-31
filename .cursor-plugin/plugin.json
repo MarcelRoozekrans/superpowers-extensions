@@ -27,6 +27,8 @@
     "anti-slop",
     "demo-video",
     "retro",
+    "wizard",
+    "upstream-issue",
     "architecture-scan"
   ],
   "skills": "./plugins/"
