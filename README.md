@@ -850,8 +850,8 @@ These skills can also be used with GitHub Copilot via [Copilot Skill Bridge](htt
 
 ## Multi-Provider Support
 
-Source-of-truth is one shared `plugins/<name>/skills/<name>/SKILL.md` tree
-of markdown files. Each supported coding-agent harness has a manifest at
+Source-of-truth is one shared tree of `plugins/<name>/skills/<skill>/SKILL.md`
+markdown files, one folder per skill. Each supported coding-agent harness has a manifest at
 the repo root pointing at the same files. Skill content does not change
 per harness; only how the harness loads them.
 
@@ -1096,10 +1096,10 @@ xcopy /E /I plugins\retro\skills\retro %USERPROFILE%\.claude\skills\retro
 # macOS / Linux -- retro
 cp -r plugins/retro/skills/retro ~/.claude/skills/retro
 
-# Windows -- architecture-scan (both skills)
+# Windows -- architecture-scan (both skills, each folder carries its NOTICE.md)
 xcopy /E /I plugins\architecture-scan\skills %USERPROFILE%\.claude\skills
 
-# macOS / Linux -- architecture-scan (both skills)
+# macOS / Linux -- architecture-scan (both skills, each folder carries its NOTICE.md)
 cp -r plugins/architecture-scan/skills/. ~/.claude/skills/
 ```
 
@@ -1444,11 +1444,13 @@ superpowers-extensions/
 │       └── skills/
 │           ├── architecture-scan/
 │           │   ├── SKILL.md                # Procedure: recall, scope, explore, report, pick
+│           │   ├── NOTICE.md               # Copy of the plugin NOTICE.md for skills-only installs
 │           │   ├── references/             # report.md report rules
 │           │   ├── templates/              # report.template.html
 │           │   └── scripts/                # hotspots.mjs git hot-spot counts and tests
 │           └── codebase-design/
 │               ├── SKILL.md                # Deep-module vocabulary and principles
+│               ├── NOTICE.md               # Copy of the plugin NOTICE.md for skills-only installs
 │               └── references/             # deepening.md and design-it-twice.md
 └── docs/
     ├── planning/                           # Project lifecycle state (ROADMAP, MILESTONE, STATE, CONVENTIONS)
@@ -1492,7 +1494,7 @@ npm run check:registries # every plugin registered everywhere, counts match disk
 
 ### Adding a plugin
 
-A plugin is not one directory — it has to be registered in nine places, and
+A plugin is not one directory — it has to be registered in several places, and
 missing one fails quietly. `npm run check:registries` enforces every item below,
 so add the plugin and run it rather than working from this list by hand:
 
@@ -1500,6 +1502,8 @@ so add the plugin and run it rather than working from this list by hand:
 |---|---|
 | `plugins/<name>/.claude-plugin/plugin.json` | Manifest whose `name` matches the directory |
 | `plugins/<name>/skills/<name>/SKILL.md` | Skill whose frontmatter `name` matches the directory |
+| `plugins/<name>/skills/<extra>/SKILL.md` | Only for a plugin with more than one skill: each extra skill folder needs its own `SKILL.md` whose frontmatter `name` matches that folder |
+| `GEMINI.md` | One `@./plugins/<name>/skills/<skill>/SKILL.md` line per skill |
 | `.claude-plugin/marketplace.json` | Entry with `source: ./plugins/<name>` and the current version |
 | `release-please-config.json` | An `extra-files` entry for `$.plugins[<index>].version` — this list is index-based, so a new plugin is never version-bumped until you add its index |
 | `package.json` | `claude plugin install <name>` in the `install-plugins` script |

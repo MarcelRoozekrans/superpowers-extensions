@@ -49,3 +49,15 @@ test('no external script src and no Tailwind CDN', () => {
 test('.b-spec badge style is defined', () => {
   assert.match(html, /\.b-spec\s*\{/);
 });
+
+test('declares doctype and UTF-8 charset', () => {
+  assert.match(html, /^<!doctype html>/i);
+  assert.match(html, /<meta charset="utf-8">/i);
+});
+
+test('each skill folder carries the same licence notice as the plugin root', () => {
+  const read = (rel) => readFileSync(fileURLToPath(new URL(rel, import.meta.url)), 'utf8');
+  const root = read('../../../NOTICE.md');
+  assert.equal(read('../NOTICE.md'), root);
+  assert.equal(read('../../codebase-design/NOTICE.md'), root);
+});

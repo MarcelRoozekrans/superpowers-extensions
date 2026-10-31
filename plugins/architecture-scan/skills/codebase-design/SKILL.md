@@ -113,4 +113,4 @@ Good interfaces make testing natural:
 - **Deepening a cluster given its dependencies**, see [references/deepening.md](references/deepening.md): dependency categories, seam discipline, and replace-don't-layer testing.
 - **Exploring alternative interfaces**, see [references/design-it-twice.md](references/design-it-twice.md): spin up parallel subagents to design the interface several radically different ways, then compare on depth, locality, and seam placement.
 
-This skill is adapted from Matt Pocock's MIT-licensed `codebase-design` skill. See [../../NOTICE.md](../../NOTICE.md) for the source and licence.
+This skill is adapted from Matt Pocock's MIT-licensed `codebase-design` skill. See [NOTICE.md](NOTICE.md) for the source and licence.

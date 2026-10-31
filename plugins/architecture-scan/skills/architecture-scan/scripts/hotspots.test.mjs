@@ -101,15 +101,14 @@ test('countHotspots honours custom depth, topN and threshold', () => {
     files: [
       { path: 'a/x/1.js', count: 1 },
       { path: 'a/y/2.js', count: 1 },
-      { path: 'b/z.js', count: 1 },
-      { path: 'c/z.js', count: 1 },
     ],
+    filesTruncated: false,
   });
   assert.equal(countHotspots(paths, { depth: 1, topN: 1, threshold: 0.5 }).scattered, false);
 });
 
 test('empty input is total 0 and scattered', () => {
-  assert.deepEqual(countHotspots([]), { dirs: [], total: 0, scattered: true, files: [] });
+  assert.deepEqual(countHotspots([]), { dirs: [], total: 0, scattered: true, files: [], filesTruncated: false });
 });
 
 test('CLI counts A and M paths over a short history', () => {
@@ -144,6 +143,52 @@ test('countHotspots counts files after exclusion, by count then path', () => {
     { path: 'src/b.js', count: 2 },
     { path: 'src/c.js', count: 1 },
   ]);
+});
+
+test('files are limited to the top directories', () => {
+  const paths = ['hot/a.js', 'hot/a.js', 'hot/b.js', 'cold/c.js'];
+  const result = countHotspots(paths, { topN: 1 });
+  assert.deepEqual(result.files.map((f) => f.path), ['hot/a.js', 'hot/b.js']);
+});
+
+test('files are capped at 100 and flagged as truncated', () => {
+  const paths = Array.from({ length: 150 }, (_, i) => `src/f${i}.js`);
+  const result = countHotspots(paths);
+  assert.equal(result.files.length, 100);
+  assert.equal(result.filesTruncated, true);
+  assert.equal(result.total, 150);
+});
+
+test('under restricts dirs, files, total and scattered to one directory', () => {
+  const paths = ['src/a/x.js', 'src/a/x.js', 'src/b/y.js', 'lib/z.js', 'src-other/w.js'];
+  for (const under of ['src', 'src/']) {
+    const result = countHotspots(paths, { under });
+    assert.equal(result.total, 3, under);
+    assert.deepEqual(result.dirs, [
+      { dir: 'src/a/', count: 2 },
+      { dir: 'src/b/', count: 1 },
+    ]);
+    assert.deepEqual(result.files.map((f) => f.path), ['src/a/x.js', 'src/b/y.js']);
+  }
+  assert.equal(countHotspots(paths, { under: 'nowhere' }).scattered, true);
+});
+
+test('CLI --under limits the counts to the named area', () => {
+  const repo = makeRepo();
+  try {
+    write(repo, 'src/orders/a.js', '1');
+    write(repo, 'src/billing/b.js', '1');
+    commit(repo, 'one', '2026-01-01T00:00:00Z');
+    const r = runCli(['--repo', repo, '--under', './src/orders']);
+    assert.equal(r.status, 0, r.stderr);
+    const out = JSON.parse(r.stdout);
+    assert.equal(out.total, 1);
+    assert.deepEqual(out.dirs, [{ dir: 'src/orders/', count: 1 }]);
+    assert.deepEqual(out.files, [{ path: 'src/orders/a.js', count: 1 }]);
+    assert.equal(out.filesTruncated, false);
+  } finally {
+    rmSync(repo, { recursive: true, force: true });
+  }
 });
 
 test('CLI reports per-file counts that match the commits', () => {

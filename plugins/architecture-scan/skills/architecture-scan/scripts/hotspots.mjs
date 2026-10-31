@@ -25,12 +25,15 @@ export function isExcluded(path) {
   return base.includes('.generated.');
 }
 
-export function countHotspots(paths, { depth = 3, topN = 5, threshold = 0.3 } = {}) {
+const FILES_CAP = 100;
+
+export function countHotspots(paths, { depth = 3, topN = 5, threshold = 0.3, under = '' } = {}) {
+  const prefix = under && !under.endsWith('/') ? `${under}/` : under;
   const counts = new Map();
   const fileCounts = new Map();
   let total = 0;
   for (const path of paths) {
-    if (isExcluded(path)) continue;
+    if (isExcluded(path) || !path.startsWith(prefix)) continue;
     const dirSegments = path.split('/').slice(0, -1).slice(0, depth);
     const dir = dirSegments.length ? `${dirSegments.join('/')}/` : './';
     counts.set(dir, (counts.get(dir) ?? 0) + 1);
@@ -42,11 +45,25 @@ export function countHotspots(paths, { depth = 3, topN = 5, threshold = 0.3 } = 
   const dirs = [...counts]
     .map(([dir, count]) => ({ dir, count }))
     .sort(byCountThenName('dir'));
-  const files = [...fileCounts]
+  const topDirs = dirs.slice(0, topN);
+  const inTopDirs = (path) => {
+    const seg = path.split('/').slice(0, -1).slice(0, depth);
+    const dir = seg.length ? `${seg.join('/')}/` : './';
+    return topDirs.some((d) => d.dir === dir);
+  };
+  const eligible = [...fileCounts]
+    .filter(([path]) => inTopDirs(path))
     .map(([path, count]) => ({ path, count }))
     .sort(byCountThenName('path'));
-  const top = dirs.slice(0, topN).reduce((sum, d) => sum + d.count, 0);
-  return { dirs, total, scattered: total === 0 || top < threshold * total, files };
+  const files = eligible.slice(0, FILES_CAP);
+  const top = topDirs.reduce((sum, d) => sum + d.count, 0);
+  return {
+    dirs,
+    total,
+    scattered: total === 0 || top < threshold * total,
+    files,
+    filesTruncated: eligible.length > FILES_CAP,
+  };
 }
 
 function readHistory(repo, commits) {
@@ -69,9 +86,9 @@ function readHistory(repo, commits) {
 }
 
 function main(argv) {
-  const opts = { repo: '.', commits: 200, depth: 3 };
+  const opts = { repo: '.', commits: 200, depth: 3, under: '' };
   const usage = (msg) => {
-    console.error(`${msg}. usage: hotspots.mjs [--repo <dir>] [--commits <n>] [--depth <n>]`);
+    console.error(`${msg}. usage: hotspots.mjs [--repo <dir>] [--commits <n>] [--depth <n>] [--under <dir>]`);
     return 2;
   };
   for (let i = 0; i < argv.length; i += 2) {
@@ -79,8 +96,8 @@ function main(argv) {
     if (!argv[i].startsWith('--') || !(key in opts)) return usage(`unknown option: ${argv[i]}`);
     const value = argv[i + 1];
     if (value === undefined) return usage(`missing value for ${argv[i]}`);
-    if (key === 'repo') {
-      opts.repo = value;
+    if (key === 'repo' || key === 'under') {
+      opts[key] = value;
     } else if (/^[1-9]\d*$/.test(value)) {
       opts[key] = Number(value);
     } else {
@@ -96,7 +113,7 @@ function main(argv) {
     console.error(`not a git repo: ${opts.repo}`);
     return 2;
   }
-  const result = countHotspots(history.paths, { depth: opts.depth });
+  const result = countHotspots(history.paths, { depth: opts.depth, under: opts.under.replace(/^\.\//, '') });
   console.log(JSON.stringify({ ...result, commits: history.commits }));
   return 0;
 }

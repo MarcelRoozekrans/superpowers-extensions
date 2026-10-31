@@ -28,14 +28,14 @@ Recall decisions with `decision-tracker`. It recalls once per session: if it alr
 
 ### 2. Scope
 
-Run the script at `<skill dir>/scripts/hotspots.mjs`: `node <skill dir>/scripts/hotspots.mjs --repo <root>`. It prints `{dirs:[{dir,count}], total, scattered, files:[{path,count}], commits}` for the last 200 commits: `dirs` counted per directory at most three levels deep, `files` per file, both without lockfiles, generated files, `CHANGELOG.md` and docs. Exit code 2 means `<root>` is not a git repo: ask the user for an area instead.
+Run the script at `<skill dir>/scripts/hotspots.mjs`: `node <skill dir>/scripts/hotspots.mjs --repo <root>`. It prints `{dirs:[{dir,count}], total, scattered, files:[{path,count}], filesTruncated, commits}` for the last 200 commits: `dirs` counted per directory at most three levels deep, `files` per file, both without lockfiles, generated files, `CHANGELOG.md` and docs. `files` holds only files inside the top five `dirs`, at most 100 of them, and `filesTruncated` says whether more were left out. Exit code 2 means `<root>` is not a git repo: ask the user for an area instead.
 
-- **The user named an area, a module or a pain point:** that is the scope. Do not pick directories from `dirs`.
+- **The user named an area, a module or a pain point:** that is the scope. Rerun the script with `--under <area>` (a repo-relative directory, trailing slash optional) so `dirs`, `files`, `total` and `scattered` count only paths under it. Do not pick directories from `dirs`.
 - **Otherwise:** the scope is the **top five directories** in `dirs` with their counts. When `scattered` is true, the top five hold less than 30% of the changes: widen the scope to the whole source tree and say so in the report.
 
 Keep the counts; the report shows them.
 
-**Hot files, not only hot directories.** A directory can be hot because of one file. Take the per-file change counts from the script's `files` field, filtered to the scope directories.
+**Hot files, not only hot directories.** A directory can be hot because of one file. Take the per-file change counts from the script's `files` field; it already covers only the scope directories.
 
 A card's files must be among the files this history changes repeatedly. Every card's Files line shows each file's change count in the window, so a file with one or two changes is visible on the card. A candidate whose files changed only once or twice each gets no card, even when it is shallow and its directory is hot.
 
@@ -83,18 +83,18 @@ Build the report from [references/report.md](references/report.md) and `template
   - the `.adr` callout only when the candidate conflicts with a recorded decision or ADR.
 - **Top recommendation** (`{{TOP}}`): one candidate, one sentence on why, a link to its card.
 
-Before publishing, check the filled HTML:
+Always write the filled HTML to `<tmpdir>/architecture-scan-<timestamp>.html` first (see Fallbacks for `<tmpdir>` and `<timestamp>`), with `{{MERMAID_SCRIPT}}` empty, whether or not an Artifact tool exists. Run these checks on that file before publishing:
 
 - `grep -niwE "component|service|services|unit|api|signature|boundary|layer|wrapper"` on the file finds nothing in report copy. A hit inside a file or directory name, such as `pricing-api.js`, is fine.
 - No `{{` remains.
 - Every `<article>` holds a `.pair`.
 - No Solution line or After panel names a method, a parameter list or a method count.
 
-Publish it as an Artifact per `report.md`, or use the fallback below. Then give the URL or the path (the HARD-GATE).
+Then publish the content of that file as an Artifact per `report.md`, or, in the fallback, put the pinned script line into the file and give its absolute path. Give the URL or the path (the HARD-GATE).
 
 ### 6. Pick
 
-Ask with AskUserQuestion: "Which candidate should go to brainstorming?" The tool takes about four options. The top recommendation comes first, labelled "(Recommended)"; then the next candidates in rank order; "None of these" always keeps the last slot. Lower-ranked candidates beyond the limit stay reachable through Other: say so in the question. Still no interface in the option labels.
+Ask with AskUserQuestion: "Which candidate should go to brainstorming?" AskUserQuestion takes at most four options, so with "None of these" in the last slot three candidates fit before Other. The top recommendation comes first, labelled "(Recommended)"; then the next candidates in rank order. Lower-ranked candidates beyond the limit stay reachable through Other: say so in the question. Still no interface in the option labels.
 
 If the user already gave the pick, or a rejection and its reason, use those answers. Do not ask again.
 
@@ -126,6 +126,7 @@ The scan's job ends at the handoff. It does not design the interface, write the 
 
 ## Fallbacks
 
+- **Artifact shows Mermaid source as text:** republish with `{{MERMAID_SCRIPT}}` filled by the pinned script line from `report.md`, as in the fallback below.
 - **No Artifact tool:** fill `{{MERMAID_SCRIPT}}` with the pinned script line from `report.md` and write the file to `<tmpdir>/architecture-scan-<timestamp>.html`, where `<tmpdir>` is `$TMPDIR`, else `/tmp` (`%TEMP%` on Windows), and `<timestamp>` is `YYYYMMDD-HHMMSS`. Try to open it (`xdg-open`, `open` or `start`); if that fails, the absolute path is enough. Give the path.
 - **No AskUserQuestion:** ask a numbered question in text, top recommendation first and marked, "None of these" last:
 
@@ -169,9 +170,9 @@ Chain: `architecture-scan` → `superpowers:brainstorming` → `superpowers:writ
 |------|----------|
 | [references/report.md](references/report.md) | Filling the template, publishing, the scope and card markup, diagram patterns, the top recommendation, tone |
 | `templates/report.template.html` | The report page and its stylesheet, with light and dark tokens |
-| `scripts/hotspots.mjs` | Change counts per directory and per file from git history |
+| `scripts/hotspots.mjs` | Change counts per directory and per file from git history; `--under <dir>` limits them to one area, `files` is capped at 100 |
 | [../codebase-design/SKILL.md](../codebase-design/SKILL.md) | Vocabulary and principles |
 | [../codebase-design/references/deepening.md](../codebase-design/references/deepening.md) | Dependency categories, seam discipline, testing |
 | [../codebase-design/references/design-it-twice.md](../codebase-design/references/design-it-twice.md) | The parallel-subagent pattern for alternative interfaces |
 
-Adapted from Matt Pocock's MIT-licensed `improve-codebase-architecture` skill. See [../../NOTICE.md](../../NOTICE.md) for the source and licence.
+Adapted from Matt Pocock's MIT-licensed `improve-codebase-architecture` skill. See [NOTICE.md](NOTICE.md) for the source and licence.

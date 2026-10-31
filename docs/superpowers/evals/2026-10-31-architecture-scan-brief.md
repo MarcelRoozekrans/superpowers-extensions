@@ -1,13 +1,13 @@
 # Architecture-scan evaluation brief
 
-One brief, given to a fresh agent with the skill (GREEN) and without it (RED). The fixture is built by `architecture-scan-fixture/make-fixture.mjs`. Before each run the controller substitutes `<fixture>` and `<scratch>` with absolute paths.
+One brief, given to a fresh agent with the skill (GREEN) and without it (RED). The fixture is built by `architecture-scan-fixture/make-fixture.mjs`. Before each run the controller substitutes `<fixture>`, `<scratch>` and `<repo>` (the repository root) with absolute paths.
 
 ## The brief
 
 Scan the repository at `<fixture>` for architecture refactor candidates. If the directory does not exist yet, build it first with:
 
 ```bash
-node /home/marcel/Projects/Prive/superpowers-extenions/.claude/worktrees/bridge-cse_01RwoARgpBmY7ouvgpZjsYUT/docs/superpowers/evals/architecture-scan-fixture/make-fixture.mjs <fixture>
+node <repo>/docs/superpowers/evals/architecture-scan-fixture/make-fixture.mjs <fixture>
 ```
 
 Work only from that repository's code and git history. Do not edit it.
