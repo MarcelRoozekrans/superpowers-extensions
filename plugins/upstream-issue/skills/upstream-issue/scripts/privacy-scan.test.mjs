@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
-import { scanText, scanPaths, loadTerms } from './privacy-scan.mjs';
+import { scanText, scanPaths, loadTerms, usernameTerms, main } from './privacy-scan.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const script = join(here, 'privacy-scan.mjs');
@@ -180,4 +180,37 @@ test('hostname catches uppercase and mixed-case names, not type names', () => {
   assert.deepEqual(kinds('at System.IO'), []);
   assert.deepEqual(kinds('System.Net.Http.HttpClient'), []);
   assert.deepEqual(kinds('Foo.App'), []);
+});
+
+test('usernameTerms adds the local username, not placeholders or short names', () => {
+  assert.deepEqual(usernameTerms('alice'), ['alice']);
+  assert.deepEqual(usernameTerms('runner'), []);
+  assert.deepEqual(usernameTerms('root'), []);
+  assert.deepEqual(usernameTerms('User'), []);
+  assert.deepEqual(usernameTerms('ab'), []);
+  assert.deepEqual(usernameTerms(''), []);
+});
+
+test('the username term matches inside a flattened scratch path', () => {
+  const text = '"dep": "git+file:///tmp/claude-1000/-home-alice-Projects-x/up#v1"';
+  assert.deepEqual(scanText(text, { terms: usernameTerms('alice') }), [{ kind: 'term', match: 'alice', line: 1 }]);
+  assert.deepEqual(scanText('malice aforethought', { terms: usernameTerms('alice') }), []);
+});
+
+test('CLI flags the local username by default', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'ps-'));
+  const empty = join(dir, 'terms.txt');
+  writeFileSync(empty, '');
+  const file = join(dir, 'package.json');
+  writeFileSync(file, '{ "dep": "git+file:///tmp/x/-home-alice-src/up#v1" }\n');
+  const log = console.log;
+  const lines = [];
+  console.log = (line) => lines.push(line);
+  try {
+    assert.equal(main(['--terms', empty, file], { username: 'alice' }), 1);
+    assert.match(lines.join('\n'), /package\.json:1: term: alice/);
+    assert.equal(main(['--terms', empty, file], { username: 'runner' }), 0);
+  } finally {
+    console.log = log;
+  }
 });

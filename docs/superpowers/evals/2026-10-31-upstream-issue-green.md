@@ -362,7 +362,7 @@ What the run did: it pinned the symptom against the README's RFC 1123 promise, t
 node plugins/upstream-issue/skills/upstream-issue/scripts/privacy-scan.mjs --terms /dev/null <scratch>/green/work-d2/draft.txt <scratch>/green/work-d2/repro
 ```
 
-Output: none. Exit code: 0, also without the `--allow lists.example.org` the agent used. The repro's `package.json` points at the local fixture upstream through a `git+file://` URL under the scratch directory; that file is not part of the mail, which carries only the inline one-liner.
+Output: none. Exit code: 0, also without the `--allow lists.example.org` the agent used. The repro's `package.json` points at the local fixture upstream through a `git+file://` URL under the scratch directory; that file is not part of the mail, which carries only the inline one-liner. That scratch path contains the local username. The scanner did not catch it at the time; after the review it also flags the local username as a term, and the same command then exits 1 with one `term` hit on `package.json` line 5. The mail is unaffected, but a repro repo built from this directory would have needed that line fixed.
 
 ### Grading
 
@@ -431,7 +431,7 @@ I confirmed both from the raw stream logs: the positive log has one Skill call w
 
 | Command | Result |
 |---------|--------|
-| `npm test` | PASS. 172 tests, 172 pass, 0 fail. |
+| `npm test` | PASS. 175 tests, 175 pass, 0 fail. |
 | `npm run check:registries` | PASS. 16 plugins registered across 9 registries, all at v1.27.1; 84 design systems, all indexed. |
 | `npm run check:conventions` | PASS. No commit or tag literals outside the protocol; 10 staging sub-skills delegate to it. |
 | `npx markdownlint-cli2` | PASS. Linting 87 files, 0 issues in 0 files. |

@@ -1,5 +1,5 @@
 import { existsSync, readFileSync, readdirSync, realpathSync, statSync } from 'node:fs';
-import { homedir } from 'node:os';
+import { homedir, userInfo } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -9,7 +9,7 @@ const BUILTIN_ALLOW = [
   'nuget.org', 'crates.io', 'pkg.go.dev',
 ];
 const SKIP_DIRS = new Set(['.git', 'node_modules', 'bin', 'obj', 'target', 'dist', '.venv']);
-const HOME_PLACEHOLDERS = new Set(['<user>', '{user}', 'user', 'runner', '$USER', 'you', 'Shared']);
+const HOME_PLACEHOLDERS = new Set(['<user>', '{user}', 'user', 'runner', 'root', '$USER', 'you', 'Shared']);
 
 // A hostname match needs a lowercase TLD label or an all-uppercase name, and no
 // further dotted label after the TLD, so type names such as System.Net.Http,
@@ -180,7 +180,28 @@ export function loadTerms(file) {
     .filter((line) => line && !line.startsWith('#'));
 }
 
-function main(argv) {
+/**
+ * The terms the local username adds: the name itself, unless it is a generic
+ * placeholder such as runner or root, or shorter than three characters. The
+ * username also shows up outside home paths, for example in a scratch path
+ * such as /tmp/x/-home-<name>-src.
+ */
+export function usernameTerms(username) {
+  if (!username || username.length < 3) return [];
+  const lower = username.toLowerCase();
+  if ([...HOME_PLACEHOLDERS].some((p) => p.toLowerCase() === lower)) return [];
+  return [username];
+}
+
+function currentUsername() {
+  try {
+    return userInfo().username;
+  } catch {
+    return '';
+  }
+}
+
+export function main(argv, { username = currentUsername() } = {}) {
   const allow = [];
   const paths = [];
   let termsFile = null;
@@ -208,7 +229,7 @@ function main(argv) {
   try {
     const defaultTerms = join(homedir(), '.claude', 'privacy-terms.txt');
     if (!termsFile && existsSync(defaultTerms)) termsFile = defaultTerms;
-    const terms = termsFile ? loadTerms(termsFile) : [];
+    const terms = [...(termsFile ? loadTerms(termsFile) : []), ...usernameTerms(username)];
     const hits = scanPaths(paths, { allow, terms });
     for (const hit of hits) console.log(`${hit.file}:${hit.line}: ${hit.kind}: ${hit.match}`);
     return hits.length ? 1 : 0;
