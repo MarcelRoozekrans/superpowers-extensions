@@ -20,7 +20,7 @@
 set -euo pipefail
 
 context_body=$(cat <<'CONTEXT'
-You have superpowers-extensions skills loaded. Eighteen skills cover quality
+You have superpowers-extensions skills loaded. Twenty skills cover quality
 gates, refactor analysis, project orchestration, frontend workflow, design
 systems, brand marks, memory compression, prose hygiene, demo recordings,
 retrospectives, setup wizards and upstream bug reports:
@@ -43,6 +43,8 @@ retrospectives, setup wizards and upstream bug reports:
 - retro                 — session retrospective: ranks setup fixes, then fixes, files or drops each
 - wizard                — bash script that walks a person through manual setup steps
 - upstream-issue        — proves a bug is upstream and verifies a repro before drafting the issue
+- architecture-scan     — ranked deepening candidates from git hot spots, before refactor-analysis
+- codebase-design       — deep-module vocabulary for designing and deepening interfaces
 
 Each skill triggers on specific phrases described in its frontmatter.
 Invoke via the host's native skill mechanism (Claude Code Skill tool,

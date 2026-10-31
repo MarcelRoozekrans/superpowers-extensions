@@ -2,7 +2,7 @@
 
 Codex auto-discovers skills under `~/.agents/skills/`. Each plugin in this
 suite is a separate skill bundle, so installation is a clone followed by
-eighteen symlinks (one per plugin).
+twenty symlinks (one per skill).
 
 ## Prerequisites
 
@@ -17,7 +17,7 @@ eighteen symlinks (one per plugin).
    git clone https://github.com/MarcelRoozekrans/superpowers-extensions.git ~/.codex/superpowers-extensions
    ```
 
-2. **Symlink each plugin's skill directory into `~/.agents/skills/`:**
+2. **Symlink each plugin's skill directories into `~/.agents/skills/`:**
 
    **macOS / Linux:**
 
@@ -26,8 +26,10 @@ eighteen symlinks (one per plugin).
    REPO=~/.codex/superpowers-extensions
    for plugin in regression-test pre-push-review refactor-analysis decision-tracker \
                  roslyn-codelens-integration memorylens-integration project-orchestration \
-                 ui-workflow ui-design-system squad compress-memory logo-design context-budget anti-slop demo-video retro wizard upstream-issue; do
-     ln -sfn "$REPO/plugins/$plugin/skills/$plugin" "$HOME/.agents/skills/$plugin"
+                 ui-workflow ui-design-system squad compress-memory logo-design context-budget anti-slop demo-video retro wizard upstream-issue architecture-scan; do
+     for skill in "$REPO/plugins/$plugin/skills/"*/; do
+       ln -sfn "${skill%/}" "$HOME/.agents/skills/$(basename "$skill")"
+     done
    done
    ```
 
@@ -39,12 +41,13 @@ eighteen symlinks (one per plugin).
    $plugins = @(
      'regression-test', 'pre-push-review', 'refactor-analysis', 'decision-tracker',
      'roslyn-codelens-integration', 'memorylens-integration', 'project-orchestration',
-     'ui-workflow', 'ui-design-system', 'squad', 'compress-memory', 'logo-design', 'context-budget', 'anti-slop', 'demo-video', 'retro', 'wizard', 'upstream-issue'
+     'ui-workflow', 'ui-design-system', 'squad', 'compress-memory', 'logo-design', 'context-budget', 'anti-slop', 'demo-video', 'retro', 'wizard', 'upstream-issue', 'architecture-scan'
    )
    foreach ($plugin in $plugins) {
-     $src = "$repo\plugins\$plugin\skills\$plugin"
-     $dst = "$env:USERPROFILE\.agents\skills\$plugin"
-     cmd /c mklink /J "$dst" "$src"
+     foreach ($skill in Get-ChildItem -Directory "$repo\plugins\$plugin\skills") {
+       $dst = "$env:USERPROFILE\.agents\skills\$($skill.Name)"
+       cmd /c mklink /J "$dst" "$($skill.FullName)"
+     }
    }
    ```
 
@@ -53,10 +56,10 @@ eighteen symlinks (one per plugin).
 ## Verify
 
 ```bash
-ls -la ~/.agents/skills/ | grep -E '(regression-test|pre-push-review|refactor-analysis|decision-tracker|roslyn-codelens-integration|memorylens-integration|project-orchestration|ui-workflow|ui-design-system|squad|compress-memory|logo-design|context-budget|anti-slop|demo-video|retro|wizard|upstream-issue)'
+ls -la ~/.agents/skills/ | grep -E '(regression-test|pre-push-review|refactor-analysis|decision-tracker|roslyn-codelens-integration|memorylens-integration|project-orchestration|ui-workflow|ui-design-system|squad|compress-memory|logo-design|context-budget|anti-slop|demo-video|retro|wizard|upstream-issue|architecture-scan|codebase-design)'
 ```
 
-You should see eighteen symlinks (or junctions on Windows), one per plugin.
+You should see twenty symlinks (or junctions on Windows), one per skill.
 
 ## Updating
 
@@ -68,11 +71,15 @@ Skills update instantly through the symlinks.
 
 ## Uninstalling
 
+Remove every link in `~/.agents/skills/` that points into the clone. This does
+not need the clone to exist, so it also works after you delete it:
+
 ```bash
-for plugin in regression-test pre-push-review refactor-analysis decision-tracker \
-              roslyn-codelens-integration memorylens-integration project-orchestration \
-              ui-workflow ui-design-system squad compress-memory logo-design context-budget anti-slop demo-video retro wizard upstream-issue; do
-  rm -f "$HOME/.agents/skills/$plugin"
+for link in "$HOME/.agents/skills/"*; do
+  [ -L "$link" ] || continue
+  case "$(readlink "$link")" in
+    */superpowers-extensions/plugins/*) rm -f "$link" ;;
+  esac
 done
 ```
 
@@ -84,7 +91,10 @@ To install only specific plugins, replace the loop body with the plugin names yo
 For example, frontend-only:
 
 ```bash
+REPO=~/.codex/superpowers-extensions
 for plugin in ui-workflow ui-design-system regression-test; do
-  ln -sfn "$REPO/plugins/$plugin/skills/$plugin" "$HOME/.agents/skills/$plugin"
+  for skill in "$REPO/plugins/$plugin/skills/"*/; do
+    ln -sfn "${skill%/}" "$HOME/.agents/skills/$(basename "$skill")"
+  done
 done
 ```

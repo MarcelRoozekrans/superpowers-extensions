@@ -1,0 +1,203 @@
+<title>Architecture Scan Sample</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,650&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one reading column; each candidate is a schematic sheet with a before/after pair, prose kept to one line per field */
+:root {
+  --bg: #f6f6f3; --surface: #ffffff; --ink: #1d2226; --muted: #5d6870; --rule: #d9dcd6;
+  --accent: #2f6b5a; --accent-soft: #e2efe9; --leak: #c2372d; --warn: #9a6a12; --warn-soft: #f6ecd6;
+  --deep: #1f2d33; --deep-ink: #eef3f1; --faint: #e9ebe6;
+  --display: "Fraunces", Georgia, serif;
+  --body: "IBM Plex Sans", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #14181a; --surface: #1b2124; --ink: #e4e8e6; --muted: #98a3a8; --rule: #2f383c;
+  --accent: #6fbfa4; --accent-soft: #1f3530; --leak: #ef7a6f; --warn: #e2b55c; --warn-soft: #3a3020;
+  --deep: #cfe3dc; --deep-ink: #14201c; --faint: #252d30; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #14181a; --surface: #1b2124; --ink: #e4e8e6; --muted: #98a3a8; --rule: #2f383c;
+  --accent: #6fbfa4; --accent-soft: #1f3530; --leak: #ef7a6f; --warn: #e2b55c; --warn-soft: #3a3020;
+  --deep: #cfe3dc; --deep-ink: #14201c; --faint: #252d30; color-scheme: dark }
+
+body { background: var(--bg); color: var(--ink); font: 15px/1.55 var(--body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+main { max-width: 980px; margin: 0 auto; padding-block: 40px 64px; display: grid; gap: 40px; }
+h1, h2, h3 { font-family: var(--display); font-weight: 650; text-wrap: balance; margin: 0; }
+h1 { font-size: 2rem; line-height: 1.15; }
+h2 { font-size: 1.35rem; }
+.eyebrow { font: 500 .72rem/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.mono { font-family: var(--mono); font-size: .85rem; }
+header { display: grid; gap: 14px; }
+.meta { color: var(--muted); }
+.sample-note { background: var(--warn-soft); color: var(--warn); border-radius: 6px; padding: 8px 12px; font-size: .9rem; }
+
+.legend { display: flex; flex-wrap: wrap; gap: 8px 22px; font-size: .82rem; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 8px; }
+.k-mod { width: 16px; height: 12px; border: 1.5px solid var(--ink); border-radius: 2px; }
+.k-seam { width: 22px; border-top: 2px dashed var(--accent); }
+.k-leak { width: 22px; border-top: 2px solid var(--leak); }
+.k-deep { width: 16px; height: 12px; background: var(--deep); border-radius: 2px; }
+
+.scope { display: grid; gap: 10px; }
+.hot { display: grid; grid-template-columns: minmax(0, 1fr) 120px 3.5em; gap: 6px 12px; align-items: center; font-size: .85rem; }
+.hot .bar { height: 8px; background: var(--accent); border-radius: 4px; }
+.hot .n { font-variant-numeric: tabular-nums; text-align: right; color: var(--muted); }
+.recalled { font-size: .88rem; color: var(--muted); }
+.recalled b { color: var(--ink); font-weight: 500; }
+
+article { background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 24px; display: grid; gap: 16px; }
+.head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 16px; }
+.badges { display: flex; flex-wrap: wrap; gap: 6px; }
+.badge { font: 500 .72rem/1 var(--mono); padding: 5px 8px; border-radius: 4px; border: 1px solid var(--rule); color: var(--muted); }
+.b-strong { background: var(--accent-soft); color: var(--accent); border-color: transparent; }
+.b-explore { background: var(--warn-soft); color: var(--warn); border-color: transparent; }
+.files { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 4px 14px; color: var(--muted); }
+
+.pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+@media (max-width: 640px) { .pair { grid-template-columns: minmax(0, 1fr); } }
+.panel { border: 1px solid var(--rule); border-radius: 8px; padding: 14px; display: grid; gap: 10px; align-content: start; min-width: 0; overflow-x: auto; }
+.panel .eyebrow { color: var(--muted); }
+.panel.after .eyebrow { color: var(--accent); }
+
+.fields { display: grid; grid-template-columns: 7.5em minmax(0, 1fr); gap: 6px 14px; margin: 0; }
+.fields dt { font: 500 .72rem/1.9 var(--mono); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.fields dd { margin: 0; }
+.wins { margin: 0; padding-left: 1.1em; }
+.adr { background: var(--warn-soft); color: var(--warn); border-radius: 6px; padding: 8px 12px; font-size: .88rem; }
+
+/* cross-section */
+.stack { display: grid; gap: 4px; }
+.band { border-left: 4px solid var(--rule); background: var(--faint); padding: 6px 10px; font: 500 .7rem/1.3 var(--mono); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.band.thick { border-left-color: var(--accent); background: var(--deep); color: var(--deep-ink); padding: 34px 12px; }
+/* mass diagram */
+.mass { display: flex; gap: 22px; align-items: flex-end; justify-content: center; min-height: 200px; }
+.mod { display: grid; gap: 3px; width: 92px; text-align: center; }
+.mod .if { background: var(--accent-soft); border: 1.5px solid var(--accent); border-radius: 3px; }
+.mod .impl { background: var(--deep); border-radius: 3px; }
+.mod small { font: 500 .66rem/1.3 var(--mono); text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+
+.top { border: 2px solid var(--accent); }
+a { color: var(--accent); }
+a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+pre.mermaid { margin: 0; background: transparent; }
+</style>
+
+<main>
+  <header>
+    <span class="eyebrow">architecture-scan · acme-shop · 2026-10-31</span>
+    <h1>Deepening candidates for acme-shop</h1>
+    <p class="sample-note">Sample report with invented code. It exists to judge the layout, not the findings.</p>
+    <div class="legend">
+      <span><i class="k-mod"></i>module</span>
+      <span><i class="k-seam"></i>seam</span>
+      <span><i class="k-leak"></i>leak across a seam</span>
+      <span><i class="k-deep"></i>deep module</span>
+    </div>
+  </header>
+
+  <section class="scope" aria-labelledby="scope-h">
+    <h2 id="scope-h">Where the scan looked</h2>
+    <p class="meta">Hot spots from the last 300 commits; files touched most often pull attention first.</p>
+    <div class="hot mono">
+      <span>src/orders/intake/</span><span class="bar" style="width:100%"></span><span class="n">64</span>
+      <span>src/pricing/</span><span class="bar" style="width:72%"></span><span class="n">46</span>
+      <span>src/notifications/</span><span class="bar" style="width:41%"></span><span class="n">26</span>
+      <span>src/shared/http/</span><span class="bar" style="width:19%"></span><span class="n">12</span>
+    </div>
+    <p class="recalled">Skipped because decision-tracker holds a rejection: <b>merge the Pricing and Tax modules</b> (rejected 2026-09-02: tax rules ship on a separate legal release cycle).</p>
+  </section>
+
+  <section aria-label="Candidates" style="display:grid;gap:28px">
+    <article id="c1">
+      <div class="head">
+        <h3>1 · Collapse the Order intake pipeline</h3>
+        <div class="badges"><span class="badge b-strong">Strong</span><span class="badge">in-process</span></div>
+      </div>
+      <ul class="files mono"><li>orders/intake/handler.ts</li><li>orders/intake/validator.ts</li><li>orders/intake/normalizer.ts</li><li>orders/intake/mapper.ts</li><li>orders/repo.ts</li></ul>
+      <div class="pair">
+        <div class="panel"><span class="eyebrow">Before</span>
+<pre class="mermaid">
+flowchart LR
+  H[Handler] --> V[Validator]
+  V --> N[Normalizer]
+  N --> M[Mapper]
+  M --> R[OrderRepo]
+  H -. reads raw fields .-> M
+  linkStyle 4 stroke:#c2372d,stroke-width:2px
+</pre>
+        </div>
+        <div class="panel after"><span class="eyebrow">After</span>
+<pre class="mermaid">
+flowchart LR
+  H[Handler] --> I[[Order intake<br/>accept order]]
+  I --> R[OrderRepo]
+</pre>
+        </div>
+      </div>
+      <dl class="fields">
+        <dt>Problem</dt><dd>Four shallow modules; the deletion test moves no complexity, and the handler reaches past the seam into the mapper.</dd>
+        <dt>Solution</dt><dd>One Order intake module with a single <span class="mono">accept(order)</span> interface; the four steps become its implementation.</dd>
+        <dt>Wins</dt><dd><ul class="wins"><li>Locality: intake bugs in one module</li><li>Tests hit one interface</li><li>Delete 3 pass-through modules</li></ul></dd>
+      </dl>
+    </article>
+
+    <article id="c2">
+      <div class="head">
+        <h3>2 · Deepen the Pricing client</h3>
+        <div class="badges"><span class="badge b-strong">Strong</span><span class="badge">ports &amp; adapters</span></div>
+      </div>
+      <ul class="files mono"><li>pricing/client.ts</li><li>pricing/types.ts</li><li>orders/intake/handler.ts</li><li>checkout/summary.ts</li></ul>
+      <div class="pair">
+        <div class="panel"><span class="eyebrow">Before · interface as wide as implementation</span>
+          <div class="mass">
+            <div class="mod"><div class="if" style="height:96px"></div><div class="impl" style="height:70px"></div><small>Pricing client<br>14 methods</small></div>
+          </div>
+        </div>
+        <div class="panel after"><span class="eyebrow">After · small interface, deep implementation</span>
+          <div class="mass">
+            <div class="mod"><div class="if" style="height:22px"></div><div class="impl" style="height:150px"></div><small>Pricing<br>2 methods</small></div>
+          </div>
+        </div>
+      </div>
+      <dl class="fields">
+        <dt>Problem</dt><dd>Callers stitch currency, rounding and retry together themselves; three call sites repeat the same sequence.</dd>
+        <dt>Solution</dt><dd>A Pricing port with <span class="mono">quote</span> and <span class="mono">quoteBatch</span>; an HTTP adapter in production, an in-memory adapter in tests.</dd>
+        <dt>Wins</dt><dd><ul class="wins"><li>Leverage: one interface, 3 call sites</li><li>Two adapters justify the seam</li><li>Retry logic stops leaking</li></ul></dd>
+      </dl>
+    </article>
+
+    <article id="c3">
+      <div class="head">
+        <h3>3 · Fold the notification layers</h3>
+        <div class="badges"><span class="badge b-explore">Worth exploring</span><span class="badge">local-substitutable</span></div>
+      </div>
+      <ul class="files mono"><li>notifications/dispatcher.ts</li><li>notifications/router.ts</li><li>notifications/templates.ts</li><li>notifications/smtp.ts</li></ul>
+      <div class="pair">
+        <div class="panel"><span class="eyebrow">Before · a send passes 5 layers</span>
+          <div class="stack">
+            <div class="band">Dispatcher</div><div class="band">Router</div><div class="band">Template resolver</div><div class="band">Channel picker</div><div class="band">SMTP adapter</div>
+          </div>
+        </div>
+        <div class="panel after"><span class="eyebrow">After · one module, one adapter swap</span>
+          <div class="stack">
+            <div class="band thick">Notifications · send(event)</div><div class="band">SMTP adapter / fake mailbox</div>
+          </div>
+        </div>
+      </div>
+      <dl class="fields">
+        <dt>Problem</dt><dd>Understanding one email means reading five modules that each forward a call.</dd>
+        <dt>Solution</dt><dd>Merge into a Notifications module tested against a local fake mailbox.</dd>
+        <dt>Wins</dt><dd><ul class="wins"><li>Locality: one place per email</li><li>Tests survive internal refactors</li></ul></dd>
+      </dl>
+      <p class="adr">Touches the recorded decision "channels are pluggable", but only one channel exists: a hypothetical seam.</p>
+    </article>
+  </section>
+
+  <section class="top" aria-labelledby="top-h" style="background:var(--surface);border-radius:10px;padding:22px;display:grid;gap:8px">
+    <span class="eyebrow">Top recommendation</span>
+    <h2 id="top-h"><a href="#c1">Collapse the Order intake pipeline</a></h2>
+    <p style="margin:0">Most-changed area in the history, in-process dependencies only, so it deepens without a new adapter.</p>
+  </section>
+</main>

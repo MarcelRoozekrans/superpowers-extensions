@@ -28,7 +28,8 @@
     "demo-video",
     "retro",
     "wizard",
-    "upstream-issue"
+    "upstream-issue",
+    "architecture-scan"
   ],
   "skills": "./plugins/"
 }
