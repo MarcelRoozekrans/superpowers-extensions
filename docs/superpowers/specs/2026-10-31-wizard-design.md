@@ -21,7 +21,7 @@ Some setup steps only a person can do: clicking through a third-party dashboard,
 ## Non-goals
 
 - Running the wizard end to end from Claude. It opens browsers and blocks on human input; upstream rules this out and so does this port.
-- Changing the template's library. It is vendored byte for byte.
+- Changing the template's library beyond the one shellcheck fix below.
 - Tracking upstream automatically. `NOTICE.md` records the upstream commit, so a manual re-vendor can be diffed. No CI watch.
 - Native Windows. The script is bash; WSL works through `open_url`'s `wslview`/`explorer.exe` branch.
 - Upstream's `agents/openai.yaml`. It is Codex UI metadata this suite does not use.
@@ -41,6 +41,7 @@ Some setup steps only a person can do: clicking through a third-party dashboard,
 | Asking | AskUserQuestion with a recommended option, at every upstream ask point |
 | Anti-slop scope | Always: commit message, PR title and body, README link. Also the on-screen prose of a wizard that gets committed. Throwaway wizards skip it. |
 | Approach | B: port plus a check script |
+| Shellcheck | Upstream `template.sh` fails shellcheck 0.10 with SC1087 at line 114 (`$e[Enter keeps current]`, a false positive). Vendor it with `${e}[Enter keeps current]` as the only change, recorded in `NOTICE.md`, and open a PR upstream with the same fix. Once it merges, re-vendor byte for byte. |
 | Flow | brainstorming → spec → plan → implement on a new branch → PR. No pushes to `master`. |
 
 ## Approaches considered
@@ -57,7 +58,7 @@ plugins/wizard/
   skills/wizard/
     SKILL.md              # adapted from upstream
     NOTICE.md             # attribution, upstream commit, MIT licence text
-    template.sh           # upstream template.sh, byte for byte
+    template.sh           # upstream template.sh plus the one-line shellcheck fix
     scripts/
       check.mjs           # verify a generated wizard
       check.test.mjs
@@ -87,10 +88,10 @@ Follows upstream's four steps and its "Done when" bars. Changes:
 | Check | Fails when |
 |-------|-----------|
 | Syntax | `bash -n` fails |
-| Shellcheck | `shellcheck` is installed and reports a finding; `skip` when it is not installed |
+| Shellcheck | `shellcheck` is installed and reports a finding on a line below the `STAGES` marker; `skip` when it is not installed. Library lines are covered by the library check, and SC2317 there only means the wizard does not call that helper. |
 | Library intact | the text above the `STAGES` marker differs from the vendored `template.sh` |
 | Stage count | `TOTAL_STAGES=` differs from the number of `stage` calls inside `run_wizard` |
-| Example removed | the template's example stage (`Stripe: API keys` banner/stage) is still present |
+| Example removed | the template's example marker comment (`Example stage: replace with your real steps`) is still present. A real Stripe wizard may reuse the example's URL and names, so the check looks only at the marker. |
 | Secret names | a `set_secret NAME` has no `secrets.NAME` in the workflow files (`.yml` or `.yaml`) under `.github/workflows` in the repo; `skip` when there is no workflows directory |
 | Executable | the file is not executable |
 
@@ -101,6 +102,7 @@ It also prints, as a warning that does not fail, every `secrets.*` in the workfl
 `check.test.mjs` runs under the existing `npm test` glob:
 
 - The vendored `template.sh` matches the SHA-256 recorded in `NOTICE.md`, so an accidental edit fails CI.
+- When shellcheck is installed (it is on GitHub's Ubuntu runners), the vendored template has no finding other than SC2317.
 - `check.mjs` on a good fixture passes; on fixtures with a stage-count mismatch, an edited library, a leftover example stage, an unknown secret name and a syntax error, it fails with the matching line.
 - A fixture wizard runs with piped stdin and `ENV_FILE` in a temp directory, with `gh` absent from `PATH`. The test asserts the `.env` content and mode 0600, that a re-run keeps an existing value on Enter, and that the summary lists the skipped secret. This guards the library on a future re-vendor.
 
