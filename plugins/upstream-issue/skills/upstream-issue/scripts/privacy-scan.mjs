@@ -11,8 +11,9 @@ const BUILTIN_ALLOW = [
 const SKIP_DIRS = new Set(['.git', 'node_modules', 'bin', 'obj', 'target', 'dist', '.venv']);
 const HOME_PLACEHOLDERS = new Set(['<user>', 'user', 'runner', '$USER', 'you']);
 
-// Hostnames are matched lowercase only, with no further dotted label after the
-// TLD, so type names such as System.Net.Http or java.io.File are not flagged.
+// A hostname match needs a lowercase TLD label or an all-uppercase name, and no
+// further dotted label after the TLD, so type names such as System.Net.Http,
+// System.IO or java.io.File are not flagged while NAS.ACME-HOME.NL still is.
 // File extensions such as md, json, js, ts, cs, py, rs, go, sh, yml, toml, txt,
 // xml, html, css, lock, sln, csproj are deliberately absent.
 const TLDS = [
@@ -28,7 +29,7 @@ const MAC = /(?<![\w:-])(?:[0-9a-f]{2}[:-]){5}[0-9a-f]{2}(?![\w:-])/gi;
 const EMAIL = /[\w.+-]+@((?:[a-z0-9-]+\.)+[a-z]{2,})/gi;
 const HOSTNAME = new RegExp(
   `(?<![\\w.@-])(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+(?:${TLDS.join('|')})(?![\\w-]|\\.\\w)`,
-  'g',
+  'gi',
 );
 const HOME_PATH = [
   /\/home\/([^/\s]+)\//g,
@@ -46,6 +47,11 @@ const TOKEN = new RegExp(
   ].join('|'),
   'g',
 );
+
+function looksLikeHostname(match) {
+  const tld = match.slice(match.lastIndexOf('.') + 1);
+  return tld === tld.toLowerCase() || match === match.toUpperCase();
+}
 
 function isAllowed(host, allow) {
   const name = host.toLowerCase();
@@ -114,7 +120,7 @@ export function scanText(text, opts = {}) {
       if (!isAllowed(m[1], allow)) add('email', m[0], m.index);
     }
     for (const m of withoutEmails.matchAll(HOSTNAME)) {
-      if (!isAllowed(m[0], allow)) add('hostname', m[0], m.index);
+      if (looksLikeHostname(m[0]) && !isAllowed(m[0], allow)) add('hostname', m[0], m.index);
     }
 
     for (const re of HOME_PATH) {

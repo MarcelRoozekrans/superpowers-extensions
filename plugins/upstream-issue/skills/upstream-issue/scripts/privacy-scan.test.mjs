@@ -141,3 +141,14 @@ test('terms are matched on every line', () => {
   const hits = scanText('zolder\nnope\nZOLDER', { terms: ['zolder'] });
   assert.deepEqual(hits.map((h) => h.line), [1, 3]);
 });
+
+test('hostname catches uppercase and mixed-case names, not type names', () => {
+  assert.deepEqual(kinds('NAS.ACME-HOME.NL'), ['hostname']);
+  assert.deepEqual(kinds('Nas.Acme-Home.nl'), ['hostname']);
+  assert.deepEqual(kinds('DESKTOP-AB1.home'), ['hostname']);
+  assert.deepEqual(kinds('API.GITHUB.COM'), []);
+  assert.deepEqual(kinds('NAS.ACME-HOME.NL', { allow: ['acme-home.nl'] }), []);
+  assert.deepEqual(kinds('at System.IO'), []);
+  assert.deepEqual(kinds('System.Net.Http.HttpClient'), []);
+  assert.deepEqual(kinds('Foo.App'), []);
+});
