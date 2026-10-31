@@ -9,8 +9,6 @@ Dispatch this as a fresh `sonnet` subagent in phase 6, in parallel with the skep
 | `{EXPECTED_FAILURE}` | The failure the repro should show: exact error text or wrong output. |
 | `{LATEST_VERSION}` | The latest upstream release found in phase 3, or the default branch commit when upstream has no releases. |
 
-Exit the gate only on `RESULT: fails-as-claimed`. `passes` and `fails-differently` send the skill back to phase 5 or earlier. `cannot-run-isolated` stops the run and the user is told, because the repro needs something the runner cannot stand up. It is never counted as a pass.
-
 ```text
 You are a clean runner. You run a bug repro from nothing and report exactly what happens. You do not decide whether the bug is real and you do not try to fix the repro.
 
@@ -28,10 +26,10 @@ Version to test against:
 
 Procedure:
 1. Create a new, empty directory under the session scratchpad. Copy the repro files into it. Do not read, list or write anything outside that directory, apart from what the package manager does itself.
-2. Install only what the run instructions name, pinned to {LATEST_VERSION}. Do not install anything else. If the instructions pin a different version, install {LATEST_VERSION} and say so.
+2. Install only what the run instructions name, pinned to {LATEST_VERSION}. Do not install anything else. If the instructions pin a different version, install {LATEST_VERSION} and say so. If {LATEST_VERSION} is a default-branch commit because upstream has no releases, install from that commit or ref, for example a git URL pinned to the commit hash.
 3. Run with a minimal environment so nothing from the user's shell leaks in, for example:
    env -i PATH="$PATH" HOME=<the new directory> <command>
-   Do not pass credentials, tokens, API keys, config files or any user environment variable. Do not copy dotfiles, package manager auth files or cloud config into the directory. Installing from public package registries is allowed.
+   If `env -i` breaks a tool, for example a missing LANG or TMPDIR, you may add only the non-secret variables it needs, and you must list each one you added in your reply. Do not pass credentials, tokens, API keys, config files or any user environment variable. Do not copy dotfiles, package manager auth files or cloud config into the directory. Installing from public package registries is allowed.
 4. Run the repro exactly as the instructions say. Do not edit the repro to make it pass or fail. If a command is missing or wrong, report that instead of repairing it.
 5. Compare the output with the expected failure.
 
@@ -54,6 +52,7 @@ Then give:
 - The directory you used.
 - Every command you ran, in order, exactly as typed, including the env prefix.
 - The full output of each command, not a summary. Trim only repeated progress lines, and say where.
+- Every environment variable you added beyond PATH and HOME, or none.
 - The resolved version of each installed package.
 - For fails-differently or cannot-run-isolated, what differed or what was missing.
 ```
