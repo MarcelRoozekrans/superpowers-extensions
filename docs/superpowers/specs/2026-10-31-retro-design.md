@@ -103,7 +103,7 @@ plugins/retro/
   .claude-plugin/plugin.json
   skills/retro/
     SKILL.md
-    LICENSE-mattpocock-skills       (upstream MIT licence text)
+    NOTICE.md                       (attribution and upstream MIT licence text)
     references/
       categories.md                 (the six categories: signal, evidence, typical fixes)
       writing-for-agents.md         (adapted; used when a fix edits a steering file or skill)
@@ -156,7 +156,7 @@ Tests use synthetic fixtures covering each section, a malformed line, an unknown
 
 - Register in all nine places `check:registries` checks, the README plugin list and plugin section, and `commitlint` scopes.
 - `release-please-config.json` gets the next `$.plugins[N].version` entry.
-- README credit line: "Adapted from Matt Pocock's [skills](https://github.com/mattpocock/skills) (MIT)". The licence file keeps the upstream copyright line, and `SKILL.md` and `references/writing-for-agents.md` each start with a one-line attribution.
+- README credit line: "Adapted from Matt Pocock's [skills](https://github.com/mattpocock/skills) (MIT)". `NOTICE.md` keeps the upstream copyright line and licence text, and `SKILL.md` and `references/writing-for-agents.md` each start with a one-line attribution.
 
 ## Left to the builder
 
