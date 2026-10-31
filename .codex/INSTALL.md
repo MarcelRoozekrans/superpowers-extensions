@@ -71,13 +71,15 @@ Skills update instantly through the symlinks.
 
 ## Uninstalling
 
+Remove every link in `~/.agents/skills/` that points into the clone. This does
+not need the clone to exist, so it also works after you delete it:
+
 ```bash
-for plugin in regression-test pre-push-review refactor-analysis decision-tracker \
-              roslyn-codelens-integration memorylens-integration project-orchestration \
-              ui-workflow ui-design-system squad compress-memory logo-design context-budget anti-slop demo-video retro architecture-scan; do
-  for skill in "$REPO/plugins/$plugin/skills/"*/; do
-    rm -f "$HOME/.agents/skills/$(basename "$skill")"
-  done
+for link in "$HOME/.agents/skills/"*; do
+  [ -L "$link" ] || continue
+  case "$(readlink "$link")" in
+    */superpowers-extensions/plugins/*) rm -f "$link" ;;
+  esac
 done
 ```
 
@@ -89,6 +91,7 @@ To install only specific plugins, replace the loop body with the plugin names yo
 For example, frontend-only:
 
 ```bash
+REPO=~/.codex/superpowers-extensions
 for plugin in ui-workflow ui-design-system regression-test; do
   for skill in "$REPO/plugins/$plugin/skills/"*/; do
     ln -sfn "${skill%/}" "$HOME/.agents/skills/$(basename "$skill")"

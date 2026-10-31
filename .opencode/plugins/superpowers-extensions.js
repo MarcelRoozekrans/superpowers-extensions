@@ -2,8 +2,8 @@
  * superpowers-extensions plugin for OpenCode.ai
  *
  * Registers every skill directory of each plugin with OpenCode's skill
- * discovery so the suite's skills load natively without symlinks. Pattern adapted
- * from obra/superpowers (MIT); content is our own.
+ * discovery so the suite's skills load natively without symlinks. Pattern
+ * adapted from obra/superpowers (MIT); content is our own.
  */
 
 import fs from 'fs';
@@ -36,6 +36,7 @@ const PLUGINS = [
 // A plugin may carry several skills, so register each folder under skills/.
 const skillPaths = PLUGINS.flatMap(name => {
   const skillsDir = path.join(repoRoot, 'plugins', name, 'skills');
+  if (!fs.existsSync(skillsDir)) return [];
   return fs.readdirSync(skillsDir, { withFileTypes: true })
     .filter(entry => entry.isDirectory())
     .map(entry => path.join(skillsDir, entry.name));
