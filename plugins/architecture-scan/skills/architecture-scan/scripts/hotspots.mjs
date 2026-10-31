@@ -45,9 +45,10 @@ export function countHotspots(paths, { depth = 3, topN = 5, threshold = 0.3 } = 
 function readHistory(repo, commits) {
   const r = spawnSync(
     'git',
-    ['-C', repo, 'log', '-n', String(commits), '--no-renames', '--name-status', '--pretty=format:%x00'],
+    ['-c', 'core.quotePath=false', '-C', repo, 'log', '-n', String(commits), '--no-renames', '--name-status', '--pretty=format:%x00'],
     { encoding: 'utf8', maxBuffer: 256 * 1024 * 1024 },
   );
+  if (r.error) return { error: `cannot run git: ${r.error.message}` };
   if (r.status !== 0) return null;
   const chunks = r.stdout.split('\0').slice(1);
   const paths = [];
@@ -62,15 +63,28 @@ function readHistory(repo, commits) {
 
 function main(argv) {
   const opts = { repo: '.', commits: 200, depth: 3 };
+  const usage = (msg) => {
+    console.error(`${msg}. usage: hotspots.mjs [--repo <dir>] [--commits <n>] [--depth <n>]`);
+    return 2;
+  };
   for (let i = 0; i < argv.length; i += 2) {
     const key = argv[i].replace(/^--/, '');
-    if (!(key in opts)) {
-      console.error(`unknown option: ${argv[i]}`);
-      return 2;
+    if (!argv[i].startsWith('--') || !(key in opts)) return usage(`unknown option: ${argv[i]}`);
+    const value = argv[i + 1];
+    if (value === undefined) return usage(`missing value for ${argv[i]}`);
+    if (key === 'repo') {
+      opts.repo = value;
+    } else if (/^[1-9]\d*$/.test(value)) {
+      opts[key] = Number(value);
+    } else {
+      return usage(`${argv[i]} must be a positive integer, got ${value}`);
     }
-    opts[key] = key === 'repo' ? argv[i + 1] : Number(argv[i + 1]);
   }
   const history = readHistory(opts.repo, opts.commits);
+  if (history?.error) {
+    console.error(history.error);
+    return 1;
+  }
   if (!history) {
     console.error(`not a git repo: ${opts.repo}`);
     return 2;

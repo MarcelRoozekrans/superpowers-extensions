@@ -83,6 +83,25 @@ test('scattered is false when changes concentrate', () => {
   assert.equal(countHotspots(paths).scattered, false);
 });
 
+test('scattered is false when the top counts equal threshold * total', () => {
+  const paths = Array.from({ length: 10 }, (_, i) => `d${i}/f.js`);
+  assert.equal(countHotspots(paths, { topN: 5, threshold: 0.5 }).scattered, false);
+});
+
+test('countHotspots honours custom depth, topN and threshold', () => {
+  const paths = ['a/x/1.js', 'a/y/2.js', 'b/z.js', 'c/z.js'];
+  assert.deepEqual(countHotspots(paths, { depth: 1, topN: 1, threshold: 0.6 }), {
+    dirs: [
+      { dir: 'a/', count: 2 },
+      { dir: 'b/', count: 1 },
+      { dir: 'c/', count: 1 },
+    ],
+    total: 4,
+    scattered: true,
+  });
+  assert.equal(countHotspots(paths, { depth: 1, topN: 1, threshold: 0.5 }).scattered, false);
+});
+
 test('empty input is total 0 and scattered', () => {
   assert.deepEqual(countHotspots([]), { dirs: [], total: 0, scattered: true });
 });
@@ -138,5 +157,26 @@ test('CLI exits 2 outside a git repo', () => {
     assert.match(r.stderr, /not a git repo/);
   } finally {
     rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('CLI reports non-ASCII directories unquoted', () => {
+  const repo = makeRepo();
+  try {
+    write(repo, 'src/café/x.js', '1');
+    commit(repo, 'add', '2026-01-01T00:00:00Z');
+    const r = runCli(['--repo', repo]);
+    assert.equal(r.status, 0, r.stderr);
+    assert.deepEqual(JSON.parse(r.stdout).dirs, [{ dir: 'src/café/', count: 1 }]);
+  } finally {
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
+test('CLI rejects bad option values with exit 2', () => {
+  for (const args of [['--commits', 'abc'], ['--commits', '0'], ['--depth', '-1'], ['--commits'], ['--bogus', '1']]) {
+    const r = runCli(args);
+    assert.equal(r.status, 2, args.join(' '));
+    assert.match(r.stderr, /usage/);
   }
 });
