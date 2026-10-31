@@ -25,7 +25,8 @@
     "logo-design",
     "context-budget",
     "anti-slop",
-    "demo-video"
+    "demo-video",
+    "retro"
   ],
   "skills": "./plugins/"
 }

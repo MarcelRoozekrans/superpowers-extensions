@@ -162,6 +162,16 @@
       },
       "source": "./plugins/demo-video",
       "category": "productivity"
+    },
+    {
+      "name": "retro",
+      "description": "Reads a finished session's transcript and ranks setup improvements most severe first: information access, guardrails, reviewer rules, navigation, tool cost and steering files. Each finding is fixed, filed as a grouped issue or dropped, chosen per finding.",
+      "version": "1.27.1",
+      "author": {
+        "name": "Marcel Roozekrans"
+      },
+      "source": "./plugins/retro",
+      "category": "workflow"
     }
   ]
 }

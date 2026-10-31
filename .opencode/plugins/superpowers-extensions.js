@@ -2,7 +2,7 @@
  * superpowers-extensions plugin for OpenCode.ai
  *
  * Registers each plugin's skill directory with OpenCode's skill discovery so
- * the suite's fifteen skills load natively without symlinks. Pattern adapted
+ * the suite's sixteen skills load natively without symlinks. Pattern adapted
  * from obra/superpowers (MIT); content is our own.
  */
 
@@ -27,7 +27,8 @@ const PLUGINS = [
   'logo-design',
   'context-budget',
   'anti-slop',
-  'demo-video'
+  'demo-video',
+  'retro'
 ];
 
 const skillPaths = PLUGINS.map(name =>
@@ -36,7 +37,7 @@ const skillPaths = PLUGINS.map(name =>
 
 export const SuperpowersExtensionsPlugin = async ({ client, directory }) => {
   return {
-    // Inject all fifteen skill paths into OpenCode's skill discovery config so
+    // Inject all sixteen skill paths into OpenCode's skill discovery config so
     // each skill is discoverable by description-based matching, the same as
     // OpenCode's native skills behavior. No symlinks required.
     config: async (config) => {
