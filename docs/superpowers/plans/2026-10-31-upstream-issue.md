@@ -52,7 +52,7 @@
   - CLI: `node privacy-scan.mjs [--allow <domain>]... [--terms <file>] <path...>`. Without `--terms`, reads `~/.claude/privacy-terms.txt` when it exists. Prints `file:line: kind: match` per hit. Exit 0 clean, 1 on any hit, 2 on a usage error.
 - `kind` values: `ip-private`, `ipv6`, `mac`, `hostname`, `home-path`, `token`, `email`, `term`.
 - Detection rules (values fixed here):
-  - `ip-private`: IPv4 in 10/8, 172.16/12, 192.168/16, 100.64/10, 169.254/16. Not flagged when directly preceded by `Version=`, `version `, or `v`.
+  - `ip-private`: IPv4 in 10/8, 172.16/12, 192.168/16, 100.64/10, 169.254/16. Not flagged when directly preceded by `Version=`, `version` followed by a space, or `v`.
   - `ipv6`: addresses in fc00::/7 or 2000::/3 with at least three groups, except 2001:db8::/32.
   - `mac`: six hex pairs joined by `:` or `-`, except `aa:bb:cc:dd:ee:ff` and all-zero.
   - `hostname`: dotted names whose last label is in a curated TLD list (`com net org nl be de uk eu io dev app cloud me info biz co xyz local lan home internal arpa`, and the like). File extensions such as `md json js mjs ts cs py rs go sh yml yaml toml txt xml html css lock sln csproj` are never TLDs. Allowed when the name equals or is a subdomain of an allowlisted domain. Built-in allowlist: `example.com example.org example.net localhost github.com githubusercontent.com gitlab.com npmjs.com npmjs.org pypi.org nuget.org crates.io pkg.go.dev` plus any `*.example` and `*.test`.
@@ -175,6 +175,6 @@
   - (d) clean runner `fails-as-claimed`; inline repro; draft handed over (non-GitHub); `node privacy-scan.mjs` on the final draft and repro exits 0; the runner transcript shows no env or credential passthrough.
   - No scenario made a public write.
 - [ ] **Step 3: REFACTOR.** For each failure, tighten the wording that let it through and re-run that scenario only. Cap at 3 rounds; if it still fails, stop and report to the user rather than loosening the bar.
-- [ ] **Step 4: Trigger check.** With the plugin installed from the worktree (`claude plugin marketplace add .` then `claude plugin install upstream-issue`): a `claude -p` prompt "this looks like a bug in <lib>, report it upstream" loads `upstream-issue`; "file an issue in my repo for this TODO" does not. If the CLI is unavailable, record `UNRUN` with the reason; never mark it passed without running it.
+- [ ] **Step 4: Trigger check.** With the plugin installed from the worktree (`claude plugin marketplace add .` then `claude plugin install upstream-issue`): a `claude -p` prompt "this looks like a bug in left-pad, report it upstream" loads `upstream-issue`; "file an issue in my repo for this TODO" does not. If the CLI is unavailable, record `UNRUN` with the reason; never mark it passed without running it.
 - [ ] **Step 5: Final checks.** `npm test`, `npm run check:registries`, `npm run check:conventions`, `npx markdownlint-cli2` all pass.
 - [ ] **Step 6: Commit** `test(upstream-issue): record GREEN evaluation results`.
