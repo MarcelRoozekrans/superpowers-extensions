@@ -29,6 +29,11 @@ test('ipv6 flags ULA and global, not documentation range', () => {
   assert.deepEqual(kinds('addr 2a02:1234:5678:9abc::1'), ['ipv6']);
   assert.deepEqual(kinds('addr 2001:db8::1'), []);
   assert.deepEqual(kinds('addr 2001:db8:1:2:3::1'), []);
+  assert.deepEqual(kinds('addr fd00::1'), ['ipv6']);
+  assert.deepEqual(kinds('addr 2a02:1234::1'), ['ipv6']);
+  assert.deepEqual(kinds('addr 2a02:1234:5678:9abc'), ['ipv6']);
+  assert.deepEqual(kinds('DateTimeOriginal 2026:10:31 12:30:45'), []);
+  assert.deepEqual(kinds('at 12:30:45'), []);
 });
 
 test('mac flags real addresses, not placeholders', () => {
@@ -57,6 +62,16 @@ test('home-path flags real users, not placeholders', () => {
   assert.deepEqual(kinds('cd /home/runner/work'), []);
 });
 
+test('home-path flags a user segment without a trailing slash', () => {
+  assert.deepEqual(kinds('HOME=/home/alice'), ['home-path']);
+  assert.deepEqual(kinds('cd /Users/alice'), ['home-path']);
+  assert.deepEqual(kinds('"/home/alice"'), ['home-path']);
+  assert.deepEqual(kinds('cd C:\\Users\\alice'), ['home-path']);
+  assert.deepEqual(kinds('`/home/alice`; (/Users/alice)'), ['home-path', 'home-path']);
+  assert.deepEqual(kinds('/home/<user>'), []);
+  assert.deepEqual(kinds('HOME=/home/$USER'), []);
+});
+
 test('token flags secrets, not commit SHAs', () => {
   assert.deepEqual(kinds('t ghp_' + 'a1B2c3D4e5'.repeat(3) + 'abcdef'), ['token']);
   assert.deepEqual(kinds('t github_pat_11ABCDEFG0abcdefghij'), ['token']);
@@ -82,7 +97,7 @@ test('term matches case-insensitively on word boundaries', () => {
 
 test('line numbers are right inside a fenced code block', () => {
   const text = '# t\n\n```sh\ncd /home/alice/src\n```\n';
-  assert.deepEqual(scanText(text), [{ kind: 'home-path', match: '/home/alice/', line: 4 }]);
+  assert.deepEqual(scanText(text), [{ kind: 'home-path', match: '/home/alice', line: 4 }]);
 });
 
 test('scanPaths recurses and skips node_modules', () => {
@@ -101,8 +116,8 @@ test('scanPaths skips binary files', () => {
 test('loadTerms ignores comments and blank lines', () => {
   const dir = mkdtempSync(join(tmpdir(), 'ps-'));
   const file = join(dir, 'terms.txt');
-  writeFileSync(file, '# note\n\nslaapkamer\n  k3s-dev  \n');
-  assert.deepEqual(loadTerms(file), ['slaapkamer', 'k3s-dev']);
+  writeFileSync(file, '# note\n\nzolderkamer\n  acme-lab  \n');
+  assert.deepEqual(loadTerms(file), ['zolderkamer', 'acme-lab']);
 });
 
 function cli(args) {

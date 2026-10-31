@@ -31,10 +31,15 @@ const HOSTNAME = new RegExp(
   `(?<![\\w.@-])(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+(?:${TLDS.join('|')})(?![\\w-]|\\.\\w)`,
   'gi',
 );
+// The user segment ends at a path separator, whitespace, a quote or backtick,
+// one of :;,) or the end of the line, so /home/alice is caught without a
+// trailing slash too.
+const HOME_END = String.raw`(?=[/\\\s"'\`:;,)]|$)`;
+const HOME_USER = String.raw`([^/\\\s"'\`:;,)]+)`;
 const HOME_PATH = [
-  /\/home\/([^/\s]+)\//g,
-  /\/Users\/([^/\s]+)\//g,
-  /[A-Za-z]:\\Users\\([^\\\s]+)\\/g,
+  new RegExp(String.raw`/home/${HOME_USER}${HOME_END}`, 'g'),
+  new RegExp(String.raw`/Users/${HOME_USER}${HOME_END}`, 'g'),
+  new RegExp(String.raw`[A-Za-z]:\\Users\\${HOME_USER}${HOME_END}`, 'g'),
 ];
 const TOKEN = new RegExp(
   [
@@ -73,15 +78,18 @@ function isPrivateIpv4(a, b, c, d) {
   );
 }
 
+// A ULA (fc00::/7) is flagged from two groups on, since a clock time never
+// starts with fc or fd. A global address (2000::/3) needs a :: or more than
+// three groups, so an EXIF-style date such as 2026:10:31 is not flagged.
 function isFlaggedIpv6(candidate) {
   const groups = candidate.split(':').filter(Boolean);
-  if (groups.length < 3) return false;
+  if (groups.length < 2) return false;
   const first = parseInt(groups[0], 16);
   const second = parseInt(groups[1], 16);
   if (first === 0x2001 && second === 0x0db8) return false;
-  const inUla = first >= 0xfc00 && first <= 0xfdff;
+  if (first >= 0xfc00 && first <= 0xfdff) return true;
   const inGlobal = first >= 0x2000 && first <= 0x3fff;
-  return inUla || inGlobal;
+  return inGlobal && (candidate.includes('::') || groups.length > 3);
 }
 
 /**
