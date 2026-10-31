@@ -11,6 +11,8 @@ const BUILTIN_ALLOW = [
 const SKIP_DIRS = new Set(['.git', 'node_modules', 'bin', 'obj', 'target', 'dist', '.venv']);
 const HOME_PLACEHOLDERS = new Set(['<user>', 'user', 'runner', '$USER', 'you']);
 
+// Hostnames are matched lowercase only, with no further dotted label after the
+// TLD, so type names such as System.Net.Http or java.io.File are not flagged.
 // File extensions such as md, json, js, ts, cs, py, rs, go, sh, yml, toml, txt,
 // xml, html, css, lock, sln, csproj are deliberately absent.
 const TLDS = [
@@ -25,8 +27,8 @@ const IPV6 = /(?<![\w:])[0-9a-f]{1,4}(?:::?[0-9a-f]{1,4})+(?:::)?(?![\w:])/gi;
 const MAC = /(?<![\w:-])(?:[0-9a-f]{2}[:-]){5}[0-9a-f]{2}(?![\w:-])/gi;
 const EMAIL = /[\w.+-]+@((?:[a-z0-9-]+\.)+[a-z]{2,})/gi;
 const HOSTNAME = new RegExp(
-  `(?<![\\w.@-])(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+(?:${TLDS.join('|')})(?![\\w-])`,
-  'gi',
+  `(?<![\\w.@-])(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+(?:${TLDS.join('|')})(?![\\w-]|\\.\\w)`,
+  'g',
 );
 const HOME_PATH = [
   /\/home\/([^/\s]+)\//g,
@@ -37,9 +39,9 @@ const TOKEN = new RegExp(
   [
     'gh[pousr]_[A-Za-z0-9]{20,}',
     'github_pat_[A-Za-z0-9_]{20,}',
-    'sk-[A-Za-z0-9_-]{20,}',
+    '(?<![\\w-])sk-[A-Za-z0-9_-]{20,}',
     'xox[abps]-[A-Za-z0-9-]+',
-    'AKIA[A-Z0-9]{16}',
+    '(?<![\\w-])AKIA[A-Z0-9]{16}',
     'eyJ[\\w-]+\\.eyJ[\\w-]+\\.[\\w-]+',
   ].join('|'),
   'g',
@@ -84,6 +86,9 @@ export function scanText(text, opts = {}) {
   const allow = opts.allow ?? [];
   const terms = opts.terms ?? [];
   const found = [];
+  const termRegexes = terms.map(
+    (term) => new RegExp(`(?<![\\p{L}\\p{N}])${term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![\\p{L}\\p{N}])`, 'giu'),
+  );
   const lines = text.split('\n');
   for (const [index, line] of lines.entries()) {
     const hits = [];
@@ -91,7 +96,7 @@ export function scanText(text, opts = {}) {
 
     for (const m of line.matchAll(IPV4)) {
       const before = line.slice(0, m.index);
-      if (/(?:Version=|version |v)$/i.test(before)) continue;
+      if (/(?:Version=|version |(?<!\w)v)$/i.test(before)) continue;
       if (isPrivateIpv4(...m.slice(1, 5).map(Number))) add('ip-private', m[0], m.index);
     }
     for (const m of line.matchAll(IPV6)) {
@@ -118,9 +123,7 @@ export function scanText(text, opts = {}) {
       }
     }
     for (const m of line.matchAll(TOKEN)) add('token', m[0], m.index);
-    for (const term of terms) {
-      const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      const re = new RegExp(`(?<![\\p{L}\\p{N}])${escaped}(?![\\p{L}\\p{N}])`, 'giu');
+    for (const re of termRegexes) {
       for (const m of line.matchAll(re)) add('term', m[0], m.index);
     }
 

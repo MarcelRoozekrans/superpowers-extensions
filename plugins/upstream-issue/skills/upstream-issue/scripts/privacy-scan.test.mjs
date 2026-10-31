@@ -119,3 +119,25 @@ test('CLI exits 0 on clean, 1 on leaky, 2 without a path', () => {
   assert.match(leaky.stdout, /leaky\.md:6: home-path:/);
   assert.equal(cli(['--terms', empty]).status, 2);
 });
+
+test('hostname ignores type and namespace names in stack traces', () => {
+  assert.deepEqual(kinds('   at System.Net.Http.HttpClient.Send(x)'), []);
+  assert.deepEqual(kinds('Microsoft.NETCore.App/10.0.0'), []);
+  assert.deepEqual(kinds('import java.io.File'), []);
+  assert.deepEqual(kinds('connect nas.acme-home.nl.'), ['hostname']);
+});
+
+test('token sk- and AKIA need a leading boundary', () => {
+  assert.deepEqual(kinds('branch fix/task-queue-timeout-handling'), []);
+  assert.deepEqual(kinds('id XAKIA' + 'ABCDEFGH12345678'), []);
+});
+
+test('ip exclusion applies to a standalone v only', () => {
+  assert.deepEqual(kinds('host srv10.0.0.5'), ['ip-private']);
+  assert.deepEqual(kinds('tag v10.0.0.5'), []);
+});
+
+test('terms are matched on every line', () => {
+  const hits = scanText('zolder\nnope\nZOLDER', { terms: ['zolder'] });
+  assert.deepEqual(hits.map((h) => h.line), [1, 3]);
+});
