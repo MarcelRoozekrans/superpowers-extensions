@@ -51,7 +51,7 @@ Show the cause lies in upstream code. Trace into the upstream source, reproduce 
 
 **Exit:** the upstream file and function the behaviour comes from, linked, or a reproduction with no user code in it.
 
-**Stop:** "This looks like it comes from your code or config, not from upstream", with the evidence and the upstream docs URL from phase 1 that documents the behaviour.
+**Stop:** "This looks like it comes from your code or config, not from upstream", with the evidence and the upstream docs URL from phase 1 that documents the behaviour. When phase 1 found no docs, say so and link the places you looked.
 
 ### 3. Check latest
 
