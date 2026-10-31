@@ -182,6 +182,16 @@
       },
       "source": "./plugins/wizard",
       "category": "workflow"
+    },
+    {
+      "name": "upstream-issue",
+      "description": "Reports a bug to an upstream project only after proving it is theirs. A minimal repro is built and run, a skeptic and a clean-room runner check it independently, and the issue draft passes anti-slop and a privacy scan before the user approves it.",
+      "version": "1.27.0",
+      "author": {
+        "name": "Marcel Roozekrans"
+      },
+      "source": "./plugins/upstream-issue",
+      "category": "workflow"
     }
   ]
 }
