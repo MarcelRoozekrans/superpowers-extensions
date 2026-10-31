@@ -117,7 +117,7 @@ Phase 6 dispatches two fresh subagents **in parallel, both on `sonnet`**:
 - the skeptic, with [skeptic-prompt.md](skeptic-prompt.md)
 - the clean runner, with [clean-runner-prompt.md](clean-runner-prompt.md)
 
-Fill only the placeholders each brief lists and send its fenced text. The skeptic gets no reasoning from you: not your suspected cause, not your reading of the docs, not your view of the search results beyond the facts the placeholders ask for. The agent that wants the bug to be real is not the one that decides it is real.
+Fill only the placeholders each brief lists and send its fenced text. The skeptic's `{REPORT_TARGET}` says whether this is a new issue or a comment on the phase 4 match and what the comment adds, so its duplicate check does not refute a comment for finding the issue it comments on. The skeptic gets no reasoning from you: not your suspected cause, not your reading of the docs, not your view of the search results beyond the facts the placeholders ask for. The agent that wants the bug to be real is not the one that decides it is real.
 
 Read the first line of each reply. That line is the verdict. Check the rows top to bottom and take the first that matches.
 
