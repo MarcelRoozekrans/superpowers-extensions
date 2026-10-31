@@ -219,6 +219,12 @@ function cyclic(label, files, count) {
   });
 }
 
+// Expected hotspots.mjs output for the built repo: orders/intake 40, search 30,
+// notifications 25, billing/ 13, billing/pricing/ 11, legacy 1, ./ 6, 122 commits,
+// scattered false. Billing splits 13/11 because the client moves at commit 10:
+// billing/ counts pricing-api.js, the first client file, the callers added and
+// the callers touched again by the move, while billing/pricing/ counts the moved
+// file as added plus its ten later edits. The scan skips deletions and renames.
 function billing() {
   const steps = [];
   const clientOld = 'src/billing/pricing-client.js';

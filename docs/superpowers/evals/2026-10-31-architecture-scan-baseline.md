@@ -1,6 +1,6 @@
 # Architecture-scan baseline (RED)
 
-A fresh Sonnet agent got the "The brief" section of `2026-10-31-architecture-scan-brief.md` without the skill, on 2026-10-31, with no skills loaded. The fixture was built by `architecture-scan-fixture/make-fixture.mjs` into `/tmp/fx-red`, and the report went to `/tmp/red-scratch/report.html`.
+A fresh Sonnet agent got the "The brief" section of `2026-10-31-architecture-scan-brief.md` without the skill, on 2026-10-31, with no skills loaded. The fixture was built by `architecture-scan-fixture/make-fixture.mjs` into `/tmp/fx-red`, and the report went to `/tmp/red-scratch/report.html`. The fixture is reproducible from `make-fixture.mjs`. The report HTML is ephemeral and not committed, so the summary below is the record.
 
 ## What it produced
 
