@@ -2,7 +2,7 @@
 
 [![GitHub Sponsors](https://img.shields.io/github/sponsors/MarcelRoozekrans?style=flat&logo=githubsponsors&color=ea4aaa&label=Sponsor)](https://github.com/sponsors/MarcelRoozekrans)
 
-Extension skills for the [superpowers](https://github.com/obra/superpowers) suite, providing quality gates, development workflow skills, and project lifecycle management for web application development. It includes fifteen skills:
+Extension skills for the [superpowers](https://github.com/obra/superpowers) suite, providing quality gates, development workflow skills, and project lifecycle management for web application development. It includes sixteen skills:
 
 - **regression-test** -- Comprehensive regression testing using the [Microsoft Playwright MCP server](https://github.com/microsoft/playwright-mcp), combining existing test suite execution with AI-powered visual and functional browser testing.
 - **pre-push-review** -- A structured branch review that diffs against the base branch and gates on plan adherence, code quality, commit hygiene, and regression testing, producing a PASS/FAIL verdict with a prioritized remediation plan on failure.
@@ -18,6 +18,7 @@ Extension skills for the [superpowers](https://github.com/obra/superpowers) suit
 - **context-budget** -- Keeps long sessions cheap. A `UserPromptSubmit` hook measures the session's context size and hands off to a fresh session at a natural break; a `PreToolUse` hook requires an explicit non-Fable `model` on general-purpose subagent dispatches. The skill states the suite-wide model rule (Sonnet by default, Opus for marked tasks, retries and the final review, Haiku for lookups) and the fresh-session handoff recipe.
 - **anti-slop** -- Rewrites AI prose tics out of text Claude is about to publish, in English and Dutch: commit messages, PR and issue text, comments, READMEs, docs and release notes. Each language has a pattern catalogue in four families (vocabulary, structure, tone, substance), and every entry pairs a bad example with a plain rewrite. Claude publishes the clean version with no report; on demand it edits a file in place and leaves a diff.
 - **demo-video** -- Records a finished web feature as a paced browser walkthrough video. Claude writes a storyboard from the plan and diff, explores it live with Playwright MCP, then generates a `record.mjs` that drives headless Chromium on the real app. ffmpeg turns the recording into chapter MP4s with captions and title cards, speeds up slow waits instead of cutting them, and builds a GIF in quick mode. Two modes: **quick** (no approval, for a PR or chat) and **polished** (storyboard approved first, for a talk or a fallback recording). Re-recording after a UI fix is one command.
+- **retro** -- Session retrospectives that improve the setup around the agent. A digest script turns a Claude Code transcript into sizes, counts and line numbers; one subagent finds setup improvements in six categories (information access, guardrails, reviewer rules, navigation, tool cost, steering files) and ranks them most severe first. Each finding is fixed on a `retro/<date>` branch, filed as a grouped issue or dropped, chosen per finding. Adapted from Matt Pocock's [skills](https://github.com/mattpocock/skills) (MIT).
 - **squad** -- Persistent AI agent teams (Lead, Backend Engineer, Frontend Engineer, Tester, Scribe) **dispatched as parallel `Task` subagents** during brainstorming and planning workflows. Each specialist runs in an isolated context window with its own charter and tier-1 history, so they cannot anchor on each other's reasoning. Per-role `history.md` files accumulate project-specific knowledge across sessions; tiered context lookup (semantic search → grep → recent history) keeps each subagent's prompt lean.
 
 ---
@@ -481,6 +482,42 @@ Node 20 or newer, a global `playwright` install with Chromium (`npm i -g playwri
 
 ---
 
+## Retro Skill
+
+The retro skill runs a retrospective on a finished session and changes the setup around the agent, not the code the session wrote. It fires on "retro", "run a retro" or "what should we change in the setup", and it offers itself once at a natural break: a merged PR, `complete-phase`, `complete-milestone`, or a session resumed from a handoff.
+
+### What It Does
+
+- **Digest first.** `scripts/digest.mjs` streams the transcript and prints the session totals, the biggest tool results, repeated reads and commands, failures with their retries, search churn, subagent dispatches with their models, unanswered calls and lines too long to read. It never prints a transcript record, so a megabyte line cannot flood the context.
+- **Six categories, most severe first.** Information access, automated checks, coding standards, navigation, tool economy, and steering size and no-ops. A repo with no guardrail (no pre-commit hook and no CI job running its checks) is a finding in itself.
+- **Fix, file or drop.** Every finding gets one outcome, picked per finding with a recommended option. Fixes go on one `retro/<date>` branch and PR; issues are grouped per repo and area; a drop whose reason matters later goes to `decision-tracker` so the next retro does not suggest it again.
+- **Split with `superpowers:diagnosing-superpowers`.** That skill reports on an `obra/superpowers` skill that misbehaved and proposes nothing. Retro covers everything you own: the repo, your global `~/.claude` files, this suite and your MCP servers.
+- **Lessons that hold everywhere** go to the longterm-memory MCP.
+
+### Usage
+
+```text
+retro
+run a retro on session <id>
+what should we change in the setup after that session?
+```
+
+The digest also runs on its own:
+
+```bash
+node plugins/retro/skills/retro/scripts/digest.mjs ~/.claude/projects/<slug>/<session-id>.jsonl --subagents
+```
+
+### Attribution
+
+Adapted from Matt Pocock's [retro](https://github.com/mattpocock/skills/tree/main/skills/engineering/retro) and [writing-for-agents](https://github.com/mattpocock/skills/tree/main/skills/productivity/writing-for-agents) skills (MIT). See [plugins/retro/skills/retro/NOTICE.md](plugins/retro/skills/retro/NOTICE.md) for the full attribution.
+
+### Prerequisites
+
+Node.js for the digest script. Optional: `decision-tracker` and the longterm-memory MCP for drops and lessons, `anti-slop` for issue text.
+
+---
+
 ## UI Workflow Skill
 
 The ui-workflow skill provides two complementary capabilities that close the design-implementation gap in frontend work.
@@ -787,7 +824,7 @@ per harness; only how the harness loads them.
 | **OpenAI Codex CLI / App** | [`.codex-plugin/plugin.json`](.codex-plugin/plugin.json) + [`.codex/INSTALL.md`](.codex/INSTALL.md) | Clone-and-symlink each plugin into `~/.agents/skills/`; instructions and a copy-paste loop in [`.codex/INSTALL.md`](.codex/INSTALL.md) |
 | **Gemini CLI** | [`gemini-extension.json`](gemini-extension.json) + [`GEMINI.md`](GEMINI.md) | `GEMINI.md` lists each SKILL.md via `@./plugins/.../SKILL.md` import syntax |
 | **GitHub Copilot CLI** | Reuses [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json) + [`.copilot-cli/INSTALL.md`](.copilot-cli/INSTALL.md) | `copilot plugin marketplace add MarcelRoozekrans/superpowers-extensions`, then install individual plugins |
-| **OpenCode.ai** | [`.opencode/plugins/superpowers-extensions.js`](.opencode/plugins/superpowers-extensions.js) | JS plugin registers all fifteen plugin skill paths via OpenCode's `config.skills.paths` array — no symlinks needed |
+| **OpenCode.ai** | [`.opencode/plugins/superpowers-extensions.js`](.opencode/plugins/superpowers-extensions.js) | JS plugin registers all sixteen plugin skill paths via OpenCode's `config.skills.paths` array — no symlinks needed |
 
 The polymorphic [`hooks/session-start`](hooks/session-start) script
 detects which harness is running it via env vars (`CURSOR_PLUGIN_ROOT`,
@@ -853,7 +890,7 @@ The multi-provider mechanism here is adapted directly from
 [`obra/superpowers`](https://github.com/obra/superpowers) (MIT). Their
 session-start hook was the model for ours; their per-harness manifest
 pattern is what enables one shared markdown tree to load natively in
-each host. Differences: we are a marketplace of fifteen plugins (versus
+each host. Differences: we are a marketplace of sixteen plugins (versus
 their single-plugin layout), so our manifests target the suite at the
 repo root with skills resolved via `./plugins/`.
 
@@ -888,6 +925,7 @@ claude plugin install logo-design
 claude plugin install context-budget
 claude plugin install anti-slop
 claude plugin install demo-video
+claude plugin install retro
 ```
 
 The regression-test plugin automatically configures the Playwright MCP server with `--caps=testing`. The pre-push-review plugin requires only git and no additional MCP servers for its core review.
@@ -1012,6 +1050,12 @@ xcopy /E /I plugins\demo-video\skills\demo-video %USERPROFILE%\.claude\skills\de
 
 # macOS / Linux -- demo-video
 cp -r plugins/demo-video/skills/demo-video ~/.claude/skills/demo-video
+
+# Windows -- retro
+xcopy /E /I plugins\retro\skills\retro %USERPROFILE%\.claude\skills\retro
+
+# macOS / Linux -- retro
+cp -r plugins/retro/skills/retro ~/.claude/skills/retro
 ```
 
 **Note:** Some plugins require companion MCP servers. Install them separately:
@@ -1032,7 +1076,7 @@ claude mcp add playwright -- npx @playwright/mcp@latest --caps=testing,pdf,visio
 
 ### Verify Installation
 
-In Claude Code, the skills should appear when you type `/regression-test`, `/pre-push-review`, `/refactor-analysis`, `/decision-tracker`, `/roslyn-codelens-integration`, `/memorylens-integration`, `/project-orchestration`, `/ui-workflow`, `/ui-design-system`, `/squad`, `/compress-memory`, `/logo-design`, `/context-budget`, `/anti-slop`, or `/demo-video`, or when you ask Claude to perform regression testing, a pre-push review, a refactor impact analysis, decision tracking, .NET code graph analysis, .NET memory profiling, project lifecycle management, UI design contract work, design system generation, to activate your agent team, to compress a memory file, to design or audit a brand mark, to rewrite AI prose tics out of a draft, or to record a demo video of a web feature.
+In Claude Code, the skills should appear when you type `/regression-test`, `/pre-push-review`, `/refactor-analysis`, `/decision-tracker`, `/roslyn-codelens-integration`, `/memorylens-integration`, `/project-orchestration`, `/ui-workflow`, `/ui-design-system`, `/squad`, `/compress-memory`, `/logo-design`, `/context-budget`, `/anti-slop`, `/demo-video`, or `/retro`, or when you ask Claude to perform regression testing, a pre-push review, a refactor impact analysis, decision tracking, .NET code graph analysis, .NET memory profiling, project lifecycle management, UI design contract work, design system generation, to activate your agent team, to compress a memory file, to design or audit a brand mark, to rewrite AI prose tics out of a draft, to record a demo video of a web feature, or to run a retro on a session.
 
 ---
 
@@ -1320,17 +1364,26 @@ superpowers-extensions/
 │   │           ├── SKILL.md                # Trigger, procedure, guardrails, on-demand file mode
 │   │           ├── references/             # patterns-en.md and patterns-nl.md catalogues
 │   │           └── scripts/                # scan.mjs vocabulary scanner
-│   └── demo-video/                         # Web features recorded as walkthrough videos (15th plugin)
+│   ├── demo-video/                         # Web features recorded as walkthrough videos
+│   │   ├── .claude-plugin/
+│   │   │   └── plugin.json
+│   │   ├── .mcp.json                       # Playwright MCP, same as regression-test
+│   │   └── skills/
+│   │       └── demo-video/
+│   │           ├── SKILL.md                # Modes, procedure, approval gate, hard gate
+│   │           ├── references/             # storyboard.md format and example
+│   │           ├── templates/              # record.template.mjs
+│   │           ├── lib/                    # runtime, ffmpeg graphs, postprocess, verify
+│   │           └── scripts/                # preflight.mjs, scaffold.mjs and tests
+│   └── retro/                              # Session retrospectives that fix, file or drop setup improvements (16th plugin)
 │       ├── .claude-plugin/
 │       │   └── plugin.json
-│       ├── .mcp.json                       # Playwright MCP, same as regression-test
 │       └── skills/
-│           └── demo-video/
-│               ├── SKILL.md                # Modes, procedure, approval gate, hard gate
-│               ├── references/             # storyboard.md format and example
-│               ├── templates/              # record.template.mjs
-│               ├── lib/                    # runtime, ffmpeg graphs, postprocess, verify
-│               └── scripts/                # preflight.mjs, scaffold.mjs and tests
+│           └── retro/
+│               ├── SKILL.md                # Offer rule, scope split, reading rules, workflow, hard rules
+│               ├── NOTICE.md               # Attribution and MIT licence
+│               ├── references/             # categories.md and writing-for-agents.md
+│               └── scripts/                # digest.mjs transcript digest and tests
 └── docs/
     ├── planning/                           # Project lifecycle state (ROADMAP, MILESTONE, STATE, CONVENTIONS)
     └── plans/                              # Design documents and phase plans
