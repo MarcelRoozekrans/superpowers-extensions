@@ -211,7 +211,7 @@ The memorylens-integration skill enhances `superpowers:systematic-debugging` wit
 
 Memory profiling is injected into two debugging phases:
 
-- **Phase 1 — Root Cause Investigation:** `ensure_dotmemory` verifies the dotMemory CLI, `list_processes` finds the target .NET process, `snapshot` captures memory state without stopping the process, and `analyze` runs the 10-rule engine (ML001-ML010) covering event handler leaks, static collection growth, undisposed disposables, LOH fragmentation, hot-path allocations, closure retention, and more.
+- **Phase 1 — Root Cause Investigation:** `list_processes` finds the target .NET process, `snapshot` captures memory state without stopping the process, and `analyze` runs the 10-rule engine over data collected in-process via EventPipe (ML001-ML010) covering event handler leaks, static collection growth, undisposed disposables, LOH fragmentation, hot-path allocations, closure retention, and more.
 - **Phase 3 — Hypothesis Testing:** `compare_snapshots` validates whether a proposed fix actually reduced retention — captures two snapshots with a configurable delay and diffs growth, new types, and retained bytes. A fix that "looks right" but doesn't move the snapshot is rejected.
 
 The skill also applies its rule knowledge during `superpowers:brainstorming` on .NET projects — flagging memory risk patterns (event subscriptions, static caches, IDisposable ownership, large buffers) as design questions before code is written.
