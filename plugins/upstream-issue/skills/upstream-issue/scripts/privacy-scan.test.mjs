@@ -81,8 +81,9 @@ test('home-path stops at a sentence-ending dot and keeps dotted names', () => {
   assert.deepEqual(kinds('cd C:\\Users\\alice. Done'), ['home-path']);
 });
 
-test('home-path skips the macOS shared folder and {user}', () => {
+test('home-path skips the shared folders and {user}', () => {
   assert.deepEqual(kinds('cp x /Users/Shared/x'), []);
+  assert.deepEqual(kinds('copy x C:\\Users\\Public\\Documents'), []);
   assert.deepEqual(kinds('cd /home/{user}/x'), []);
 });
 

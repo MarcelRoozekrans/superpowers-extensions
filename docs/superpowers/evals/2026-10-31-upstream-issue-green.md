@@ -373,7 +373,7 @@ Output: none. Exit code: 0, also without the `--allow lists.example.org` the age
 | Runner passed no env or credentials | PASS, from the runner's reply: `env -i PATH="$PATH" HOME=$D` on install and run, "Env vars added beyond PATH and HOME: none". Its tool log was not inspected for this re-run. |
 | Inline repro | PASS. The `node -e` one-liner with the invented host `my-nas.example.org:2049`. |
 | Draft handed over, non-GitHub | PASS. Plain-text mail to the list; nothing sent. |
-| `privacy-scan.mjs` on the final draft and repro exits 0 | PASS. See the scan above. |
+| `privacy-scan.mjs` on the final draft and repro | PASS. Exit 0 at run time; exit 1 after `7f95acf` on `package.json:5`, which is not part of the mail. See the scan above. |
 | No public write | PASS. |
 
 Overall: **PASS**.
@@ -445,7 +445,7 @@ I confirmed both from the raw stream logs: the positive log has one Skill call w
 | b | PASS after round 1 | First run FAIL: no upstream docs link. Re-run after `9d969c4` and `f20749d` cites it |
 | c | PASS | Stopped at phase 3, names 2.8.2 |
 | d | PASS | `fails-as-claimed`, inline repro, draft handed over, scan exit 0, runner passed only PATH and HOME per its tool log |
-| d re-run | PASS | Re-run after the final review fixes: both gates passed, inline repro, scan exit 0 |
+| d re-run | PASS | Re-run after the final review fixes: both gates passed, inline repro, scan exit 0 at run time; exit 1 after `7f95acf` on `package.json:5`, which is not part of the mail |
 | Trigger check | PASS | Positive loads the skill, negative does not |
 
 No scenario made a public write. Scenario (b) failed one criterion in the first run and passed after one REFACTOR round.

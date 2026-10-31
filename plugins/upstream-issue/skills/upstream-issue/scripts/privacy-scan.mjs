@@ -9,7 +9,7 @@ const BUILTIN_ALLOW = [
   'nuget.org', 'crates.io', 'pkg.go.dev',
 ];
 const SKIP_DIRS = new Set(['.git', 'node_modules', 'bin', 'obj', 'target', 'dist', '.venv']);
-const HOME_PLACEHOLDERS = new Set(['<user>', '{user}', 'user', 'runner', 'root', '$USER', 'you', 'Shared']);
+const HOME_PLACEHOLDERS = new Set(['<user>', '{user}', 'user', 'runner', 'root', '$USER', 'you', 'Shared', 'Public']);
 
 // A hostname match needs a lowercase TLD label or an all-uppercase name, and no
 // further dotted label after the TLD, so type names such as System.Net.Http,
