@@ -155,7 +155,7 @@ Rules:
 
    Exit 1 lists the hits. A public reference the report needs, such as an RFC, the runtime's docs or a third-party tracker, is not private: re-run with its domain in `--allow` instead of editing it. Replace only private values, with a documentation value such as `example.com`, `192.0.2.1` or `<entry_id>`. When a hit seems necessary for the report, keep it only by showing it to the user explicitly at the approval step. Re-run until it exits 0 or only shown hits remain.
 
-Never repeat a private detail from the user's logs in chat either.
+The privacy gate covers everything that goes public: the draft, the repro files, their commits and the repro repo. Your message to the user may name a value the user supplied when that explains the cause, but never copy it into the draft or the repro.
 
 ## Approve and post
 
