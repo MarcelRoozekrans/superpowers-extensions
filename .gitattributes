@@ -9,3 +9,7 @@ plugins/*/skills/*/scripts/*.mjs text eol=lf
 # Cmd files MUST keep CRLF on Windows
 hooks/*.cmd text eol=crlf
 scripts/*.cmd text eol=crlf
+
+# The upstream-issue eval fixture applies a patch with `git apply` and runs a
+# bash script; both break with CRLF.
+docs/superpowers/evals/fixtures/upstream-issue/** text eol=lf

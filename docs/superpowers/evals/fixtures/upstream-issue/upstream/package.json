@@ -1,0 +1,10 @@
+{
+  "name": "hostspec",
+  "version": "1.0.0",
+  "description": "Parse host[:port] strings into { host, port }.",
+  "main": "index.js",
+  "scripts": {
+    "test": "node test.js"
+  },
+  "license": "MIT"
+}

@@ -1,0 +1,77 @@
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 6f5a6e4..78876c9 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,5 +1,9 @@
+ # Changelog
+ 
++## 1.1.0
++
++- Add `format({ host, port })`, the inverse of `parse()`.
++
+ ## 1.0.0
+ 
+ - First release: `parse(spec, defaultPort)`.
+diff --git a/README.md b/README.md
+index 7ea4d0c..9ed456d 100644
+--- a/README.md
++++ b/README.md
+@@ -18,6 +18,10 @@ parse('[2001:db8::1]:443');     // { host: '2001:db8::1', port: 443 }
+ 
+ Throws a `TypeError` when `spec` is not a valid host spec, and a `RangeError` when the port is outside 1–65535.
+ 
++### `format({ host, port })`
++
++The inverse of `parse()`: returns `host:port`, with an IPv6 host in brackets, or the host alone when `port` is `undefined`.
++
+ ## Contributing
+ 
+ See [CONTRIBUTING.md](CONTRIBUTING.md).
+diff --git a/index.js b/index.js
+index 2f66a9a..7821d1f 100644
+--- a/index.js
++++ b/index.js
+@@ -18,4 +18,9 @@ function parse(spec, defaultPort) {
+   return { host, port };
+ }
+ 
+-module.exports = { parse };
++function format({ host, port }) {
++  const name = host.includes(':') ? `[${host}]` : host;
++  return port === undefined ? name : `${name}:${port}`;
++}
++
++module.exports = { parse, format };
+diff --git a/package.json b/package.json
+index a1da3a7..ebd8b9e 100644
+--- a/package.json
++++ b/package.json
+@@ -1,6 +1,6 @@
+ {
+   "name": "hostspec",
+-  "version": "1.0.0",
++  "version": "1.1.0",
+   "description": "Parse host[:port] strings into { host, port }.",
+   "main": "index.js",
+   "scripts": {
+diff --git a/test.js b/test.js
+index b090350..27ec450 100644
+--- a/test.js
++++ b/test.js
+@@ -1,7 +1,7 @@
+ 'use strict';
+ 
+ const assert = require('node:assert/strict');
+-const { parse } = require('./index.js');
++const { parse, format } = require('./index.js');
+ 
+ assert.deepEqual(parse('example.org:8080'), { host: 'example.org', port: 8080 });
+ assert.deepEqual(parse('192.0.2.10', 80), { host: '192.0.2.10', port: 80 });
+@@ -9,5 +9,7 @@ assert.deepEqual(parse('[2001:db8::1]:443'), { host: '2001:db8::1', port: 443 })
+ assert.deepEqual(parse('LOCALHOST'), { host: 'localhost', port: undefined });
+ assert.throws(() => parse('example.org:70000'), RangeError);
+ assert.throws(() => parse('two words:80'), TypeError);
++assert.equal(format({ host: '2001:db8::1', port: 443 }), '[2001:db8::1]:443');
++assert.equal(format({ host: 'example.org' }), 'example.org');
+ 
+ console.log('ok');

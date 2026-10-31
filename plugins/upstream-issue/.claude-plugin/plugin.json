@@ -1,0 +1,9 @@
+{
+  "name": "upstream-issue",
+  "description": "Reports a bug to an upstream project only after proving it is theirs. Localises the cause, checks the latest release and existing reports, builds a minimal repro that fails, has a skeptic and a clean-room runner check it independently, then drafts an issue that passes anti-slop and a privacy scan for the user to approve.",
+  "author": {
+    "name": "Marcel Roozekrans"
+  },
+  "license": "MIT",
+  "keywords": ["upstream-issue", "bug-report", "repro", "github", "issue", "privacy"]
+}
