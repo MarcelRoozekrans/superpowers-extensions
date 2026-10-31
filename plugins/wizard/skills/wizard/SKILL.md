@@ -29,7 +29,7 @@ Find every manual step and every value captured along the way. Read the repo bef
 Then put the ordered stage list, with the values each stage produces, to the user:
 
 - **Stage list.** Options: "Use these N stages (Recommended)", "Add or change stages", "Drop stages".
-- **Where a value goes,** only when the repo does not settle it. Options: `.env` only, GitHub secret, both, nowhere. Recommend what CI reads: a GitHub secret when a workflow references it, `.env` when only the app reads it, both when both do.
+- **Where a value goes.** Options: `.env` only, GitHub secret, both, nowhere. Start from who runs the wizard. A GitHub secret is shared by the whole repo, so a wizard that every new developer runs must not write their personal values (a dev database, a personal API key) over the secrets the deploy uses. Recommend `.env` only for per-developer setup. Recommend a GitHub secret only when the person running the wizard owns CI, such as when they set up a new repo or environment, and then put `set_secret` behind a `confirm`. Ask this even when a workflow reads the value: the workflow says which name CI needs, not who should set it.
 
 **Done when:** every stage is named in order, and for each captured value you know (a) where the person gets it, (b) where it is written (`.env`, a GitHub secret, both or nowhere; some stages are pure actions) and (c) whether it is secret (hidden entry) or public.
 
@@ -39,7 +39,7 @@ For each stage, write the exact path a person follows: which URL to open, what t
 
 When you do not know the current UI or the exact command, do not guess. A step that sends someone to a menu that does not exist is worse than no wizard. Ask:
 
-- **Unknown UI or command.** Options: "Check the provider's docs (Recommended)", "I'll describe the path". With the first, fetch the docs page and cite it in a `note` line in the stage.
+- **Unknown UI or command.** Options: "Check the provider's docs (Recommended)", "I'll describe the path". With the first, fetch the docs page and cite it in a `note` line in the stage. When the docs cannot be fetched, the stage says so to the person running it, with a `warn` line such as `warn "Menu names unverified; if they differ, follow <docs URL>"`, and your hand-off says the same.
 
 **Done when:** every stage traces to instructions a stranger could follow.
 
@@ -52,7 +52,7 @@ The bar the template sets:
 - Open the URL before asking for its value.
 - Use `ask_secret` for anything secret.
 - `write_env` every value that must persist.
-- `set_secret` only the values CI reads, under the exact name the workflow uses.
+- `set_secret` only the values CI reads, under the exact name the workflow uses, and only in a wizard run by whoever owns CI.
 - `confirm` before any irreversible action.
 - Keep a stage to one task. Each `stage` clears the screen, so what the person needs must fit on it.
 
@@ -64,7 +64,7 @@ Run the check script:
 node <this skill's directory>/scripts/check.mjs <wizard.sh> --repo <repo root>
 ```
 
-It checks syntax (`bash -n`), shellcheck on the stages section when shellcheck is installed, the library against the template, `TOTAL_STAGES` against the `stage` calls, that the example stage is gone, that every `set_secret` name is read by a workflow, and the executable bit (`chmod +x`). Fix every `FAIL` and run it again. Read each `warn`: a secret a workflow reads but the wizard does not set is either missing from the wizard or set some other way. Say which.
+It checks syntax (`bash -n`), shellcheck on the stages section when shellcheck is installed, the library against the template, `TOTAL_STAGES` against the `stage` calls, that the example stage is gone, that every `set_secret` name is read by a workflow, and the executable bit (`chmod +x`). Fix every `FAIL` and run it again. Read each `warn`: a secret a workflow reads but the wizard does not set is either missing from the wizard or set some other way, for example by the CI owner. Say which.
 
 The script cannot see where each value lands. Trace that yourself: every value from step 1 is captured and written where step 1 said.
 

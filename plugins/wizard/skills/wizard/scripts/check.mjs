@@ -23,10 +23,11 @@ const library = (text) => {
   return m ? text.slice(0, m.index) : null;
 };
 
-// The 1-based line number of the STAGES marker.
+// The 1-based line number of the STAGES marker; 1 when there is none, so
+// shellcheck then covers the whole file.
 const markerLine = (text) => {
   const m = MARKER.exec(text);
-  return m ? text.slice(0, m.index).split('\n').length : Infinity;
+  return m ? text.slice(0, m.index).split('\n').length : 1;
 };
 
 const runWizardBody = (text) => {

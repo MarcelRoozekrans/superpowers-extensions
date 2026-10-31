@@ -41,7 +41,7 @@ Some setup steps only a person can do: clicking through a third-party dashboard,
 | Asking | AskUserQuestion with a recommended option, at every upstream ask point |
 | Anti-slop scope | Always: commit message, PR title and body, README link. Also the on-screen prose of a wizard that gets committed. Throwaway wizards skip it. |
 | Approach | B: port plus a check script |
-| Shellcheck | Upstream `template.sh` fails shellcheck 0.10 with SC1087 at line 114 (`$e[Enter keeps current]`, a false positive). Vendor it with `${e}[Enter keeps current]` as the only change, recorded in `NOTICE.md`, and open a PR upstream with the same fix. Once it merges, re-vendor byte for byte. |
+| Shellcheck | Upstream `template.sh` fails shellcheck 0.10 with SC1087 at line 114 (`$e[Enter keeps current]`, a false positive). Vendor it with `${e}[Enter keeps current]` as the only change, recorded in `NOTICE.md`. The user chose to also send the fix upstream; during implementation it turned out upstream takes no outside PRs and already closed the same report as a false positive ([#1295](https://github.com/mattpocock/skills/issues/1295)), so the change stays local and is reapplied on every re-vendor. |
 | Flow | brainstorming → spec → plan → implement on a new branch → PR. No pushes to `master`. |
 
 ## Approaches considered

@@ -9,7 +9,7 @@ This skill is adapted from the `wizard` skill in [mattpocock/skills](https://git
 
 ## What is different here
 
-- **One change to `template.sh`.** Line 114 reads `${e}[Enter keeps current]` where upstream has `$e[Enter keeps current]`. Bash expands both the same way, but shellcheck 0.10 reports the upstream form as SC1087, an error. Once the fix lands upstream, the template is copied again byte for byte.
+- **One change to `template.sh`.** Line 114 reads `${e}[Enter keeps current]` where upstream has `$e[Enter keeps current]`. Bash expands both the same way, but shellcheck 0.10 reports the upstream form as SC1087, an error, and the check script runs shellcheck. Upstream closed the same report as a shellcheck false positive ([mattpocock/skills#1295](https://github.com/mattpocock/skills/issues/1295)), so the change stays. When the template is copied from upstream again, apply it again and update the SHA-256 below.
 - **Questions go through AskUserQuestion,** with labelled options and one marked "(Recommended)", where upstream asks in prose.
 - **Published text goes through `anti-slop`:** the commit message, PR text and README link, and the on-screen text of a wizard that gets committed.
 - **`scripts/check.mjs`** runs upstream's verification checklist as one command.

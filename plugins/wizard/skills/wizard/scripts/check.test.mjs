@@ -105,3 +105,8 @@ test('set_secret mid-line is checked', () => {
   assert.equal(secrets.status, 'fail');
   assert.match(secrets.detail, /OTHER_KEY/);
 });
+
+test('shellcheck checks every line when the STAGES marker is missing', { skip: !hasShellcheck && 'shellcheck not installed' }, () => {
+  const path = variant((t) => `${t.replace(/^# STAGES:.*$/m, '# stages')}\nsay $PUB_KEY\n`);
+  assert.equal(status(checkWizard(path, { repo }), 'shellcheck').status, 'fail');
+});
