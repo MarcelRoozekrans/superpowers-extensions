@@ -157,14 +157,14 @@ Show the user, in one message:
 
 - the final draft
 - the target repo, and whether this is a new issue or a comment on an existing one, with its link
-- where the repro will live: inline, or the name of the new public repo under their account
+- where the repro will live: inline, or the name of the new public repo under their account, with the noreply author address its commits will carry
 - the skeptic's Gaps
 - any privacy hit you kept, and why
 
 Then stop and wait. Only on an explicit yes, on GitHub:
 
-1. When the repro is a separate repo, create it with `gh repo create <name> --public` and push the repro, then put its URL into the draft.
-2. Post with `gh issue create` for a new issue, or `gh issue comment` on the existing one.
+1. When the repro is a separate repo, commit it with the user's GitHub noreply address as author, never the local `git config user.email`, which may be a private address the privacy scan never saw. Get the id and login from `gh api user --jq '.id, .login'` and commit with `git -c user.name=<login> -c user.email=<id>+<login>@users.noreply.github.com commit`. Then create the repo with `gh repo create <name> --public`, push, and put its URL into the draft.
+2. Write the final body to a file and always name the target repo, since a bare `gh issue` call inside the user's own checkout would target that repo. For a new issue, run `gh issue create --repo <owner/repo> --title <title> --body-file <file>`. For a comment, run `gh issue comment <number> --repo <owner/repo> --body-file <file>`.
 3. Report every URL created.
 
 Any change the user asks for goes back through `anti-slop`, the privacy scan and this approval step.
