@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.27.1](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.27.0...superpowers-extensions-v1.27.1) (2026-10-31)
+
+
+### Bug Fixes
+
+* **memorylens-integration:** detect the MemoryLens 2.x tools ([#164](https://github.com/MarcelRoozekrans/superpowers-extensions/issues/164)) ([227d70b](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/227d70b3bbe643db13ccccee0b24e483b59d927d))
+
 ## [1.27.0](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.26.0...superpowers-extensions-v1.27.0) (2026-10-31)
 
 
