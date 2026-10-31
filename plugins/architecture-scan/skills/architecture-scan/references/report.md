@@ -118,14 +118,21 @@ flowchart LR
 
 ### Hand-built boxes
 
-Use modules as bordered `<div>`s when Mermaid's layout fights the point, for example when the after diagram should be one thick-bordered deep module with its internals faded inside. Build them from the template's `.k-mod`, `.k-deep` and `.band.thick` look: a `.band.thick` is the deep module, plain `.band` rows are the pieces around it.
+Use modules as bordered `<div>`s when Mermaid's layout fights the point, for example when the after diagram should be one thick-bordered deep module with its internals faded inside. Compose them from `.band.thick` for the deep module and plain borders for the rest.
+
+```html
+<div class="panel after"><span class="eyebrow">After · one deep module</span>
+  <div class="band thick">Order intake · accept(order)</div>
+  <div style="border:1px solid var(--rule);border-radius:4px;padding:8px;text-align:center">OrderRepo</div>
+</div>
+```
 
 ### Cross-section
 
 For layered pass-throughs: stack `.band` rows in a `.stack`, one per module a call passes through. Before is many thin bands each forwarding a call; after is one `.band.thick` carrying the merged responsibility, plus the adapter beneath it.
 
 ```html
-<div class="panel"><span class="eyebrow">Before · a send passes 5 layers</span>
+<div class="panel"><span class="eyebrow">Before · a send passes 5 modules</span>
   <div class="stack">
     <div class="band">Dispatcher</div><div class="band">Router</div><div class="band">Template resolver</div><div class="band">Channel picker</div><div class="band">SMTP adapter</div>
   </div>
@@ -152,7 +159,19 @@ For an interface as wide as its implementation. Each module is two rectangles: `
 
 ### Call-graph collapse
 
-Before: a tree of function calls as nested bordered boxes inside a `.panel`. After: the same tree collapsed into one `.band.thick` box, with the now-internal calls listed faded inside it. No dedicated classes; compose it from `.panel`, `.band` and the muted ink token (`var(--muted)`).
+Before: a tree of function calls as nested bordered boxes inside a `.panel`. After: the same tree collapsed into one `.band.thick` box, with the now-internal calls shown faded inside it in `var(--muted)`. No dedicated classes.
+
+```html
+<div class="panel"><span class="eyebrow">Before</span>
+  <div style="border:1px solid var(--rule);border-radius:4px;padding:8px">handle()
+    <div style="border:1px solid var(--rule);border-radius:4px;padding:6px;margin-top:6px">validate()</div>
+    <div style="border:1px solid var(--rule);border-radius:4px;padding:6px;margin-top:6px">normalize()</div>
+  </div>
+</div>
+<div class="panel after"><span class="eyebrow">After</span>
+  <div class="band thick">accept(order)<br><span style="color:var(--muted)">validate() · normalize()</span></div>
+</div>
+```
 
 ## Top recommendation
 
@@ -169,7 +188,7 @@ Plain English, concise. The architectural nouns and verbs come straight from the
 
 **Use exactly:** module, interface, implementation, depth, deep, shallow, seam, adapter, leverage, locality.
 
-**Never substitute:** component, service, unit (for module) · API, signature (for interface) · boundary (for seam) · layer, wrapper (for module, when you mean module).
+**Never substitute:** component, service, unit (for module) · API, signature (for interface) · boundary (for seam) · layer, wrapper (for module or adapter).
 
 Phrasings that fit:
 
@@ -178,6 +197,6 @@ Phrasings that fit:
 - "Deepen: one interface, one place to test."
 - "Two adapters justify the seam: HTTP in prod, in-memory in tests."
 
-Wins bullets name the gain in glossary terms: "locality: bugs concentrate in one module", "leverage: one interface, N call sites", "interface shrinks; implementation absorbs the wrappers". Do not write "easier to maintain" or "cleaner code".
+Wins bullets name the gain in glossary terms: "locality: bugs concentrate in one module", "leverage: one interface, N call sites", "interface shrinks; implementation absorbs the pass-through modules". Do not write "easier to maintain" or "cleaner code".
 
 No hedging, no throat-clearing, no "it's worth noting that". If a sentence could be a bullet, make it a bullet. If a bullet could be cut, cut it. If a term is not in the `codebase-design` glossary, reach for one that is before inventing a new one.
