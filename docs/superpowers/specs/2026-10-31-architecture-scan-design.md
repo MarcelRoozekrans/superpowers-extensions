@@ -59,7 +59,7 @@ It is adapted from Matt Pocock's MIT-licensed skills: `skills/engineering/improv
 |-------|------|-----|
 | Hot-spot window | The last 200 commits on the current branch, change counts per directory, excluding lockfiles, generated files, `CHANGELOG.md` and docs. If the top five directories hold less than 30% of the changes, the history counts as scattered and the scan widens to the whole source tree | Upstream says "a good stretch" and "widen if scattered" without numbers. Fixed numbers make the scope reproducible and show in the report |
 | Explore subagent | One `general-purpose` subagent on Sonnet, with an explicit `model`. It returns structured candidates; the main session builds the report | `context-budget` rule: Sonnet for non-lookup subagents, never Fable. One agent keeps the comparison across hot spots in one context |
-| Candidate count | Three to six cards, ranked by strength, then by churn in the area | Fewer than three gives no choice; more than six turns the report into a list |
+| Candidate count | Up to six cards, ranked by strength, then by churn in the area. Aim for at least three, but never pad with invented candidates when the scan finds fewer | More than six turns the report into a list; padding to a quota produces the generic advice this design rules out |
 | Existing glossary and ADRs | If the repo already has a glossary (`GLOSSARY.md`, `CONTEXT.md` or similar) or an ADR folder, the scan reads it and uses its terms. It never creates one | Keeps upstream's benefit where the project already has these, without adding files |
 | Rejection record | `task` type, importance 5, tags `decision`, `project:<name>`, `task-specific`, `rejected-candidate`, `architecture-scan` and an area tag. Text names the candidate, its files and the reason | Matches decision-tracker's task-specific category, so its recall and deduplication work unchanged |
 | Which rejections are recorded | Only a rejection with a lasting reason ("tax rules ship on a separate release cycle"). "Not now" is not recorded | Upstream's filter for ADRs; a temporary reason would block a candidate that becomes right later |
@@ -84,7 +84,7 @@ For the step after the pick, three flows were considered: the scan runs its own 
 
 1. Recall decisions with `decision-tracker` (it runs once per session) and collect the ones tagged `rejected-candidate`.
 2. If the user named an area, a module or a pain point, that is the scope. Skip step 3.
-3. Otherwise compute hot spots from the git history with the window from **Claude's calls**, and keep the counts for the report.
+3. Otherwise compute hot spots from the git history with the window from **Claude's calls**, and keep the counts for the report. `scripts/hotspots.mjs` does the counting so the result is the same on every run.
 4. Read an existing glossary and ADR folder if present.
 
 ### 2. Explore (subagent)
@@ -149,7 +149,9 @@ plugins/architecture-scan/
   skills/
     architecture-scan/
       SKILL.md
-      references/report.md        # HTML scaffold, diagram patterns, tone
+      references/report.md        # diagram patterns, card rules, tone
+      templates/report.template.html  # the page scaffold from the approved sample
+      scripts/hotspots.mjs        # hot-spot counts from git log, with tests
     codebase-design/
       SKILL.md
       references/deepening.md
@@ -159,6 +161,8 @@ plugins/architecture-scan/
 `NOTICE.md` follows `plugins/ui-design-system/skills/ui-design-system/design-systems/NOTICE.md`: which files are adapted from which upstream files, what changed, and the full MIT licence text with Matt Pocock's copyright line. The README entry credits him as well.
 
 The plugin is registered everywhere `demo-video` was: `.claude-plugin/marketplace.json`, `.codex-plugin/plugin.json`, `.codex/INSTALL.md`, `.copilot-cli/INSTALL.md`, `.cursor-plugin/plugin.json`, `.opencode/plugins/superpowers-extensions.js`, `GEMINI.md`, `hooks/session-start`, `package.json`, `release-please-config.json`, `commitlint.config.js` (scope `architecture-scan`) and `README.md`.
+
+This is the first plugin with two skills. The OpenCode paths, the Codex symlink loops and GEMINI.md assume one skill per plugin at `plugins/<name>/skills/<name>`, so `codebase-design` would not load outside Claude Code. The OpenCode plugin and the Codex loops change to take every skill folder of a plugin, GEMINI.md gets a line per skill, and `check:registries` checks every skill folder rather than only the one named after its plugin.
 
 ## Integration with existing skills
 
