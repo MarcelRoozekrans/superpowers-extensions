@@ -410,6 +410,7 @@ This skill is designed to complement — not replace — the superpowers workflo
 
 | Superpowers Skill | Relationship | Notes |
 |---|---|---|
+| `architecture-scan` | **Runs before brainstorming.** Finds and ranks refactor candidates; its briefing makes the spec that this skill's Phase 1 reads. | Optional first step: it decides which refactor to do, this skill maps its blast radius. |
 | `superpowers:brainstorming` | **Runs before this skill.** Brainstorming establishes what to refactor and why. This skill maps the impact. | Brainstorming design doc is input to Phase 1. |
 | `superpowers:writing-plans` | **Runs after this skill.** This skill's impact analysis document is consumed by writing-plans to produce safe, ordered implementation steps. | The execution order from Phase 6 directly informs the plan's task sequence. |
 | `pre-push-review` | **Runs after implementation.** Once the refactor is implemented per the plan, pre-push-review validates the result. | Pre-push-review's code quality check verifies no references were missed. |
@@ -417,7 +418,8 @@ This skill is designed to complement — not replace — the superpowers workflo
 **Recommended workflow chain:**
 
 ```text
-brainstorming (what and why)
+architecture-scan (optional: which refactor)
+  → brainstorming (what and why)
   → refactor-analysis (this skill: blast radius and safe ordering — as writing-plans starts)
   → writing-plans (implementation steps)
   → implementation

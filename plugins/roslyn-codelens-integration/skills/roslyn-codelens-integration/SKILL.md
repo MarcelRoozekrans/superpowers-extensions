@@ -303,6 +303,7 @@ refactor-analysis, so they are mapped to their own workflows here:
 |---|---|---|
 | `superpowers:brainstorming` | **Always-on when detected.** Enhances all 4 phases with semantic code intelligence. Grounds clarifying questions and approach proposals in actual architecture. | Falls back to Grep/Glob when roslyn tools are not available. |
 | `refactor-analysis` | **Always-on when detected.** Replaces text search in Phase 2 (dependency mapping), Phase 3 (transitive closure), Phase 5 (risk identification), and informs Phase 6 (execution order). | Falls back to text-based approach when roslyn tools are not available. |
+| `architecture-scan` | **Always-on when detected.** The explore subagent uses `get_complexity_metrics`, `find_callers`, `get_public_api_surface`, `get_type_hierarchy` and `find_circular_dependencies` to back a shallow-module finding. | Falls back to Grep and Read when roslyn tools are not available. |
 | `superpowers:writing-plans` | **Always-on when detected.** Plans cite concrete symbols and reference counts obtained from the MCP tools; task ordering uses `get_project_dependencies`. | — |
 | `superpowers:executing-plans` | **Always-on when detected.** `get_diagnostics` replaces `dotnet build` at checkpoints; `analyze_change_impact` scopes each task. | — |
 | `superpowers:subagent-driven-development` | **Always-on when detected.** Subagent prompts carry concrete symbol data from the MCP tools; `get_diagnostics` verifies each handoff. | Subagents should also use roslyn tools directly if available. |
