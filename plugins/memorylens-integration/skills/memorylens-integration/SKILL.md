@@ -1,21 +1,23 @@
 ---
 name: memorylens-integration
-description: Use on .NET codebases when MemoryLens MCP tools are available, in either of two paths — (1) the user directly reports a memory issue ("memory leak", "OOM", "out of memory", "high GC pressure", "process memory keeps growing", "profile memory", "investigate retained objects"), or (2) systematic-debugging is active and the symptom is memory-related. Provides snapshot/analyze/compare_snapshots over dotMemory for leak detection and before/after fix validation. Skip for non-.NET memory issues, non-memory bugs, or when MemoryLens MCP tools are unavailable.
+description: Use on .NET codebases when MemoryLens MCP tools are available, in either of two paths — (1) the user directly reports a memory issue ("memory leak", "OOM", "out of memory", "high GC pressure", "process memory keeps growing", "profile memory", "investigate retained objects"), or (2) systematic-debugging is active and the symptom is memory-related. Provides snapshot/analyze/compare_snapshots, collected in-process over EventPipe, for leak detection and before/after fix validation. Skip for non-.NET memory issues, non-memory bugs, or when MemoryLens MCP tools are unavailable.
 ---
 
 # MemoryLens — Superpowers Debugging Integration
 
 ## Prerequisites
 
-This skill requires the MemoryLens MCP server (6 tools). Install via:
+This skill requires the MemoryLens MCP server (5 tools), which the memorylens plugin provides. Install via:
 
-```bash
-claude install gh:MarcelRoozekrans/memorylens-mcp
+```text
+/plugin install memorylens --marketplace MarcelRoozekrans/memorylens-mcp
 ```
+
+This plugin does not start a server of its own.
 
 ## Detection
 
-Check if `ensure_dotmemory` is available as an MCP tool. If not, this skill is inert — do nothing. No errors, no degradation.
+Check if the MemoryLens `snapshot` and `list_processes` tools are available. If not, this skill is inert — do nothing. No errors, no degradation.
 
 ## Overview
 
@@ -35,19 +37,17 @@ When this skill activates alongside systematic-debugging:
 
 When systematic-debugging Phase 1 is active on a .NET process, inject memory profiling as an evidence-gathering step:
 
-### Step 1: Ensure Tooling
+### Step 1: Identify Target Process
 
-Call **`ensure_dotmemory`** to verify the JetBrains dotMemory CLI is available. This downloads it automatically if missing.
+Call **`list_processes`** to find running .NET processes. Present the list and confirm the target with the user if ambiguous. If the user has already identified a PID, skip to Step 2.
 
-### Step 2: Identify Target Process
+Nothing needs installing or verifying first: MemoryLens collects in-process over EventPipe.
 
-Call **`list_processes`** to find running .NET processes. Present the list and confirm the target with the user if ambiguous. If the user has already identified a PID, skip to Step 3.
-
-### Step 3: Capture Memory Snapshot
+### Step 2: Capture Memory Snapshot
 
 Call **`snapshot`** with the target process PID. This captures the full memory state without stopping the process.
 
-### Step 4: Analyze Snapshot
+### Step 3: Analyze Snapshot
 
 Call **`analyze`** to run the 10-rule engine (ML001-ML010) against the snapshot. The rules cover:
 
@@ -60,7 +60,7 @@ Call **`analyze`** to run the 10-rule engine (ML001-ML010) against the snapshot.
 
 For per-rule triggers, impact, and fix patterns, read [rule-reference.md](rule-reference.md). Use **`get_rules`** for live metadata including per-project overrides.
 
-### Step 5: Present Findings
+### Step 4: Present Findings
 
 Present findings **ordered by severity** alongside other Phase 1 evidence. Format:
 
@@ -117,11 +117,11 @@ Present the comparison results alongside the hypothesis verdict:
 
 ## Brainstorming Integration
 
-When brainstorming is active on a .NET project and `ensure_dotmemory` is available, apply ML rule knowledge to inform design questions and approach proposals. **No profiling happens during brainstorming** — no `snapshot` or `compare_snapshots` calls. This is knowledge application only.
+When brainstorming is active on a .NET project and the MemoryLens tools are available, apply ML rule knowledge to inform design questions and approach proposals. **No profiling happens during brainstorming** — no `snapshot` or `compare_snapshots` calls. This is knowledge application only.
 
 ### Trigger
 
-Check if `ensure_dotmemory` is available as an MCP tool. If it is and brainstorming is active on a .NET codebase, apply the guidance below.
+Check if the MemoryLens `snapshot` tool is available. If it is and brainstorming is active on a .NET codebase, apply the guidance below.
 
 ### What to Do
 
@@ -146,7 +146,6 @@ Raise these as design questions, not as blocking warnings. The goal is to surfac
 
 | Tool | Phase | Purpose |
 |------|-------|---------|
-| `ensure_dotmemory` | P1 | Verify/download dotMemory CLI |
 | `list_processes` | P1 | Find target .NET process |
 | `snapshot` | P1 | Capture memory state |
 | `analyze` | P1 | Run rule engine (ML001-ML010) |

@@ -1,7 +1,0 @@
-{
-  "memorylens": {
-    "command": "memorylens-mcp",
-    "args": [],
-    "transport": "stdio"
-  }
-}
