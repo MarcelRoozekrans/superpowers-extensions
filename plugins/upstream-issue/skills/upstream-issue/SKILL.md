@@ -58,7 +58,6 @@ Show the cause lies in upstream code. Trace into the upstream source, reproduce 
 "Latest" is the latest release. When upstream has no releases, it is the default branch. Do these checks yourself; the version the user has installed proves nothing about latest.
 
 - Read the changelog or releases, and the commits since the user's version.
-- Look at open pull requests and active branches that touch the symptom.
 - Re-run against the latest release, and against the default branch where that is cheap.
 
 **Exit:** it still fails on the latest release. Name the release or commit tested.
@@ -67,16 +66,15 @@ Show the cause lies in upstream code. Trace into the upstream source, reproduce 
 
 - Fixed in a release: "Fixed in version X", with the release link.
 - Fails on the latest release but passes on the default branch: "Fixed but not released yet", with the commit or pull request.
-- An open pull request fixes it: name and link it, and stop.
 
 ### 4. Search for existing reports
 
-Search open and closed issues, pull requests and discussions by error text, symbol names and the symptom in plain words. On GitHub, use `gh search issues` and `gh search prs` against the upstream repo. For any other tracker, search what you can read.
+Search open and closed issues, pull requests and discussions by error text, symbol names and the symptom in plain words. An open pull request that fixes the bug counts as an existing report. On GitHub, use `gh search issues` and `gh search prs` against the upstream repo. For any other tracker, search what you can read.
 
 **Exit:** a list of every query, where it ran and what it returned, plus what could not be searched, such as an unreachable mailing-list archive. Then one of:
 
 - **No match:** go on to phase 5.
-- **A match:** read the whole thread. A comment is drafted only when it adds something the thread lacks, such as a repro the issue does not have or newly affected versions. Name what the thread lacks and quote where you checked. That comment then goes through phases 5 to 8 like a new issue.
+- **A match,** including an open fix pull request: read the whole thread. A comment is drafted only when it adds something the thread lacks, such as a repro the issue does not have or newly affected versions. Name what the thread lacks and quote where you checked. That comment then goes through phases 5 to 8 like a new issue.
 
 **Stop:** a match where a comment would add nothing: give the user the link and stop. Never draft a bare "+1".
 
@@ -102,6 +100,8 @@ See [Drafting](#drafting).
 
 **Exit:** a draft that passed `anti-slop`, and a privacy scan with no unresolved hit.
 
+**Stop:** "I cannot finish the draft", naming what is missing: a field the upstream template requires that the evidence does not cover, or a privacy hit that can be neither replaced nor kept with a reason the user can judge.
+
 ### 8. Approve and post
 
 See [Approve and post](#approve-and-post).
@@ -119,20 +119,21 @@ Phase 6 dispatches two fresh subagents **in parallel, both on `sonnet`**:
 
 Fill only the placeholders each brief lists and send its fenced text. The skeptic gets no reasoning from you: not your suspected cause, not your reading of the docs, not your view of the search results beyond the facts the placeholders ask for. The agent that wants the bug to be real is not the one that decides it is real.
 
-Read the first line of each reply. That line is the verdict.
+Read the first line of each reply. That line is the verdict. Check the rows top to bottom and take the first that matches.
 
 | Skeptic | Clean runner | Next step |
 |---------|--------------|-----------|
-| `upheld` | `fails-as-claimed` | Go on to phase 7. |
-| `refuted` | any | Go back to the phase the strongest reason points at: misuse to 2, documented behaviour to 1, environment to 2, already fixed to 3, duplicate to 4. |
-| any | `passes` or `fails-differently` | Go back to phase 5, or to 2 when the clean output points away from upstream. |
-| any | `cannot-run-isolated` | **Stop.** Tell the user what the runner could not stand up. Do not run it yourself instead. |
+| any | `cannot-run-isolated` | **Stop,** whatever the skeptic said. Tell the user what the runner could not stand up. Do not run it yourself instead. |
 | no valid first line | any | Dispatch that brief again, once, with the same input. A second malformed reply stops the run. |
+| any | no valid first line | Same as the row above, for the clean runner. |
+| `upheld` | `fails-as-claimed` | Go on to phase 7. |
+| `refuted` | any | Go back to the phase the strongest reason points at: misuse to 2, documented behaviour to 1, environment to 2, already fixed to 3, duplicate to 4. When the clean runner failed too, this target wins; carry the runner's output into that phase. |
+| `upheld` | `passes` or `fails-differently` | Go back to phase 5, or to 2 when the clean output points away from upstream. |
 
 Rules:
 
 - **Verdicts are final.** Do not argue past a verdict, explain it away, or dispatch again to get a different answer. A loop-back means fixing what the verdict found and then dispatching both gates afresh.
-- **At most two loop-backs.** After the second failed round, stop and report both verdicts and their evidence to the user.
+- **At most two loop-backs.** A failed gate round uses one loop-back. When the third round fails, with both loop-backs used, stop and report every verdict from all three rounds, with its evidence, to the user.
 - **Keep the skeptic's Gaps section.** It lists the angles the skeptic could not fully check. Show it to the user at the approval step, next to the draft.
 
 ## Drafting
@@ -143,10 +144,10 @@ Rules:
 4. **Privacy.** Run the scanner over the draft and every repro file, allowing upstream's own domains:
 
    ```bash
-   node scripts/privacy-scan.mjs --allow <upstream-domain> [--allow <docs-domain>]... <draft> <repro-dir>
+   node <this skill's directory>/scripts/privacy-scan.mjs --allow <upstream-domain> [--allow <docs-domain>]... <draft> <repro-dir>
    ```
 
-   Without `--terms` it also reads the user's term list at `~/.claude/privacy-terms.txt` when that file exists. Exit 0 is clean, 1 lists hits as `file:line: kind: match`, 2 is a usage error. Fix every hit with a documentation value such as `example.com`, `192.0.2.1` or `<entry_id>`. When a hit seems necessary for the report, keep it only by showing it to the user explicitly at the approval step. Re-run until it exits 0 or only shown hits remain.
+   Exit 1 lists the hits. Fix every hit with a documentation value such as `example.com`, `192.0.2.1` or `<entry_id>`. When a hit seems necessary for the report, keep it only by showing it to the user explicitly at the approval step. Re-run until it exits 0 or only shown hits remain.
 
 Never repeat a private detail from the user's logs in chat either.
 
