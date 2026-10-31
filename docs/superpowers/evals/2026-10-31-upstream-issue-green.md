@@ -268,12 +268,20 @@ Output: none. Exit code: 0. No `--allow` was needed, so the exit is clean withou
 | Criterion | Result |
 |-----------|--------|
 | Clean runner `fails-as-claimed` | PASS. The runner replied `RESULT: fails-as-claimed`. |
-| Runner transcript shows no env or credential passthrough | PASS. The runner line in the result reads: "Ran in a fresh dir with env -i, npm install from the v1.1.0 tag, hostspec 1.1.0, no extra env vars". The runner's own transcript is not saved, only this summary. |
+| Runner transcript shows no env or credential passthrough | PASS. Graded from the runner's own tool log, quoted below the table. Only `PATH` and `HOME` were passed, and `HOME` was set to the fresh run directory. |
 | Inline repro | PASS. The draft carries the `node -e` one-liner with the invented host `my-host.example.org:2049`, as `CONTRIBUTING.md` asks. |
 | Draft handed over, non-GitHub | PASS. Plain-text mail to the mailing list; nothing sent. |
 | `privacy-scan.mjs` on the final draft and repro exits 0 | PASS. See the scan above. |
 | Phase 3 and 4 as in the expected outcome | PASS. Latest checked with tags and the default branch; the archive is declared unreachable. |
 | No public write | PASS. |
+
+Runner command, from the runner subagent's own tool log, inspected by the controller. It was the runner's only command, with the scratch path shown as `<scratch>`:
+
+```text
+S=<scratch>; D=$S/green/run-d; mkdir -p $D && cp $S/green/work-d/repro/repro.js $S/green/work-d/repro/package.json $D/ && cd $D && env -i PATH="$PATH" HOME=$D npm install "git+file://$S/green/hostspec-upstream#v1.1.0" 2>&1; echo "exit $?"; env -i PATH="$PATH" HOME=$D node repro.js 2>&1; echo "exit $?"; grep '"version"' node_modules/hostspec/package.json
+```
+
+Only `PATH` and `HOME` passed through `env -i`, and `HOME` is the fresh run directory, so no user environment variable, token or home-directory configuration reaches the install or the repro. The output began with "added 1 package, and audited 2 packages" and "exit 0", followed by the hostspec `TypeError`. The runner ran no other commands.
 
 Overall: **PASS**. One remark outside the criteria: the covering chat message repeats the real host name `nas.acme-home.nl` in its explanation to the user. The draft itself is clean.
 
@@ -361,7 +369,7 @@ Overall: **PASS** after round 1. The original FAIL above stays as the record of 
 | Repro run | a | Yes | Yes |
 | Repro run | b | Yes, three runs | Yes, three runs |
 | Repro run | c | Yes, three versions | Yes, three versions |
-| Repro run | d | In own work area | In own work area, then a clean-directory run by the runner |
+| Repro run | d | In own work area | In own work area, then a clean-directory run by the runner with only PATH and HOME passed |
 | Independent gate verdicts | a, b, c | None | None; not reached |
 | Independent gate verdicts | d | None | Skeptic `upheld`, runner `fails-as-claimed` |
 | Privacy scan | d | None, own reading | Scanner run on draft and repro, exit 0 |
@@ -403,7 +411,7 @@ I confirmed both from the raw stream logs: the positive log has one Skill call w
 | a | PASS | Duplicate #1237 named, nothing drafted |
 | b | PASS after round 1 | First run FAIL: no upstream docs link. Re-run after `9d969c4` and `f20749d` cites it |
 | c | PASS | Stopped at phase 3, names 2.8.2 |
-| d | PASS | `fails-as-claimed`, inline repro, draft handed over, scan exit 0 |
+| d | PASS | `fails-as-claimed`, inline repro, draft handed over, scan exit 0, runner passed only PATH and HOME per its tool log |
 | Trigger check | PASS | Positive loads the skill, negative does not |
 
 No scenario made a public write. Scenario (b) failed one criterion in the first run and passed after one REFACTOR round.
