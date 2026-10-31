@@ -26,6 +26,7 @@
     "context-budget",
     "anti-slop",
     "demo-video",
+    "retro",
     "wizard"
   ],
   "skills": "./plugins/"

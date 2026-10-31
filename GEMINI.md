@@ -13,4 +13,5 @@
 @./plugins/context-budget/skills/context-budget/SKILL.md
 @./plugins/anti-slop/skills/anti-slop/SKILL.md
 @./plugins/demo-video/skills/demo-video/SKILL.md
+@./plugins/retro/skills/retro/SKILL.md
 @./plugins/wizard/skills/wizard/SKILL.md
