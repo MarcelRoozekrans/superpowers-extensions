@@ -108,10 +108,14 @@ refuse and point at `new-milestone`.
    once and write them.
 3. List the active milestone's phases that are not `complete` and have no plan
    on disk. These are the phases to groom. A phase that already has a plan is
-   left alone, with one exception. If its design has a `**Builds on:**` entry and
-   the earlier phase's plan has no matching `guard` check, do step 4.5 for it.
-   This repairs a groom that was interrupted between writing a plan and
-   committing. *(My call.)* If the list is empty, skip to step 6.
+   not groomed again, but it gets the repairs `ready-check` would otherwise
+   reject it for: a missing `**Plan:**` line is written, a spec without
+   `**Status:** approved` gets the operator's approval and the line, a plan
+   without `## Checks` gets one per the plan rules below, and a `**Builds on:**`
+   entry whose earlier plan has no matching `guard` check gets step 4.5. These
+   repair a groom that was interrupted between writing a plan and committing,
+   and plans written before grooming existed. *(My call.)* If the list is
+   empty, skip to step 6.
 4. For each phase in roadmap order:
    1. **Design.** No design spec: read `superpowers:brainstorming` and follow it at
       phase scope with `templates/phase-design.template.md`, as `start-next-phase`
@@ -128,7 +132,8 @@ refuse and point at `new-milestone`.
       (including `## Checks`). Verify the plan file, then write the phase's
       `**Plan:**` line in ROADMAP.md. The phase stays `[status: pending]`.
    5. **Guard checks.** For each `**Builds on:**` entry, append a guard check to the
-      earlier phase's plan (see Later phases).
+      earlier phase's plan (see Later phases), creating its `## Checks` section
+      per the plan rules if it is absent.
    6. **Commit** the spec, plan, ROADMAP.md edit and any guard-check edits as one
       `docs` commit per phase, scope `plan`, per the Commit & Release Protocol.
       Verify a clean tree.
@@ -193,6 +198,10 @@ Phase 1.2's design is written against Phase 1.1's plan, not its code:
 - A `Builds on` phase that is already `active` still gets the guard check. If a
   new test step is needed, it goes into the plan as an unticked task, and the
   execution in flight picks it up. *(My call.)*
+- `insert-phase` and `remove-phase` renumber phases, so they rewrite the
+  `**Builds on:** Phase N.M` lines and `guard N.M` labels in the active
+  milestone's specs and plans to the new numbers. A renumbered phase with an
+  `unattended/phase-N-M` branch or open PR gets a warning, not a rename.
 - At run time, if 1.1 drifts from its plan, its guard check fails, three fix
   attempts later 1.1 parks, and 1.2 parks with it through `base`. Nothing builds
   on a moved interface.
