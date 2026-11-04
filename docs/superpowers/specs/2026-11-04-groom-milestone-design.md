@@ -201,7 +201,10 @@ Phase 1.2's design is written against Phase 1.1's plan, not its code:
 - `insert-phase` and `remove-phase` renumber phases, so they rewrite the
   `**Builds on:** Phase N.M` lines and `guard N.M` labels in the active
   milestone's specs and plans to the new numbers. A renumbered phase with an
-  `unattended/phase-N-M` branch or open PR gets a warning, not a rename.
+  `unattended/phase-N-M` branch or open PR gets a warning, not a rename. A
+  `**Builds on:**` line that named a removed phase becomes
+  `<removed Phase N.M>`, an open question: `ready-check` fails it and
+  `start-next-phase` holds that phase until the operator answers.
 - At run time, if 1.1 drifts from its plan, its guard check fails, three fix
   attempts later 1.1 parks, and 1.2 parks with it through `base`. Nothing builds
   on a moved interface.
@@ -229,9 +232,11 @@ Phase 1.2's design is written against Phase 1.1's plan, not its code:
   another container.)*
   - Open PR: report "Phase N.M has an open unattended PR: `<url>`. Review and merge
     it, then continue." and move to the next phase.
-  - Merged PR (`gh pr list --head unattended/phase-N-M --state merged`): the run
-    built the phase. Once the merge is on the current branch, run
-    `complete-phase` for it. Never treat it as unbuilt.
+  - Merged PR (`gh pr list --head unattended/phase-N-M --state merged`, run
+    whenever `gh` works, even when the branch is gone): the run built the
+    phase. Once the merge is on the current branch, run `complete-phase` for
+    it. A merge into its base run branch makes the phase wait until that branch
+    is merged down. Never treat it as unbuilt.
   - The branch exists but has no open PR, because the run parked the phase or
     the PR was closed unmerged: treat the phase as unbuilt and route it normally.
     Name the branch so the operator can look at it first.
