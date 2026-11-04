@@ -1,6 +1,6 @@
 # Phase N.M Design — `<Phase Name>`
 
-> Template consumed by `start-next-phase` when it routes to `superpowers:brainstorming` for a phase that has no design spec. The brainstorm fills in every section; `start-next-phase` then verifies the spec exists with a Surface declaration before chaining to the Surface pre-plan hook (UI: `ui-design-system` + `ui-workflow ui-phase`; Refactor: `refactor-analysis`; others: skip hook). Save the filled-in copy at `docs/superpowers/specs/YYYY-MM-DD-<phase>-design.md`.
+> Template consumed by `start-next-phase` and `groom-milestone` when they route to `superpowers:brainstorming` for a phase that has no design spec. The brainstorm fills in every section; the routing sub-skill then verifies the spec exists with a Surface declaration before chaining to the Surface pre-plan hook (UI: `ui-design-system` + `ui-workflow ui-phase`; Refactor: `refactor-analysis`; others: skip hook). Save the filled-in copy at `docs/superpowers/specs/YYYY-MM-DD-<phase>-design.md`.
 
 **Date:** YYYY-MM-DD
 **Phase:** `<N.M>`
@@ -8,11 +8,11 @@
 **Stage:** phase (one phase, implementation-ready)
 **Status:** draft
 
-> Whoever records the operator's approval sets the line to `**Status:** approved YYYY-MM-DD`: `groom-milestone`, or `start-next-phase` on the attended path. `ready-check` requires it.
+> Whoever records the operator's approval sets the status line to approved, followed by today's date: `groom-milestone`, or `start-next-phase` on the attended path. `ready-check` requires it.
 
 **Builds on:** Phase N.M — `<interfaces used>`
 
-> Optional. Delete the line when the phase builds on nothing. List the interfaces an earlier, not-yet-complete phase of this milestone creates, using the names that phase's plan fixes.
+> Optional. Delete the line when the phase builds on nothing. Write one `**Builds on:**` line per earlier phase. List the interfaces an earlier, not-yet-complete phase of this milestone creates, using the names that phase's plan fixes.
 >
 > The `**Surface:**` line above is REQUIRED. `start-next-phase`'s VERIFY step grep-checks it. If it is missing, the design spec is rejected and the brainstorm is re-run. The Surface value here MUST match what is declared in `docs/planning/ROADMAP.md` for this phase — if they disagree, fix ROADMAP.md or re-tag the phase, do not let them drift.
 
