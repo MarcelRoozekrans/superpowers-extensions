@@ -22,8 +22,10 @@ Park, do not decide, anything on this list: merge, release, deploy,
 force-push, posting outside the operator's own repos, deleting data, a new
 public API or breaking change, a step the design marks as needing the operator.
 
-Parking means writing the question into the run's state file and moving on to
-the next item.
+Parking means writing the question into `docs/planning/STATE.md` when it
+exists, otherwise `.claude/unattended-run.md`, and moving on to the next item.
+In queue mode, also set the item's `status` to `parked` and its `parkedReason`
+in `.claude/unattended-queue.json`.
 
 ## Finishing
 
