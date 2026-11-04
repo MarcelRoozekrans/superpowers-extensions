@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
-import { isUnattended, readQueue, openItem, checkAsk, checkStop, QUEUE_PATH } from './unattended.mjs';
+import { isUnattended, readQueue, openItem, checkAsk, checkStop, policyText, FALLBACK_POLICY, QUEUE_PATH } from './unattended.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const askPath = join(here, 'ask-check.mjs');
@@ -125,4 +125,45 @@ test('stop-check entry is silent when attended and leaves the queue untouched', 
   assert.equal(r.status, 0);
   assert.equal(r.stdout, '');
   assert.deepEqual(readFileSync(file), before);
+});
+
+const startPath = join(here, 'session-start.mjs');
+const policyHeading = readFileSync(join(here, '..', 'policy.md'), 'utf8').split('\n').find((l) => l.startsWith('#'));
+const startOut = (dir, source, env = ON) => spawn(startPath, JSON.stringify({ cwd: dir, source }), env, dir).stdout;
+const contextOf = (out) => {
+  const o = JSON.parse(out).hookSpecificOutput;
+  assert.equal(o.hookEventName, 'SessionStart');
+  return o.additionalContext;
+};
+
+test('session-start injects policy when unattended', () => {
+  const ctx = contextOf(startOut(tmp(), 'startup'));
+  assert.ok(ctx.includes(policyHeading));
+  assert.match(ctx, /Single-item mode/);
+});
+
+test('session-start is silent when attended', () => {
+  assert.equal(startOut(tmp(), 'startup', {}), '');
+});
+
+test('session-start re-injects on resume', () => {
+  const dir = tmp();
+  mkdirSync(join(dir, '.claude'));
+  writeFileSync(join(dir, QUEUE_PATH), JSON.stringify({ goal: 'g', items: [item('p1', 'done'), item('p2', 'running')] }));
+  const ctx = contextOf(startOut(dir, 'resume'));
+  assert.ok(ctx.includes(policyHeading));
+  assert.match(ctx, /the current item is p2 \(docs\/superpowers\/plans\/p2\.md\)/);
+});
+
+test('session-start injects policy with a broken queue', () => {
+  const dir = tmp();
+  mkdirSync(join(dir, '.claude'));
+  writeFileSync(join(dir, QUEUE_PATH), '{not json');
+  assert.match(contextOf(startOut(dir, 'startup')), /Single-item mode/);
+});
+
+test('session-start falls back when policy.md is missing', () => {
+  const text = policyText(tmp(), null);
+  assert.ok(text.startsWith(FALLBACK_POLICY));
+  assert.match(text, /Single-item mode/);
 });

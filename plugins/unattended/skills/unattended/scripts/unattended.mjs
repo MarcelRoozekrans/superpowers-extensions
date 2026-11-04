@@ -59,3 +59,20 @@ export function checkStop(env, queue) {
     reason: `Item ${item.id} parked after repeated stops; continue with item ${next.id}.`,
   };
 }
+
+export const FALLBACK_POLICY =
+  `Unattended run: no one will answer questions. Never wait for input. Take the Recommended option, log every such call in ${CALLS_PATH}, park anything irreversible or outward-facing, never merge.`;
+
+export function policyText(skillDir, queue) {
+  let policy;
+  try {
+    policy = readFileSync(join(skillDir, 'policy.md'), 'utf8').trimEnd();
+  } catch {
+    policy = FALLBACK_POLICY;
+  }
+  const item = queue ? openItem(queue) : null;
+  const entry = item
+    ? `Queue mode: work the queue in ${QUEUE_PATH}; the current item is ${item.id} (${item.plan}). Invoke the unattended skill.`
+    : 'Single-item mode: the session prompt is the item. Invoke the unattended skill.';
+  return `${policy}\n\n${entry}`;
+}
