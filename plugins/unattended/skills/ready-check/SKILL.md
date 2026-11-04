@@ -36,7 +36,7 @@ An item that still fails after the operator has answered is not queued. Tell the
 
 ## Queue
 
-Queue only the items that pass, in phase or plan order. For each item after the first, ask the operator with `AskUserQuestion` whether it builds on an earlier queued item. For a phase, read the `**Builds on:**` line of its design and recommend the latest queued phase it names. A phase that names none falls back to the previous queued item when it is a later roadmap phase. For a plan, or when nothing applies, recommend none. Record the answer as `base`. Write `.claude/unattended-queue.json`:
+Queue only the items that pass, in phase or plan order. For each item after the first, ask the operator with `AskUserQuestion` whether it builds on an earlier queued item. For a phase, read the `**Builds on:**` line of its design and recommend the latest queued phase it names. A phase that names none falls back to the previous queued item when it is a later roadmap phase. Ignore named phases that are `[status: complete]`, since their code is merged; when every named phase is complete, recommend `null`. A named phase that is neither complete nor queued cannot be built on: ask the operator with `AskUserQuestion` and recommend leaving this item out. For a plan, or when nothing applies, recommend none. Record the answer as `base`. Write `.claude/unattended-queue.json`:
 
 ```json
 {
