@@ -18,14 +18,14 @@ The rules live in [policy.md](policy.md), which the session start hook has alrea
 
 ## Queue mode
 
-The queue is `{ "items": [...] }`. Each item has an `id`, a `plan`, and a `status` of `queued`, `running`, `done` or `parked`. The next item is the first one with status `running`, otherwise the first `queued` one. For each item:
+The queue is `{ "items": [...] }`. Each item has an `id`, a `plan`, a `pr` (null until the PR is open) and a `status` of `queued`, `running`, `done` or `parked`. The next item is the first one with status `running`, otherwise the first `queued` one. For each item:
 
 1. Set its `status` to `running` in the queue file.
 2. Branch from the default branch as `unattended/<id>`.
 3. Execute the plan with `superpowers:subagent-driven-development`.
 4. Run each command under the plan's `## Checks`. A failing check gets three fix attempts. If it still fails, park the item and attach the failure.
 5. Open a PR. Add a `## Unattended calls` section to the body, copied from this item's `## <id>` section in `.claude/unattended-calls.md`. Apply `anti-slop` to the prose when it is installed.
-6. Set the item to `done` with the PR URL, then take the next item.
+6. Set the item to `done` and set `pr` to the PR URL, then take the next item.
 
 A parked item does not stop the run. Continue with the next one.
 
