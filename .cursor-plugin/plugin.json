@@ -29,7 +29,8 @@
     "retro",
     "wizard",
     "upstream-issue",
-    "architecture-scan"
+    "architecture-scan",
+    "unattended"
   ],
   "skills": "./plugins/"
 }

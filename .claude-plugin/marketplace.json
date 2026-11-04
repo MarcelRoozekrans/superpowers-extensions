@@ -202,6 +202,16 @@
       },
       "source": "./plugins/architecture-scan",
       "category": "code-quality"
+    },
+    {
+      "name": "unattended",
+      "description": "Runs a groomed queue of plans without a human present: denies questions nobody will answer, keeps stops from ending the run early, and logs every call made on the user's behalf. Includes ready-check, which checks the work is ready and writes the queue.",
+      "version": "1.28.0",
+      "author": {
+        "name": "Marcel Roozekrans"
+      },
+      "source": "./plugins/unattended",
+      "category": "workflow"
     }
   ]
 }

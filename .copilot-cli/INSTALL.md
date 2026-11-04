@@ -37,6 +37,7 @@ copilot plugin install retro
 copilot plugin install wizard
 copilot plugin install upstream-issue
 copilot plugin install architecture-scan
+copilot plugin install unattended
 ```
 
 ## Tool name mapping
@@ -59,10 +60,10 @@ In a Copilot CLI session, ask:
 
 > What skills do you have loaded?
 
-The agent should list the twenty skills from this suite (regression-test,
+The agent should list the twenty-two skills from this suite (regression-test,
 pre-push-review, refactor-analysis, decision-tracker,
 roslyn-codelens-integration, memorylens-integration, project-orchestration,
-ui-workflow, ui-design-system, squad, compress-memory, logo-design, context-budget, anti-slop, demo-video, retro, wizard, upstream-issue, architecture-scan, codebase-design).
+ui-workflow, ui-design-system, squad, compress-memory, logo-design, context-budget, anti-slop, demo-video, retro, wizard, upstream-issue, architecture-scan, codebase-design, unattended, ready-check).
 
 ## Updating
 
