@@ -20,9 +20,9 @@ When this skill chains to a sub-skill (`brainstorming`, `writing-plans`, `execut
 
 If the artifact is missing, the previous step did not complete — return to it. Do not proceed with the next link in the chain on faith.
 
-**Brainstorming's hand-off when this skill drives it.** Upstream brainstorming (superpowers v7+) ends with "invoke superpowers:writing-plans and no other skill". That line keeps an agent from jumping to implementation. When `start-next-phase`, `plan-roadmap`, or `new-milestone` drives brainstorming, its job ends at the approved design: return here and continue from this skill's routing. The Surface pre-plan hook between brainstorming and writing-plans runs skills that only write documents (`ui-design-system`, `ui-workflow ui-phase`, `refactor-analysis`), so brainstorming's gate still holds: nothing gets built before the design is approved and planned. `plan-roadmap` and `new-milestone` do not chain to writing-plans at all; they write planning files from the approved design.
+**Brainstorming's hand-off when this skill drives it.** Upstream brainstorming (superpowers v7+) ends with "invoke superpowers:writing-plans and no other skill". That line keeps an agent from jumping to implementation. When `start-next-phase`, `groom-milestone`, `plan-roadmap`, or `new-milestone` drives brainstorming, its job ends at the approved design: return here and continue from this skill's routing. The Surface pre-plan hook between brainstorming and writing-plans runs skills that only write documents (`ui-design-system`, `ui-workflow ui-phase`, `refactor-analysis`), so brainstorming's gate still holds: nothing gets built before the design is approved and planned. `plan-roadmap` and `new-milestone` do not chain to writing-plans at all; they write planning files from the approved design.
 
-**Writing-plans when this skill drives it.** Plans keep each task small enough for one implementer to finish in a short run. Split a task that touches more than about five files, or that combines a new component with its integration. A task that is genuinely hard (architecture, tricky concurrency, cross-module work) gets a `**Model:** opus` line with a one-line reason; a task without the mark runs on Sonnet. Execution follows `context-budget` `## Model Choice`, and `pause-work` is the handoff `context-budget` uses under `## Fresh-Session Handoff` when `docs/planning/STATE.md` exists.
+**Writing-plans when this skill drives it.** Plans keep each task small enough for one implementer to finish in a short run. Split a task that touches more than about five files, or that combines a new component with its integration. A task that is genuinely hard (architecture, tricky concurrency, cross-module work) gets a `**Model:** opus` line with a one-line reason; a task without the mark runs on Sonnet. Every plan ends with a `## Checks` section in the format the `unattended` plugin reads: at least one ``- build: `cmd` `` bullet taken from CONVENTIONS.md `**Build:**` and one ``- tests: `cmd` `` bullet taken from `**Test:**`. When either line is `none` or missing, ask the operator for the command before writing the plan, and write the answer into CONVENTIONS.md. Execution follows `context-budget` `## Model Choice`, and `pause-work` is the handoff `context-budget` uses under `## Fresh-Session Handoff` when `docs/planning/STATE.md` exists.
 
 **State file writes (separate gate, applies to every sub-skill below that touches `docs/planning/`):**
 
@@ -501,13 +501,13 @@ If you encounter a malformed state file that `resume-work` cannot parse — fron
 
 ### When to Use
 
-When a phase's plan is finished — all tasks in `docs/superpowers/plans/YYYY-MM-DD-<phase>.md` are checked off (`- [x]`), tests pass, and `executing-plans` returned a clean state. Promotes the phase from `active` to `complete` in the planning files.
+When a phase's plan is finished — all tasks in `docs/superpowers/plans/YYYY-MM-DD-<phase>.md` are checked off (`- [x]`), tests pass, and `executing-plans` returned a clean state. Promotes the phase from `active` to `complete` in the planning files. A phase built by an unattended run is still `pending` when its PR merges; `complete-phase` promotes it from `pending` to `complete` directly.
 
 This sub-skill closes the loop that was missing: without it, `executing-plans` finishes a phase but ROADMAP.md still shows the phase as `active`, so the next session sees stale state and `start-next-phase` routes back to the same already-finished phase.
 
-`start-next-phase` invokes `complete-phase` automatically when it detects an `active` phase whose plan is fully checked off (see `start-next-phase` step 1 below). Manual invocation is also supported when the user says "mark phase N.M complete" or "wrap up this phase".
+`start-next-phase` invokes `complete-phase` automatically when it detects an `active` or `pending` phase whose plan has at least one checkbox and is fully checked off (see `start-next-phase` step 1 below). Manual invocation is also supported when the user says "mark phase N.M complete" or "wrap up this phase".
 
-**Pre-condition:** the phase's plan file exists, all task checkboxes in it are `- [x]`, and the phase is currently `[status: active]` in ROADMAP.md. If the phase is already `[status: complete]`, this sub-skill is a no-op.
+**Pre-condition:** the phase's plan file exists, it has at least one checkbox, all task checkboxes in it are `- [x]`, and the phase is currently `[status: active]` or `[status: pending]` in ROADMAP.md. If the phase is already `[status: complete]`, this sub-skill is a no-op.
 
 ### Announce Line
 
@@ -515,16 +515,22 @@ This sub-skill closes the loop that was missing: without it, `executing-plans` f
 
 ### Process
 
-1. **Read** `docs/planning/ROADMAP.md` and confirm the target phase is `[status: active]`. If it's already `[status: complete]`, exit silently — this is a no-op. If it's `[status: pending]`, refuse: "Phase N.M is pending, not active. Run `start-next-phase` to begin work first." and exit.
+1. **Read** `docs/planning/ROADMAP.md` and confirm the target phase is `[status: active]` or `[status: pending]`. If it's already `[status: complete]`, exit silently — this is a no-op.
 
-2. **Read** the plan file referenced by the phase's `Plan:` line. Confirm all task checkboxes are `- [x]`. If any `- [ ]` remain, refuse: "Phase N.M has unchecked tasks — execution is not complete. Resume `executing-plans` first." and exit.
+2. **Read** the plan file referenced by the phase's `Plan:` line. If it has no checkboxes at all, refuse: "Phase N.M's plan has no checkboxes — nothing shows it was executed." and exit. Confirm all task checkboxes are `- [x]`. If any `- [ ]` remain, refuse: "Phase N.M has unchecked tasks — execution is not complete. Resume `executing-plans` first." and exit.
 
 3. **Use the `Edit` tool** on `docs/planning/ROADMAP.md` to make TWO precise edits to the phase's block. The exact transitions are:
 
-   **Before:**
+   **Before** (`active` on the attended path, `pending` after an unattended run's PR merges):
 
    ```markdown
    ### Phase 1.2: <Name> [status: active]
+   **Goal:** <one sentence>
+   **Plan:** `docs/superpowers/plans/<plan-file>.md`
+   ```
+
+   ```markdown
+   ### Phase 1.2: <Name> [status: pending]
    **Goal:** <one sentence>
    **Plan:** `docs/superpowers/plans/<plan-file>.md`
    ```
@@ -538,13 +544,13 @@ This sub-skill closes the loop that was missing: without it, `executing-plans` f
    **Completed:** YYYY-MM-DD
    ```
 
-   Two changes: (a) `[status: active]` → `[status: complete]` in the heading, (b) add `**Completed:** YYYY-MM-DD` line below `**Plan:**` with today's actual date.
+   Two changes: (a) `[status: active]` or `[status: pending]` → `[status: complete]` in the heading, (b) add `**Completed:** YYYY-MM-DD` line below `**Plan:**` with today's actual date.
 
 4. **VERIFY:** re-read `docs/planning/ROADMAP.md` and confirm both edits landed — the heading shows `[status: complete]`, the `**Completed:** ...` line is present, and no other phase was accidentally modified.
 
 5. **Use the `Edit` tool** on `docs/planning/MILESTONE.md` to update the `## Phases` list. The exact transition is:
 
-   **Before:**
+   **Before** (`[active]` or `[pending]`, matching ROADMAP.md):
 
    ```markdown
    2. Phase 1.2 — <name> [active]
@@ -592,9 +598,16 @@ After `resume-work` confirmation, or any time the user says "continue", "next", 
 
 ### Process
 
-1. Read `docs/planning/ROADMAP.md` and `docs/planning/MILESTONE.md`. **Before identifying the next phase**, check whether any phase in the current milestone is `[status: active]` AND its plan file has all tasks checked off (`- [x]`). If yes, **run `complete-phase` first** to promote it from `active` to `complete`. This closes the loop after the previous session — without it, every continuation routes back to the already-finished phase.
+1. Read `docs/planning/ROADMAP.md` and `docs/planning/MILESTONE.md`. **Before identifying the next phase**, check whether any phase in the current milestone is `[status: active]` or `[status: pending]` AND its plan file exists, has at least one checkbox, and has all of them checked off (`- [x]`). If yes, **run `complete-phase` first** to promote it to `complete`. This closes the loop after the previous session — without it, every continuation routes back to the already-finished phase. A `pending` phase with a fully ticked plan is one an unattended run built: the ticked plan reached the default branch when the operator merged its PR. A plan with no checkboxes shows nothing was executed, so it never closes a phase.
 
-2. After any pending `complete-phase` runs, identify the **next non-complete phase** (first phase with status `active`, falling back to first `pending` phase).
+2. After any pending `complete-phase` runs, identify the **next non-complete phase** (first phase with status `active`, falling back to the first `pending` phase in roadmap order). **Before routing it, run the open-PR check**, because an unattended run may already have built it:
+   - If `gh` works (`gh auth status` succeeds), run `gh pr list --head unattended/phase-N-M --state open`, where `N-M` is the phase number with a dash, such as `unattended/phase-1-2`.
+     - **Open PR:** report "Phase N.M has an open unattended PR: `<url>`. Review and merge it, then continue." The phase waits; move on to the next non-complete phase and run this check on it.
+     - **Branch exists, no open PR:** the run parked the phase, or the PR was closed unmerged. Treat the phase as unbuilt and route it normally, but first name the branch: "Branch `unattended/phase-N-M` exists with no open PR. Look at it before this phase is built again."
+     - **No branch:** route the phase normally.
+   - If `gh` is missing or not authenticated, check whether the branch exists with `git ls-remote --heads origin unattended/phase-N-M`. If it exists, report "Branch `unattended/phase-N-M` exists on origin; its PR state is unknown without `gh`. Check it, then continue." and let the operator say whether the phase waits. If it does not exist, route the phase normally.
+   - **Waiting on an earlier phase:** a phase whose design spec has a `**Builds on:**` line naming a phase that is not complete waits too, and is never built without that phase's code. Report "Phase 1.2 waits on Phase 1.1." and move on. A phase with no `**Builds on:**` line, or whose named phases are all complete, proceeds.
+   - If every non-complete phase waits, stop and report the waiting phases. There is nothing to route until a PR merges.
 
 3. Check artifacts for that phase:
    - **Surface** — read the phase block's `**Surface:**` line in ROADMAP.md. Drives the pre-plan hook in step 5. Missing or `Mixed` falls through to default routing.
@@ -611,8 +624,9 @@ After `resume-work` confirmation, or any time the user says "continue", "next", 
    |---|---|---|---|
    | `active` | — | exists | **Read** `list-phase-assumptions` (this skill) → on user confirmation, **read** the `superpowers:executing-plans` skill and follow it end-to-end |
    | `active` | exists | missing | Run **Surface pre-plan hook** (step 5) → **read** the `superpowers:writing-plans` skill and follow it end-to-end. **VERIFY:** plan file exists. Then run `list-phase-assumptions` → `superpowers:executing-plans` |
+   | `pending` | exists | exists | Groomed phase (see [state-files.md](state-files.md)). **Use the `Edit` tool** to set `[status: active]` on the phase in ROADMAP.md and `[active]` in MILESTONE.md's `## Phases` list. **VERIFY** both edits, then commit per [Commit & Release Protocol](#commit--release-protocol) with `type=chore, scope=roadmap, subject=start phase N.M — <name>`. Then **read** `list-phase-assumptions` (this skill) → on user confirmation, **read** the `superpowers:executing-plans` skill and follow it end-to-end |
    | `pending` | exists | missing | Run **Surface pre-plan hook** (step 5) → **read** the `superpowers:writing-plans` skill and follow it end-to-end. **VERIFY:** plan file exists. Then run `list-phase-assumptions` → `superpowers:executing-plans` |
-   | `pending` | missing | missing | **Read** the `superpowers:brainstorming` skill and follow it end-to-end. The brainstorm fills in [templates/phase-design.template.md](templates/phase-design.template.md) and saves it at `docs/superpowers/specs/YYYY-MM-DD-<phase>-design.md`. **VERIFY:** design spec exists AND its `**Surface:**` line matches the phase's Surface in ROADMAP.md. If Surface is missing or mismatched, the brainstorm did not complete — re-run it. Then run **Surface pre-plan hook** (step 5) → chain to `superpowers:writing-plans` (verify plan file) → `list-phase-assumptions` → `superpowers:executing-plans` |
+   | `pending` | missing | missing | **Read** the `superpowers:brainstorming` skill and follow it end-to-end. The brainstorm fills in [templates/phase-design.template.md](templates/phase-design.template.md) and saves it at `docs/superpowers/specs/YYYY-MM-DD-<phase>-design.md`. On the operator's approval, set the spec's `**Status:** draft` to `**Status:** approved YYYY-MM-DD` with today's date. **VERIFY:** design spec exists AND its `**Surface:**` line matches the phase's Surface in ROADMAP.md. If Surface is missing or mismatched, the brainstorm did not complete — re-run it. Then run **Surface pre-plan hook** (step 5) → chain to `superpowers:writing-plans` (verify plan file) → `list-phase-assumptions` → `superpowers:executing-plans` |
 
 5. **Surface pre-plan hook** — fires once a design spec exists for the phase and BEFORE chaining to `superpowers:writing-plans`. Reads the phase's `**Surface:**` value from ROADMAP.md and applies:
 
@@ -651,20 +665,27 @@ resume-work / "continue" / "next"
         │
         ▼
   ┌──────────────────────┐
-  │ Active phase with    │  Yes   ┌─────────────────┐
-  │ all tasks checked?   ├───────►│ complete-phase  │
-  │ (cleanup last run)   │        │ (active → done) │
-  └────────┬─────────────┘        └────────┬────────┘
+  │ Active/pending phase │  Yes   ┌──────────────────┐
+  │ with ≥1 checkbox,    ├───────►│ complete-phase   │
+  │ all checked?         │        │ (active/pending  │
+  │ (cleanup last run)   │        │  → done)         │
+  └────────┬─────────────┘        └────────┬─────────┘
            │ No                            │
            ◄───────────────────────────────┘
            │
            ▼
   ┌──────────────────┐
-  │ Find next phase   │
-  │ (first non-       │
-  │  complete phase)  │
-  └────────┬──────────┘
-           │
+  │ Find next phase   │◄─────────────────────────┐
+  │ (first non-       │                          │
+  │  complete phase)  │                          │
+  └────────┬──────────┘                          │
+           │                                     │
+     ┌─────▼──────────────┐  Yes  ┌─────────────┴──────────┐
+     │ Open unattended PR,│──────►│ Report and skip:       │
+     │ or Builds on a     │       │ "PR open: <url>" or    │
+     │ non-complete phase?│       │ "1.2 waits on 1.1"     │
+     └─────┬──────────────┘       └────────────────────────┘
+           │ No (a branch with no open PR: name it, route on)
      ┌─────▼──────┐    No     ┌──────────────────┐
      │ Design spec├──────────►│ brainstorming    │──┐
      │ exists?    │           │ (verify spec)    │  │
@@ -691,6 +712,8 @@ resume-work / "continue" / "next"
            │                  │ └────────┬─────────────────┘ │
            │                  └──────────┼───────────────────┘
            │                             │
+           │ pending (groomed)?          │
+           │ set [status: active] first  │
      ┌─────▼──────────────┐              │
      │ list-phase-         │◄────────────┘
      │ assumptions         │
@@ -1043,7 +1066,7 @@ After `complete-milestone`, or when the user wants to start a new version cycle 
 
 9. Stage `git add docs/planning/MILESTONE.md docs/planning/ROADMAP.md`, then commit per [Commit & Release Protocol](#commit--release-protocol) with `type=chore, scope=milestone, subject=start milestone N+1 — <name>`. Run `git status` and confirm a clean tree.
 
-10. Announce only after the commit succeeds: "Milestone N+1 — {name} started. Use `add-phase` to add the first phase, or `start-next-phase` to chain into brainstorming/writing-plans/executing-plans for phase 1."
+10. Announce only after the commit succeeds: "Milestone N+1 — {name} started. Use `add-phase` to add the first phase, or `start-next-phase` to chain into brainstorming/writing-plans/executing-plans for phase 1. Once the phases are added, `groom-milestone` designs and plans all of them in one sitting, so an unattended run can build the milestone without you."
 
 ---
 
