@@ -1,6 +1,6 @@
 ---
 name: project-orchestration
-description: Use for multi-session project lifecycle management. Triggers on kickoff phrases ("plan the roadmap", "new project", "start a project from scratch", "greenfield", "what milestones do we need"); session lifecycle ("resume", "continue", "where are we", "pause", "I'm done for today"); phase/milestone ops ("add a phase", "new milestone", "audit the milestone", "complete the milestone"); session start on a project with a docs/planning/ directory; or an empty/greenfield repo where the user signals multi-milestone work. Covers greenfield kickoff via plan-roadmap (whole-project brainstorm covering 3-7 milestones, NOT one phase or one milestone), brownfield codebase mapping, phase management, session pause/resume via STATE.md, milestone audit/completion, and routing via start-next-phase. Skip for one-off features that fit a single brainstorming → writing-plans → executing-plans cycle without milestones.
+description: Use for multi-session project lifecycle management. Triggers on kickoff phrases ("plan the roadmap", "new project", "start a project from scratch", "greenfield", "what milestones do we need"); session lifecycle ("resume", "continue", "where are we", "pause", "I'm done for today"); phase/milestone ops ("add a phase", "new milestone", "groom the milestone", "audit the milestone", "complete the milestone"); session start on a project with a docs/planning/ directory; or an empty/greenfield repo where the user signals multi-milestone work. Covers greenfield kickoff via plan-roadmap (whole-project brainstorm covering 3-7 milestones, NOT one phase or one milestone), brownfield codebase mapping, phase management, session pause/resume via STATE.md, milestone audit/completion, and routing via start-next-phase. Skip for one-off features that fit a single brainstorming → writing-plans → executing-plans cycle without milestones.
 ---
 
 # Project Orchestration Skill
@@ -435,8 +435,8 @@ When the user is stopping work and wants to preserve context for next session. T
 1. Identify current position: which milestone, which phase, which task was last completed.
 2. Identify open decisions or blockers (from the conversation context).
 3. Determine recommended next step.
-4. **Use the `Write` tool** to create or overwrite `docs/planning/STATE.md` with the handoff note (see [state-files.md](state-files.md) for format). Do not narrate the content — write the file.
-5. **VERIFY:** re-read `docs/planning/STATE.md` and confirm the handoff note is present with all required sections (Current Position, Open Decisions, Blockers, Recommended Next Step). If any section is missing, the write did not capture it — re-write.
+4. **Use the `Write` tool** to create or overwrite `docs/planning/STATE.md` with the handoff note (see [state-files.md](state-files.md) for format). Do not narrate the content — write the file. When `groom-milestone` is mid-run, include the `## Grooming` section with `Grooming: milestone N, next phase N.M`, naming the next phase to groom. Otherwise leave that section out.
+5. **VERIFY:** re-read `docs/planning/STATE.md` and confirm the handoff note is present with all required sections (Current Position, Open Decisions, Blockers, Recommended Next Step), plus `## Grooming` when step 4 wrote it. If any section is missing, the write did not capture it — re-write.
 6. **Compress state files (if enabled).** Read `docs/planning/ROADMAP.md` and check whether its YAML frontmatter contains `compress_memory: enabled`.
 
    - If `enabled`: invoke the `compress-memory` skill on `docs/planning/STATE.md`. Then, if `git diff --quiet HEAD -- docs/planning/ROADMAP.md` exits non-zero (i.e. ROADMAP.md has changed since the last commit), also invoke `compress-memory` on `docs/planning/ROADMAP.md`.
@@ -478,12 +478,13 @@ The post-compaction trigger exists because conversation summarizers do not have 
    > **Current phase:** N.M — Name
    > **Last completed:** Task description
    > **Open decisions:** (list if any)
+   > **Grooming:** milestone N, next phase N.M (only when STATE.md has a `## Grooming` section)
    > **Recommended next step:** Description
    >
    > Ready to continue?
 
 4. If `decision-tracker` is active for this project, trigger decision recall now to restore cross-cutting decisions alongside session state.
-5. On confirmation, invoke `start-next-phase` to determine and execute the next action.
+5. On confirmation, invoke `start-next-phase` to determine and execute the next action. If STATE.md has a `## Grooming` section, invoke `groom-milestone` instead. It resumes at its step 3 and, when nothing is left to groom, ends with its hand-off.
 
 > **CRITICAL:** Do NOT ask the user "what would you like to do?" after presenting the resume summary. The `start-next-phase` sub-skill determines the correct next action automatically. The user said "resume" — that means "continue working", not "present me a menu".
 
@@ -742,6 +743,50 @@ resume-work / "continue" / "next"
                                        │ └─────────────────────────┘ │
                                        └─────────────────────────────┘
 ```
+
+---
+
+## groom-milestone
+
+### When to Use
+
+When the operator wants to answer every design and plan question of the active milestone in one sitting, so its phases can be built later without them: by an unattended run, or attended through `start-next-phase`. Triggers on: "groom the milestone", "groom milestone N", "prep this milestone for an unattended run", "answer everything up front". `new-milestone`'s closing announce line also offers it.
+
+Grooming writes designs and plans. It never executes a plan.
+
+**Pre-condition:** a milestone is `[status: active]` in `docs/planning/ROADMAP.md`. If none is, refuse: "No milestone is active. Run `new-milestone` first." If the operator names a milestone that is not the active one, refuse: "Only the active milestone can be groomed. Milestone N is not active."
+
+### Announce Line
+
+> "Grooming milestone N — design and plan every pending phase, no execution."
+
+### Process
+
+1. **Read** `docs/planning/ROADMAP.md`, `docs/planning/MILESTONE.md` and `docs/planning/CONVENTIONS.md`. Run `complete-phase` for any phase that `start-next-phase` step 1 would close.
+
+2. **Check commands.** Apply the HARD-GATE's writing-plans `## Checks` rule now, once for the whole milestone, instead of at the first plan. When it asks for a command, propose one found in the repo, such as a `package.json` script, a `.sln` or a Makefile target. Stage the CONVENTIONS.md edit with the run's first commit, a repair in step 3 or the first phase in step 4.6. If step 3 finds nothing to groom or repair, commit it on its own per [Commit & Release Protocol](#commit--release-protocol) with `type=chore, scope=state, subject=record build and test commands`.
+
+3. **List the phases to groom:** the active milestone's phases that are not `[status: complete]` and have no plan file on disk. Look for plans as `start-next-phase` step 3 does, including the legacy `docs/plans/` layout. A phase that already has a plan is left alone, with one exception. If its design has a `**Builds on:**` entry and the earlier phase's plan has no matching `guard` check, run step 4.5 for it, then commit as in step 4.6. This repairs a groom that was interrupted between writing a plan and committing. If no phase is left to groom, skip to step 6.
+
+4. **For each phase, in roadmap order:**
+
+   1. **Design.** If the phase has no design spec, **read** the `superpowers:brainstorming` skill and follow it end-to-end at phase scope, as the `pending | missing | missing` row of `start-next-phase` step 4 does. The brainstorm fills in [templates/phase-design.template.md](templates/phase-design.template.md) and saves it at `docs/superpowers/specs/YYYY-MM-DD-<phase>-design.md`. On the operator's approval, set `**Status:** draft` to `**Status:** approved YYYY-MM-DD` with today's date. A spec that exists but is not approved, with no status line or with `draft`, gets the operator's approval now, or a re-run of the brainstorm. Never plan over an unapproved design. **VERIFY:** the spec exists, its `**Surface:**` line matches the phase's Surface in ROADMAP.md, and it reads `**Status:** approved YYYY-MM-DD`.
+   2. **Builds on.** If the phase uses anything that an earlier phase of this milestone creates, and that phase is not complete, the design says so on a line `**Builds on:** Phase N.M —` followed by the interfaces it uses: the type, function, endpoint or table names. That phase's code does not exist yet, so take the names and signatures from its plan. This phase's plan then uses exactly those names. An earlier phase that is `active` counts too. **VERIFY:** every `**Builds on:**` line names a real phase and real interfaces. A line that still reads `Phase N.M` or holds a `<...>` placeholder is an open question, and `ready-check` fails it.
+   3. **Surface pre-plan hook.** Run it exactly as `start-next-phase` step 5, including its VERIFY.
+   4. **Plan.** **Read** the `superpowers:writing-plans` skill and follow it end-to-end. Supply the execution method up front, in these words: "Execution method: none now. This plan is built later, by an unattended run or by `start-next-phase`. Review only; do not execute." writing-plans then asks the operator to review the plan and stops there. The plan follows the HARD-GATE's writing-plans rules, `## Checks` included. **VERIFY:** the plan file exists and has a `## Checks` section. Then **use the `Edit` tool** to write the phase's `**Plan:**` line in ROADMAP.md, and **VERIFY** it by re-reading the file. The phase keeps its status: a `pending` phase stays `[status: pending]`.
+   5. **Guard checks.** For each `**Builds on:**` entry, append one guard check to the earlier phase's plan, under its `## Checks`. For Phase 1.2 building on Phase 1.1, that is ``- guard 1.2: `cmd` `` in Phase 1.1's plan. The command is a build or test command that exercises the interfaces named on the line, normally a test that 1.1's plan already adds. If 1.1's plan has no such test, add a task to 1.1's plan that writes one, and point the guard at it. A Phase 1.1 that is already `active` still gets the guard. A new test task goes in unticked, and the execution in flight picks it up. The `guard` label tells `ready-check` that the check may fail at the base. **VERIFY:** re-read the earlier plan and confirm the guard bullet is under `## Checks`.
+   6. **Commit.** Stage the spec, the plan, ROADMAP.md, any guard-check edits, and any Surface artifact the hook left uncommitted. Commit them as one commit per phase, per [Commit & Release Protocol](#commit--release-protocol) with `type=docs, scope=plan, subject=groom phase N.M — <name>`. Run `git status` and confirm a clean tree.
+
+5. **Between phases,** apply the handoff rule in `context-budget` `## Fresh-Session Handoff`. A finished phase groom is a natural break. On handoff, `pause-work` writes the STATE.md `## Grooming` section with `Grooming: milestone N, next phase N.M`, naming the next phase to groom. The new session re-enters `groom-milestone`. It resumes at step 3, because the groomed phases now have plans.
+
+6. **Hand off.** If the `unattended` plugin is installed, announce: "Milestone N is groomed. Run `ready-check` to queue it, or `start-next-phase` to build it attended." Otherwise announce: "Milestone N is groomed. Run `start-next-phase` to build it." Do not invoke `ready-check` unasked; the operator may want to build attended.
+
+### Never
+
+- Execute a plan, or start `executing-plans` or `subagent-driven-development`.
+- Set a groomed phase `[status: active]`.
+- Groom a phase outside the active milestone.
+- Start an unattended run.
 
 ---
 
@@ -1104,6 +1149,10 @@ After `complete-milestone`, or when the user wants to start a new version cycle 
 
 15. **"I'll just commit with `chore(...)` like the examples show"** — The examples are gone. Read `docs/planning/CONVENTIONS.md` and follow the [Commit & Release Protocol](#commit--release-protocol) — the host project's lint config decides the format, not this skill. Every call site now passes a `type` / `scope` / `subject` triple and lets the protocol render it; copying a message shape out of this file's history is how the hardcodes got here in the first place, and it is exactly the message the host's commitlint may reject.
 
+16. **Executing a plan during grooming** — `groom-milestone` stops at the reviewed plan. Running `executing-plans` or `subagent-driven-development` from it builds a phase that an unattended run will build again, and leaves ROADMAP.md saying `pending` for work that is done. The operator chooses how the milestone is built, after grooming ends.
+
+17. **Grooming a phase outside the active milestone** — A later milestone's plan is written against code that the active milestone has not built yet, so its names are guesses on top of guesses. Groom the active milestone, build it, then groom the next.
+
 ## Common Rationalizations
 
 | Rationalization | Why It's Wrong | Correct Action |
@@ -1130,6 +1179,8 @@ After `complete-milestone`, or when the user wants to start a new version cycle 
 | "External dev closed the issue, the work is done" | Closed-on-GitHub is a *signal*, not state. The maintainer reviews the evidence and runs `complete-phase` locally; that is what writes the authoritative status. | Read the advisory comment posted by `detect-external-signals`. Decide. If genuinely done, run `complete-phase`; if not, reopen on GitHub or leave it pending. |
 | "Sync failed; let me fix the file directly" | If `sync-github` fails, the desired GitHub state was not achieved, but ROADMAP.md is unaffected and still correct. Editing ROADMAP.md to "compensate" inverts the projection direction and corrupts the source of truth. | Investigate the `gh` failure (auth, network, rate limit, deleted issue). Re-run `sync-github`. Leave ROADMAP.md alone unless the local state itself is wrong. |
 | "I'll skip the dry-run, it's fine" | Dry-run is the fastest way to catch label/title/permission/repo-name mistakes before they create real GitHub state that has to be cleaned up afterwards. | Use `--dry-run` on first `init-github-sync` and after any structural change (renamed phase, new label scheme, repo move). Only run for-real after the dry-run output looks correct. |
+| "I'll add the guard check when I plan the later phase" | The guard belongs in the commit that writes the `**Builds on:**` line. Put off, it is lost at the next handoff, and in a run Phase 1.1 can drift from its plan while Phase 1.2 still builds on the moved interface, with nothing failing | Append the guard in step 4.5, before the step 4.6 commit of the phase whose design has the `**Builds on:**` line |
+| "The plan is reviewed, let me just run it" | Grooming hands the milestone to `ready-check` or `start-next-phase`. Running the plan here skips `list-phase-assumptions` and the operator's choice between an unattended and an attended build | Commit the plan and move to the next phase. Build later, through `start-next-phase` or an unattended run |
 
 ## Quick Reference
 
@@ -1146,6 +1197,7 @@ After `complete-milestone`, or when the user wants to start a new version cycle 
 | `pause-work` | "done for today" / stopping | `docs/planning/STATE.md` |
 | `resume-work` | "resume" / session start — chains to `start-next-phase` | None (read-only) |
 | `start-next-phase` | After `resume-work`, or on "continue" / "next" | None (read-only — routes to brainstorming/writing-plans/executing-plans) |
+| `groom-milestone` | "groom the milestone" / before an unattended run | Specs, plans, `docs/planning/ROADMAP.md` (`**Plan:**` lines; phases stay `pending`) |
 | `complete-phase` | After `executing-plans` finishes a phase, or "mark phase N.M complete" | `docs/planning/ROADMAP.md`, `docs/planning/MILESTONE.md` (single phase: active → complete) |
 | `audit-milestone` | "verify milestone is done" | `docs/superpowers/reviews/YYYY-MM-DD-milestone-N-audit.md` |
 | `complete-milestone` | After audit PASS | `docs/planning/ROADMAP.md`, `docs/planning/MILESTONE.md`, git tag *(only when conventions say so)* |
@@ -1159,11 +1211,12 @@ After `complete-milestone`, or when the user wants to start a new version cycle 
 
 | Superpowers Skill | Relationship | Notes |
 |---|---|---|
-| `superpowers:brainstorming` | Three entry points: (1) `plan-roadmap` invokes brainstorming at **roadmap scope** (3-7 milestones) at project start. (2) `new-milestone` invokes brainstorming at **milestone scope** before writing MILESTONE.md. (3) `start-next-phase` invokes brainstorming at **phase scope** when a phase has no design spec. `map-codebase` runs before brainstorming on existing projects. | Provides codebase context that makes brainstorming questions more grounded. The skill is reused at three levels of abstraction; the brainstorming process is the same, only the scope changes. |
-| `superpowers:writing-plans` | `start-next-phase` routes to writing-plans when a design spec exists but no plan file does. `add-phase` / `insert-phase` maintain the ROADMAP.md that writing-plans references for context. `list-phase-assumptions` reviews the plan before executing-plans begins. | Phase management and plan writing are complementary — ROADMAP.md is the source of truth for what gets planned. |
+| `superpowers:brainstorming` | Four entry points: (1) `plan-roadmap` invokes brainstorming at **roadmap scope** (3-7 milestones) at project start. (2) `new-milestone` invokes brainstorming at **milestone scope** before writing MILESTONE.md. (3) `start-next-phase` invokes brainstorming at **phase scope** when a phase has no design spec. (4) `groom-milestone` invokes it at **phase scope** for every pending phase of the active milestone that has no approved design. `map-codebase` runs before brainstorming on existing projects. | Provides codebase context that makes brainstorming questions more grounded. The skill is reused at three levels of abstraction; the brainstorming process is the same, only the scope changes. |
+| `superpowers:writing-plans` | `start-next-phase` routes to writing-plans when a design spec exists but no plan file does. `groom-milestone` runs it for each phase it grooms, with the execution method supplied up front, so writing-plans stops at the operator's plan review and nothing executes. `add-phase` / `insert-phase` maintain the ROADMAP.md that writing-plans references for context. `list-phase-assumptions` reviews the plan before executing-plans begins. | Phase management and plan writing are complementary — ROADMAP.md is the source of truth for what gets planned. |
 | `superpowers:executing-plans` | `start-next-phase` routes to executing-plans (via `list-phase-assumptions`) when a plan file exists for an active phase. `pause-work` can interrupt executing-plans cleanly. | list-phase-assumptions is a pre-execution gate; pause-work is a clean exit. |
 | `superpowers:subagent-driven-development` | `list-phase-assumptions` applies equally before subagent dispatch. `pause-work` captures state when stopping mid-subagent execution. | Both sub-skills work regardless of whether execution uses executing-plans or subagent-driven-development. |
 | `superpowers:finishing-a-development-branch` | `audit-milestone` + `complete-milestone` extend the finishing workflow to full milestone release management. | finishing-a-development-branch handles branch integration; `complete-milestone` handles milestone closure and hands the release to whatever `docs/planning/CONVENTIONS.md` records under `Released by`. It creates a tag only when `Milestone completion tags a release: yes` — on a project where an automation owns releases, closing a milestone correctly performs no git tag action at all. |
+| `unattended` (`ready-check` and `unattended`) | `groom-milestone` ends by pointing at `ready-check`, which queues the groomed phases of the active milestone. The run builds each phase on `unattended/phase-N-M` and opens a PR. After the operator merges it, `start-next-phase` step 1 closes the phase, and step 2 holds back a phase whose PR is still open. | The unattended run never writes ROADMAP.md; phase state changes only on the default branch, after merge. `groom-milestone` never invokes `ready-check` unasked. |
 | `regression-test` | `audit-milestone` optionally invokes regression-test as part of definition-of-done verification for projects with a web UI. | Regression-test provides the visual and functional evidence for milestone audit. |
 | `decision-tracker` | Independent but complementary. Three integration points: (1) `resume-work` triggers decision-tracker recall at session start. (2) `Surface: UI` pre-plan hook runs a recall for `tags=[ui, design]` so prior UI conventions inform the contract. (3) `Surface: Refactor` pre-plan hook runs a recall for `tags=[architecture, naming]` so prior structural decisions inform the impact analysis. All three are best-effort — recall failures (MCP unavailable, no matching tags) are not chain failures. | decision-tracker handles cross-cutting decisions; project-orchestration handles project state and lifecycle. **Project conventions are deliberately a local file (`docs/planning/CONVENTIONS.md`) rather than a decision-tracker memory**, and the best-effort clause above is the reason: a recall failure is explicitly not a chain failure, so conventions stored as memories would silently go absent whenever the MCP server is down. The Commit & Release Protocol cannot be best-effort — it must either read the conventions or stop, never guess a format or a release mechanism from a failed recall. A file is either on disk or it is not, and `init-conventions` self-heals the "not". Record the *rationale* for a convention in decision-tracker if it is worth remembering; the protocol still reads the file. |
 | `pre-push-review` | `audit-milestone` checks tests and regression, but does NOT cover code quality review (security, YAGNI, dead code, naming). Run `pre-push-review` on each feature branch before `audit-milestone` for complete coverage. | No direct invocation — they operate at different scopes (branch vs milestone). |

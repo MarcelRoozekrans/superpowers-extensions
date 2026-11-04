@@ -230,7 +230,7 @@ The project's invariant technical decisions — stack, commits, branching, versi
 ```markdown
 # Project Conventions
 
-> Written by `init-conventions`. Do not hand-edit — re-run the sub-skill instead; the Commit & Release Protocol reads these fields.
+> Written by `init-conventions`. Do not hand-edit — re-run the sub-skill instead; the Commit & Release Protocol reads these fields. One exception: the writing-plans `## Checks` rule may also fill `**Build:**` and `**Test:**`, which the protocol does not read. Every other field goes through a re-run.
 
 **Established:** YYYY-MM-DD
 
