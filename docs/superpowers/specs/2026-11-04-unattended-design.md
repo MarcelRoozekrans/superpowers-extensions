@@ -123,16 +123,17 @@ Short, imperative text, kept in one file (`policy.md`) so Harness² can tune it:
   the approach".)*
 - End each item at an open PR. Never merge.
 
-The policy also names the entry point: if a queue file exists, invoke the
-`unattended` skill and work the queue; otherwise treat the session prompt as a
-single groomed item and invoke the same skill in single-item mode.
+The policy also names the entry point: if a queue file exists and has an
+open item, invoke the `unattended` skill and work the queue; otherwise treat the
+session prompt as a single groomed item and invoke the same skill in single-item
+mode.
 
 ### Call log
 
 `.claude/unattended-calls.md`, one section per item (`## <item>`), one bullet
 per call: question, choice, reason. Written by the agent as each call is made,
 read when the PR body is written, kept across compaction because it is a file.
-*(My call: a file survives subagents and context-budget handoffs; context does
+*(My call: a file survives subagents and compaction; context does
 not.)* In single-item mode the section heading is the current branch name. In harness-lab the file sits under `.claude/`, which is excluded from the
 graded diff.
 
@@ -149,7 +150,7 @@ In `claude -p`, an agent that ends its turn with a plain-text question ends the
 whole run, and the `AskUserQuestion` hook cannot see that. When unattended and in
 queue mode with unfinished items in the queue, the `Stop` hook blocks the stop
 with "no one will answer: decide by the policy, log the call, continue". It
-blocks at most three times per item, counted in the run state; the fourth stop
+blocks at most three times per item, counted as `stopBlocks` in the queue file; the fourth stop
 parks the item and lets the run go on to the next one, and a stop with no items
 left passes. Single-item mode stops normally, so a premature stop shows up in
 harness-lab as a failed rollout. (Operator's call, 2026-11-04; the limit of three
@@ -203,10 +204,13 @@ Named `unattended` so the harness-lab copy at `.claude/skills/unattended/` keeps
 the name harness-lab requires. *(My call.)* Entered from the policy's entry point
 (above), never by trigger wording alone.
 
-**Single-item mode** (no queue file; every harness-lab rollout): the session
-prompt is the item. Work on the current branch, follow the policy, run the
-repo's build and tests as the checks if the prompt names none, and stop at a
-committed change; no PR, no state file beyond the call log.
+**Single-item mode** (no queue file, or a queue with no open item; every
+harness-lab rollout): the session prompt is the item. Add `.claude/unattended-*`
+to `.git/info/exclude` first, so the call log and run file are never committed.
+Work on the current branch, follow the policy, run the repo's build and tests as
+the checks if the prompt names none, and stop at a committed change; no PR. A
+parked question goes to `docs/planning/STATE.md` when it exists, otherwise to
+`.claude/unattended-run.md`.
 
 **Queue mode:** the queue has `items` and at least one open item. At the start,
 `.claude/unattended-*` goes into `.git/info/exclude`, so the queue, the call log

@@ -639,7 +639,7 @@ A long run is never handed off to a fresh session. Auto-compaction carries it, a
 
 ### Single-Item Mode
 
-Queue mode needs a queue file that parses, has an `items` array and has an open item, one that is `running` or `queued`. In any other case the session prompt is the item. Claude works on the current branch, uses the checks the prompt names, logs its calls under the branch name and ends at a commit. It opens no PR. A parked question goes to `docs/planning/STATE.md` when it exists, otherwise to `.claude/unattended-run.md`.
+Queue mode needs a queue file that parses, has an `items` array and has an open item, one that is `running` or `queued`. In any other case the session prompt is the item. Claude first adds `.claude/unattended-*` to `.git/info/exclude`, so the calls log and run file are never committed. It works on the current branch, uses the checks the prompt names, logs its calls under the branch name and ends at a commit. It opens no PR. A parked question goes to `docs/planning/STATE.md` when it exists, otherwise to `.claude/unattended-run.md`.
 
 ### Using It in harness-lab
 

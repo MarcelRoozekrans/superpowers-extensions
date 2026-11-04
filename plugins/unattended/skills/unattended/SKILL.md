@@ -49,7 +49,7 @@ When no item is `queued` or `running`, write a summary to `.claude/unattended-ru
 
 ## Single-item mode
 
-1. Work on the current branch.
+1. Add `.claude/unattended-*` to `.git/info/exclude` unless it is already there, so the calls log and run file are never committed. Work on the current branch.
 2. Use the checks the prompt names. If it names none, use the repo's build and test commands.
 3. Log every call as the policy says.
 4. A parked question goes to `docs/planning/STATE.md` when it exists, otherwise `.claude/unattended-run.md`.
