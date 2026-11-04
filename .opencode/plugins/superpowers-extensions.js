@@ -32,7 +32,8 @@ const PLUGINS = [
   'retro',
   'wizard',
   'upstream-issue',
-  'architecture-scan'
+  'architecture-scan',
+  'unattended'
 ];
 
 // A plugin may carry several skills, so register each folder under skills/.
@@ -46,7 +47,7 @@ const skillPaths = PLUGINS.flatMap(name => {
 
 export const SuperpowersExtensionsPlugin = async ({ client, directory }) => {
   return {
-    // Inject all twenty skill paths into OpenCode's skill discovery config so
+    // Inject all twenty-two skill paths into OpenCode's skill discovery config so
     // each skill is discoverable by description-based matching, the same as
     // OpenCode's native skills behavior. No symlinks required.
     config: async (config) => {

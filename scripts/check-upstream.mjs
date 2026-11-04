@@ -61,6 +61,16 @@ const ANCHORS = [
     text: '## Execution Handoff',
     users: 'squad runs its plan review before this step',
   },
+  {
+    file: 'skills/brainstorming/SKILL.md',
+    text: 'Each message ends with one question',
+    users: 'the unattended policy and the Stop guard exist because brainstorming asks in plain text rather than through AskUserQuestion',
+  },
+  {
+    file: 'skills/writing-plans/SKILL.md',
+    text: '**Subagent-driven**',
+    users: 'unattended policy defaults the execution choice',
+  },
   ...['skills/subagent-driven-development/SKILL.md', 'skills/executing-plans/SKILL.md'].flatMap((file) => [
     {
       file,

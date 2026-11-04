@@ -2,7 +2,7 @@
 
 [![GitHub Sponsors](https://img.shields.io/github/sponsors/MarcelRoozekrans?style=flat&logo=githubsponsors&color=ea4aaa&label=Sponsor)](https://github.com/sponsors/MarcelRoozekrans)
 
-Extension skills for the [superpowers](https://github.com/obra/superpowers) suite, providing quality gates, development workflow skills, and project lifecycle management for web application development. It includes nineteen plugins with twenty skills:
+Extension skills for the [superpowers](https://github.com/obra/superpowers) suite, providing quality gates, development workflow skills, and project lifecycle management for web application development. It includes twenty plugins with twenty-two skills:
 
 - **regression-test** -- Regression testing using the [Microsoft Playwright MCP server](https://github.com/microsoft/playwright-mcp), combining existing test suite execution with AI-powered visual and functional browser testing.
 - **pre-push-review** -- A structured branch review that diffs against the base branch and gates on plan adherence, code quality, commit hygiene, and regression testing, producing a PASS/FAIL verdict with a prioritized remediation plan on failure.
@@ -22,6 +22,7 @@ Extension skills for the [superpowers](https://github.com/obra/superpowers) suit
 - **wizard** -- Writes an interactive bash script that walks a person through setup steps only they can do: dashboards, API keys, `.env` values, GitHub secrets and variables, one-off migrations. The script shows stage progress, asks before irreversible steps, reads secrets with hidden input and ends with a summary. `check.mjs` verifies a generated wizard in one command. Adapted from Matt Pocock's `wizard` skill (MIT).
 - **upstream-issue** -- Reports a bug to an upstream project only after proving it is theirs. Claude pins the symptom against the docs, traces the cause into upstream code, checks the latest release and the default branch, and searches for existing reports, including open fix pull requests. It builds a minimal repro and runs it until it fails. Two fresh subagents then check it independently: a skeptic tries to refute the report, and a clean runner runs the repro from an empty directory. The draft goes through anti-slop and a privacy scanner, and nothing is posted until you approve it.
 - **architecture-scan** -- Finds shallow modules in the areas the git history changes most. A script ranks the hot directories and files of the last 200 commits, one subagent applies the deletion test there, and the ranked report (an Artifact or an HTML file) shows a before/after diagram per candidate. You pick one, and it goes to `superpowers:brainstorming`. The plugin also ships **codebase-design**, the shared deep-module vocabulary (module, interface, depth, seam, leverage, locality). Adapted from Matt Pocock's [skills](https://github.com/mattpocock/skills) (MIT). See [plugins/architecture-scan/NOTICE.md](plugins/architecture-scan/NOTICE.md).
+- **unattended** -- Runs a queue of groomed plans while no one is at the keyboard. Three hooks deny `AskUserQuestion`, stop the session from ending while an item is open, and inject a short policy that says which option to take and what to park. Every call made for you goes into a log that becomes the PR body. `ready-check` is the attended half: it checks each item and writes the queue.
 - **squad** -- Persistent AI agent teams (Lead, Backend Engineer, Frontend Engineer, Tester, Scribe) **dispatched as parallel `Task` subagents** during brainstorming and planning workflows. Each specialist runs in an isolated context window with its own charter and tier-1 history, so they cannot anchor on each other's reasoning. Per-role `history.md` files accumulate project-specific knowledge across sessions; tiered context lookup (semantic search → grep → recent history) keeps each subagent's prompt lean.
 
 ---
@@ -607,6 +608,54 @@ Node.js for the privacy scanner and an authenticated `gh` CLI for searching and 
 
 ---
 
+## Unattended Skill
+
+The unattended plugin lets a session work through groomed plans with no one to answer questions. It holds two skills. `unattended` runs the work and fires when `SUPERPOWERS_UNATTENDED=1` is set. `ready-check` runs in an attended session beforehand: it fires on "ready to run unattended" or "queue this for an unattended run".
+
+### Starting a Run
+
+Run `ready-check` first. For each item it checks for an approved design, a `## Checks` section in the plan, a passing build at the base, no open questions and no step that needs you. It asks about each gap and writes the queue. It then prints the start command and stops:
+
+```bash
+SUPERPOWERS_UNATTENDED=1 claude -p "Run the unattended queue: <goal>"
+```
+
+A `claude -p` run cannot answer permission prompts. Allow file edits, git, gh and the plan's check commands in a `permissions.allow` list in the project's `.claude/settings.json`. Use `--permission-mode bypassPermissions` only inside a throwaway container or VM.
+
+### The Three Hooks
+
+- **SessionStart** injects `policy.md`: answer every question itself, taking the option marked "(Recommended)" or else the one closest to the approved design, then the smaller change. It logs the call and parks anything irreversible or outward-facing, such as a merge, a release or a deploy.
+- **PreToolUse on `AskUserQuestion`** denies the question and tells Claude to apply the policy instead.
+- **Stop** is what catches plain-text questions, which never call `AskUserQuestion`. It blocks a stop while a queue item is open. After three blocks it parks the item and moves on, so a stuck item cannot hold the run. Items the guard parks appear in the queue with a `parkedReason`, and in the end-of-run summary.
+
+### Queue and Calls Files
+
+- `.claude/unattended-queue.json` holds `{ "items": [...] }`. Each item has an `id`, a `plan`, an optional `base`, a `pr`, a `status` (`queued`, `running`, `done` or `parked`), a `stopBlocks` counter and a `parkedReason`. Each item runs on a branch named `unattended/<id>` and ends as a PR. `ready-check` asks, for each item after the first, whether it builds on an earlier one and records its `id` as `base`. With no `base`, the item branches from the default branch. With a `base` that is done, it branches from `unattended/<base>` and the PR targets that branch. If the `base` item is parked, this item is parked with the reason `base item <id> parked`.
+- `.claude/unattended-calls.md` logs every call under `## <item id>` as `Q`, `Chose` and `Why`. The PR body copies that section.
+
+At the start of a queue run, `.claude/unattended-*` is added to `.git/info/exclude`, so the queue, the calls log and the run file are never committed and survive branch switches. In queue mode a parked question, the end-of-run summary and any PR body for a repo with no remote go to `.claude/unattended-run.md`. The run continues with the next item.
+
+A long run is never handed off to a fresh session. Auto-compaction carries it, and the session start hook re-injects the policy and the current item when it fires.
+
+### Single-Item Mode
+
+Queue mode needs a queue file that parses, has an `items` array and has an open item, one that is `running` or `queued`. In any other case the session prompt is the item. Claude first adds `.claude/unattended-*` to `.git/info/exclude`, so the calls log and run file are never committed. It works on the current branch, uses the checks the prompt names, logs its calls under the branch name and ends at a commit. It opens no PR. A parked question goes to `docs/planning/STATE.md` when it exists, otherwise to `.claude/unattended-run.md`.
+
+### Using It in harness-lab
+
+1. Copy `plugins/unattended/skills/unattended/` to `harness/base/.claude/skills/unattended/`. Do not copy `ready-check`: it is attended, so harness-lab does not grade it.
+2. Register the three hooks in `harness/base/.claude/settings.json`, using `plugins/unattended/hooks/hooks.json` as the template. The PreToolUse entry needs `"matcher": "AskUserQuestion"`. Each command is `node "$CLAUDE_PROJECT_DIR/.claude/skills/unattended/scripts/<name>.mjs"`, where `<name>` is `session-start`, `ask-check` or `stop-check`.
+3. Add a trigger line to `harness/base/CLAUDE.md` that tells an unattended session to invoke the `unattended` skill.
+4. Have the substrate set `SUPERPOWERS_UNATTENDED=1` in `session_env`.
+
+A harness-lab task is a single groomed item, so harness-lab grades the policy and the single-item flow. Multi-item runs get a dogfood run on a real backlog.
+
+### Prerequisites
+
+Node.js for the hooks. `superpowers:subagent-driven-development` runs each plan. `anti-slop` and `decision-tracker` are used when installed.
+
+---
+
 ## UI Workflow Skill
 
 The ui-workflow skill provides two complementary capabilities that close the design-implementation gap in frontend work.
@@ -913,7 +962,7 @@ per harness; only how the harness loads them.
 | **OpenAI Codex CLI / App** | [`.codex-plugin/plugin.json`](.codex-plugin/plugin.json) + [`.codex/INSTALL.md`](.codex/INSTALL.md) | Clone-and-symlink each plugin into `~/.agents/skills/`; instructions and a copy-paste loop in [`.codex/INSTALL.md`](.codex/INSTALL.md) |
 | **Gemini CLI** | [`gemini-extension.json`](gemini-extension.json) + [`GEMINI.md`](GEMINI.md) | `GEMINI.md` lists each SKILL.md via `@./plugins/.../SKILL.md` import syntax |
 | **GitHub Copilot CLI** | Reuses [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json) + [`.copilot-cli/INSTALL.md`](.copilot-cli/INSTALL.md) | `copilot plugin marketplace add MarcelRoozekrans/superpowers-extensions`, then install individual plugins |
-| **OpenCode.ai** | [`.opencode/plugins/superpowers-extensions.js`](.opencode/plugins/superpowers-extensions.js) | JS plugin registers all twenty skill paths via OpenCode's `config.skills.paths` array — no symlinks needed |
+| **OpenCode.ai** | [`.opencode/plugins/superpowers-extensions.js`](.opencode/plugins/superpowers-extensions.js) | JS plugin registers all twenty-two skill paths via OpenCode's `config.skills.paths` array — no symlinks needed |
 
 The polymorphic [`hooks/session-start`](hooks/session-start) script
 detects which harness is running it via env vars (`CURSOR_PLUGIN_ROOT`,
@@ -979,7 +1028,7 @@ The multi-provider mechanism here is adapted directly from
 [`obra/superpowers`](https://github.com/obra/superpowers) (MIT). Their
 session-start hook was the model for ours; their per-harness manifest
 pattern is what enables one shared markdown tree to load natively in
-each host. Differences: we are a marketplace of nineteen plugins (versus
+each host. Differences: we are a marketplace of twenty plugins (versus
 their single-plugin layout), so our manifests target the suite at the
 repo root with skills resolved via `./plugins/`.
 
@@ -1018,6 +1067,7 @@ claude plugin install retro
 claude plugin install wizard
 claude plugin install upstream-issue
 claude plugin install architecture-scan
+claude plugin install unattended
 ```
 
 The regression-test plugin automatically configures the Playwright MCP server with `--caps=testing`. The pre-push-review plugin requires only git and no additional MCP servers for its core review.
@@ -1165,6 +1215,12 @@ xcopy /E /I plugins\architecture-scan\skills %USERPROFILE%\.claude\skills
 
 # macOS / Linux -- architecture-scan (both skills, each folder carries its NOTICE.md)
 cp -r plugins/architecture-scan/skills/. ~/.claude/skills/
+
+# Windows -- unattended (both skills; the hooks need the plugin install)
+xcopy /E /I plugins\unattended\skills %USERPROFILE%\.claude\skills
+
+# macOS / Linux -- unattended (both skills; the hooks need the plugin install)
+cp -r plugins/unattended/skills/. ~/.claude/skills/
 ```
 
 **Note:** Some plugins require companion MCP servers. Install them separately:
@@ -1185,7 +1241,7 @@ claude mcp add playwright -- npx @playwright/mcp@latest --caps=testing,pdf,visio
 
 ### Verify Installation
 
-In Claude Code, the skills should appear when you type `/regression-test`, `/pre-push-review`, `/refactor-analysis`, `/decision-tracker`, `/roslyn-codelens-integration`, `/memorylens-integration`, `/project-orchestration`, `/ui-workflow`, `/ui-design-system`, `/squad`, `/compress-memory`, `/logo-design`, `/context-budget`, `/anti-slop`, `/demo-video`, `/retro`, `/wizard`, `/upstream-issue`, `/architecture-scan`, or `/codebase-design`, or when you ask Claude to perform regression testing, a pre-push review, a refactor impact analysis, decision tracking, .NET code graph analysis, .NET memory profiling, project lifecycle management, UI design contract work, design system generation, to activate your agent team, to compress a memory file, to design or audit a brand mark, to rewrite AI prose tics out of a draft, to record a demo video of a web feature, to run a retro on a session, to write a setup wizard, to report a bug upstream, to find refactor candidates, or to design a deeper module interface.
+In Claude Code, the skills should appear when you type `/regression-test`, `/pre-push-review`, `/refactor-analysis`, `/decision-tracker`, `/roslyn-codelens-integration`, `/memorylens-integration`, `/project-orchestration`, `/ui-workflow`, `/ui-design-system`, `/squad`, `/compress-memory`, `/logo-design`, `/context-budget`, `/anti-slop`, `/demo-video`, `/retro`, `/wizard`, `/upstream-issue`, `/architecture-scan`, `/codebase-design`, `/unattended`, or `/ready-check`, or when you ask Claude to perform regression testing, a pre-push review, a refactor impact analysis, decision tracking, .NET code graph analysis, .NET memory profiling, project lifecycle management, UI design contract work, design system generation, to activate your agent team, to compress a memory file, to design or audit a brand mark, to rewrite AI prose tics out of a draft, to record a demo video of a web feature, to run a retro on a session, to write a setup wizard, to report a bug upstream, to find refactor candidates, to design a deeper module interface, to check that work is ready for an unattended run, or to run a queue with no one present.
 
 ---
 
@@ -1520,21 +1576,33 @@ superpowers-extensions/
 │   │           ├── clean-runner-prompt.md  # Brief for the clean-room runner subagent
 │   │           ├── references/             # repro-shapes.md and issue-body.md
 │   │           └── scripts/                # privacy-scan.mjs, tests and fixtures
-│   └── architecture-scan/                  # Deepening candidates from git hot spots (19th plugin, two skills)
+│   ├── architecture-scan/                  # Deepening candidates from git hot spots (19th plugin, two skills)
+│   │   ├── .claude-plugin/
+│   │   │   └── plugin.json
+│   │   ├── NOTICE.md                       # Attribution to Matt Pocock's skills (MIT)
+│   │   └── skills/
+│   │       ├── architecture-scan/
+│   │       │   ├── SKILL.md                # Procedure: recall, scope, explore, report, pick
+│   │       │   ├── NOTICE.md               # Copy of the plugin NOTICE.md for skills-only installs
+│   │       │   ├── references/             # report.md report rules
+│   │       │   ├── templates/              # report.template.html
+│   │       │   └── scripts/                # hotspots.mjs git hot-spot counts and tests
+│   │       └── codebase-design/
+│   │           ├── SKILL.md                # Deep-module vocabulary and principles
+│   │           ├── NOTICE.md               # Copy of the plugin NOTICE.md for skills-only installs
+│   │           └── references/             # deepening.md and design-it-twice.md
+│   └── unattended/                         # Unattended runs of a groomed queue (20th plugin, two skills)
 │       ├── .claude-plugin/
 │       │   └── plugin.json
-│       ├── NOTICE.md                       # Attribution to Matt Pocock's skills (MIT)
+│       ├── hooks/
+│       │   └── hooks.json                  # SessionStart, PreToolUse on AskUserQuestion, Stop
 │       └── skills/
-│           ├── architecture-scan/
-│           │   ├── SKILL.md                # Procedure: recall, scope, explore, report, pick
-│           │   ├── NOTICE.md               # Copy of the plugin NOTICE.md for skills-only installs
-│           │   ├── references/             # report.md report rules
-│           │   ├── templates/              # report.template.html
-│           │   └── scripts/                # hotspots.mjs git hot-spot counts and tests
-│           └── codebase-design/
-│               ├── SKILL.md                # Deep-module vocabulary and principles
-│               ├── NOTICE.md               # Copy of the plugin NOTICE.md for skills-only installs
-│               └── references/             # deepening.md and design-it-twice.md
+│           ├── unattended/
+│           │   ├── SKILL.md                # Queue and single-item modes, parking, handoff
+│           │   ├── policy.md               # The rules injected at session start
+│           │   └── scripts/                # session-start, ask-check, stop-check, shared module and tests
+│           └── ready-check/
+│               └── SKILL.md                # Five checks, gaps, queue file and start command
 └── docs/
     ├── planning/                           # Project lifecycle state (ROADMAP, MILESTONE, STATE, CONVENTIONS)
     └── plans/                              # Design documents and phase plans

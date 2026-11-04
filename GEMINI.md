@@ -18,3 +18,5 @@
 @./plugins/upstream-issue/skills/upstream-issue/SKILL.md
 @./plugins/architecture-scan/skills/architecture-scan/SKILL.md
 @./plugins/architecture-scan/skills/codebase-design/SKILL.md
+@./plugins/unattended/skills/unattended/SKILL.md
+@./plugins/unattended/skills/ready-check/SKILL.md

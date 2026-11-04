@@ -1,0 +1,9 @@
+{
+  "name": "unattended",
+  "description": "Runs a groomed queue of plans without a human present: denies questions nobody will answer, keeps stops from ending the run early, and logs every call made on the user's behalf.",
+  "author": {
+    "name": "Marcel Roozekrans"
+  },
+  "license": "MIT",
+  "keywords": ["unattended", "autonomous", "queue", "hooks"]
+}
