@@ -1,6 +1,6 @@
 # groom-milestone design
 
-Date: 2026-11-04. Status: draft.
+Date: 2026-11-04. Status: approved 2026-11-04. Builder check done.
 
 ## Intent
 
