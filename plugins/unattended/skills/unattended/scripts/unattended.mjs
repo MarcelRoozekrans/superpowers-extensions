@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, renameSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 
 export const QUEUE_PATH = '.claude/unattended-queue.json';
@@ -19,7 +19,9 @@ export function readQueue(cwd) {
 export function writeQueue(cwd, queue) {
   const path = join(cwd, QUEUE_PATH);
   mkdirSync(dirname(path), { recursive: true });
-  writeFileSync(path, JSON.stringify(queue, null, 2) + '\n');
+  const tmp = `${path}.${process.pid}.tmp`;
+  writeFileSync(tmp, JSON.stringify(queue, null, 2) + '\n');
+  renameSync(tmp, path);
 }
 
 export const openItem = (queue) =>
@@ -37,8 +39,9 @@ export function checkStop(env, queue) {
   const item = openItem(queue);
   if (!item) return { block: false };
 
-  if (item.stopBlocks < MAX_STOP_BLOCKS) {
-    item.stopBlocks += 1;
+  const blocks = Number.isInteger(item.stopBlocks) ? item.stopBlocks : 0;
+  if (blocks < MAX_STOP_BLOCKS) {
+    item.stopBlocks = blocks + 1;
     return {
       block: true,
       queue,
@@ -47,7 +50,7 @@ export function checkStop(env, queue) {
   }
 
   item.status = 'parked';
-  item.parkedReason = 'stopped 4 times without finishing';
+  item.parkedReason = `stopped ${MAX_STOP_BLOCKS + 1} times without finishing`;
   const next = openItem(queue);
   if (!next) return { block: false, queue };
   return {

@@ -108,3 +108,21 @@ test('stop-check entry is silent on bad input', () => {
   assert.equal(r.status, 0);
   assert.equal(r.stdout, '');
 });
+
+test('stop treats a missing stopBlocks as zero', () => {
+  const r = checkStop(ON, { goal: 'g', items: [{ id: 'a', status: 'running' }] });
+  assert.equal(r.block, true);
+  assert.equal(r.queue.items[0].stopBlocks, 1);
+});
+
+test('stop-check entry is silent when attended and leaves the queue untouched', () => {
+  const cwd = tmp();
+  mkdirSync(join(cwd, '.claude'));
+  const file = join(cwd, QUEUE_PATH);
+  writeFileSync(file, JSON.stringify({ goal: 'g', items: [item('a', 'running')] }));
+  const before = readFileSync(file);
+  const r = spawn(stopPath, JSON.stringify({ cwd }), {}, cwd);
+  assert.equal(r.status, 0);
+  assert.equal(r.stdout, '');
+  assert.deepEqual(readFileSync(file), before);
+});
