@@ -6,7 +6,14 @@
 **Phase:** `<N.M>`
 **Surface:** `<UI | Backend | Refactor | Data | Infra | Docs | Mixed>`
 **Stage:** phase (one phase, implementation-ready)
+**Status:** draft
 
+> Whoever records the operator's approval sets the line to `**Status:** approved YYYY-MM-DD`: `groom-milestone`, or `start-next-phase` on the attended path. `ready-check` requires it.
+
+**Builds on:** Phase N.M — `<interfaces used>`
+
+> Optional. Delete the line when the phase builds on nothing. List the interfaces an earlier, not-yet-complete phase of this milestone creates, using the names that phase's plan fixes.
+>
 > The `**Surface:**` line above is REQUIRED. `start-next-phase`'s VERIFY step grep-checks it. If it is missing, the design spec is rejected and the brainstorm is re-run. The Surface value here MUST match what is declared in `docs/planning/ROADMAP.md` for this phase — if they disagree, fix ROADMAP.md or re-tag the phase, do not let them drift.
 
 ## Goal

@@ -67,6 +67,7 @@ state files stay machine-readable across sessions.
 - **Status values are exhaustive** — only `active`, `complete`, `pending`. Never `wip`, `done`, `tbd`, `blocked`, or other free-form values. If a phase is blocked, leave its status as `active` and capture the blocker in `STATE.md` instead.
 - **Completed date** — always `**Completed:** YYYY-MM-DD` on its own line, ISO 8601 dashes, no time component. Add this line only when status transitions to `complete`. Never add it pre-emptively.
 - **Surface field** — `**Surface:**` on its own line below `**Goal:**`. Drives `start-next-phase`'s pre-plan routing (UI phases chain through `ui-design-system` + `ui-workflow ui-phase`; refactor phases chain through `refactor-analysis`; others go directly to `writing-plans`). Allowed values, exhaustive: `UI`, `Backend`, `Refactor`, `Data`, `Infra`, `Docs`, `Mixed`. Capitalized exactly as shown, no quotes, single space after the colon. If a phase blends two surfaces equally (e.g. a feature touching both API and UI), use `Mixed` and document the breakdown in the design spec; `start-next-phase` falls back to the default routing for `Mixed` so authors can drive the order manually. Phases authored before this convention existed may omit the field — `start-next-phase` treats missing `Surface` the same as `Mixed`.
+- **Groomed phase** — a phase is *groomed* when it is `[status: pending]`, its design spec says `**Status:** approved`, and its `**Plan:**` file exists. There is no new status value. The design spec carries `**Status:** draft`, then `**Status:** approved YYYY-MM-DD` once the operator approves it. A phase that builds on an earlier phase of the same milestone, one not yet complete, adds `**Builds on:** Phase N.M —` to its design spec, followed by the interfaces it uses, using the names that phase's plan fixes. Each such entry gets a guard check in the earlier plan's `## Checks`, formatted ``- guard N.M: `cmd` ``, where N.M is the later phase relying on it.
 - **HelpWanted:** — value is exactly `yes` or `no` (lowercase). Drives the `help wanted` label on `sync-github`. Default `no`. Field is optional; missing is treated as `no`.
 - **Issue:** — written by `init-github-sync` on first GitHub-issue creation, read by `sync-github` thereafter. Format is `**Issue:** #N` *with* the leading hash (matches GitHub issue convention). Do not edit manually unless reconciling a deleted issue.
 - **Milestone:** — same rules but stores the GitHub native Milestone number *without* a hash. Format is `**Milestone:** N` (just the digit). The two formats differ deliberately so a stray copy-paste between fields is detectable.
@@ -119,6 +120,21 @@ After:  ### Phase 1.2: Auth [status: complete]
 
 (two changes: status bracket and new `**Completed:**` line below `**Plan:**`)
 
+**Phase: pending → complete** (after an unattended run's PR merges, via `start-next-phase` step 1):
+
+```markdown
+Before: ### Phase 1.2: Auth [status: pending]
+        **Goal:** Add JWT auth with refresh tokens
+        **Plan:** `docs/superpowers/plans/2026-04-12-auth.md`
+
+After:  ### Phase 1.2: Auth [status: complete]
+        **Goal:** Add JWT auth with refresh tokens
+        **Plan:** `docs/superpowers/plans/2026-04-12-auth.md`
+        **Completed:** 2026-05-04
+```
+
+(the same two changes as active → complete: status bracket and new `**Completed:**` line below `**Plan:**`)
+
 **Milestone: active → complete** (end of milestone, via `complete-milestone`):
 
 ```markdown
@@ -166,9 +182,14 @@ Session handoff document. Written by `pause-work`, read by `resume-work`.
 ## Blockers
 - Blocker description (if any)
 
+## Grooming
+Grooming: milestone N, next phase N.M
+
 ## Recommended Next Step
 One sentence: what to do when resuming.
 ```
+
+The `## Grooming` section is optional. `pause-work` writes it only when `groom-milestone` is mid-run. The line has exactly the form `Grooming: milestone N, next phase N.M`, and a new session re-enters `groom-milestone`, which resumes at that phase.
 
 ## MILESTONE.md
 
@@ -219,6 +240,8 @@ The project's invariant technical decisions — stack, commits, branching, versi
 **Package manager:** <value>
 **Framework:** <value | none>
 **Datastore:** <value | n/a>
+**Build:** <command | none>
+**Test:** <command | none>
 
 ## Commits
 
@@ -247,7 +270,7 @@ The project's invariant technical decisions — stack, commits, branching, versi
 **Deployed by:** <mechanism | none>
 ```
 
-Nineteen fields: `Established` plus eighteen across the five sections. All five `##` headings are required even when a section's fields are all `none` — `init-conventions`' VERIFY checks that all five are present.
+Twenty-one fields: `Established` plus twenty across the five sections. All five `##` headings are required even when a section's fields are all `none` — `init-conventions`' VERIFY checks that all five are present.
 
 ### Canonical syntax — exact field and value rules
 

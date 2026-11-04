@@ -224,6 +224,7 @@ Steps refer to each other by **name**, never by number.
    |---|---|
    | Language / runtime, Package manager, Framework | If `map-codebase` ran this session, read `docs/superpowers/specs/*-codebase-map.md` — it already detected these. Otherwise apply `map-codebase`'s **Read project root** and **Identify patterns** steps. Greenfield: no signal. |
    | Datastore | ORM config, connection strings, compose service images; else no signal. |
+   | Build / Test | `package.json` scripts named `build` and `test`, a `.sln` or `.csproj` (`dotnet build`, `dotnet test`), a Makefile with `build` and `test` targets, or `pyproject.toml` (a test runner such as `pytest`). Otherwise no signal: **Propose** asks, and a declined field is recorded as `none (defaulted)`. |
    | Commit format | `commitlint.config.js`, `.commitlintrc*`, husky hooks. Else sample `git log -50 --format=%s`: a clear majority matching `type(scope):` → `conventional`. No commits → no signal. |
    | Scopes / Scope source | A `scope-enum` rule → `enforced` plus the path of the file holding it. Conventional but no rule → `free`, `Scope source: n/a`. Not conventional → `none`, `n/a`. |
    | Scheme | Shape of `git tag -l`, ignoring any `<name>-` prefix — release-please monorepo tags look like `mypkg-v1.2.3`. `vX.Y.Z` → semver, `vYYYY.MM*` → calver, `vN.0` → milestone. Mixed shapes → whichever the 10 most recent tags mostly use. No tags → `none`. |

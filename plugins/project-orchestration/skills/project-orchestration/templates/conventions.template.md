@@ -14,6 +14,10 @@
 **Package manager:** `<value>`
 **Framework:** `<value | none>`
 **Datastore:** `<value | n/a>`
+**Build:** `<command | none>`
+**Test:** `<command | none>`
+
+> Plans copy `**Build:**` and `**Test:**` into their `## Checks` section.
 
 ## Commits
 
