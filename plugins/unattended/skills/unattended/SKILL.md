@@ -9,21 +9,21 @@ Run groomed work with no one to answer questions.
 
 If `SUPERPOWERS_UNATTENDED` is not `1`, say so and stop. This skill is for unattended sessions only.
 
-The rules live in [policy.md](policy.md), which the session start hook has already injected. Follow them; this skill does not repeat them. It covers the order of work.
+The rules live in [policy.md](policy.md), which the session start hook has already injected. Follow them. This file only sets the order of work.
 
 ## Pick the mode
 
-- **Queue mode:** `.claude/unattended-queue.json` exists. Work the queue.
-- **Single-item mode:** no queue file. The session prompt is the item.
+- **Queue mode:** `.claude/unattended-queue.json` exists, parses as JSON and has an `items` array. Work the queue.
+- **Single-item mode:** anything else, including a queue file that cannot be read as JSON or has no `items` array. The session prompt is the item.
 
 ## Queue mode
 
 The queue is `{ "items": [...] }`. Each item has an `id`, a `plan`, a `pr` (null until the PR is open) and a `status` of `queued`, `running`, `done` or `parked`. The next item is the first one with status `running`, otherwise the first `queued` one. For each item:
 
 1. Set its `status` to `running` in the queue file.
-2. Branch from the default branch as `unattended/<id>`.
+2. Branch from the default branch as `unattended/<id>`. If that branch already exists, as for an item still `running` after a resume, check it out instead.
 3. Execute the plan with `superpowers:subagent-driven-development`.
-4. Run each command under the plan's `## Checks`. A failing check gets three fix attempts. If it still fails, park the item and attach the failure.
+4. Run each command under the plan's `## Checks`. A failing check gets three fix attempts. If it still fails, park the item as described under Parking, with the failure as its `parkedReason`.
 5. Open a PR. Add a `## Unattended calls` section to the body, copied from this item's `## <id>` section in `.claude/unattended-calls.md`. Apply `anti-slop` to the prose when it is installed.
 6. Set the item to `done` and set `pr` to the PR URL, then take the next item.
 
@@ -39,7 +39,7 @@ Hand off to a fresh session only at an item boundary, never in the middle of an 
 
 ### End of the run
 
-When no item is `queued` or `running`, write a summary to the state file named above: the PRs opened, the parked items with their questions, and the number of calls made. Then stop. The stop guard allows it because no item is open.
+When no item is `queued` or `running`, write a summary to the state file named above: the PRs opened, the parked items with their questions, and the number of calls made, which is the count of bullets in `.claude/unattended-calls.md`. Then stop. The stop guard allows it because no item is open.
 
 ## Single-item mode
 
