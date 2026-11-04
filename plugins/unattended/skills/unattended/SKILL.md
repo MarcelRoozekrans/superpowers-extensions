@@ -25,6 +25,7 @@ The queue is `{ "items": [...] }`. Each item has an `id`, a `plan`, a `pr` (null
 3. Execute the plan with `superpowers:subagent-driven-development`.
 4. Run each command under the plan's `## Checks`. A failing check gets three fix attempts. If it still fails, park the item as described under Parking, with the failure as its `parkedReason`.
 5. Open a PR. Add a `## Unattended calls` section to the body, copied from this item's `## <id>` section in `.claude/unattended-calls.md`. Apply `anti-slop` to the prose when it is installed.
+   No remote: write the PR body to the state file, `.claude/unattended-run.md`, and leave `pr` null.
 6. Set the item to `done` and set `pr` to the PR URL, then take the next item.
 
 A parked item does not stop the run. Continue with the next one.
