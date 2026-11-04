@@ -208,6 +208,11 @@ Phase 1.2's design is written against Phase 1.1's plan, not its code:
   the ticked plan is on the default branch. The "at least one checkbox" rule also
   goes into `complete-phase`, so a plan with no checkboxes is never closed by
   default. *(My call.)*
+  The executors do not tick the plan: superpowers `executing-plans` and
+  `subagent-driven-development` track progress in a ledger and todo list. So
+  the unattended run ticks the plan on its branch before it opens the PR, and
+  `start-next-phase` ticks it when attended execution returns clean, then runs
+  `complete-phase`.
 - **New check before routing:** for a phase that is not complete, look for an
   open PR from `unattended/phase-N-M`, using
   `gh pr list --head unattended/phase-N-M --state open` when `gh` works.
@@ -215,6 +220,9 @@ Phase 1.2's design is written against Phase 1.1's plan, not its code:
   another container.)*
   - Open PR: report "Phase N.M has an open unattended PR: `<url>`. Review and merge
     it, then continue." and move to the next phase.
+  - Merged PR (`gh pr list --head unattended/phase-N-M --state merged`): the run
+    built the phase. Once the merge is on the current branch, run
+    `complete-phase` for it. Never treat it as unbuilt.
   - The branch exists but has no open PR, because the run parked the phase or
     the PR was closed unmerged: treat the phase as unbuilt and route it normally.
     Name the branch so the operator can look at it first.

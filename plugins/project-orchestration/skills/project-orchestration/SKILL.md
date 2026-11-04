@@ -504,9 +504,11 @@ If you encounter a malformed state file that `resume-work` cannot parse — fron
 
 When a phase's plan is finished — all tasks in `docs/superpowers/plans/YYYY-MM-DD-<phase>.md` are checked off (`- [x]`), tests pass, and `executing-plans` returned a clean state. Promotes the phase from `active` to `complete` in the planning files. A phase built by an unattended run is still `pending` when its PR merges; `complete-phase` promotes it from `pending` to `complete` directly.
 
+The executors do not tick the plan themselves. On the attended path, `start-next-phase` step 6 ticks it when execution returns clean. An unattended run ticks it on its branch before it opens the PR, so the merge brings a ticked plan to the default branch.
+
 This sub-skill closes the loop that was missing: without it, `executing-plans` finishes a phase but ROADMAP.md still shows the phase as `active`, so the next session sees stale state and `start-next-phase` routes back to the same already-finished phase.
 
-`start-next-phase` invokes `complete-phase` automatically when it detects an `active` or `pending` phase whose plan has at least one checkbox and is fully checked off (see `start-next-phase` step 1 below). Manual invocation is also supported when the user says "mark phase N.M complete" or "wrap up this phase".
+`start-next-phase` invokes `complete-phase` automatically when it detects an `active` or `pending` phase whose plan has at least one checkbox and is fully checked off (see `start-next-phase` step 1 below), after it ticks a plan in step 6, and when step 2 finds a merged unattended PR. Manual invocation is also supported when the user says "mark phase N.M complete" or "wrap up this phase".
 
 **Pre-condition:** the phase's plan file exists, it has at least one checkbox, all task checkboxes in it are `- [x]`, and the phase is currently `[status: active]` or `[status: pending]` in ROADMAP.md. If the phase is already `[status: complete]`, this sub-skill is a no-op.
 
@@ -518,7 +520,7 @@ This sub-skill closes the loop that was missing: without it, `executing-plans` f
 
 1. **Read** `docs/planning/ROADMAP.md` and confirm the target phase is `[status: active]` or `[status: pending]`. If it's already `[status: complete]`, exit silently — this is a no-op.
 
-2. **Read** the plan file referenced by the phase's `Plan:` line. If it has no checkboxes at all, refuse: "Phase N.M's plan has no checkboxes — nothing shows it was executed." and exit. Confirm all task checkboxes are `- [x]`. If any `- [ ]` remain, refuse: "Phase N.M has unchecked tasks — execution is not complete. Resume `executing-plans` first." and exit.
+2. **Read** the plan file referenced by the phase's `Plan:` line. If it has no checkboxes at all, refuse: "Phase N.M's plan has no checkboxes — nothing shows it was executed." and exit. Confirm all task checkboxes are `- [x]`. If any `- [ ]` remain, refuse: "Phase N.M has unchecked tasks — execution is not complete. Resume `executing-plans` first." and exit. When execution did finish clean and only the ticks are missing, tick the plan as `start-next-phase` step 6 does, then start this sub-skill again.
 
 3. **Use the `Edit` tool** on `docs/planning/ROADMAP.md` to make TWO precise edits to the phase's block. The exact transitions are:
 
@@ -565,7 +567,7 @@ This sub-skill closes the loop that was missing: without it, `executing-plans` f
 
 6. **VERIFY:** re-read `docs/planning/MILESTONE.md` and confirm the phase entry now reads `[complete]`.
 
-7. Stage `git add docs/planning/ROADMAP.md docs/planning/MILESTONE.md`, then commit per [Commit & Release Protocol](#commit--release-protocol) with `type=chore, scope=roadmap, subject=complete phase N.M — <name>`.
+7. Stage `git add docs/planning/ROADMAP.md docs/planning/MILESTONE.md`, plus the plan file when `start-next-phase` ticked it, then commit per [Commit & Release Protocol](#commit--release-protocol) with `type=chore, scope=roadmap, subject=complete phase N.M — <name>`.
 
    Run `git status` and confirm a clean tree.
 
@@ -604,9 +606,10 @@ After `resume-work` confirmation, or any time the user says "continue", "next", 
 2. After any pending `complete-phase` runs, identify the **next non-complete phase** (first phase with status `active`, falling back to the first `pending` phase in roadmap order). **Before routing it, run the open-PR check**, because an unattended run may already have built it:
    - **Find the branch.** The run's branch is `unattended/phase-N-M`, where `N-M` is the phase number with a dash, such as `unattended/phase-1-2`. Run `git ls-remote --heads origin unattended/phase-N-M` and `git branch --list unattended/phase-N-M`. The branch exists if either prints a line.
    - **No branch:** route the phase normally.
-   - **Branch exists and `gh` works** (`gh auth status` succeeds): run `gh pr list --head unattended/phase-N-M --state open`.
+   - **Branch exists and `gh` works** (`gh auth status` succeeds): run `gh pr list --head unattended/phase-N-M --state open`. If it prints nothing, run `gh pr list --head unattended/phase-N-M --state merged --json url,mergeCommit`.
      - **Open PR:** report "Phase N.M has an open unattended PR: `<url>`. Review and merge it, then continue." The phase waits; move on to the next non-complete phase and run this check on it.
-     - **Empty result:** the run parked the phase, or the PR was closed unmerged. Treat the phase as unbuilt and route it normally, but first name the branch: "Branch `unattended/phase-N-M` exists with no open PR. Look at it before this phase is built again."
+     - **Merged PR:** the run built the phase and the operator merged it. Never treat the phase as unbuilt. First confirm the merge is on the current branch: `git merge-base --is-ancestor <mergeCommit.oid> HEAD` exits 0. A stacked PR merges into its base branch first, so it may not be. If it is not, report "Phase N.M's unattended PR `<url>` is merged, but not into this branch yet. Merge it down, then continue." The phase waits. If it is, run `complete-phase` for the phase. A run that predates the tick step left the plan unticked: tick it first, as step 6 does, because the merged PR shows the run built it with its checks passing. Then identify the next non-complete phase again.
+     - **Neither:** the run parked the phase, or the PR was closed unmerged. Treat the phase as unbuilt and route it normally, but first name the branch: "Branch `unattended/phase-N-M` exists with no open PR. Look at it before this phase is built again."
    - **Branch exists, no `gh`** (missing or not authenticated): report "Branch `unattended/phase-N-M` exists; its PR state is unknown without `gh`. Check it, then continue." and ask the operator whether the phase waits.
    - **Waiting on an earlier phase:** a phase whose design spec (located as in step 3) has a `**Builds on:**` line naming a phase that is not complete waits too, and is never built without that phase's code. Report "Phase 1.2 waits on Phase 1.1." and move on. A phase with no `**Builds on:**` line, or whose named phases are all complete, proceeds.
    - If every non-complete phase waits, stop and report the waiting phases. There is nothing to route until a PR merges.
@@ -642,7 +645,7 @@ After `resume-work` confirmation, or any time the user says "continue", "next", 
 
    Decision recall is best-effort — if `decision-tracker` / `longterm-memory` MCP is not available, skip the recall step silently and proceed to the surface specialist. Recall failures are not chain failures.
 
-6. **When `executing-plans` returns** (the leaf of every routing path): if all tasks in the plan file are now `- [x]`, run the **Surface post-implementation hook** below FIRST, then **run `complete-phase`** to promote the phase to `complete` in ROADMAP.md and MILESTONE.md. Skipping `complete-phase` is the most common reason ROADMAP.md gets stale during multi-phase milestones.
+6. **When `executing-plans` or `subagent-driven-development` returns** (the leaf of every routing path): neither skill ticks the plan file. They track progress in their own ledger and todo list, so the plan's checkboxes are still `- [ ]`. If execution returned clean, with every task done and the plan's checks passing, **use the `Edit` tool** to set every task checkbox in the plan to `- [x]`, and **VERIFY** by re-reading the plan that no `- [ ]` is left. Then run the **Surface post-implementation hook** below FIRST, then **run `complete-phase`** to promote the phase to `complete` in ROADMAP.md and MILESTONE.md. Its commit takes the ticked plan. If execution stopped before every task was done, leave the plan as it is: the phase stays `active` for the next continuation. Skipping `complete-phase` is the most common reason ROADMAP.md gets stale during multi-phase milestones.
 
 7. **Surface post-implementation hook** — fires after `executing-plans` returns clean and BEFORE `complete-phase`. Mirrors the pre-plan hook on the audit side:
 
@@ -671,7 +674,7 @@ resume-work / "continue" / "next"
   │ Active/pending phase │  Yes   ┌──────────────────┐
   │ with ≥1 checkbox,    ├───────►│ complete-phase   │
   │ all checked?         │        │ (active/pending  │
-  │ (cleanup last run)   │        │  → done)         │
+  │ (cleanup last run)   │        │  → complete)     │
   └────────┬─────────────┘        └────────┬─────────┘
            │ No                            │
            ◄───────────────────────────────┘
@@ -688,7 +691,8 @@ resume-work / "continue" / "next"
      │ or Builds on a     │       │ "PR open: <url>" or    │
      │ non-complete phase?│       │ "1.2 waits on 1.1"     │
      └─────┬──────────────┘       └────────────────────────┘
-           │ No (a branch with no open PR: name it, route on)
+           │ No (merged PR: complete-phase, then find again;
+           │     a branch with no PR: name it, route on)
      ┌─────▼──────┐    No     ┌──────────────────┐
      │ Design spec├──────────►│ brainstorming    │──┐
      │ exists?    │           │ (verify spec)    │  │
@@ -728,8 +732,8 @@ resume-work / "continue" / "next"
   └────────┬───────────┘
            │
      ┌─────▼──────────────────┐  Yes   ┌─────────────────────────────┐
-     │ All tasks now checked? ├───────►│ Surface post-impl hook      │
-     │ (close the loop)       │        │ ┌─────────────────────────┐ │
+     │ All tasks done?        ├───────►│ Surface post-impl hook      │
+     │ (tick plan, close loop)│        │ ┌─────────────────────────┐ │
      └─────┬──────────────────┘        │ │ Surface == UI?          │ │
            │ No (mid-phase pause)      │ │  → ui-workflow ui-review│ │
            ▼                           │ │    (degrade if no       │ │
@@ -739,7 +743,7 @@ resume-work / "continue" / "next"
                                        │          ▼                  │
                                        │ ┌─────────────────────────┐ │
                                        │ │ complete-phase          │ │
-                                       │ │ (active → done)         │ │
+                                       │ │ (active → complete)     │ │
                                        │ └─────────────────────────┘ │
                                        └─────────────────────────────┘
 ```
@@ -1135,7 +1139,7 @@ After `complete-milestone`, or when the user wants to start a new version cycle 
 
 8. **Skipping the brainstorm in `new-milestone` / `plan-roadmap`** — Asking two questions ("goal?", "DoD?") and writing the file is not a brainstorm. The design spec at `docs/superpowers/specs/` is what `audit-milestone` and downstream skills reference. Skipping it leaves the milestone with no shared source of truth.
 
-9. **Skipping `complete-phase` after `executing-plans` returns** — The plan file's checkboxes go to `- [x]` but ROADMAP.md still shows `[status: active]`. The next continuation routes back to the same phase forever. `start-next-phase` is supposed to invoke `complete-phase` automatically when this state is detected; if the agent skips it, the multi-phase milestone never makes visible progress in the planning files.
+9. **Skipping the tick or `complete-phase` after `executing-plans` returns** — Execution finishes, but ROADMAP.md still shows `[status: active]`. The next continuation routes back to the same phase forever. The executors do not tick the plan, so `start-next-phase` step 6 ticks it and then invokes `complete-phase`. If the agent skips either, the multi-phase milestone never makes visible progress in the planning files.
 
 10. **Treating a compaction summary's "Continuation Plan" as authoritative** — Auto-generated conversation summaries describe past work and propose next steps based on conversation alone, with no access to `docs/planning/`. Acting on those next steps directly bypasses every workflow gate in this suite. Always run `resume-work` first when a compaction signal fires (see Post-compaction discipline in HARD-GATE).
 
