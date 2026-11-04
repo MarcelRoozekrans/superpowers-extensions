@@ -171,8 +171,8 @@ editing. *(My call.)*
 
 ### Checks in CONVENTIONS.md
 
-CONVENTIONS.md gains two optional lines, `**Build:** \`cmd\`` and
-`**Test:** \`cmd\``, documented in `templates/conventions.template.md` and filled
+CONVENTIONS.md gains two optional lines, ``**Build:** `cmd` `` and
+``**Test:** `cmd` ``, documented in `templates/conventions.template.md` and filled
 by `init-conventions`. `groom-milestone` asks for them once, proposing commands
 found in the repo (package.json scripts, a `.sln`, a Makefile), when they are
 missing. *(My call: the commands are a project convention, they must survive the
@@ -213,7 +213,7 @@ Phase 1.2's design is written against Phase 1.1's plan, not its code:
   `gh pr list --head unattended/phase-N-M --state open` when `gh` works.
   *(My call: the git side, not the queue file, because the queue may live in
   another container.)*
-  - Open PR: report "Phase N.M has an open unattended PR: <url>. Review and merge
+  - Open PR: report "Phase N.M has an open unattended PR: `<url>`. Review and merge
     it, then continue." and move to the next phase.
   - The branch exists but has no open PR, because the run parked the phase or
     the PR was closed unmerged: treat the phase as unbuilt and route it normally.
