@@ -65,8 +65,8 @@
 
 - `checkStop` rules, in order:
   1. If the session is not unattended, or `queue` is null, or `openItem` is null, allow.
-  2. If `item.stopBlocks < 3`, increment it and block. The reason says: "No one will answer. Decide by the unattended policy, log the call in .claude/unattended-calls.md, and continue with item <id>."
-  3. Otherwise set `status: 'parked'` and `parkedReason: 'stopped 4 times without finishing'`. If another item is open after that, block with "Item <id> parked after repeated stops; continue with item <next id>." If none is open, allow.
+  2. If `item.stopBlocks < 3`, increment it and block. The reason says: "No one will answer. Decide by the unattended policy, log the call in .claude/unattended-calls.md, and continue with item ITEM_ID."
+  3. Otherwise set `status: 'parked'` and `parkedReason: 'stopped 4 times without finishing'`. If another item is open after that, block with "Item ITEM_ID parked after repeated stops; continue with item NEXT_ID." If none is open, allow.
 - `checkAsk` reason, exact copy: `Unattended run: no one will answer. Take the option marked (Recommended), or if none is marked the one closest to the approved design, then the smaller change. Append the question, your choice and why to .claude/unattended-calls.md, and continue. If the choice is on the unsafe list, park the item instead.`
 
 - [ ] **Step 1: Add `unattended` to `scope-enum` in `commitlint.config.js`, after `architecture-scan`.**
