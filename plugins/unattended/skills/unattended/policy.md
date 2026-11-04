@@ -4,9 +4,10 @@ No one will answer questions. Never wait for input. Apply these rules.
 
 ## Deciding
 
-- Where a skill asks you to choose, take the option marked "(Recommended)".
-  If none is marked, take the one closest to the approved design, then the
-  smaller change.
+- Answer every question yourself, whether a skill asks it in plain text or
+  through AskUserQuestion. Take the option marked "(Recommended)" when one is
+  marked, otherwise the one closest to the approved design, then the smaller
+  change. Never end a turn on a question.
 - Log every such call in `.claude/unattended-calls.md` the moment you make it.
   Write it under `## <item id>` as `- Q: … / Chose: … / Why: …`. Never keep it
   only in context.

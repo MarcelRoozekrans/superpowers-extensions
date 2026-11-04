@@ -63,8 +63,8 @@ const ANCHORS = [
   },
   {
     file: 'skills/brainstorming/SKILL.md',
-    text: 'Open questions come first.',
-    users: 'unattended policy takes the Recommended option where brainstorming offers a menu',
+    text: 'Each message ends with one question',
+    users: 'the unattended policy and the Stop guard exist because brainstorming asks in plain text rather than through AskUserQuestion',
   },
   {
     file: 'skills/writing-plans/SKILL.md',

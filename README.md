@@ -622,9 +622,9 @@ SUPERPOWERS_UNATTENDED=1 claude -p "Run the unattended queue: <goal>"
 
 ### The Three Hooks
 
-- **SessionStart** injects `policy.md`: take the option marked "(Recommended)", log the call, and park anything irreversible or outward-facing, such as a merge, a release or a deploy.
+- **SessionStart** injects `policy.md`: answer every question itself, taking the option marked "(Recommended)" or else the one closest to the approved design, then the smaller change. It logs the call and parks anything irreversible or outward-facing, such as a merge, a release or a deploy.
 - **PreToolUse on `AskUserQuestion`** denies the question and tells Claude to apply the policy instead.
-- **Stop** blocks a stop while a queue item is open. After three blocks it parks the item and moves on, so a stuck item cannot hold the run.
+- **Stop** is what catches plain-text questions, which never call `AskUserQuestion`. It blocks a stop while a queue item is open. After three blocks it parks the item and moves on, so a stuck item cannot hold the run.
 
 ### Queue and Calls Files
 
@@ -639,9 +639,12 @@ With no readable queue file, the session prompt is the item. Claude works on the
 
 ### Using It in harness-lab
 
-1. Copy `plugins/unattended/skills/unattended/` to `harness/base/.claude/skills/unattended/`.
+1. Copy `plugins/unattended/skills/unattended/` to `harness/base/.claude/skills/unattended/`. Do not copy `ready-check`: it is attended, so harness-lab does not grade it.
 2. Register the three hooks in `harness/base/.claude/settings.json`, each as `node "$CLAUDE_PROJECT_DIR/.claude/skills/unattended/scripts/<name>.mjs"`, where `<name>` is `session-start`, `ask-check` or `stop-check`.
-3. Have the substrate set `SUPERPOWERS_UNATTENDED=1`.
+3. Add a trigger line to `harness/base/CLAUDE.md` that tells an unattended session to invoke the `unattended` skill.
+4. Have the substrate set `SUPERPOWERS_UNATTENDED=1` in `session_env`.
+
+A harness-lab task is a single groomed item, so harness-lab grades the policy and the single-item flow. Multi-item runs get a dogfood run on a real backlog.
 
 ### Prerequisites
 
