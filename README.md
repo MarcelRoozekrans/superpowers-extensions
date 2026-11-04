@@ -620,27 +620,31 @@ Run `ready-check` first. For each item it checks for an approved design, a `## C
 SUPERPOWERS_UNATTENDED=1 claude -p "Run the unattended queue: <goal>"
 ```
 
+A `claude -p` run cannot answer permission prompts. Allow file edits, git, gh and the plan's check commands in a `permissions.allow` list in the project's `.claude/settings.json`. Use `--permission-mode bypassPermissions` only inside a throwaway container or VM.
+
 ### The Three Hooks
 
 - **SessionStart** injects `policy.md`: answer every question itself, taking the option marked "(Recommended)" or else the one closest to the approved design, then the smaller change. It logs the call and parks anything irreversible or outward-facing, such as a merge, a release or a deploy.
 - **PreToolUse on `AskUserQuestion`** denies the question and tells Claude to apply the policy instead.
-- **Stop** is what catches plain-text questions, which never call `AskUserQuestion`. It blocks a stop while a queue item is open. After three blocks it parks the item and moves on, so a stuck item cannot hold the run.
+- **Stop** is what catches plain-text questions, which never call `AskUserQuestion`. It blocks a stop while a queue item is open. After three blocks it parks the item and moves on, so a stuck item cannot hold the run. Items the guard parks appear in the queue with a `parkedReason`, and in the end-of-run summary.
 
 ### Queue and Calls Files
 
-- `.claude/unattended-queue.json` holds `{ "items": [...] }`. Each item has an `id`, a `plan`, a `pr`, a `status` (`queued`, `running`, `done` or `parked`), a `stopBlocks` counter and a `parkedReason`. Each item runs on a branch named `unattended/<id>` and ends as a PR.
+- `.claude/unattended-queue.json` holds `{ "items": [...] }`. Each item has an `id`, a `plan`, an optional `base`, a `pr`, a `status` (`queued`, `running`, `done` or `parked`), a `stopBlocks` counter and a `parkedReason`. Each item runs on a branch named `unattended/<id>` and ends as a PR. `ready-check` asks, for each item after the first, whether it builds on an earlier one and records its `id` as `base`. With no `base`, the item branches from the default branch. With a `base` that is done, it branches from `unattended/<base>` and the PR targets that branch. If the `base` item is parked, this item is parked with the reason `base item <id> parked`.
 - `.claude/unattended-calls.md` logs every call under `## <item id>` as `Q`, `Chose` and `Why`. The PR body copies that section.
 
-A parked item records its question in `docs/planning/STATE.md`, or in `.claude/unattended-run.md` when there is no state file, and the run continues with the next item.
+At the start of a queue run, `.claude/unattended-*` is added to `.git/info/exclude`, so the queue, the calls log and the run file are never committed and survive branch switches. In queue mode a parked question, the end-of-run summary and any PR body for a repo with no remote go to `.claude/unattended-run.md`. The run continues with the next item.
+
+A long run is never handed off to a fresh session. Auto-compaction carries it, and the session start hook re-injects the policy and the current item when it fires.
 
 ### Single-Item Mode
 
-With no readable queue file, the session prompt is the item. Claude works on the current branch, uses the checks the prompt names, logs its calls and ends at a commit. It opens no PR.
+Queue mode needs a queue file that parses, has an `items` array and has an open item, one that is `running` or `queued`. In any other case the session prompt is the item. Claude works on the current branch, uses the checks the prompt names, logs its calls under the branch name and ends at a commit. It opens no PR. A parked question goes to `docs/planning/STATE.md` when it exists, otherwise to `.claude/unattended-run.md`.
 
 ### Using It in harness-lab
 
 1. Copy `plugins/unattended/skills/unattended/` to `harness/base/.claude/skills/unattended/`. Do not copy `ready-check`: it is attended, so harness-lab does not grade it.
-2. Register the three hooks in `harness/base/.claude/settings.json`, each as `node "$CLAUDE_PROJECT_DIR/.claude/skills/unattended/scripts/<name>.mjs"`, where `<name>` is `session-start`, `ask-check` or `stop-check`.
+2. Register the three hooks in `harness/base/.claude/settings.json`, using `plugins/unattended/hooks/hooks.json` as the template. The PreToolUse entry needs `"matcher": "AskUserQuestion"`. Each command is `node "$CLAUDE_PROJECT_DIR/.claude/skills/unattended/scripts/<name>.mjs"`, where `<name>` is `session-start`, `ask-check` or `stop-check`.
 3. Add a trigger line to `harness/base/CLAUDE.md` that tells an unattended session to invoke the `unattended` skill.
 4. Have the substrate set `SUPERPOWERS_UNATTENDED=1` in `session_env`.
 

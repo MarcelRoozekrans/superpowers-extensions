@@ -87,6 +87,16 @@ test('ask-check entry denies on bad input when unattended', () => {
   assert.equal(JSON.parse(r.stdout).hookSpecificOutput.permissionDecision, 'deny');
 });
 
+test('ask-check entry still denies when unattended.mjs cannot be loaded', () => {
+  const dir = tmp();
+  const lone = join(dir, 'ask-check.mjs');
+  writeFileSync(lone, readFileSync(askPath, 'utf8'));
+  const r = spawn(lone, '', { SUPERPOWERS_UNATTENDED: '1' });
+  assert.equal(r.status, 0);
+  assert.equal(JSON.parse(r.stdout).hookSpecificOutput.permissionDecision, 'deny');
+  assert.equal(spawn(lone, '', {}).stdout, '');
+});
+
 test('ask-check entry is silent when attended', () => {
   const r = spawn(askPath, 'not json', {});
   assert.equal(r.status, 0);

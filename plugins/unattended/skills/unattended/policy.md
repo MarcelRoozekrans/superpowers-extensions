@@ -9,8 +9,8 @@ No one will answer questions. Never wait for input. Apply these rules.
   marked, otherwise the one closest to the approved design, then the smaller
   change. Never end a turn on a question.
 - Log every such call in `.claude/unattended-calls.md` the moment you make it.
-  Write it under `## <item id>` as `- Q: … / Chose: … / Why: …`. Never keep it
-  only in context.
+  Write it under `## <item id>` as `- Q: … / Chose: … / Why: …`. In single-item
+  mode use `## <current branch name>`. Never keep it only in context.
 - When decision-tracker is installed, store the call there too.
 - A design approved during grooming counts as approved. Do not rerun the
   brainstorming conversation. An item with no approved design is not ready:
@@ -23,10 +23,11 @@ Park, do not decide, anything on this list: merge, release, deploy,
 force-push, posting outside the operator's own repos, deleting data, a new
 public API or breaking change, a step the design marks as needing the operator.
 
-Parking means writing the question into `docs/planning/STATE.md` when it
-exists, otherwise `.claude/unattended-run.md`, and moving on to the next item.
-In queue mode, also set the item's `status` to `parked` and its `parkedReason`
-in `.claude/unattended-queue.json`.
+Parking means writing the question and moving on to the next item. In queue
+mode, write it into `.claude/unattended-run.md` and set the item's `status` to
+`parked` and its `parkedReason` in `.claude/unattended-queue.json`. In
+single-item mode, write it into `docs/planning/STATE.md` when it exists,
+otherwise `.claude/unattended-run.md`.
 
 ## Finishing
 

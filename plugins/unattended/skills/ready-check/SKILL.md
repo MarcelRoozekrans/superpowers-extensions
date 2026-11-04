@@ -36,7 +36,7 @@ An item that still fails after the operator has answered is not queued. Tell the
 
 ## Queue
 
-Queue only the items that pass, in phase or plan order. Write `.claude/unattended-queue.json`:
+Queue only the items that pass, in phase or plan order. For each item after the first, ask the operator with `AskUserQuestion` whether it builds on an earlier queued item. Recommend the previous item when this item is a later roadmap phase, otherwise recommend none. Record the answer as `base`. Write `.claude/unattended-queue.json`:
 
 ```json
 {
@@ -44,6 +44,7 @@ Queue only the items that pass, in phase or plan order. Write `.claude/unattende
     {
       "id": "auth",
       "plan": "docs/superpowers/plans/2026-11-04-auth.md",
+      "base": null,
       "status": "queued",
       "stopBlocks": 0,
       "pr": null,
@@ -55,6 +56,7 @@ Queue only the items that pass, in phase or plan order. Write `.claude/unattende
 
 - `id` is short and unique. It becomes the branch `unattended/<id>`.
 - `plan` is the repo-relative path of the plan.
+- `base` is the `id` of an earlier item this one builds on, or `null`. The run branches from `unattended/<base>` and opens the PR against that branch. When the base item is parked, this item is parked too.
 - Every item starts `queued` with `stopBlocks: 0`, `pr: null` and `parkedReason: null`.
 
 If no item passes, write no queue file and say so. If `.claude/unattended-queue.json` already exists, ask the operator before replacing it.
@@ -64,6 +66,8 @@ Then print the start command, with the goal filled in:
 ```bash
 SUPERPOWERS_UNATTENDED=1 claude -p "Run the unattended queue: <goal>"
 ```
+
+The run needs file edits, git, gh and the plan's check commands allowed without a prompt, because `claude -p` cannot answer one. Put them in a `permissions.allow` list in the project's `.claude/settings.json`. Use `--permission-mode bypassPermissions` only inside a throwaway container or VM.
 
 ## Never
 
