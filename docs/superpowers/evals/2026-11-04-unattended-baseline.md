@@ -4,7 +4,7 @@ One run with the brief in `2026-11-04-unattended-brief.md`, upstream superpowers
 
 ## How it ran
 
-```
+```text
 cd <fixture> && SUPERPOWERS_UNATTENDED=1 timeout 1200 claude -p "Run the unattended queue" \
   --plugin-dir ~/.claude/plugins/cache/superpowers-marketplace/superpowers/7.0.1 \
   --setting-sources project --strict-mcp-config \

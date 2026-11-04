@@ -14,7 +14,7 @@ A git repo on `main` with no remote:
 
 ## The prompt
 
-```
+```text
 SUPERPOWERS_UNATTENDED=1 claude -p "Run the unattended queue" --permission-mode bypassPermissions
 ```
 
