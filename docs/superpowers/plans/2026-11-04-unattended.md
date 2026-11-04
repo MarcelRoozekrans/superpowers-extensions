@@ -36,6 +36,7 @@
 ### Task 1: Core module, ask and stop hooks
 
 **Files:**
+
 - Create: `plugins/unattended/.claude-plugin/plugin.json`
 - Create: `plugins/unattended/hooks/hooks.json`
 - Create: `plugins/unattended/skills/unattended/scripts/unattended.mjs`
@@ -45,6 +46,7 @@
 - Modify: `commitlint.config.js` (add `unattended` to `scope-enum`)
 
 **Interfaces:**
+
 - Produces, from `unattended.mjs`:
   - `QUEUE_PATH = '.claude/unattended-queue.json'`, `CALLS_PATH = '.claude/unattended-calls.md'`, `MAX_STOP_BLOCKS = 3`
   - `isUnattended(env: Record<string,string|undefined>): boolean`. True only when `env.SUPERPOWERS_UNATTENDED === '1'`.
@@ -101,6 +103,7 @@
 ### Task 2: Policy text and SessionStart hook
 
 **Files:**
+
 - Create: `plugins/unattended/skills/unattended/policy.md`
 - Create: `plugins/unattended/skills/unattended/scripts/session-start.mjs`
 - Modify: `plugins/unattended/skills/unattended/scripts/unattended.mjs` (add `policyText`)
@@ -108,6 +111,7 @@
 - Test: `plugins/unattended/skills/unattended/scripts/unattended.test.mjs`
 
 **Interfaces:**
+
 - Consumes: `isUnattended`, `readQueue`, `openItem`, `QUEUE_PATH`, `CALLS_PATH` from Task 1.
 - Produces: `policyText(skillDir: string, queue: Queue | null): string`. This is the contents of `<skillDir>/policy.md`, or `FALLBACK_POLICY` when that file cannot be read. It then adds an entry-point paragraph:
   - With an open item: `Queue mode: work the queue in .claude/unattended-queue.json; the current item is <id> (<plan>). Invoke the unattended skill.`
@@ -126,7 +130,7 @@
   Run: `node --test plugins/unattended/skills/unattended/scripts/unattended.test.mjs`
   Expected: the five new tests FAIL.
 
-- [ ] **Step 3: Write `policy.md`.** It holds the spec's "The policy" bullets as short imperative rules for the agent, plus the unsafe list and the 3-attempt check rule from Global Constraints. One rule says to write each call to `CALLS_PATH` under `## <item id>` as `- Q: … / Chose: … / Why: …` at the moment it is made. Another says writing-plans' execution choice is subagent-driven-development. A third says an approved design counts as approved, and an item with no approved design is parked. Keep it under 60 lines; Harness² tunes it later.
+- [ ] **Step 3: Write `policy.md`.** It holds the spec's "The policy" bullets as short imperative rules for the agent, plus the unsafe list and the 3-attempt check rule from Global Constraints. One rule says to write each call to `CALLS_PATH` under `## <item id>` as `- Q: … / Chose: … / Why: …` at the moment it is made, and to store it with decision-tracker too when that is installed. Another says writing-plans' execution choice is subagent-driven-development. A third says an approved design counts as approved, and an item with no approved design is parked. Keep it under 60 lines; Harness² tunes it later.
 
 - [ ] **Step 4: Implement `policyText` and `session-start.mjs`.** It prints `{ hookSpecificOutput: { hookEventName: 'SessionStart', additionalContext } }` when unattended. On error it prints nothing and exits 0. Register it in `hooks.json` with no matcher, so it fires on startup, resume, clear and compact.
 
@@ -137,9 +141,11 @@
 ### Task 3: The `unattended` run skill
 
 **Files:**
+
 - Create: `plugins/unattended/skills/unattended/SKILL.md`
 
 **Interfaces:**
+
 - Consumes: the queue shape, `QUEUE_PATH`, `CALLS_PATH`, `MAX_STOP_BLOCKS` from Task 1, and `policy.md` from Task 2.
 - Produces: the skill name `unattended`, which the SessionStart entry-point text invokes.
 
@@ -168,9 +174,11 @@
 ### Task 4: The `ready-check` skill
 
 **Files:**
+
 - Create: `plugins/unattended/skills/ready-check/SKILL.md`
 
 **Interfaces:**
+
 - Consumes: the queue shape and `QUEUE_PATH` from Task 1.
 - Produces: `.claude/unattended-queue.json` with every item `queued` and `stopBlocks: 0`, plus the start command `SUPERPOWERS_UNATTENDED=1 claude -p "Run the unattended queue: <goal>"`.
 
@@ -197,6 +205,7 @@
 ### Task 5: Registries, upstream guard and README
 
 **Files:**
+
 - Modify: `.claude-plugin/marketplace.json` (append entry 19, version `1.28.0`, category `workflow`)
 - Modify: `release-please-config.json` (add `$.plugins[19].version`)
 - Modify: `package.json` (`install-plugins` gets `&& claude plugin install unattended`)
@@ -232,6 +241,7 @@
 ### Task 6: RED/GREEN evaluation
 
 **Files:**
+
 - Create: `docs/superpowers/evals/2026-11-04-unattended-brief.md`
 - Create: `docs/superpowers/evals/unattended-fixture/make-fixture.mjs`
 - Create: `docs/superpowers/evals/2026-11-04-unattended-baseline.md`
