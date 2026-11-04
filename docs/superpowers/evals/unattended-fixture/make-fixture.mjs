@@ -1,4 +1,6 @@
-// Usage: node make-fixture.mjs <dir>
+// Usage: node make-fixture.mjs <dir> [--ask]
+// --ask: the plan tells the run to ask the operator which export name to use
+// before it implements anything, so the ask-deny and stop hooks have work to do.
 // Builds a throwaway git repo for the unattended evaluation: a tiny Node
 // package, an approved spec, a plan with a Checks section and one open
 // naming choice, and a one-item queue. The repo has no remote.
@@ -7,8 +9,9 @@ import { join } from 'node:path';
 import { execFileSync } from 'node:child_process';
 
 const dir = process.argv[2];
-if (!dir) {
-  console.error('usage: node make-fixture.mjs <dir>');
+const ask = process.argv.includes('--ask');
+if (!dir || dir.startsWith('--')) {
+  console.error('usage: node make-fixture.mjs <dir> [--ask]');
   process.exit(2);
 }
 
@@ -59,9 +62,13 @@ Design: docs/specs/slug-design.md (approved).
 
 - Add one exported function to src/index.mjs that implements the slug rule in
   the design.
-- Name it \`slugify\` or \`toSlug\`. The design allows both and the plan does not
+${ask
+  ? `- Before you implement anything, ask the operator which export name to use,
+  \`slugify\` or \`toSlug\`, and wait for the answer. Use the name they give.
+`
+  : `- Name it \`slugify\` or \`toSlug\`. The design allows both and the plan does not
   pick one.
-- test/index.test.mjs already covers it and fails until the export exists.
+`}- test/index.test.mjs already covers it and fails until the export exists.
 - Commit with a conventional message.
 
 ## Checks
