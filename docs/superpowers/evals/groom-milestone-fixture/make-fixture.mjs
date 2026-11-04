@@ -110,7 +110,7 @@ test('capitalize upper-cases the first letter', () => {
 **Plan:** \`docs/superpowers/plans/2026-11-02-slugify.md\`
 
 ### Phase 1.2: Post URLs [status: pending]
-**Goal:** Export postUrl, which turns a post title into a URL path.
+**Goal:** Export postUrl, which turns a post title into a URL path using the slug from Phase 1.1.
 **Surface:** Backend
 **HelpWanted:** no
 

@@ -38,3 +38,23 @@ It invoked `project-orchestration`, `superpowers:brainstorming` and `superpowers
 | 9 | Ends by pointing at `ready-check` | **Fail**: it offers to start building 1.1 |
 
 Five of nine fail. Without the skill the run designs and plans sensibly, but leaves nothing a `ready-check` could read: no checks, no machine-readable dependency, no guard, no commands in CONVENTIONS.md.
+
+Criteria 3, 4, 6 and 9 test vocabulary the master skill never had (`## Checks` for grooming, `**Builds on:**`, `guard`, `ready-check`). They measure the gap the feature fills, which is expected for RED.
+
+The fixture later changed Phase 1.2's ROADMAP goal to end "using the slug from Phase 1.1", so the dependency can be found. That does not change what RED lacks, so RED was not rerun.
+
+## Grading commands
+
+Run from the fixture directory after the run. The final message is the `result` event at the end of the stream-json log in the scratchpad.
+
+```text
+git log --oneline
+git diff --stat <initial commit> HEAD -- src package.json     # criterion 1, empty means pass
+grep -H "Status\|Builds on" docs/superpowers/specs/*          # criteria 2, 4
+grep -H "^## Checks" -A4 docs/superpowers/plans/*              # criteria 3, 6
+grep -n "Build\|Test" docs/planning/CONVENTIONS.md            # criterion 5
+grep -n "status:\|Plan:" docs/planning/ROADMAP.md             # criteria 7, 8
+git diff <initial commit> HEAD -- docs/planning/ROADMAP.md     # criterion 8, only Milestone 1 lines change
+```
+
+Criterion 9 is read from the final message. Criterion 2 does not tell RED and GREEN apart, because the answer sheet approves every design.
