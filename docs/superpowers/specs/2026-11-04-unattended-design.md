@@ -1,6 +1,6 @@
 # unattended design
 
-Date: 2026-11-04. Status: draft for approval. Builder check done.
+Date: 2026-11-04. Status: approved 2026-11-04. Builder check done.
 
 ## Intent
 
@@ -26,7 +26,7 @@ empty run, and the policy wording can be tuned by Harness² against real tasks.
 - An **unattended policy** that overrides the suite's ask-the-user gates without
   editing upstream superpowers: decide by rule, log each call, park unsafe items.
 - A **run** skill that loops over the queued items, one branch and PR per item,
-  with context-budget handoffs for long runs.
+  that survives long runs through auto-compaction.
 - Hooks and skills that harness-lab can install from `harness/base` unchanged.
 
 ## Non-goals
@@ -116,7 +116,7 @@ Short, imperative text, kept in one file (`policy.md`) so Harness² can tune it:
   force-push, posting outside the operator's own repos, deleting data, a new
   public API or breaking change, a step the design marks as needing the operator.
   Parking writes the question into the run's state file and moves to the next
-  item.
+  item. In queue mode the state file is `.claude/unattended-run.md`.
 - An item is done only when its checks pass on the branch. A check that still
   fails after three fix attempts parks the item with the failure attached.
   *(My call: three matches systematic-debugging's "three failed fixes, question
@@ -131,9 +131,9 @@ single groomed item and invoke the same skill in single-item mode.
 
 `.claude/unattended-calls.md`, one section per item (`## <item>`), one bullet
 per call: question, choice, reason. Written by the agent as each call is made,
-read when the PR body is written, kept across handoffs because it is a file.
+read when the PR body is written, kept across compaction because it is a file.
 *(My call: a file survives subagents and context-budget handoffs; context does
-not.)* In harness-lab the file sits under `.claude/`, which is excluded from the
+not.)* In single-item mode the section heading is the current branch name. In harness-lab the file sits under `.claude/`, which is excluded from the
 graded diff.
 
 ### Enforcement (`PreToolUse` on `AskUserQuestion`)
@@ -158,7 +158,7 @@ is my call.)
 ### Groomed item
 
 An item is a phase in `docs/planning/` (project-orchestration) or a standalone
-plan in `docs/superpowers/plans/`, plus a `## Checks` section in its plan:
+plan in `docs/superpowers/plans/`, plus a `## Checks` section in its plan. A queued item may name an earlier item as its `base` (see the run below).
 
 ```markdown
 ## Checks
@@ -189,8 +189,13 @@ or asks "is this ready to run unattended". For each item it checks:
 
 It asks the operator each gap right there, using AskUserQuestion with a
 recommended option, and writes the answers back into the design or plan. Items
-that still fail are not queued. Output: a queue file listing the ready items in
-order, and the exact command to start the run.
+that still fail are not queued. For each item after the first it also asks whether the item builds on an
+earlier queued item (recommended: the previous item when it is a later roadmap
+phase, else none) and records the answer as the item's optional `base`. Output: a
+queue file listing the ready items in order, and the exact command to start the
+run. The run needs file edits, git, gh and the plan's check commands allowed in
+a `permissions.allow` list, because `claude -p` cannot answer prompts;
+`bypassPermissions` belongs only in a throwaway container or VM.
 
 ### `unattended` skill (the run)
 
@@ -203,15 +208,26 @@ prompt is the item. Work on the current branch, follow the policy, run the
 repo's build and tests as the checks if the prompt names none, and stop at a
 committed change; no PR, no state file beyond the call log.
 
-**Queue mode:** for each queued item in order: branch from the default branch, execute the plan via
+**Queue mode:** the queue has `items` and at least one open item. At the start,
+`.claude/unattended-*` goes into `.git/info/exclude`, so the queue, the call log
+and the run file are never committed. For each queued item in order: branch from
+the default branch, or from `unattended/<base>` with the PR against that branch
+when the item has a `base` that is done; park the item with the reason
+`base item <id> parked` when its base is parked. Execute the plan via
 subagent-driven-development, run the checks, open a PR whose body lists the
 unattended calls, update the run state, continue. Parked items are recorded with
-their question and the run moves on. Long runs hand off through context-budget
-at item boundaries. The run ends with a summary in the state file: PRs opened,
-items parked with their questions, calls made.
+their question and the run moves on. The run ends with a summary in
+`.claude/unattended-run.md`: PRs opened, every parked item with its reason
+(including items the stop guard parked), calls made.
 
-The run's state lives in `docs/planning/STATE.md` when it exists, otherwise in
-`.claude/unattended-run.md`.
+A long run never hands off to a fresh session. Auto-compaction carries it, and
+`SessionStart` re-injects the policy and the current item. *(Reason: a local
+`claude -p` has no `create_session`, and the Stop guard and an untracked queue
+in a new worktree would break a handoff.)*
+
+In queue mode the run state lives in `.claude/unattended-run.md`. In
+single-item mode a parked question goes to `docs/planning/STATE.md` when it
+exists, otherwise to `.claude/unattended-run.md`.
 
 ### harness-lab fit
 
