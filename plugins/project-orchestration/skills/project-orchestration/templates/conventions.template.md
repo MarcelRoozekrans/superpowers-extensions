@@ -1,6 +1,6 @@
 # Project Conventions
 
-> Written by `init-conventions`. Read by the Commit & Release Protocol before every commit and tag. `init-conventions`' VERIFY step checks that all five `##` sections are present and that no `**Key:**` line still contains a `<placeholder>` or a space-padded `|`, then saves the filled-in copy at `docs/planning/CONVENTIONS.md`. Stable across milestones — re-run `init-conventions` if a convention changes. Do NOT hand-edit fields the protocol reads without re-running the sub-skill; it validates them.
+> Written by `init-conventions`. Read by the Commit & Release Protocol before every commit and tag. `init-conventions`' VERIFY step checks that all five `##` sections are present and that no `**Key:**` line still contains a `<placeholder>` or a space-padded `|`, then saves the filled-in copy at `docs/planning/CONVENTIONS.md`. Stable across milestones — re-run `init-conventions` if a convention changes. Do NOT hand-edit fields the protocol reads without re-running the sub-skill; it validates them. One exception: the writing-plans `## Checks` rule may also fill `**Build:**` and `**Test:**`, which the protocol does not read. Every other field goes through a re-run.
 
 **Established:** YYYY-MM-DD
 
@@ -14,6 +14,10 @@
 **Package manager:** `<value>`
 **Framework:** `<value | none>`
 **Datastore:** `<value | n/a>`
+**Build:** `<command | none>`
+**Test:** `<command | none>`
+
+> Plans copy `**Build:**` and `**Test:**` into their `## Checks` section.
 
 ## Commits
 

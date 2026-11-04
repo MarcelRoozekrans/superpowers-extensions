@@ -293,10 +293,11 @@ The project-orchestration skill provides GSD-inspired project lifecycle manageme
 | `pause-work` | "done for today" / stopping | Writes `docs/planning/STATE.md` with current position, open decisions, and recommended next step |
 | `resume-work` | "resume" / session start | Reads `STATE.md`, presents a session handoff summary, then chains into `start-next-phase` |
 | `start-next-phase` | After `resume-work`, or "continue" / "next" | Routing hub — finds the next non-complete phase and mechanically chains into brainstorming / writing-plans / executing-plans depending on which artifacts exist |
-| `complete-phase` | After `executing-plans` finishes a phase, or "mark phase N.M complete" | Promotes a phase from `active` to `complete`. Without it ROADMAP.md keeps showing the phase active and `start-next-phase` routes back to already-finished work. Offers a `retro` once when that plugin is installed |
+| `complete-phase` | After `executing-plans` finishes a phase, or "mark phase N.M complete" | Promotes a phase from `active` or `pending` to `complete`. Without it ROADMAP.md keeps showing the phase active and `start-next-phase` routes back to already-finished work. Offers a `retro` once when that plugin is installed |
 | `audit-milestone` | "verify milestone is done" | Verifies each definition-of-done criterion: phases, tests, regression test, docs, and the release tag — the last one only on projects whose conventions say milestone completion tags a release, and skipped (not failed) otherwise |
 | `complete-milestone` | After audit PASS | Archives the milestone and updates the roadmap, then handles the release per `docs/planning/CONVENTIONS.md`. Creates a tag only when the project's conventions say milestone completion tags a release; where an automation owns releases, it creates none and says so. Offers a `retro` once when that plugin is installed |
 | `new-milestone` | After `complete-milestone` | Brainstorms the next milestone end-to-end before writing `MILESTONE.md` (refuses to start if previous milestone is not complete) |
+| `groom-milestone` | "groom the milestone" / before an unattended run | Designs and plans every pending phase of the active milestone in one sitting, with no execution. Later phases are written against earlier plans through a `**Builds on:**` line and guard checks. Flow: groom → `ready-check` → run → merge → `start-next-phase` closes the phases |
 | `init-github-sync` | "set up GitHub sync" / `/sync-to-github`, one-time | Creates labels, native Milestones, and Issues on GitHub from `ROADMAP.md`, writing the resulting numbers back. Refuses if sync is already initialized |
 | `sync-github` | Auto-invoked from `pause-work` and `complete-phase`; manual on demand | Projects `ROADMAP.md` state onto GitHub issues/milestones (one-way write). Step 5 embeds `detect-external-signals`, which posts advisory comments when an external dev closes or edits an issue out of band. Skips silently rather than blocking when `gh` is unauthenticated |
 
@@ -614,7 +615,7 @@ The unattended plugin lets a session work through groomed plans with no one to a
 
 ### Starting a Run
 
-Run `ready-check` first. For each item it checks for an approved design, a `## Checks` section in the plan, a passing build at the base, no open questions and no step that needs you. It asks about each gap and writes the queue. It then prints the start command and stops:
+Run `ready-check` first. For a project with `docs/planning/`, it takes the non-complete phases of the active milestone, so the phases `groom-milestone` prepared are queued as `phase-N-M`. Name another milestone, or say "all", to change that. For each item it checks for an approved design, a `## Checks` section in the plan, a passing build at the base, no open questions and no step that needs you. It asks about each gap and writes the queue. It then prints the start command and stops:
 
 ```bash
 SUPERPOWERS_UNATTENDED=1 claude -p "Run the unattended queue: <goal>"
@@ -1463,7 +1464,7 @@ superpowers-extensions/
 │   │   │   └── plugin.json
 │   │   └── skills/
 │   │       └── project-orchestration/
-│   │           ├── SKILL.md                # 18 sub-skills for project lifecycle (start-next-phase routing hub, plan-roadmap, init-conventions, github-sync)
+│   │           ├── SKILL.md                # 19 sub-skills for project lifecycle (start-next-phase routing hub, plan-roadmap, init-conventions, github-sync)
 │   │           ├── state-files.md          # docs/planning/ file format reference
 │   │           └── templates/              # roadmap / milestone / phase design + conventions templates
 │   ├── ui-workflow/

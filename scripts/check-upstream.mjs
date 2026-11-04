@@ -58,6 +58,11 @@ const ANCHORS = [
   },
   {
     file: 'skills/writing-plans/SKILL.md',
+    text: '**When an execution method has already been supplied:**',
+    users: 'project-orchestration groom-milestone supplies the method so writing-plans stops at plan review',
+  },
+  {
+    file: 'skills/writing-plans/SKILL.md',
     text: '## Execution Handoff',
     users: 'squad runs its plan review before this step',
   },

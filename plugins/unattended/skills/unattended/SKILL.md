@@ -29,9 +29,10 @@ For each item:
 3. Branch as `unattended/<id>`. If that branch already exists, as for an item still `running` after a resume, check it out instead.
 4. Execute the plan with `superpowers:subagent-driven-development`.
 5. Run each command under the plan's `## Checks`. A failing check gets three fix attempts. If it still fails, park the item as described under Parking, with the failure as its `parkedReason`.
-6. Open a PR. Add a `## Unattended calls` section to the body, copied from this item's `## <id>` section in `.claude/unattended-calls.md`. Apply `anti-slop` to the prose when it is installed.
+6. Tick the plan. `subagent-driven-development` tracks progress outside the plan file, so its task checkboxes are still `- [ ]`. Set every one to `- [x]`, re-read the plan to confirm none is left open, and commit it on the item's branch, following the repo's commit rules. When the operator merges the PR, the ticked plan reaches the default branch, and `start-next-phase` closes the phase from it.
+7. Open a PR. Add a `## Unattended calls` section to the body, copied from this item's `## <id>` section in `.claude/unattended-calls.md`. Apply `anti-slop` to the prose when it is installed.
    No remote: write the PR body to `.claude/unattended-run.md` and leave `pr` null.
-7. Set the item to `done` and set `pr` to the PR URL, then take the next item.
+8. Set the item to `done` and set `pr` to the PR URL, then take the next item.
 
 A parked item does not stop the run. Continue with the next one.
 
@@ -53,7 +54,8 @@ When no item is `queued` or `running`, write a summary to `.claude/unattended-ru
 2. Use the checks the prompt names. If it names none, use the repo's build and test commands.
 3. Log every call as the policy says.
 4. A parked question goes to `docs/planning/STATE.md` when it exists, otherwise `.claude/unattended-run.md`.
-5. End at a commit. Open no PR and write no queue.
+5. When the item is a plan and its checks pass, tick the plan as queue mode step 6 does, before the final commit.
+6. End at a commit. Open no PR and write no queue.
 
 ## Never
 
