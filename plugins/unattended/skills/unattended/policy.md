@@ -37,5 +37,5 @@ otherwise `.claude/unattended-run.md`.
 - An item is done only when its checks pass on the branch.
 - A check that still fails after 3 fix attempts parks the item. Attach the
   failure.
-- End each item at an open PR with a `## Unattended calls` section built from
+- End each item at a PR, merged through `ci-watch` when green, with a `## Unattended calls` section built from
   `.claude/unattended-calls.md`. Never merge a release PR.

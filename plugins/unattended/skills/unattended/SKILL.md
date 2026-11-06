@@ -30,10 +30,10 @@ For each item:
 4. Execute the plan with `superpowers:subagent-driven-development`.
 5. Run each command under the plan's `## Checks`. A failing check gets three fix attempts. If it still fails, park the item as described under Parking, with the failure as its `parkedReason`.
 6. Tick the plan. `subagent-driven-development` tracks progress outside the plan file, so its task checkboxes are still `- [ ]`. Set every one to `- [x]`, re-read the plan to confirm none is left open, and commit it on the item's branch, following the repo's commit rules. When the operator merges the PR, the ticked plan reaches the default branch, and `start-next-phase` closes the phase from it.
-7. Open a PR. Add a `## Unattended calls` section to the body, copied from this item's `## <id>` section in `.claude/unattended-calls.md`. Apply `anti-slop` to the prose when it is installed.
+7. Open a PR. Add a `## Unattended calls` section to the body, copied from this item's `## <id>` section in `.claude/unattended-calls.md`. Apply `anti-slop` to the prose when it is installed. Set the item's `pr` to the PR URL as soon as the PR is open.
    No remote: write the PR body to `.claude/unattended-run.md` and leave `pr` null.
-8. Run `ci-watch` Wait on the PR, using its foreground mechanism. Without `gh`, write "CI not watched: no gh" to `.claude/unattended-run.md` and go on. When CI is green and the Merge stage allows it, run Merge and set the item's `merged` to the merge commit SHA. Otherwise the item ends at its open PR, with the reason in `.claude/unattended-run.md`.
-9. Set the item to `done` and set `pr` to the PR URL, then take the next item.
+8. No PR (step 7 had no remote and `pr` is null): skip this step. Otherwise run `ci-watch` Wait on the PR, using its foreground mechanism. Without `gh`, write "CI not watched: no gh" to `.claude/unattended-run.md` and go on. When CI is green and the Merge stage allows it, run Merge and set the item's `merged` to the merge commit SHA. Red CI follows the `ci-watch` Red CI loop. After its three failed fix rounds, park the item with the failure as its `parkedReason` and the details in `.claude/unattended-run.md`. In any other case where the PR is not merged, the item ends at its open PR, with the reason in `.claude/unattended-run.md`.
+9. Set the item to `done`, keeping `pr` and `merged` as recorded, then take the next item. A parked item stays `parked`.
 
 A parked item does not stop the run. Continue with the next one.
 
