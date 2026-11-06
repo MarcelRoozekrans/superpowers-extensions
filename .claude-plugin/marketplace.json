@@ -212,6 +212,16 @@
       },
       "source": "./plugins/unattended",
       "category": "workflow"
+    },
+    {
+      "name": "ci-watch",
+      "description": "Waits for CI as an event, fixes red CI, merges a green PR when asked and follows the release. A hook starts the watch whenever a PR is opened.",
+      "version": "1.29.0",
+      "author": {
+        "name": "Marcel Roozekrans"
+      },
+      "source": "./plugins/ci-watch",
+      "category": "workflow"
     }
   ]
 }

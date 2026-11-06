@@ -33,7 +33,8 @@ const PLUGINS = [
   'wizard',
   'upstream-issue',
   'architecture-scan',
-  'unattended'
+  'unattended',
+  'ci-watch'
 ];
 
 // A plugin may carry several skills, so register each folder under skills/.

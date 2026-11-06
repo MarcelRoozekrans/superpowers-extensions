@@ -77,3 +77,16 @@ test('hook stays silent on bad input, failed creation and unattended', () => {
   assert.equal(r.status, 0);
   assert.equal(r.stdout, '');
 });
+
+const ciWatchPath = join(here, 'ci-watch.mjs');
+
+test('sanitize CLI reads stdin and prints the bracketed form', () => {
+  const r = spawnSync('node', [ciWatchPath, 'sanitize'], { input: '[Singleton(As = typeof(IDetector), AllowMultiple = true)]\n', encoding: 'utf8' });
+  assert.equal(r.status, 0);
+  assert.equal(r.stdout, '[Singleton(As = typeof[IDetector], AllowMultiple = true)]\n');
+});
+
+test('sanitizeBody drops signature lines even inside code fences', () => {
+  const input = 'x\n```\nCo-Authored-By: Claude <noreply@anthropic.com>\nhttps://claude.ai/code/session_abc\nkeep\n```\ny';
+  assert.equal(sanitizeBody(input), 'x\n```\nkeep\n```\ny');
+});

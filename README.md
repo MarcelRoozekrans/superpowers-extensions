@@ -2,7 +2,7 @@
 
 [![GitHub Sponsors](https://img.shields.io/github/sponsors/MarcelRoozekrans?style=flat&logo=githubsponsors&color=ea4aaa&label=Sponsor)](https://github.com/sponsors/MarcelRoozekrans)
 
-Extension skills for the [superpowers](https://github.com/obra/superpowers) suite, providing quality gates, development workflow skills, and project lifecycle management for web application development. It includes twenty plugins with twenty-two skills:
+Extension skills for the [superpowers](https://github.com/obra/superpowers) suite, providing quality gates, development workflow skills, and project lifecycle management for web application development. It includes twenty-one plugins with twenty-three skills:
 
 - **regression-test** -- Regression testing using the [Microsoft Playwright MCP server](https://github.com/microsoft/playwright-mcp), combining existing test suite execution with AI-powered visual and functional browser testing.
 - **pre-push-review** -- A structured branch review that diffs against the base branch and gates on plan adherence, code quality, commit hygiene, and regression testing, producing a PASS/FAIL verdict with a prioritized remediation plan on failure.
@@ -23,6 +23,7 @@ Extension skills for the [superpowers](https://github.com/obra/superpowers) suit
 - **upstream-issue** -- Reports a bug to an upstream project only after proving it is theirs. Claude pins the symptom against the docs, traces the cause into upstream code, checks the latest release and the default branch, and searches for existing reports, including open fix pull requests. It builds a minimal repro and runs it until it fails. Two fresh subagents then check it independently: a skeptic tries to refute the report, and a clean runner runs the repro from an empty directory. The draft goes through anti-slop and a privacy scanner, and nothing is posted until you approve it.
 - **architecture-scan** -- Finds shallow modules in the areas the git history changes most. A script ranks the hot directories and files of the last 200 commits, one subagent applies the deletion test there, and the ranked report (an Artifact or an HTML file) shows a before/after diagram per candidate. You pick one, and it goes to `superpowers:brainstorming`. The plugin also ships **codebase-design**, the shared deep-module vocabulary (module, interface, depth, seam, leverage, locality). Adapted from Matt Pocock's [skills](https://github.com/mattpocock/skills) (MIT). See [plugins/architecture-scan/NOTICE.md](plugins/architecture-scan/NOTICE.md).
 - **unattended** -- Runs a queue of groomed plans while no one is at the keyboard. Three hooks deny `AskUserQuestion`, stop the session from ending while an item is open, and inject a short policy that says which option to take and what to park. Every call made for you goes into a log that becomes the PR body. `ready-check` is the attended half: it checks each item and writes the queue.
+- **ci-watch** -- Waits for CI as an event, fixes red CI, merges a green PR when asked and follows the release. A hook starts the watch whenever a PR is opened, including PRs opened by upstream skills. Needs `gh` locally or the GitHub MCP tools in cloud sessions.
 - **squad** -- Persistent AI agent teams (Lead, Backend Engineer, Frontend Engineer, Tester, Scribe) **dispatched as parallel `Task` subagents** during brainstorming and planning workflows. Each specialist runs in an isolated context window with its own charter and tier-1 history, so they cannot anchor on each other's reasoning. Per-role `history.md` files accumulate project-specific knowledge across sessions; tiered context lookup (semantic search → grep → recent history) keeps each subagent's prompt lean.
 
 ---
@@ -657,6 +658,30 @@ Node.js for the hooks. `superpowers:subagent-driven-development` runs each plan.
 
 ---
 
+## CI Watch Skill
+
+The ci-watch plugin lets CI results drive the work after a PR is open. One skill, `ci-watch`, has three stages: Wait, Merge and Release. It fires on "merge when green", "watch CI" and "babysit this PR", and when the hook reports a new PR.
+
+### The Hook
+
+A `PostToolUse` hook fires after `gh pr create` or an MCP `create_pull_request` call that returned a PR URL, and tells the agent to run the Wait stage. This also covers PRs opened by upstream skills such as `finishing-a-development-branch`. The hook only starts the watch: it never merges and never blocks, it does nothing on any error, and it stays silent in unattended runs, where the `unattended` skill calls Wait itself.
+
+### The Stages
+
+- **Wait** picks one mechanism per PR: a foreground `gh pr checks --watch` in unattended runs, the same command in the background in interactive sessions, or `subscribe_pr_activity` in cloud sessions that have no `gh` for PRs. Never a sleep loop. The default limit is 60 minutes; set `**CI timeout:** <minutes>` in `docs/planning/CONVENTIONS.md` to change it. Red CI is reproduced locally, fixed and pushed, for at most three rounds. Failing checks are never re-run until green.
+- **Merge** runs only for a PR you asked for, or for a phase PR in an unattended run. It squash-merges with the PR title as subject and a body from `ci-watch.mjs sanitize`, which removes `Co-Authored-By: Claude` trailers and session links and rewrites nested parentheses into square brackets so release-please keeps the commit. Release PRs are never merged.
+- **Release** checks that a merged `feat` or `fix` appears in the release-please PR, that the release PR is green, and after you merge it, that the tag and publish workflows succeed.
+
+### Merging With an Admin-Bypass Ruleset
+
+When the default branch needs one approving review and you cannot approve your own PR, the skill merges with `--admin` only to pass the review rule. Before that it verifies from the ruleset and the PR that every required check passed on the current head, the branch is up to date when the rule is strict, there are no conflicts, and your account is a bypass actor. It never uses `--auto` or any other bypass.
+
+### Prerequisites
+
+An authenticated `gh` locally, or the GitHub MCP tools in cloud sessions.
+
+The merge flow is adapted from `merge-when-green` in [Devleaps/tempa-config-template](https://github.com/Devleaps/tempa-config-template) (MIT); see `plugins/ci-watch/NOTICE.md`.
+
 ## UI Workflow Skill
 
 The ui-workflow skill provides two complementary capabilities that close the design-implementation gap in frontend work.
@@ -963,7 +988,7 @@ per harness; only how the harness loads them.
 | **OpenAI Codex CLI / App** | [`.codex-plugin/plugin.json`](.codex-plugin/plugin.json) + [`.codex/INSTALL.md`](.codex/INSTALL.md) | Clone-and-symlink each plugin into `~/.agents/skills/`; instructions and a copy-paste loop in [`.codex/INSTALL.md`](.codex/INSTALL.md) |
 | **Gemini CLI** | [`gemini-extension.json`](gemini-extension.json) + [`GEMINI.md`](GEMINI.md) | `GEMINI.md` lists each SKILL.md via `@./plugins/.../SKILL.md` import syntax |
 | **GitHub Copilot CLI** | Reuses [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json) + [`.copilot-cli/INSTALL.md`](.copilot-cli/INSTALL.md) | `copilot plugin marketplace add MarcelRoozekrans/superpowers-extensions`, then install individual plugins |
-| **OpenCode.ai** | [`.opencode/plugins/superpowers-extensions.js`](.opencode/plugins/superpowers-extensions.js) | JS plugin registers all twenty-two skill paths via OpenCode's `config.skills.paths` array — no symlinks needed |
+| **OpenCode.ai** | [`.opencode/plugins/superpowers-extensions.js`](.opencode/plugins/superpowers-extensions.js) | JS plugin registers all twenty-three skill paths via OpenCode's `config.skills.paths` array — no symlinks needed |
 
 The polymorphic [`hooks/session-start`](hooks/session-start) script
 detects which harness is running it via env vars (`CURSOR_PLUGIN_ROOT`,
@@ -1029,7 +1054,7 @@ The multi-provider mechanism here is adapted directly from
 [`obra/superpowers`](https://github.com/obra/superpowers) (MIT). Their
 session-start hook was the model for ours; their per-harness manifest
 pattern is what enables one shared markdown tree to load natively in
-each host. Differences: we are a marketplace of twenty plugins (versus
+each host. Differences: we are a marketplace of twenty-one plugins (versus
 their single-plugin layout), so our manifests target the suite at the
 repo root with skills resolved via `./plugins/`.
 
@@ -1069,6 +1094,7 @@ claude plugin install wizard
 claude plugin install upstream-issue
 claude plugin install architecture-scan
 claude plugin install unattended
+claude plugin install ci-watch
 ```
 
 The regression-test plugin automatically configures the Playwright MCP server with `--caps=testing`. The pre-push-review plugin requires only git and no additional MCP servers for its core review.
@@ -1222,6 +1248,12 @@ xcopy /E /I plugins\unattended\skills %USERPROFILE%\.claude\skills
 
 # macOS / Linux -- unattended (both skills; the hooks need the plugin install)
 cp -r plugins/unattended/skills/. ~/.claude/skills/
+
+# Windows -- ci-watch (the skill; the PR hook needs the plugin install)
+xcopy /E /I plugins\ci-watch\skills %USERPROFILE%\.claude\skills
+
+# macOS / Linux -- ci-watch (the skill; the PR hook needs the plugin install)
+cp -r plugins/ci-watch/skills/. ~/.claude/skills/
 ```
 
 **Note:** Some plugins require companion MCP servers. Install them separately:
@@ -1604,6 +1636,16 @@ superpowers-extensions/
 │           │   └── scripts/                # session-start, ask-check, stop-check, shared module and tests
 │           └── ready-check/
 │               └── SKILL.md                # Five checks, gaps, queue file and start command
+│   └── ci-watch/                           # CI watch, merge when green, release follow-through (21st plugin, one skill)
+│       ├── .claude-plugin/
+│       │   └── plugin.json
+│       ├── NOTICE.md                       # Attribution to Devleaps/tempa-config-template
+│       ├── hooks/
+│       │   └── hooks.json                  # PostToolUse on PR creation
+│       └── skills/
+│           └── ci-watch/
+│               ├── SKILL.md                # Wait, Red CI, Merge and Release stages
+│               └── scripts/                # pr-opened hook, ci-watch.mjs and tests
 └── docs/
     ├── planning/                           # Project lifecycle state (ROADMAP, MILESTONE, STATE, CONVENTIONS)
     └── plans/                              # Design documents and phase plans

@@ -1,4 +1,6 @@
-// Pure logic for the ci-watch hook and the Merge stage; no I/O, so it is easy to test.
+// Pure logic for the ci-watch hook and the Merge stage; only the CLI entry at the bottom does I/O.
+import { readFileSync } from 'node:fs';
+import { pathToFileURL } from 'node:url';
 const PR_URL = /https:\/\/github\.com\/[\w.-]+\/[\w.-]+\/pull\/\d+/;
 
 export function isPrCreate(toolName, toolInput) {
@@ -9,7 +11,7 @@ export function isPrCreate(toolName, toolInput) {
 
 export function findPrUrl(toolResponse) {
   const text = typeof toolResponse === 'string' ? toolResponse : JSON.stringify(toolResponse ?? '');
-  const m = PR_URL.exec(text ?? '');
+  const m = PR_URL.exec(text);
   return m ? m[0] : null;
 }
 
@@ -42,10 +44,16 @@ export function sanitizeBody(text) {
   let fenced = false;
   let removed = false;
   for (const line of lines) {
+    // Signature lines are dropped even inside code fences: they must not reach a squash commit.
     if (/^co-authored-by:\s*claude\b/i.test(line) || line.includes('claude.ai/code/session_')) { removed = true; continue; }
     if (line.startsWith('```')) { fenced = !fenced; kept.push(line); continue; }
     kept.push(fenced ? line : (flattenLine(line) ?? line));
   }
   if (removed) while (kept.length && kept[kept.length - 1].trim() === '') kept.pop();
   return kept.join('\n');
+}
+
+// CLI: `node ci-watch.mjs sanitize < body.txt > clean.txt`
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href && process.argv[2] === 'sanitize') {
+  process.stdout.write(sanitizeBody(readFileSync(0, 'utf8')));
 }

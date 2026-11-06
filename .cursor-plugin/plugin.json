@@ -30,7 +30,8 @@
     "wizard",
     "upstream-issue",
     "architecture-scan",
-    "unattended"
+    "unattended",
+    "ci-watch"
   ],
   "skills": "./plugins/"
 }
