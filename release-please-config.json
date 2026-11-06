@@ -110,6 +110,11 @@
         },
         {
           "type": "json",
+          "path": ".claude-plugin/marketplace.json",
+          "jsonpath": "$.plugins[20].version"
+        },
+        {
+          "type": "json",
           "path": ".cursor-plugin/plugin.json",
           "jsonpath": "$.version"
         },

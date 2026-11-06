@@ -24,7 +24,7 @@ Run all five for every item.
 2. **`## Checks`.** The plan has a `## Checks` section with at least one command.
 3. **`build` checks pass at the base.** A build check is a bullet under `## Checks` in the form ``- build: `cmd` ``, labelled `build` before the colon. Run each one from the repo root, on the default branch or the branch the run will start from, with a 15-minute timeout. A build that fails or times out fails the item. Other checks, such as `test` and ``- guard N.M: `cmd` ``, are only checked for being present and non-empty. A test check may fail at the base because the feature is missing. A guard check exercises the interfaces of a later phase, so it may fail at the base too. Running only builds avoids test side effects while grooming.
 4. **No open questions.** Search the design and the plan, headings and body, for the word `TBD` (case-sensitive), for any heading line that ends in `?`, and for the phrase `left to the operator`. A `**Builds on:**` line in the design that still holds a template placeholder, a literal `Phase N.M` or a `<...>`, counts as an open question too. Any hit fails the item.
-5. **No unsafe step.** None of these appears in a plan step that is not marked `park`: merge, release, deploy, force-push, posting outside the operator's own repos, deleting data, a new public API or breaking change, a step the design marks as needing the operator. A step marked `park` is fine. The run parks it and moves on.
+5. **No unsafe step.** None of these appears in a plan step that is not marked `park`: merging any PR other than the item's own, and always a release PR, release, deploy, force-push, posting outside the operator's own repos, deleting data, a new public API or breaking change, a step the design marks as needing the operator. A step marked `park` is fine. The run parks it and moves on.
 
 ## Gaps
 
@@ -48,6 +48,7 @@ Queue only the items that pass, in phase or plan order. For each item after the 
       "status": "queued",
       "stopBlocks": 0,
       "pr": null,
+      "merged": null,
       "parkedReason": null
     }
   ]
@@ -57,7 +58,7 @@ Queue only the items that pass, in phase or plan order. For each item after the 
 - `id` is short and unique. It becomes the branch `unattended/<id>`. For a phase it is `phase-N-M`, so `start-next-phase` finds the branch `unattended/phase-N-M`.
 - `plan` is the repo-relative path of the plan.
 - `base` is the `id` of an earlier item this one builds on, or `null`. The run branches from `unattended/<base>` and opens the PR against that branch. When the base item is parked, this item is parked too.
-- Every item starts `queued` with `stopBlocks: 0`, `pr: null` and `parkedReason: null`.
+- Every item starts `queued` with `stopBlocks: 0`, `pr: null`, `merged: null` and `parkedReason: null`.
 
 If no item passes, write no queue file and say so. If `.claude/unattended-queue.json` already exists, ask the operator before replacing it.
 

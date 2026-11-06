@@ -61,7 +61,7 @@ export function checkStop(env, queue) {
 }
 
 export const FALLBACK_POLICY =
-  `Unattended run: no one will answer questions. Never wait for input. Take the Recommended option, log every such call in ${CALLS_PATH}, park anything irreversible or outward-facing, never merge.`;
+  `Unattended run: no one will answer questions. Never wait for input. Take the Recommended option, log every such call in ${CALLS_PATH}, park anything irreversible or outward-facing, merge only the item's own PR, only through ci-watch once its CI is green, never merge any other PR, never merge a release PR.`;
 
 export function policyText(skillDir, queue) {
   let policy;

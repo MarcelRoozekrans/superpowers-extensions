@@ -1,0 +1,9 @@
+{
+  "name": "ci-watch",
+  "description": "Waits for CI as an event, fixes red CI, merges a green PR when asked and follows the release. A hook starts the watch whenever a PR is opened.",
+  "author": {
+    "name": "Marcel Roozekrans"
+  },
+  "license": "MIT",
+  "keywords": ["ci", "github", "merge", "release", "hooks"]
+}
