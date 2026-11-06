@@ -4,6 +4,7 @@
   "private": true,
   "description": "Extension skills for the superpowers suite — quality gates and development workflow skills for Claude Code",
   "scripts": {
+    "prepare": "git config core.hooksPath .githooks",
     "lint:md": "markdownlint-cli2",
     "check:registries": "node scripts/check-registries.mjs",
     "check:conventions": "node scripts/check-conventions.mjs",

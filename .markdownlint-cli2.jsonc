@@ -12,7 +12,10 @@
     // Vendored verbatim from VoltAgent/awesome-design-md; upstream formatting is
     // not ours to fix, and the weekly refresh would undo it anyway.
     "plugins/ui-design-system/skills/ui-design-system/design-systems",
-    "GEMINI.md"
+    "GEMINI.md",
+    // Local agent state: worktrees hold full repo copies and handoff notes are
+    // scratch. None of it is ours to lint; CI never sees it.
+    ".claude"
   ],
   // Skip locally-generated, gitignored artifacts (regression reports, review
   // reports). CI never sees them; without this, local runs fail on files that

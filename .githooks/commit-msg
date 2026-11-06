@@ -1,0 +1,9 @@
+#!/bin/sh
+# Same check as the commitlint job in CI, run at commit time so a bad scope
+# fails here and not after the push. Wired by `npm install` through the
+# `prepare` script.
+if [ ! -x node_modules/.bin/commitlint ]; then
+  echo "commit-msg: commitlint not installed, run npm install; skipping" >&2
+  exit 0
+fi
+exec node_modules/.bin/commitlint --edit "$1"
