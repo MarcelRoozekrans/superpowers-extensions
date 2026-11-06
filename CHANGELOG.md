@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.30.0](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.29.0...superpowers-extensions-v1.30.0) (2026-11-06)
+
+
+### Features
+
+* **ci-watch:** wait for CI, merge when green, follow the release ([#178](https://github.com/MarcelRoozekrans/superpowers-extensions/issues/178)) ([be2405b](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/be2405b191b2f677ac8d18c8529062d112d47e0e))
+
 ## [1.29.0](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.28.0...superpowers-extensions-v1.29.0) (2026-11-04)
 
 
