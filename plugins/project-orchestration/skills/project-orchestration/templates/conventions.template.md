@@ -33,8 +33,9 @@
 **Model:** trunk | feature-branch | gitflow
 **PR required:** yes | no | unknown
 **Protected branches:** `<comma-separated list | none>`
+**CI timeout:** <minutes | 60 (defaulted)>
 
-> `**Protected branches:**` entries are comma-separated. `*` is a wildcard matching within a single path segment — `release/*` matches `release/1.2` but not `release/1/2`. Matching is case-sensitive. The branch guard tests the current branch for membership in this list, so a pattern that is not listed is not protected.
+> `**Protected branches:**` entries are comma-separated. `*` is a wildcard matching within a single path segment — `release/*` matches `release/1.2` but not `release/1/2`. Matching is case-sensitive. The branch guard tests the current branch for membership in this list, so a pattern that is not listed is not protected. `ci-watch` reads `**CI timeout:**` as the most minutes it waits for CI; absent means 60.
 
 ## Versioning & Release
 
