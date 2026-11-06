@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Bash|mcp__.*__create_pull_request",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/skills/ci-watch/scripts/pr-opened.mjs\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}
