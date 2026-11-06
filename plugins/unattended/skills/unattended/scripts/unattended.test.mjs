@@ -177,3 +177,8 @@ test('session-start falls back when policy.md is missing', () => {
   assert.ok(text.startsWith(FALLBACK_POLICY));
   assert.match(text, /Single-item mode/);
 });
+
+test('FALLBACK_POLICY allows ci-watch merges but never a release PR merge', () => {
+  assert.match(FALLBACK_POLICY, /never merge a release PR/i);
+  assert.doesNotMatch(FALLBACK_POLICY, /never merge\./i);
+});
