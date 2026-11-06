@@ -9,6 +9,9 @@ export function isPrCreate(toolName, toolInput) {
   return toolName.endsWith('create_pull_request');
 }
 
+// Matches a URL only, no bare PR number. A failed `gh pr create` that prints
+// "a pull request for branch X already exists: <url>" on stderr deliberately still fires the hook:
+// that PR is open and its CI is worth watching.
 export function findPrUrl(toolResponse) {
   const text = typeof toolResponse === 'string' ? toolResponse : JSON.stringify(toolResponse ?? '');
   const m = PR_URL.exec(text);

@@ -29,6 +29,11 @@ test('findPrUrl', () => {
   assert.equal(findPrUrl({ stdout: '', stderr: 'GraphQL: ...' }), null);
 });
 
+test('prOpenedContext fires for an already-exists failure that prints the PR URL', () => {
+  const exists = { ...created, tool_response: { stdout: '', stderr: `a pull request for branch "x" into branch "main" already exists:\n${URL12}` } };
+  assert.equal(prOpenedContext({}, exists), MSG);
+});
+
 test('prOpenedContext', () => {
   assert.equal(prOpenedContext({}, created), MSG);
   assert.equal(prOpenedContext({ SUPERPOWERS_UNATTENDED: '1' }, created), null);
