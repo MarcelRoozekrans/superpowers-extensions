@@ -406,6 +406,7 @@ This skill is designed to complement — not replace — the superpowers workflo
 | `finishing-a-development-branch` | **Run pre-push-review first.** This skill gates whether the branch is ready; finishing-a-development-branch decides how to integrate it (merge, PR, cleanup). | Pre-push-review produces the evidence that finishing-a-development-branch needs. |
 | `verification-before-completion` | **This skill satisfies it.** Verification-before-completion requires evidence before success claims. A PASS verdict from this skill is that evidence. | No need to run both — a completed pre-push-review covers verification. |
 | `requesting-code-review` | **This skill supersedes it.** Pre-push-review includes code quality review (Phase 3) plus plan adherence, commit hygiene, and regression testing. | If pre-push-review has been run, skip requesting-code-review to avoid redundant work. |
+| `ci-watch` | **Runs after the push.** Once the PR is open, ci-watch waits for CI, fixes red CI and merges when asked. | Pre-push-review gates the push; ci-watch watches what the push triggers. |
 
 **Recommended workflow chain:**
 
@@ -413,6 +414,7 @@ This skill is designed to complement — not replace — the superpowers workflo
 Implementation complete
   → pre-push-review (this skill: structured quality gate)
   → finishing-a-development-branch (superpowers: merge/PR decision)
+  → ci-watch (wait for CI, merge when asked)
 ```
 
 ## Supporting References
