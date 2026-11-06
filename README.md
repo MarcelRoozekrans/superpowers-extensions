@@ -626,7 +626,7 @@ A `claude -p` run cannot answer permission prompts. Allow file edits, git, gh an
 
 ### The Three Hooks
 
-- **SessionStart** injects `policy.md`: answer every question itself, taking the option marked "(Recommended)" or else the one closest to the approved design, then the smaller change. It logs the call and parks anything irreversible or outward-facing, such as a release PR merge, a release or a deploy. The item's own PR is merged through `ci-watch` once its CI is green.
+- **SessionStart** injects `policy.md`: answer every question itself, taking the option marked "(Recommended)" or else the one closest to the approved design, then the smaller change. It logs the call and parks anything irreversible or outward-facing, such as merging any PR but the item's own, a release PR merge, a release or a deploy. The item's own PR is merged through `ci-watch` once its CI is green and the Merge stage allows it.
 - **PreToolUse on `AskUserQuestion`** denies the question and tells Claude to apply the policy instead.
 - **Stop** is what catches plain-text questions, which never call `AskUserQuestion`. It blocks a stop while a queue item is open. After three blocks it parks the item and moves on, so a stuck item cannot hold the run. Items the guard parks appear in the queue with a `parkedReason`, and in the end-of-run summary.
 
@@ -669,7 +669,7 @@ A `PostToolUse` hook fires after `gh pr create` or an MCP `create_pull_request` 
 ### The Stages
 
 - **Wait** picks one mechanism per PR: a foreground `gh pr checks --watch` in unattended runs, the same command in the background in interactive sessions, or `subscribe_pr_activity` in cloud sessions that have no `gh` for PRs. Never a sleep loop. The default limit is 60 minutes; set `**CI timeout:** <minutes>` in `docs/planning/CONVENTIONS.md` to change it. Red CI is reproduced locally, fixed and pushed, for at most three rounds. Failing checks are never re-run until green.
-- **Merge** runs only for a PR you asked for, or for a phase PR in an unattended run. It squash-merges with the PR title as subject and a body from `ci-watch.mjs sanitize`, which removes `Co-Authored-By: Claude` trailers and session links and rewrites nested parentheses into square brackets so release-please keeps the commit. Release PRs are never merged.
+- **Merge** runs only for a PR you asked for, or for the run's own item PR in an unattended run. It squash-merges with the PR title as subject and a body from `ci-watch.mjs sanitize`, which removes `Co-Authored-By: Claude` trailers and session links and rewrites nested parentheses into square brackets so release-please keeps the commit. Release PRs are never merged.
 - **Release** checks that a merged `feat` or `fix` appears in the release-please PR, that the release PR is green, and after you merge it, that the tag and publish workflows succeed.
 
 ### Merging With an Admin-Bypass Ruleset

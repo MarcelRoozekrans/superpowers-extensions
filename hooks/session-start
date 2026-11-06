@@ -23,7 +23,7 @@ context_body=$(cat <<'CONTEXT'
 You have superpowers-extensions skills loaded. Twenty-three skills cover quality
 gates, refactor analysis, project orchestration, frontend workflow, design
 systems, brand marks, memory compression, prose hygiene, demo recordings,
-retrospectives, setup wizards, upstream bug reports and unattended runs:
+retrospectives, setup wizards, upstream bug reports, unattended runs and CI:
 
 - regression-test       — UI/web regression with Playwright MCP
 - pre-push-review       — branch review before push or PR
