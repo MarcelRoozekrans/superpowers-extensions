@@ -31,7 +31,7 @@ The merge flow is adapted from `merge-when-green` in
   and publish workflows succeed.
 - Every opened PR starts the watch, including PRs opened by upstream
   `finishing-a-development-branch`, without editing upstream.
-- An unattended milestone run merges each green phase PR and finishes the
+- An unattended milestone run merges each green item PR of its own and finishes the
   milestone, instead of leaving stacked PRs.
 
 ## Non-goals
@@ -105,8 +105,9 @@ The operator chose approach 1 (2026-11-06), with these calls:
 
 - Attended: a "merge when green" request merges that one PR; release PRs
   always ask first.
-- Unattended: merge each phase PR when green; release PRs stay parked. This
-  reverses the 2026-11-04 `unattended` non-goal "never merge" for phase PRs.
+- Unattended: merge the run's own item PR when green; no other PR, and never a
+  release PR. This reverses the 2026-11-04 `unattended` non-goal "never merge"
+  for the item's own PR.
 - `--admin` only to pass the review rule, after the skill has verified every
   other rule itself, in both modes.
 - Keep upstream superpowers; keep the name `unattended`.
@@ -120,6 +121,7 @@ plugins/ci-watch/
   hooks/hooks.json
   skills/ci-watch/
     SKILL.md
+    NOTICE.md                    copy of ../../NOTICE.md, so the link resolves
     scripts/pr-opened.mjs        PostToolUse hook
     scripts/ci-watch.mjs         pure functions the hook uses
     scripts/ci-watch.test.mjs
@@ -139,7 +141,10 @@ the tool input and response:
 - Bash: fires only when the command runs `gh pr create` and the output holds a
   PR URL.
 - MCP: fires when the tool name ends in `create_pull_request` and the response
-  holds a PR URL or number.
+  holds a PR URL. A bare PR number does not count.
+
+A failed `gh pr create` that prints "already exists" with the PR URL on stderr
+still fires the hook, on purpose: that PR is open and its CI is worth watching.
 
 It returns `additionalContext`: "PR `<url>` was opened. Invoke `ci-watch` and run
 its Wait stage for this PR." It never merges anything and never blocks; on any
@@ -172,11 +177,12 @@ since cloud sessions may have a `gh` binary that is limited to search.)*
 
 Limits: the default wait is 60 minutes from the first watch. A repo can set its
 own in `docs/planning/CONVENTIONS.md` as `**CI timeout:** <minutes>`, an
-optional field that project-orchestration's CONVENTIONS template and
-`scripts/check-conventions.mjs` learn (a positive integer; absent means 60).
-When the
-limit passes, the agent stops waiting and reports which checks are still
-pending (attended) or parks the item (unattended). For the subscription
+optional field that project-orchestration's CONVENTIONS template records as
+`60 (defaulted)`. A bare number and `60 (defaulted)` both mean 60; absent also
+means 60. `scripts/check-conventions.mjs` is not taught the field. Only
+`complete-milestone` points at the Release stage. When the limit passes, the
+agent stops waiting and reports which checks are still pending (attended), or
+returns "timed out" with them (unattended). For the subscription
 mechanism, the agent also schedules a single fallback wakeup at the limit
 (`ScheduleWakeup` or `send_later`, whichever the session has), so a check that
 never reports cannot hang the session. *(My call: 60 minutes covers this
@@ -188,8 +194,8 @@ Outcomes:
 - **All green:** go to Merge when a merge was asked for or the run may merge;
   otherwise report green and stop.
 - **Pending is not green.** Keep waiting.
-- **No checks at all:** report it and ask (attended) or park (unattended). No CI
-  is not the same as green.
+- **No checks at all:** report it and ask (attended) or return "no checks"
+  (unattended). No CI is not the same as green.
 - **Red:** the red-CI loop below.
 - **Blocked by missing required checks on a bot PR:** report it, with the
   reason that only `pull_request`-event checks count. Never trigger checks
@@ -206,35 +212,47 @@ Outcomes:
 4. Wait again.
 
 Three failed fix rounds on the same PR end the loop: report with the failure
-attached (attended) or park the item (unattended). *(My call: three matches the
+attached (attended) or return "red after three fix rounds" (unattended); the
+`unattended` skill then parks the item. *(My call: three matches the
 unattended policy and systematic-debugging's "question the approach" point.)*
 A failure that is clearly not caused by the branch (an outage, a flaky
 external service) is reported, never re-run until green.
 
 ### Merge stage
 
-Runs only on an explicit request for this PR (attended), or for a phase PR in
-an unattended run. Never for any other PR.
+Runs only on an explicit request for this PR (attended), or for the run's own
+item PR in an unattended run. Never for any other PR.
 
 1. Stop and say why when the PR is closed, merged, a draft, or conflicting.
    Conflicts are resolved on the branch, then Wait runs again.
 2. Release PRs are never merged here. A PR is a release PR when its head branch
    starts with `release-please--` or the repo's `Released by` (CONVENTIONS.md)
-   tool opened it. Attended: ask. Unattended: park.
-3. Reviews and the admin bypass:
+   tool opened it. Attended: ask. Unattended: return "release PR".
+3. Reviews and the admin bypass. This whole step runs before every merge,
+   including when the review decision is `APPROVED`. The rules are read with
+   `gh api repos/<o>/<r>/rules/branches/<base>` (active rules, required checks)
+   and `gh api repos/<o>/<r>/rulesets/<id>` (bypass actors and whether the
+   current user can bypass). The MCP `pull_request_read` returns neither
+   rulesets nor bypass actors. When the rules or their required checks cannot
+   be read, stop: attended, report and hand back; unattended, return "rules
+   unreadable". A merge never goes ahead on an unverified rule set.
    - `APPROVED`, or empty because no review is required: plain merge.
    - `REVIEW_REQUIRED` with the review rule as the only unmet rule: merge with
      `--admin`, in attended sessions on the operator's explicit request for this
-     PR and in unattended runs for phase PRs (operator's call, 2026-11-06). Before
+     PR and in unattended runs for the item's own PR (operator's call, 2026-11-06). Before
      using it, verify from the ruleset or branch protection and the PR itself
      that every required status check has passed on the current head, the branch
      is up to date with the base when the rule is strict, there are no conflicts,
-     and the operator's account is a bypass actor. `--admin` is never used to get
+     and the current user can bypass the ruleset. `--admin` is never used to get
      past anything else.
    - `CHANGES_REQUESTED`, or any other unmet rule: stop and say what is missing
-     (attended) or park (unattended).
-   - A merge refused by GitHub: stop or park with GitHub's message. Never retry
-     with another bypass.
+     (attended) or return "rules not met" (unattended).
+   - A merge refused by GitHub: stop, or return it as the reason when
+     unattended, with GitHub's message. Never retry with another bypass.
+
+A PR that is only behind the base with no conflicts is updated
+(`gh pr update-branch`, or `update_pull_request_branch` through MCP), then Wait
+runs again.
 4. Squash-merge with an explicit commit message: the PR title as subject,
    unchanged, and a body built from the branch's commit bodies by a pure,
    tested `sanitizeBody` function in `ci-watch.mjs`. It removes every
@@ -254,8 +272,9 @@ an unattended run. Never for any other PR.
 After a merged commit whose type release-please counts (`feat`, `fix`, or a
 breaking change) in a repo whose `Released by` is release-please:
 
-1. Wait for the release PR to be created or updated (Wait stage on the release
-   PR's checks).
+1. Find the release PR (`gh pr list --state open --search "head:release-please--"`,
+   or `search_pull_requests` through MCP) and wait for it to be created or
+   updated (Wait stage on the release PR's checks).
 2. Confirm the merged commit appears in the release PR's changelog. When it
    does not, report it as a likely parse drop and show the commit message.
 3. Release PR green: ask the operator whether to merge it (attended), or record
@@ -278,26 +297,29 @@ needs it.)*
 
 - `policy.md`: "merge" leaves the park list for the item's own PR once its CI
   is green and the Merge stage allows it, the review-only admin bypass
-  included; release, deploy and force-push stay. "Never merge" becomes "never
-  merge a release PR".
+  included. Merging any other PR, and always a release PR, release, deploy and
+  force-push stay on the list.
 - `SKILL.md` queue mode, after step 7 (open the PR): run `ci-watch` Wait. Green
   and mergeable: run Merge and record the merge commit on the item. Red after
-  three fix rounds, timeout, no checks, or a rule the Merge stage may not pass:
-  the item ends as today, at an open PR, with the reason in
-  `.claude/unattended-run.md`.
+  three fix rounds: the item is `parked`. Timeout, no checks, rules not met, a
+  release PR or unreadable rules: the item ends `done` at its open PR with no
+  `merged`, the reason in `.claude/unattended-run.md`, and dependents stack on
+  `unattended/<base>`. Queue step 8 is the single authority for the item's
+  status; `ci-watch` only returns an outcome and a reason.
 - The run's end summary lists each merge commit and the Release-stage result.
 - The PR-body `## Unattended calls` section is still written before the merge,
   so it lands in the squash commit's PR link for the operator to review later.
-- Branch point: when the `base` item was merged, the next item branches from the
-  updated default branch and its PR targets the default branch. When the base
+- Branch point: when the `base` item was merged, the next item branches from
+  `origin/<default>` after a `git fetch origin`, and its PR targets the default
+  branch. With no `base` it branches from `origin/<default>` the same way. When the base
   item is `done` but not merged, it stacks on `unattended/<base>` as today.
 - Queue item: a new `merged` field (merge commit SHA or `null`). `status` keeps
   its values. *(My call: a field, not a new status, so `openItem` and the
   stop guard keep working unchanged.)*
 - Stop guard: unchanged, since unattended runs only use the foreground wait.
 - `FALLBACK_POLICY` in `unattended.mjs` follows the new policy text.
-- `## Never`: "Merge, release or force-push" becomes "Merge a release PR,
-  release, deploy or force-push".
+- `## Never`: "Merge, release or force-push" becomes "Merge any PR but the
+  item's own, merge a release PR, release, deploy or force-push".
 
 ### Other skills
 
@@ -320,6 +342,7 @@ Devleaps/tempa-config-template (MIT) for the merge flow.
   create` output and both MCP response shapes.
 - Test cases for `sanitizeBody`, including the AI.Sentinel line from the
   operator's CLAUDE.md.
-- How the Merge stage reads the ruleset (`gh api repos/<o>/<r>/rulesets` and
-  `gh pr view --json`), and the matching MCP calls in cloud sessions.
+- How the Merge stage reads the rules (`gh api` on `rules/branches/<base>` and
+  `rulesets/<id>`, plus `gh pr view --json`), and the matching MCP calls in
+  cloud sessions.
 - Splitting the work into plan tasks and their order.
