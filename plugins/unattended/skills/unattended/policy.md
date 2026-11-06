@@ -19,12 +19,13 @@ No one will answer questions. Never wait for input. Apply these rules.
 
 ## Parking
 
-Park, do not decide, anything on this list: merging a release PR, release,
-deploy, force-push, posting outside the operator's own repos, deleting data, a new
-public API or breaking change, a step the design marks as needing the operator.
+Park, do not decide, anything on this list: merging any PR other than the
+item's own, and always a release PR, release, deploy, force-push, posting
+outside the operator's own repos, deleting data, a new public API or breaking
+change, a step the design marks as needing the operator.
 
 The item's own PR is not on this list. Merge it through `ci-watch` Merge when
-its CI is green.
+its CI is green and the Merge stage allows it.
 
 Parking means writing the question and moving on to the next item. In queue
 mode, write it into `.claude/unattended-run.md` and set the item's `status` to
@@ -37,5 +38,6 @@ otherwise `.claude/unattended-run.md`.
 - An item is done only when its checks pass on the branch.
 - A check that still fails after 3 fix attempts parks the item. Attach the
   failure.
-- End each item at a PR, merged through `ci-watch` when green, with a `## Unattended calls` section built from
+- End each item at a PR, merged through `ci-watch` when green and the Merge
+  stage allows it, with a `## Unattended calls` section built from
   `.claude/unattended-calls.md`. Never merge a release PR.
