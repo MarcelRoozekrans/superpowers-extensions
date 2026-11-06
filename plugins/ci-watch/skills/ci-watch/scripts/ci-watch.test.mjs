@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
+import { mkdtempSync, symlinkSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { isPrCreate, findPrUrl, prOpenedContext, sanitizeBody } from './ci-watch.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -89,4 +91,49 @@ test('sanitize CLI reads stdin and prints the bracketed form', () => {
 test('sanitizeBody drops signature lines even inside code fences', () => {
   const input = 'x\n```\nCo-Authored-By: Claude <noreply@anthropic.com>\nhttps://claude.ai/code/session_abc\nkeep\n```\ny';
   assert.equal(sanitizeBody(input), 'x\n```\nkeep\n```\ny');
+});
+
+test('sanitizeBody rewrites nested groups on lines that also hold an unmatched paren', () => {
+  assert.equal(sanitizeBody('1) fix foo(bar(x))'), '1) fix foo(bar[x])');
+  assert.equal(sanitizeBody('smile :) and f(g(x))'), 'smile :) and f(g[x])');
+  assert.equal(sanitizeBody('open ( only and f(g(x))'), 'open ( only and f(g[x])');
+});
+
+test('sanitizeBody rewrites a group that spans lines of one paragraph', () => {
+  assert.equal(sanitizeBody('see (first\nand (second) part)\n\nnext (a)'), 'see (first\nand [second] part)\n\nnext (a)');
+});
+
+test('sanitizeBody does not pair parens across paragraphs or fences', () => {
+  assert.equal(sanitizeBody('open (\n\nclose ) f(g(x))'), 'open (\n\nclose ) f(g[x])');
+  assert.equal(sanitizeBody('a (b\n```\nx)\n```\nc'), 'a (b\n```\nx)\n```\nc');
+});
+
+test('sanitizeBody recognises indented and tilde fences', () => {
+  const t = 'x\n  ```\nf(g(h))\n  ```\n~~~\nf(g(h))\n~~~\ny';
+  assert.equal(sanitizeBody(t), t);
+});
+
+test('sanitizeBody rewrites inline code spans too', () => {
+  assert.equal(sanitizeBody('use `f(g(x))` here'), 'use `f(g[x])` here');
+});
+
+test('sanitizeBody anchors the trailer match at the line start', () => {
+  assert.equal(sanitizeBody('  Co-Authored-By: Claude <noreply@anthropic.com>\nkeep'), 'keep');
+  const quoted = 'note: Co-Authored-By: Claude is how trailers look';
+  assert.equal(sanitizeBody(quoted), quoted);
+  const bot = 'Co-Authored-By: Claude-bot <bot@example.com>';
+  assert.equal(sanitizeBody(bot), bot);
+});
+
+test('sanitize CLI works through a symlink and rejects unknown subcommands', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'ci-watch-'));
+  try {
+    const link = join(dir, 'link.mjs');
+    symlinkSync(ciWatchPath, link);
+    const r = spawnSync('node', [link, 'sanitize'], { input: 'f(g(x))\n', encoding: 'utf8' });
+    assert.equal(r.status, 0);
+    assert.equal(r.stdout, 'f(g[x])\n');
+    const bad = spawnSync('node', [ciWatchPath, 'bogus'], { input: '', encoding: 'utf8' });
+    assert.notEqual(bad.status, 0);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
 });
