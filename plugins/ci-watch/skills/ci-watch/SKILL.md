@@ -61,6 +61,8 @@ Runs only on an explicit request for this PR, or for a phase PR in an unattended
    gh pr merge <n> --squash --delete-branch --subject "<PR title>" --body-file body.txt
    ```
 
+   Run `git fetch origin <base>` first so `origin/<base>` is fresh. In cloud sessions there is no local clone to diff: build the body from the commit messages that `pull_request_read` returns for the PR, pipe it through the same `sanitize` command, and pass it as `commit_message`.
+
    Add `--admin` only in the case of step 3 that allows it. In cloud sessions pass the same subject and body as `commit_title` and `commit_message` to `merge_pull_request`. Use the repo's allowed method when squash is disabled. Delete the branch.
 5. Confirm the PR shows as merged and note the merge commit.
 6. Report the PR, the checks that passed, the merge commit and what the merge sets in motion.

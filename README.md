@@ -1624,18 +1624,18 @@ superpowers-extensions/
 │   │           ├── SKILL.md                # Deep-module vocabulary and principles
 │   │           ├── NOTICE.md               # Copy of the plugin NOTICE.md for skills-only installs
 │   │           └── references/             # deepening.md and design-it-twice.md
-│   └── unattended/                         # Unattended runs of a groomed queue (20th plugin, two skills)
-│       ├── .claude-plugin/
-│       │   └── plugin.json
-│       ├── hooks/
-│       │   └── hooks.json                  # SessionStart, PreToolUse on AskUserQuestion, Stop
-│       └── skills/
-│           ├── unattended/
-│           │   ├── SKILL.md                # Queue and single-item modes, parking, handoff
-│           │   ├── policy.md               # The rules injected at session start
-│           │   └── scripts/                # session-start, ask-check, stop-check, shared module and tests
-│           └── ready-check/
-│               └── SKILL.md                # Five checks, gaps, queue file and start command
+│   ├── unattended/                         # Unattended runs of a groomed queue (20th plugin, two skills)
+│   │   ├── .claude-plugin/
+│   │   │   └── plugin.json
+│   │   ├── hooks/
+│   │   │   └── hooks.json                  # SessionStart, PreToolUse on AskUserQuestion, Stop
+│   │   └── skills/
+│   │       ├── unattended/
+│   │       │   ├── SKILL.md                # Queue and single-item modes, parking, handoff
+│   │       │   ├── policy.md               # The rules injected at session start
+│   │       │   └── scripts/                # session-start, ask-check, stop-check, shared module and tests
+│   │       └── ready-check/
+│   │           └── SKILL.md                # Five checks, gaps, queue file and start command
 │   └── ci-watch/                           # CI watch, merge when green, release follow-through (21st plugin, one skill)
 │       ├── .claude-plugin/
 │       │   └── plugin.json
