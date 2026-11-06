@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.29.0](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.28.0...superpowers-extensions-v1.29.0) (2026-11-04)
+
+
+### Features
+
+* **project-orchestration:** groom a whole milestone before an unattended run ([#177](https://github.com/MarcelRoozekrans/superpowers-extensions/issues/177)) ([3a678f2](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/3a678f2a6d93ab36ae59e3f8b2e515c26a218121))
+* **unattended:** run groomed work with no questions asked ([#175](https://github.com/MarcelRoozekrans/superpowers-extensions/issues/175)) ([1aa028b](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/1aa028bacf6b028952d5670f22f3c36f8f1c4d27))
+
 ## [1.28.0](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.27.1...superpowers-extensions-v1.28.0) (2026-10-31)
 
 
