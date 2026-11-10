@@ -103,7 +103,7 @@ and the review threads. Output:
 - `reviewBody`: the latest CodeRabbit review's text, because CodeRabbit puts
   outside-diff and duplicate comments there and not in threads.
 
-CodeRabbit is recognised by author login `coderabbitai[bot]`. *(My call.)*
+CodeRabbit is recognised by author login `coderabbitai` (GraphQL) or `coderabbitai[bot]` (REST). *(My call.)*
 
 ### The skill
 
