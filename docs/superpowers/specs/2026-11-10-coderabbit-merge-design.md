@@ -94,8 +94,11 @@ and the review threads. Output:
   `changes-requested`, `not-approved` (the latest review is only a comment and
   no findings are open), `no-review` or `stale` (the last CodeRabbit review is
   for an older commit).
-- `findings`: unresolved CodeRabbit threads, each with path, line, severity,
-  the finding text and the extracted agent prompt (empty when absent).
+- `findings`: unresolved CodeRabbit threads, each with thread and comment id,
+  path, line, severity, the finding text and the extracted agent prompt
+  (empty when absent).
+- `reviewBody`: the latest CodeRabbit review's text, because CodeRabbit puts
+  outside-diff and duplicate comments there and not in threads.
 
 CodeRabbit is recognised by author login `coderabbitai[bot]`. *(My call.)*
 

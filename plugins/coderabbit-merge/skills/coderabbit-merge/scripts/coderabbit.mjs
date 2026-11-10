@@ -22,6 +22,10 @@ function severityOf(label) {
 // The fix prompt sits in a code fence under a "Prompt for AI Agents" summary.
 const AGENT_PROMPT = /Prompt for AI Agents[\s\S]*?```[^\n]*\n([\s\S]*?)\n```/;
 
+// GitHub reports the CodeRabbit commit status in upper case (PENDING, EXPECTED) and a check run
+// as queued or in_progress; any of these means the review is not finished.
+const RUNNING = new Set(['pending', 'expected', 'queued', 'in_progress']);
+
 export function parseFinding(thread) {
   const text = String(thread?.comments?.[0]?.body ?? '');
   const [firstLine, ...rest] = text.split('\n');
@@ -29,6 +33,8 @@ export function parseFinding(thread) {
   const prose = (severity === 'unknown' ? text : rest.join('\n')).split('<details>')[0].trim();
   const prompt = AGENT_PROMPT.exec(text);
   return {
+    threadId: thread?.id ?? null,
+    commentId: thread?.comments?.[0]?.databaseId ?? null,
     path: thread?.path ?? null,
     line: thread?.line ?? null,
     severity,
@@ -46,13 +52,13 @@ export function coderabbitStatus(input) {
     .sort((a, b) => Date.parse(b.submittedAt) - Date.parse(a.submittedAt))[0];
 
   let state;
-  if (input?.checkState === 'pending') state = 'reviewing';
+  if (RUNNING.has(String(input?.checkState ?? '').toLowerCase())) state = 'reviewing';
   else if (!latest) state = 'no-review';
   else if (latest.commitOid !== input.headSha) state = 'stale';
   else if (latest.state === 'APPROVED') state = 'approved';
   else if (latest.state === 'CHANGES_REQUESTED' || findings.length) state = 'changes-requested';
   else state = 'not-approved';
-  return { state, findings };
+  return { state, findings, reviewBody: latest?.body ?? '' };
 }
 
 // CLI: `node coderabbit.mjs status < input.json`; also works through a symlink.

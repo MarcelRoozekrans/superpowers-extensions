@@ -2,7 +2,7 @@
 
 Codex auto-discovers skills under `~/.agents/skills/`. Each plugin in this
 suite is a separate skill bundle, so installation is a clone followed by
-twenty-three symlinks (one per skill).
+twenty-four symlinks (one per skill).
 
 ## Prerequisites
 
@@ -59,7 +59,7 @@ twenty-three symlinks (one per skill).
 ls -la ~/.agents/skills/ | grep -E '(regression-test|pre-push-review|refactor-analysis|decision-tracker|roslyn-codelens-integration|memorylens-integration|project-orchestration|ui-workflow|ui-design-system|squad|compress-memory|logo-design|context-budget|anti-slop|demo-video|retro|wizard|upstream-issue|architecture-scan|codebase-design|unattended|ready-check|ci-watch|coderabbit-merge)'
 ```
 
-You should see twenty-three symlinks (or junctions on Windows), one per skill.
+You should see twenty-four symlinks (or junctions on Windows), one per skill.
 
 ## Updating
 

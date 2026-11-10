@@ -122,6 +122,42 @@ test('resolved threads, and threads by humans or other bots, are not findings', 
   assert.deepEqual(coderabbitStatus(input({ reviews: [review({ state: 'COMMENTED' })], threads })).findings, []);
 });
 
+test('an upper-case PENDING check state is reviewing', () => {
+  assert.equal(coderabbitStatus(input({ checkState: 'PENDING' })).state, 'reviewing');
+});
+
+test('expected, queued and in_progress check states are reviewing', () => {
+  for (const checkState of ['EXPECTED', 'queued', 'IN_PROGRESS']) {
+    assert.equal(coderabbitStatus(input({ checkState })).state, 'reviewing', checkState);
+  }
+});
+
+test('a finished check state does not block an approval', () => {
+  for (const checkState of ['SUCCESS', 'failure', null]) {
+    assert.equal(coderabbitStatus(input({ checkState })).state, 'approved', String(checkState));
+  }
+});
+
+test('the latest CodeRabbit review body is returned, so review-body findings are not lost', () => {
+  const reviews = [review({ state: 'CHANGES_REQUESTED', body: 'Outside diff range comments (1)' })];
+  const r = coderabbitStatus(input({ reviews }));
+  assert.equal(r.state, 'changes-requested');
+  assert.deepEqual(r.findings, []);
+  assert.equal(r.reviewBody, 'Outside diff range comments (1)');
+});
+
+test('reviewBody is an empty string when there is no CodeRabbit review', () => {
+  assert.equal(coderabbitStatus(input({ reviews: [] })).reviewBody, '');
+});
+
+test('a finding carries the thread id and the first comment id for replying and resolving', () => {
+  const t = thread({ id: 'PRRT_1' });
+  t.comments[0].databaseId = 99;
+  const f = parseFinding(t);
+  assert.equal(f.threadId, 'PRRT_1');
+  assert.equal(f.commentId, 99);
+});
+
 test('the CLI prints the status as JSON', () => {
   const r = spawnSync(process.execPath, [SCRIPT, 'status'], { input: JSON.stringify(input()), encoding: 'utf8' });
   assert.equal(r.status, 0);

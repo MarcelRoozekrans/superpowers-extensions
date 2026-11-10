@@ -24,7 +24,7 @@ Pick the mechanism once per PR. Probe `gh` with `gh auth status` and `gh pr view
 | Interactive with `gh` | The same command with `run_in_background`, then end the turn; you are re-invoked when it exits. Without `run_in_background`, use the foreground loop. |
 | No `gh` for PRs, as in cloud sessions | `subscribe_pr_activity` for the PR, then end the turn; the CI event wakes the session. |
 
-In a repo that CodeRabbit reviews, run the `coderabbit-merge` skill before the Merge stage.
+In a repo that CodeRabbit reviews, an attended run uses the `coderabbit-merge` skill before the Merge stage. An unattended run does not merge there and returns "rules not met: CodeRabbit".
 
 Never use a `sleep` loop. In a cloud session follow the rules in the `subscription.created` event for handling PR events; do not restate or override them here.
 
