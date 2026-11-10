@@ -20,7 +20,7 @@
 set -euo pipefail
 
 context_body=$(cat <<'CONTEXT'
-You have superpowers-extensions skills loaded. Twenty-three skills cover quality
+You have superpowers-extensions skills loaded. Twenty-four skills cover quality
 gates, refactor analysis, project orchestration, frontend workflow, design
 systems, brand marks, memory compression, prose hygiene, demo recordings,
 retrospectives, setup wizards, upstream bug reports, unattended runs and CI:

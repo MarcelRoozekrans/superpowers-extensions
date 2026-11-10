@@ -127,6 +127,12 @@ test('an upper-case PENDING check state is reviewing', () => {
   assert.equal(coderabbitStatus(input({ checkState: 'PENDING' })).state, 'reviewing');
 });
 
+test('requested and waiting check states are reviewing', () => {
+  for (const checkState of ['REQUESTED', 'waiting']) {
+    assert.equal(coderabbitStatus(input({ checkState })).state, 'reviewing', checkState);
+  }
+});
+
 test('expected, queued and in_progress check states are reviewing', () => {
   for (const checkState of ['EXPECTED', 'queued', 'IN_PROGRESS']) {
     assert.equal(coderabbitStatus(input({ checkState })).state, 'reviewing', checkState);

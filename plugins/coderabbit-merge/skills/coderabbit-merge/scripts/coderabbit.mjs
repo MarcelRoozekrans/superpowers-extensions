@@ -25,9 +25,9 @@ function severityOf(label) {
 // The fix prompt sits in a code fence under a "Prompt for AI Agents" summary.
 const AGENT_PROMPT = /Prompt for AI Agents[\s\S]*?```[^\n]*\n([\s\S]*?)\n```/;
 
-// GitHub reports the CodeRabbit commit status in upper case (PENDING, EXPECTED) and a check run
-// as queued or in_progress; any of these means the review is not finished.
-const RUNNING = new Set(['pending', 'expected', 'queued', 'in_progress']);
+// These commit status and check run states mean the review is not finished. GitHub reports them
+// in upper case.
+const RUNNING = new Set(['pending', 'expected', 'queued', 'in_progress', 'requested', 'waiting']);
 
 export function parseFinding(thread) {
   const text = String(thread?.comments?.[0]?.body ?? '');

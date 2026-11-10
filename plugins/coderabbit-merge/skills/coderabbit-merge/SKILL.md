@@ -54,7 +54,7 @@ The script prints `{ "state", "findings", "reviewBody" }`. Each finding has `thr
 | `not-approved` | CodeRabbit only commented and nothing is open | Report that CodeRabbit never approves unless `.coderabbit.yaml` sets `reviews.request_changes_workflow: true`. Do not merge. |
 | `stale` | The last review is for an older commit | Wait for the review of the new head. |
 | `changes-requested` | CodeRabbit asked for changes, or unresolved findings are open, even beside an approval | Run the Fix loop. |
-| `approved` | CodeRabbit approved the current head | With CI green and a merge asked for this PR, go to Merge. Otherwise report "approved and green" and stop. |
+| `approved` | CodeRabbit approved the current head and nothing is open | First read `reviewBody`: validate any outside-diff or duplicate comment in it and fix the genuine ones, as in the Fix loop. Then, with CI green and a merge asked for this PR, go to Merge. Otherwise report "approved and green" and stop. |
 
 "No findings" is never approval. Only `approved` on the current head leads to a merge.
 
