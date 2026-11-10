@@ -6,7 +6,10 @@ export function isCodeRabbit(login) {
   return login === 'coderabbitai' || login === 'coderabbitai[bot]';
 }
 
-// CodeRabbit opens a comment with a label such as "_⚠️ Potential issue_ | _🟠 Major_".
+// CodeRabbit opens a comment with a marker comment, then a label line such as
+// "**<picture>...</picture> Major** · **Functional Correctness** · **Quick win**".
+const MARKER = /^\s*<!--[\s\S]*?-->\s*/;
+const LABEL_LINE = /^.*\b(?:critical|major|minor|nitpick|trivial)\b.*(?:\n|$)/i;
 const SEVERITIES = [
   ['critical', /critical/i],
   ['major', /major/i],
@@ -28,9 +31,10 @@ const RUNNING = new Set(['pending', 'expected', 'queued', 'in_progress']);
 
 export function parseFinding(thread) {
   const text = String(thread?.comments?.[0]?.body ?? '');
-  const [firstLine, ...rest] = text.split('\n');
-  const severity = severityOf(firstLine);
-  const prose = (severity === 'unknown' ? text : rest.join('\n')).split('<details>')[0].trim();
+  const unmarked = text.replace(MARKER, '');
+  const label = LABEL_LINE.exec(unmarked.split('\n\n')[0] + '\n')?.[0] ?? '';
+  const severity = severityOf(label);
+  const prose = (label ? unmarked.slice(unmarked.indexOf(label) + label.length) : unmarked).split('<details>')[0].trim();
   const prompt = AGENT_PROMPT.exec(text);
   return {
     threadId: thread?.id ?? null,
@@ -47,16 +51,17 @@ export function coderabbitStatus(input) {
   const findings = (input?.threads ?? [])
     .filter((t) => !t.isResolved && isCodeRabbit(t.comments?.[0]?.author))
     .map(parseFinding);
-  const latest = (input?.reviews ?? [])
-    .filter((r) => isCodeRabbit(r.author))
-    .sort((a, b) => Date.parse(b.submittedAt) - Date.parse(a.submittedAt))[0];
+  const own = (input?.reviews ?? []).filter((r) => isCodeRabbit(r.author));
+  // Without a valid time on every CodeRabbit review there is no telling which is the latest.
+  const orderKnown = own.every((r) => Number.isFinite(Date.parse(r.submittedAt)));
+  const latest = [...own].sort((a, b) => Date.parse(b.submittedAt) - Date.parse(a.submittedAt))[0];
 
   let state;
   if (RUNNING.has(String(input?.checkState ?? '').toLowerCase())) state = 'reviewing';
   else if (!latest) state = 'no-review';
-  else if (latest.commitOid !== input.headSha) state = 'stale';
-  else if (latest.state === 'APPROVED') state = 'approved';
+  else if (!orderKnown || !input?.headSha || !latest.commitOid || latest.commitOid !== input.headSha) state = 'stale';
   else if (latest.state === 'CHANGES_REQUESTED' || findings.length) state = 'changes-requested';
+  else if (latest.state === 'APPROVED') state = 'approved';
   else state = 'not-approved';
   return { state, findings, reviewBody: latest?.body ?? '' };
 }

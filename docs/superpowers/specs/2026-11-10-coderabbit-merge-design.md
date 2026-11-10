@@ -90,10 +90,13 @@ Pure functions plus a CLI entry, in the style of `ci-watch.mjs`. Input is JSON
 from stdin: the PR head SHA, the state of the `CodeRabbit` check, the reviews
 and the review threads. Output:
 
-- `state`: `reviewing` (the CodeRabbit check is pending), `approved`,
+- `state`: `reviewing` (the CodeRabbit check is still running), `approved`
+  (an approval on the current head with no unresolved findings; any open
+  finding makes it `changes-requested`),
   `changes-requested`, `not-approved` (the latest review is only a comment and
   no findings are open), `no-review` or `stale` (the last CodeRabbit review is
-  for an older commit).
+  for an older commit, or its commit or time is missing, so nothing is
+  approved on an unknown order).
 - `findings`: unresolved CodeRabbit threads, each with thread and comment id,
   path, line, severity, the finding text and the extracted agent prompt
   (empty when absent).

@@ -17,7 +17,7 @@ const thread = (over = {}) => ({
   isResolved: false,
   path: 'src/a.mjs',
   line: 12,
-  comments: [{ author: 'coderabbitai', body: body('_⚠️ Potential issue_ | _🟠 Major_', 'In src/a.mjs around line 12, guard the null.') }],
+  comments: [{ author: 'coderabbitai', body: body('**Major** · **Functional Correctness** · **Quick win**', 'In src/a.mjs around line 12, guard the null.') }],
   ...over,
 });
 
@@ -46,7 +46,7 @@ test('parseFinding reads a major severity label', () => {
 });
 
 test('parseFinding reads a nitpick severity label', () => {
-  const t = thread({ comments: [{ author: 'coderabbitai', body: body('_🧹 Nitpick_ | _🔵 Trivial_') }] });
+  const t = thread({ comments: [{ author: 'coderabbitai', body: body('**Trivial** · **Maintainability** · **Quick win**') }] });
   assert.equal(parseFinding(t).severity, 'nitpick');
 });
 
@@ -60,7 +60,7 @@ test('parseFinding extracts path, line, text and the agent prompt', () => {
 });
 
 test('a finding with no agent prompt block has an empty agentPrompt', () => {
-  const t = thread({ comments: [{ author: 'coderabbitai', body: body('_🟡 Minor_') }] });
+  const t = thread({ comments: [{ author: 'coderabbitai', body: body('**Minor** · **Functional Correctness** · **Quick win**') }] });
   const f = parseFinding(t);
   assert.equal(f.agentPrompt, '');
   assert.equal(f.severity, 'minor');
@@ -95,6 +95,7 @@ test('the latest review is chosen by submittedAt, not array order', () => {
     review({ state: 'CHANGES_REQUESTED', submittedAt: '2026-11-10T09:00:00Z' }),
   ];
   assert.equal(coderabbitStatus(input({ reviews })).state, 'approved');
+  assert.equal(coderabbitStatus(input({ reviews: [...reviews].reverse() })).state, 'approved');
 });
 
 test('a changes-requested review is changes-requested', () => {
@@ -156,6 +157,41 @@ test('a finding carries the thread id and the first comment id for replying and 
   const f = parseFinding(t);
   assert.equal(f.threadId, 'PRRT_1');
   assert.equal(f.commentId, 99);
+});
+
+const realBody = (label) =>
+  `<!-- coderabbit-ai-generated:v1 -->\n\n**<picture><img src="https://example.com/i.svg" width="16" alt=""></picture> ${label}** · **Functional Correctness** · **Quick win**\n\n**Handle the null case.**\n\nThe value can be null here.\n`;
+
+test('parseFinding reads severity from the real CodeRabbit label format', () => {
+  for (const [label, want] of [['Major', 'major'], ['Minor', 'minor'], ['Critical', 'critical'], ['Trivial', 'nitpick']]) {
+    const t = thread({ comments: [{ author: 'coderabbitai', body: realBody(label) }] });
+    assert.equal(parseFinding(t).severity, want, label);
+  }
+});
+
+test('parseFinding leaves the marker comment and the label out of the body', () => {
+  const t = thread({ comments: [{ author: 'coderabbitai', body: realBody('Major') }] });
+  const f = parseFinding(t);
+  assert.match(f.body, /^\*\*Handle the null case\.\*\*/);
+  assert.doesNotMatch(f.body, /coderabbit-ai-generated|<picture>/);
+});
+
+test('an APPROVED current-head review with unresolved findings is changes-requested', () => {
+  const r = coderabbitStatus(input({ threads: [thread()] }));
+  assert.equal(r.state, 'changes-requested');
+  assert.equal(r.findings.length, 1);
+});
+
+test('a missing headSha or commitOid is never approved', () => {
+  assert.equal(coderabbitStatus(input({ headSha: undefined, reviews: [review({ commitOid: undefined })] })).state, 'stale');
+  assert.equal(coderabbitStatus(input({ headSha: '', reviews: [review({ commitOid: '' })] })).state, 'stale');
+  assert.equal(coderabbitStatus(input({ headSha: null, reviews: [review({ commitOid: null })] })).state, 'stale');
+});
+
+test('a CodeRabbit review with no submittedAt makes the order unknown, so nothing is approved', () => {
+  const reviews = [review({ submittedAt: null, state: 'CHANGES_REQUESTED' }), review({ state: 'APPROVED' })];
+  assert.equal(coderabbitStatus(input({ reviews })).state, 'stale');
+  assert.equal(coderabbitStatus(input({ reviews: [review({ submittedAt: null })] })).state, 'stale');
 });
 
 test('the CLI prints the status as JSON', () => {
