@@ -222,6 +222,16 @@
       },
       "source": "./plugins/ci-watch",
       "category": "workflow"
+    },
+    {
+      "name": "coderabbit-merge",
+      "description": "Waits for CodeRabbit, validates and fixes its findings, and hands an approved, green PR to ci-watch to merge.",
+      "version": "1.30.0",
+      "author": {
+        "name": "Marcel Roozekrans"
+      },
+      "source": "./plugins/coderabbit-merge",
+      "category": "workflow"
     }
   ]
 }

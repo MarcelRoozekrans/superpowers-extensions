@@ -26,7 +26,7 @@ twenty-three symlinks (one per skill).
    REPO=~/.codex/superpowers-extensions
    for plugin in regression-test pre-push-review refactor-analysis decision-tracker \
                  roslyn-codelens-integration memorylens-integration project-orchestration \
-                 ui-workflow ui-design-system squad compress-memory logo-design context-budget anti-slop demo-video retro wizard upstream-issue architecture-scan unattended ci-watch; do
+                 ui-workflow ui-design-system squad compress-memory logo-design context-budget anti-slop demo-video retro wizard upstream-issue architecture-scan unattended ci-watch coderabbit-merge; do
      for skill in "$REPO/plugins/$plugin/skills/"*/; do
        ln -sfn "${skill%/}" "$HOME/.agents/skills/$(basename "$skill")"
      done
@@ -41,7 +41,7 @@ twenty-three symlinks (one per skill).
    $plugins = @(
      'regression-test', 'pre-push-review', 'refactor-analysis', 'decision-tracker',
      'roslyn-codelens-integration', 'memorylens-integration', 'project-orchestration',
-     'ui-workflow', 'ui-design-system', 'squad', 'compress-memory', 'logo-design', 'context-budget', 'anti-slop', 'demo-video', 'retro', 'wizard', 'upstream-issue', 'architecture-scan', 'unattended', 'ci-watch'
+     'ui-workflow', 'ui-design-system', 'squad', 'compress-memory', 'logo-design', 'context-budget', 'anti-slop', 'demo-video', 'retro', 'wizard', 'upstream-issue', 'architecture-scan', 'unattended', 'ci-watch', 'coderabbit-merge'
    )
    foreach ($plugin in $plugins) {
      foreach ($skill in Get-ChildItem -Directory "$repo\plugins\$plugin\skills") {
@@ -56,7 +56,7 @@ twenty-three symlinks (one per skill).
 ## Verify
 
 ```bash
-ls -la ~/.agents/skills/ | grep -E '(regression-test|pre-push-review|refactor-analysis|decision-tracker|roslyn-codelens-integration|memorylens-integration|project-orchestration|ui-workflow|ui-design-system|squad|compress-memory|logo-design|context-budget|anti-slop|demo-video|retro|wizard|upstream-issue|architecture-scan|codebase-design|unattended|ready-check|ci-watch)'
+ls -la ~/.agents/skills/ | grep -E '(regression-test|pre-push-review|refactor-analysis|decision-tracker|roslyn-codelens-integration|memorylens-integration|project-orchestration|ui-workflow|ui-design-system|squad|compress-memory|logo-design|context-budget|anti-slop|demo-video|retro|wizard|upstream-issue|architecture-scan|codebase-design|unattended|ready-check|ci-watch|coderabbit-merge)'
 ```
 
 You should see twenty-three symlinks (or junctions on Windows), one per skill.

@@ -34,7 +34,8 @@ const PLUGINS = [
   'upstream-issue',
   'architecture-scan',
   'unattended',
-  'ci-watch'
+  'ci-watch',
+  'coderabbit-merge'
 ];
 
 // A plugin may carry several skills, so register each folder under skills/.

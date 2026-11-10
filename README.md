@@ -2,7 +2,7 @@
 
 [![GitHub Sponsors](https://img.shields.io/github/sponsors/MarcelRoozekrans?style=flat&logo=githubsponsors&color=ea4aaa&label=Sponsor)](https://github.com/sponsors/MarcelRoozekrans)
 
-Extension skills for the [superpowers](https://github.com/obra/superpowers) suite, providing quality gates, development workflow skills, and project lifecycle management for web application development. It includes twenty-one plugins with twenty-three skills:
+Extension skills for the [superpowers](https://github.com/obra/superpowers) suite, providing quality gates, development workflow skills, and project lifecycle management for web application development. It includes twenty-two plugins with twenty-four skills:
 
 - **regression-test** -- Regression testing using the [Microsoft Playwright MCP server](https://github.com/microsoft/playwright-mcp), combining existing test suite execution with AI-powered visual and functional browser testing.
 - **pre-push-review** -- A structured branch review that diffs against the base branch and gates on plan adherence, code quality, commit hygiene, and regression testing, producing a PASS/FAIL verdict with a prioritized remediation plan on failure.
@@ -24,6 +24,7 @@ Extension skills for the [superpowers](https://github.com/obra/superpowers) suit
 - **architecture-scan** -- Finds shallow modules in the areas the git history changes most. A script ranks the hot directories and files of the last 200 commits, one subagent applies the deletion test there, and the ranked report (an Artifact or an HTML file) shows a before/after diagram per candidate. You pick one, and it goes to `superpowers:brainstorming`. The plugin also ships **codebase-design**, the shared deep-module vocabulary (module, interface, depth, seam, leverage, locality). Adapted from Matt Pocock's [skills](https://github.com/mattpocock/skills) (MIT). See [plugins/architecture-scan/NOTICE.md](plugins/architecture-scan/NOTICE.md).
 - **unattended** -- Runs a queue of groomed plans while no one is at the keyboard. Three hooks deny `AskUserQuestion`, stop the session from ending while an item is open, and inject a short policy that says which option to take and what to park. Every call made for you goes into a log that becomes the PR body. `ready-check` is the attended half: it checks each item and writes the queue.
 - **ci-watch** -- Waits for CI as an event, fixes red CI, merges a green PR when asked and follows the release. A hook starts the watch whenever a PR is opened, including PRs opened by upstream skills. Needs `gh` locally or the GitHub MCP tools in cloud sessions.
+- **coderabbit-merge** -- Waits for CodeRabbit, checks each finding against the code and fixes the genuine ones, then hands a CodeRabbit-approved, CI-green PR to `ci-watch` to merge. Needs `gh` locally or the GitHub MCP tools in cloud sessions.
 - **squad** -- Persistent AI agent teams (Lead, Backend Engineer, Frontend Engineer, Tester, Scribe) **dispatched as parallel `Task` subagents** during brainstorming and planning workflows. Each specialist runs in an isolated context window with its own charter and tier-1 history, so they cannot anchor on each other's reasoning. Per-role `history.md` files accumulate project-specific knowledge across sessions; tiered context lookup (semantic search → grep → recent history) keeps each subagent's prompt lean.
 
 ---
@@ -682,6 +683,24 @@ An authenticated `gh` locally, or the GitHub MCP tools in cloud sessions.
 
 The merge flow is adapted from `merge-when-green` in [Devleaps/tempa-config-template](https://github.com/Devleaps/tempa-config-template) (MIT); see `plugins/ci-watch/NOTICE.md`.
 
+## CodeRabbit Merge Skill
+
+The coderabbit-merge plugin merges a PR once CodeRabbit has approved it and CI is green. One skill, `coderabbit-merge`, fires on "merge when CodeRabbit approves", "wait for CodeRabbit" and "fix the CodeRabbit findings".
+
+### The Loop
+
+- A script, `coderabbit.mjs status`, turns the PR's reviews, review threads and `CodeRabbit` check state into a status (`reviewing`, `approved`, `changes-requested`, `not-approved`, `no-review` or `stale`) and a list of open findings with severity and CodeRabbit's own "Prompt for AI Agents" text.
+- While CodeRabbit is reviewing, the skill waits. For each open finding it checks the claim against the code. A genuine finding is fixed, using CodeRabbit's prompt as the starting point. Any other finding gets a reply with the reason and is resolved. A genuine finding in code the PR does not touch goes into one grouped issue, and a finding that needs a design choice goes to you. Three rounds end the loop.
+- When CodeRabbit approves the current head and CI is green, the skill hands the PR to the `ci-watch` Merge stage. It never runs `gh pr merge` itself, and release PRs are never merged.
+
+### Make CodeRabbit Approve
+
+CodeRabbit posts a real GitHub approval only when `.coderabbit.yaml` sets `reviews.request_changes_workflow: true`. Without it the skill reports that no approval can appear and does not merge.
+
+### Prerequisites
+
+An authenticated `gh` locally, or the GitHub MCP tools in cloud sessions. Attended sessions only.
+
 ## UI Workflow Skill
 
 The ui-workflow skill provides two complementary capabilities that close the design-implementation gap in frontend work.
@@ -988,7 +1007,7 @@ per harness; only how the harness loads them.
 | **OpenAI Codex CLI / App** | [`.codex-plugin/plugin.json`](.codex-plugin/plugin.json) + [`.codex/INSTALL.md`](.codex/INSTALL.md) | Clone-and-symlink each plugin into `~/.agents/skills/`; instructions and a copy-paste loop in [`.codex/INSTALL.md`](.codex/INSTALL.md) |
 | **Gemini CLI** | [`gemini-extension.json`](gemini-extension.json) + [`GEMINI.md`](GEMINI.md) | `GEMINI.md` lists each SKILL.md via `@./plugins/.../SKILL.md` import syntax |
 | **GitHub Copilot CLI** | Reuses [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json) + [`.copilot-cli/INSTALL.md`](.copilot-cli/INSTALL.md) | `copilot plugin marketplace add MarcelRoozekrans/superpowers-extensions`, then install individual plugins |
-| **OpenCode.ai** | [`.opencode/plugins/superpowers-extensions.js`](.opencode/plugins/superpowers-extensions.js) | JS plugin registers all twenty-three skill paths via OpenCode's `config.skills.paths` array — no symlinks needed |
+| **OpenCode.ai** | [`.opencode/plugins/superpowers-extensions.js`](.opencode/plugins/superpowers-extensions.js) | JS plugin registers all twenty-four skill paths via OpenCode's `config.skills.paths` array — no symlinks needed |
 
 The polymorphic [`hooks/session-start`](hooks/session-start) script
 detects which harness is running it via env vars (`CURSOR_PLUGIN_ROOT`,
@@ -1054,7 +1073,7 @@ The multi-provider mechanism here is adapted directly from
 [`obra/superpowers`](https://github.com/obra/superpowers) (MIT). Their
 session-start hook was the model for ours; their per-harness manifest
 pattern is what enables one shared markdown tree to load natively in
-each host. Differences: we are a marketplace of twenty-one plugins (versus
+each host. Differences: we are a marketplace of twenty-two plugins (versus
 their single-plugin layout), so our manifests target the suite at the
 repo root with skills resolved via `./plugins/`.
 
@@ -1095,6 +1114,7 @@ claude plugin install upstream-issue
 claude plugin install architecture-scan
 claude plugin install unattended
 claude plugin install ci-watch
+claude plugin install coderabbit-merge
 ```
 
 The regression-test plugin automatically configures the Playwright MCP server with `--caps=testing`. The pre-push-review plugin requires only git and no additional MCP servers for its core review.
@@ -1254,6 +1274,12 @@ xcopy /E /I plugins\ci-watch\skills %USERPROFILE%\.claude\skills
 
 # macOS / Linux -- ci-watch (the skill; the PR hook needs the plugin install)
 cp -r plugins/ci-watch/skills/. ~/.claude/skills/
+
+# Windows -- coderabbit-merge
+xcopy /E /I plugins\coderabbit-merge\skills %USERPROFILE%\.claude\skills
+
+# macOS / Linux -- coderabbit-merge
+cp -r plugins/coderabbit-merge/skills/. ~/.claude/skills/
 ```
 
 **Note:** Some plugins require companion MCP servers. Install them separately:
@@ -1636,16 +1662,23 @@ superpowers-extensions/
 │   │       │   └── scripts/                # session-start, ask-check, stop-check, shared module and tests
 │   │       └── ready-check/
 │   │           └── SKILL.md                # Five checks, gaps, queue file and start command
-│   └── ci-watch/                           # CI watch, merge when green, release follow-through (21st plugin, one skill)
+│   ├── ci-watch/                           # CI watch, merge when green, release follow-through (21st plugin, one skill)
+│   │   ├── .claude-plugin/
+│   │   │   └── plugin.json
+│   │   ├── NOTICE.md                       # Attribution to Devleaps/tempa-config-template
+│   │   ├── hooks/
+│   │   │   └── hooks.json                  # PostToolUse on PR creation
+│   │   └── skills/
+│   │       └── ci-watch/
+│   │           ├── SKILL.md                # Wait, Red CI, Merge and Release stages
+│   │           └── scripts/                # pr-opened hook, ci-watch.mjs and tests
+│   └── coderabbit-merge/                   # CodeRabbit-gated merge (22nd plugin, one skill)
 │       ├── .claude-plugin/
 │       │   └── plugin.json
-│       ├── NOTICE.md                       # Attribution to Devleaps/tempa-config-template
-│       ├── hooks/
-│       │   └── hooks.json                  # PostToolUse on PR creation
 │       └── skills/
-│           └── ci-watch/
-│               ├── SKILL.md                # Wait, Red CI, Merge and Release stages
-│               └── scripts/                # pr-opened hook, ci-watch.mjs and tests
+│           └── coderabbit-merge/
+│               ├── SKILL.md                # Gather, act on the state, fix loop and merge
+│               └── scripts/                # coderabbit.mjs and tests
 └── docs/
     ├── planning/                           # Project lifecycle state (ROADMAP, MILESTONE, STATE, CONVENTIONS)
     └── plans/                              # Design documents and phase plans
