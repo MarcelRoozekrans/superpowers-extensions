@@ -1,6 +1,6 @@
 # coderabbit-merge design
 
-Date: 2026-11-10. Status: draft, awaiting approval.
+Date: 2026-11-10. Status: approved 2026-11-10.
 
 ## Intent
 
@@ -87,10 +87,13 @@ plugins/coderabbit-merge/
 ### The script
 
 Pure functions plus a CLI entry, in the style of `ci-watch.mjs`. Input is JSON
-from stdin: the PR head SHA, the reviews and the review threads. Output:
+from stdin: the PR head SHA, the state of the `CodeRabbit` check, the reviews
+and the review threads. Output:
 
-- `state`: `reviewing`, `approved`, `changes-requested`, `no-review` or
-  `stale` (the last CodeRabbit review is for an older commit).
+- `state`: `reviewing` (the CodeRabbit check is pending), `approved`,
+  `changes-requested`, `not-approved` (the latest review is only a comment and
+  no findings are open), `no-review` or `stale` (the last CodeRabbit review is
+  for an older commit).
 - `findings`: unresolved CodeRabbit threads, each with path, line, severity,
   the finding text and the extracted agent prompt (empty when absent).
 
