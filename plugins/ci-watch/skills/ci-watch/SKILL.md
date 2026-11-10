@@ -24,6 +24,8 @@ Pick the mechanism once per PR. Probe `gh` with `gh auth status` and `gh pr view
 | Interactive with `gh` | The same command with `run_in_background`, then end the turn; you are re-invoked when it exits. Without `run_in_background`, use the foreground loop. |
 | No `gh` for PRs, as in cloud sessions | `subscribe_pr_activity` for the PR, then end the turn; the CI event wakes the session. |
 
+In a repo that CodeRabbit reviews, run the `coderabbit-merge` skill before the Merge stage.
+
 Never use a `sleep` loop. In a cloud session follow the rules in the `subscription.created` event for handling PR events; do not restate or override them here.
 
 Limit: wait at most 60 minutes from the first watch. A repo can set its own in `docs/planning/CONVENTIONS.md` as `**CI timeout:** <minutes>`. The value is a positive integer; a bare number and `60 (defaulted)`, as `init-conventions` records it, both mean 60. When the limit passes, stop waiting and report which checks are still pending. When unattended, return "timed out" with those checks as the reason. For the subscription mechanism, also schedule one fallback wakeup at the limit, with `ScheduleWakeup` or `send_later`, whichever the session has, so a check that never reports cannot hang the session. It fires once.
