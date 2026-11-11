@@ -31,7 +31,8 @@
     "upstream-issue",
     "architecture-scan",
     "unattended",
-    "ci-watch"
+    "ci-watch",
+    "coderabbit-merge"
   ],
   "skills": "./plugins/"
 }

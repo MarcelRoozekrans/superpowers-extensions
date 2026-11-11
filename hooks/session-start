@@ -20,7 +20,7 @@
 set -euo pipefail
 
 context_body=$(cat <<'CONTEXT'
-You have superpowers-extensions skills loaded. Twenty-three skills cover quality
+You have superpowers-extensions skills loaded. Twenty-four skills cover quality
 gates, refactor analysis, project orchestration, frontend workflow, design
 systems, brand marks, memory compression, prose hygiene, demo recordings,
 retrospectives, setup wizards, upstream bug reports, unattended runs and CI:
@@ -48,6 +48,7 @@ retrospectives, setup wizards, upstream bug reports, unattended runs and CI:
 - unattended            — works a groomed queue with no one to ask; parks what needs the operator
 - ready-check           — checks groomed items can run unattended, then writes the queue
 - ci-watch              — waits for CI, fixes red CI, merges a green PR when asked, follows the release
+- coderabbit-merge      — waits for CodeRabbit, fixes its genuine findings, merges once it approves
 
 Each skill triggers on specific phrases described in its frontmatter.
 Invoke via the host's native skill mechanism (Claude Code Skill tool,

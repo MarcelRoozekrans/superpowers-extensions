@@ -21,3 +21,4 @@
 @./plugins/unattended/skills/unattended/SKILL.md
 @./plugins/unattended/skills/ready-check/SKILL.md
 @./plugins/ci-watch/skills/ci-watch/SKILL.md
+@./plugins/coderabbit-merge/skills/coderabbit-merge/SKILL.md
