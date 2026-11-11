@@ -182,6 +182,20 @@ test('parseFinding leaves the marker comment and the label out of the body', () 
   assert.doesNotMatch(f.body, /coderabbit-ai-generated|<picture>/);
 });
 
+test('an unlabelled sentence that mentions minor keeps its full body and has severity unknown', () => {
+  const text = 'Minor typo in the major version string, please fix it.';
+  const f = parseFinding(thread({ comments: [{ author: 'coderabbitai', body: text }] }));
+  assert.equal(f.severity, 'unknown');
+  assert.equal(f.body, text);
+});
+
+test('the same holds behind the marker comment', () => {
+  const text = 'This is a major rewrite of the minor path.';
+  const f = parseFinding(thread({ comments: [{ author: 'coderabbitai', body: `<!-- coderabbit-ai-generated:v1 -->\n\n${text}` }] }));
+  assert.equal(f.severity, 'unknown');
+  assert.equal(f.body, text);
+});
+
 test('an APPROVED current-head review with unresolved findings is changes-requested', () => {
   const r = coderabbitStatus(input({ threads: [thread()] }));
   assert.equal(r.state, 'changes-requested');

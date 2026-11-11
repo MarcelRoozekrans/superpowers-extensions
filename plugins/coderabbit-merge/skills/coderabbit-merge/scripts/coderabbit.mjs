@@ -9,18 +9,8 @@ export function isCodeRabbit(login) {
 // CodeRabbit opens a comment with a marker comment, then a label line such as
 // "**<picture>...</picture> Major** · **Functional Correctness** · **Quick win**".
 const MARKER = /^\s*<!--[\s\S]*?-->\s*/;
-const LABEL_LINE = /^.*\b(?:critical|major|minor|nitpick|trivial)\b.*(?:\n|$)/i;
-const SEVERITIES = [
-  ['critical', /critical/i],
-  ['major', /major/i],
-  ['minor', /minor/i],
-  ['nitpick', /nitpick|trivial/i],
-];
-
-function severityOf(label) {
-  for (const [name, re] of SEVERITIES) if (re.test(label)) return name;
-  return 'unknown';
-}
+const LABEL_LINE = /^\*\*(?:<picture>[\s\S]*?<\/picture>\s*)?(critical|major|minor|nitpick|trivial)\*\*.*(?:\n|$)/i;
+const SEVERITY = { critical: 'critical', major: 'major', minor: 'minor', nitpick: 'nitpick', trivial: 'nitpick' };
 
 // The fix prompt sits in a code fence under a "Prompt for AI Agents" summary.
 const AGENT_PROMPT = /Prompt for AI Agents[\s\S]*?```[^\n]*\n([\s\S]*?)\n```/;
@@ -32,8 +22,9 @@ const RUNNING = new Set(['pending', 'expected', 'queued', 'in_progress', 'reques
 export function parseFinding(thread) {
   const text = String(thread?.comments?.[0]?.body ?? '');
   const unmarked = text.replace(MARKER, '');
-  const label = LABEL_LINE.exec(unmarked.split('\n\n')[0] + '\n')?.[0] ?? '';
-  const severity = severityOf(label);
+  const match = LABEL_LINE.exec(unmarked.split('\n\n')[0] + '\n');
+  const label = match?.[0] ?? '';
+  const severity = match ? SEVERITY[match[1].toLowerCase()] : 'unknown';
   const prose = (label ? unmarked.slice(unmarked.indexOf(label) + label.length) : unmarked).split('<details>')[0].trim();
   const prompt = AGENT_PROMPT.exec(text);
   return {
