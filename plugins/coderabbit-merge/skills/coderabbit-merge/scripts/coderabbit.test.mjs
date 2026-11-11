@@ -196,6 +196,20 @@ test('the same holds behind the marker comment', () => {
   assert.equal(f.body, text);
 });
 
+test('parseFinding reads a severity label with an emoji prefix', () => {
+  const text = '**🟠 Major** · **Functional Correctness**\n\nThe value can be null here.';
+  const f = parseFinding(thread({ comments: [{ author: 'coderabbitai', body: text }] }));
+  assert.equal(f.severity, 'major');
+  assert.equal(f.body, 'The value can be null here.');
+});
+
+test('bold prose that is not a severity label is not parsed as one', () => {
+  const text = '**Handle the null case.**\n\nThe value can be null here.';
+  const f = parseFinding(thread({ comments: [{ author: 'coderabbitai', body: text }] }));
+  assert.equal(f.severity, 'unknown');
+  assert.equal(f.body, text);
+});
+
 test('an APPROVED current-head review with unresolved findings is changes-requested', () => {
   const r = coderabbitStatus(input({ threads: [thread()] }));
   assert.equal(r.state, 'changes-requested');

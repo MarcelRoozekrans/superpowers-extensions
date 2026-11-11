@@ -7,9 +7,10 @@ export function isCodeRabbit(login) {
 }
 
 // CodeRabbit opens a comment with a marker comment, then a label line such as
-// "**<picture>...</picture> Major** · **Functional Correctness** · **Quick win**".
+// "**<picture>...</picture> Major** · **Functional Correctness** · **Quick win**"; an emoji can
+// stand in for the picture, as in "**🟠 Major**". Bold prose without a severity word is no label.
 const MARKER = /^\s*<!--[\s\S]*?-->\s*/;
-const LABEL_LINE = /^\*\*(?:<picture>[\s\S]*?<\/picture>\s*)?(critical|major|minor|nitpick|trivial)\*\*.*(?:\n|$)/i;
+const LABEL_LINE = /^\*\*(?:<picture>[\s\S]*?<\/picture>\s*|[^\w\s*<]+\s*)?(critical|major|minor|nitpick|trivial)\*\*.*(?:\n|$)/i;
 const SEVERITY = { critical: 'critical', major: 'major', minor: 'minor', nitpick: 'nitpick', trivial: 'nitpick' };
 
 // The fix prompt sits in a code fence under a "Prompt for AI Agents" summary.
