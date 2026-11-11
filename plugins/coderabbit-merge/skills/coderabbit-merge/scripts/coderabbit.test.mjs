@@ -210,6 +210,30 @@ test('bold prose that is not a severity label is not parsed as one', () => {
   assert.equal(f.body, text);
 });
 
+const details = (summary, inner) => `<details>\n<summary>${summary}</summary>\n\n${inner}\n\n</details>`;
+const labelled = (rest) => `<!-- coderabbit-ai-generated:v1 -->\n\n**Major** · **Functional Correctness** · **Quick win**\n\n${rest}`;
+
+test('finding prose after a leading details block is kept', () => {
+  const text = labelled(`${details('Supported by static analysis', 'Script executed:\n\nsed -n 1,5p a.mjs')}\n\nThe cache key is shared.\n\n${details('Prompt for AI Agents', `${FENCE}\nfix it\n${FENCE}`)}`);
+  const f = parseFinding(thread({ comments: [{ author: 'coderabbitai', body: text }] }));
+  assert.equal(f.body, 'The cache key is shared.');
+  assert.equal(f.agentPrompt, 'fix it');
+});
+
+test('prose before a later details block is still kept, and nested details are skipped whole', () => {
+  const nested = details('Outer', details('Inner', 'logs'));
+  const text = labelled(`${nested}\n\nFirst part.\n\n${details('More', 'x')}\n\nNot part of the body.`);
+  const f = parseFinding(thread({ comments: [{ author: 'coderabbitai', body: text }] }));
+  assert.equal(f.body, 'First part.');
+});
+
+test('text after the label on the same line is part of the finding', () => {
+  const text = '**🟠 Major**: The cache key is shared across users.';
+  const f = parseFinding(thread({ comments: [{ author: 'coderabbitai', body: text }] }));
+  assert.equal(f.severity, 'major');
+  assert.equal(f.body, 'The cache key is shared across users.');
+});
+
 test('an APPROVED current-head review with unresolved findings is changes-requested', () => {
   const r = coderabbitStatus(input({ threads: [thread()] }));
   assert.equal(r.state, 'changes-requested');

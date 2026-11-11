@@ -10,7 +10,7 @@ export function isCodeRabbit(login) {
 // "**<picture>...</picture> Major** · **Functional Correctness** · **Quick win**"; an emoji can
 // stand in for the picture, as in "**🟠 Major**". Bold prose without a severity word is no label.
 const MARKER = /^\s*<!--[\s\S]*?-->\s*/;
-const LABEL_LINE = /^\*\*(?:<picture>[\s\S]*?<\/picture>\s*|[^\w\s*<]+\s*)?(critical|major|minor|nitpick|trivial)\*\*.*(?:\n|$)/i;
+const LABEL_LINE = /^\*\*(?:<picture>[\s\S]*?<\/picture>\s*|[^\w\s*<]+\s*)?(critical|major|minor|nitpick|trivial)\*\*(?:\s*[·|]\s*\*\*[^*\n]+\*\*)*(.*)(?:\n|$)/i;
 const SEVERITY = { critical: 'critical', major: 'major', minor: 'minor', nitpick: 'nitpick', trivial: 'nitpick' };
 
 // The fix prompt sits in a code fence under a "Prompt for AI Agents" summary.
@@ -20,13 +20,34 @@ const AGENT_PROMPT = /Prompt for AI Agents[\s\S]*?```[^\n]*\n([\s\S]*?)\n```/;
 // in upper case.
 const RUNNING = new Set(['pending', 'expected', 'queued', 'in_progress', 'requested', 'waiting']);
 
+// Drops the balanced <details> block at the start of the text, nested blocks included.
+function skipDetails(text) {
+  const tag = /<details[\s>]|<\/details>/g;
+  let depth = 0;
+  for (let m = tag.exec(text); m; m = tag.exec(text)) {
+    depth += m[0] === '</details>' ? -1 : 1;
+    if (depth === 0) return text.slice(m.index + m[0].length);
+  }
+  return '';
+}
+
+// The finding prose is what stands before the first details block once leading blocks are skipped.
+function proseOf(text) {
+  let rest = text.trimStart();
+  while (rest.startsWith('<details')) rest = skipDetails(rest).trimStart();
+  return rest.split('<details>')[0].trim();
+}
+
 export function parseFinding(thread) {
   const text = String(thread?.comments?.[0]?.body ?? '');
   const unmarked = text.replace(MARKER, '');
-  const match = LABEL_LINE.exec(unmarked.split('\n\n')[0] + '\n');
-  const label = match?.[0] ?? '';
+  const cut = unmarked.indexOf('\n\n');
+  const first = cut < 0 ? unmarked : unmarked.slice(0, cut);
+  const after = cut < 0 ? '' : unmarked.slice(cut + 2);
+  const match = LABEL_LINE.exec(first);
   const severity = match ? SEVERITY[match[1].toLowerCase()] : 'unknown';
-  const prose = (label ? unmarked.slice(unmarked.indexOf(label) + label.length) : unmarked).split('<details>')[0].trim();
+  const head = match ? [match[2].replace(/^[\s:\u2013\u2014-]+/, ''), first.slice(match[0].length)].filter(Boolean).join('\n') : first;
+  const prose = proseOf([head, after].filter(Boolean).join('\n\n'));
   const prompt = AGENT_PROMPT.exec(text);
   return {
     threadId: thread?.id ?? null,
