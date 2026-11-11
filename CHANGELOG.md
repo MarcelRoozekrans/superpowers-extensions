@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.31.0](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.30.0...superpowers-extensions-v1.31.0) (2026-11-11)
+
+
+### Features
+
+* **coderabbit-merge:** add CodeRabbit-gated merge skill ([d510cb8](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/d510cb8ae18ba884a3a2663719b63b8404454249))
+
 ## [1.30.0](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.29.0...superpowers-extensions-v1.30.0) (2026-11-06)
 
 
