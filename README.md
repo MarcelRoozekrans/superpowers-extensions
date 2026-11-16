@@ -1712,12 +1712,17 @@ React Router, Next.js (App Router & Pages Router), Angular, Vue Router, SvelteKi
 
 ## Contributing
 
-Two checks run in CI and are worth running locally before pushing:
+CI runs these checks, and they are worth running locally before pushing:
 
 ```bash
-npm run lint:md          # markdownlint — globs live in .markdownlint-cli2.jsonc
-npm run check:registries # every plugin registered everywhere, counts match disk
+npm run lint:md           # markdownlint — globs live in .markdownlint-cli2.jsonc
+npm run check:registries  # every plugin registered everywhere, counts match disk
+npm run check:conventions # no hard-coded commit messages or tags outside the protocol
+npm run check:upstream    # the pinned obra/superpowers release still fits; needs network
+npm test                  # node --test over the plugin scripts
 ```
+
+Pull requests also run commitlint over their commits.
 
 ### Adding a plugin
 
