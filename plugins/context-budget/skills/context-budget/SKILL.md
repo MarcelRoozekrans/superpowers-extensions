@@ -36,6 +36,7 @@ Hand off only at a natural break, and only when the next work needs nothing from
 - A natural break is a finished phase or PR, or a delivered result.
 - A finished plan task is not a natural break. A `subagent-driven-development` or `executing-plans` run goes on to the last task and its final review in this session; implementer subagents already keep this context small.
 - If the next work needs what is in the current context, carry on. A big context that the work needs is fine.
+- Never hand off while a `/goal` is active. A goal belongs to its session: a new session starts without it, so the run stops until someone sets it again. Auto-compaction carries a long goal run instead. The same holds during an unattended run (see the `unattended` skill).
 - Outside a natural break, or when the next work depends on the current context, say nothing and carry on silently. A context-budget reminder is a prompt to check these conditions, not an instruction to stop.
 
 ### Record the handoff
