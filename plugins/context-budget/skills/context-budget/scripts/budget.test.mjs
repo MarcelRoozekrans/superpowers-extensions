@@ -135,6 +135,8 @@ test('reminderText', () => {
   assert.doesNotMatch(reminderText('nudge', 250000), /stop/i);
   assert.match(reminderText('nudge', 250000), /plan task is not/);
   assert.doesNotMatch(reminderText('nudge', 250000), /offer/i);
+  assert.match(reminderText('nudge', 250000), /Never hand off while a \/goal is active/);
+  assert.match(reminderText('firm', 420000), /Never hand off while a \/goal is active/);
 });
 
 test('state round-trip', () => {
