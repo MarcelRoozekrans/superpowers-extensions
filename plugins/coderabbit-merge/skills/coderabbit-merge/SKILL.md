@@ -60,7 +60,7 @@ The script prints `{ "state", "findings", "reviewBody" }`. Each finding has `thr
 
 ## Waiting
 
-Use `ci-watch`'s limit: 60 minutes in total for the PR from the first wait, never restarted by a new round, or `**CI timeout:** <minutes>` from `docs/planning/CONVENTIONS.md`. When it passes, stop and report "CodeRabbit has not reviewed `<sha>`" with the state.
+Use `ci-watch`'s limit: 60 minutes, or the `**CI timeout:** <minutes>` value from `docs/planning/CONVENTIONS.md` read the same way, in total for the PR from the first wait. A new round never restarts it. When it passes, stop and report "CodeRabbit has not reviewed `<sha>`" with the state.
 
 `gh pr checks --watch` ends when CI ends, which can be before CodeRabbit reviews, so it is not enough here. In cloud sessions `subscribe_pr_activity` delivers CodeRabbit's review as an event. Locally, watch with `Monitor` on an `until` loop over the review list that ends when a CodeRabbit review for the head commit exists and the `CodeRabbit` check is no longer running, or when the limit passes. A review on the head does not end the wait while the check is still running. A review CodeRabbit never posts (paused auto-review, draft PR, skipped files) ends at the limit, not in a loop.
 
