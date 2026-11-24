@@ -28,12 +28,12 @@ In a repo that CodeRabbit reviews, an attended run uses the `coderabbit-merge` s
 
 Never use a `sleep` loop. In a cloud session follow the rules in the `subscription.created` event for handling PR events; do not restate or override them here.
 
-Limit: wait at most 60 minutes in total for one PR, counted from its first watch. The limit covers every later wait on the same PR and never restarts: a fix push, a branch update or a resolved conflict does not give the PR a new 60 minutes. A repo can set its own in `docs/planning/CONVENTIONS.md` as `**CI timeout:** <minutes>`. The value is a positive integer: a bare number such as `120` means that many minutes, and `60 (defaulted)`, as `init-conventions` records it, means 60. A configured value is a total for the PR too. When the limit passes, stop waiting and report which checks are still pending. When unattended, return "timed out" with those checks as the reason. For the subscription mechanism, also schedule one fallback wakeup at the limit, with `ScheduleWakeup` or `send_later`, whichever the session has, so a check that never reports cannot hang the session. It fires once.
+Limit: wait at most 60 minutes in total for one PR, counted from its first watch. The limit covers every later wait on the same PR and never restarts: a fix push, a branch update or a resolved conflict does not give the PR a new 60 minutes. A repo can set its own in `docs/planning/CONVENTIONS.md` as `**CI timeout:** <minutes>`. The value is a positive integer: a bare number such as `120` means that many minutes, and `60 (defaulted)`, as `init-conventions` records it, means 60. A configured value is a total for the PR too. Give each watch a timeout of 10 minutes or the time left of the PR's limit, whichever is shorter, so no watch runs past the limit. When the limit passes, stop waiting and report which checks are still pending. When unattended, return "timed out" with those checks as the reason. For the subscription mechanism, also schedule one fallback wakeup at the limit, with `ScheduleWakeup` or `send_later`, whichever the session has, so a check that never reports cannot hang the session. It fires once.
 
 Outcomes:
 
 - **All green:** go to Merge when a merge was asked for or the run may merge. Otherwise report green and stop.
-- **Pending is not green.** Keep waiting.
+- **Pending is not green.** Keep waiting. Between watches, check every check that has already failed against the [Circle guard](#circle-guard), and stop waiting when it fires.
 - **No checks at all:** report it and ask when attended; return "no checks" when unattended. No CI is not green.
 - **Red:** run the Red CI loop.
 - **Blocked by missing required checks on a bot PR:** report it, with the reason that only `pull_request` event checks count. Never trigger checks another way.
