@@ -132,11 +132,9 @@ Een treffer is een aanleiding om de zin te controleren, geen automatische correc
 
 ### Gestapelde overgangen
 
-**Tell:** Zinnen die openen met `Daarnaast,`, `Bovendien,` of `Tevens,` om een punt erbij te plakken.
+**Tell:** Zinnen die openen met `Daarnaast`, `Bovendien` of `Tevens`, met of zonder komma, om een punt erbij te plakken.
 
-**Match:** `(?:^\s*(?:[-*+>]|\d+\.)?\s*|[.!?]\s+)(?:daarnaast|bovendien|tevens),`
-
-**Match:** `(?:^\s*(?:[-*+>]|\d+\.)?\s*|[.!?]\s+)tevens\s`
+**Match:** `(?:^\s*(?:[-*+>]|\d+\.)?\s*|[.!?]\s+)(?:daarnaast|bovendien|tevens)(?:,|\s)`
 
 **Bad:** Daarnaast toont het commando een samenvatting. Bovendien schrijft het een logbestand.
 
@@ -218,7 +216,7 @@ Een treffer is een aanleiding om de zin te controleren, geen automatische correc
 
 **Tell:** Voorbehouden bij feiten die de schrijver kent, zoals `zou mogelijk kunnen` of `het lijkt erop dat`.
 
-**Match:** `\b(?:zou|zouden) (?:mogelijk|eventueel|potentieel|mogelijkerwijs) (?:kunnen|mogen)\b`
+**Match:** `\b(?:zou|zouden) (?:mogelijk|eventueel|potentieel|mogelijkerwijs)(?:\s+[^\s.!?]+){0,4}?\s+(?:kunnen|mogen)\b`
 
 **Match:** `\b(?:mogelijkerwijs|potentieel) (?:kan|kunnen|zou|zouden)\b`
 
