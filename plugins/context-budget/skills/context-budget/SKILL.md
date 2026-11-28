@@ -1,6 +1,6 @@
 ---
 name: context-budget
-description: Use when dispatching implementer or reviewer subagents, when choosing a model for a subagent, when a context-budget reminder appears in the conversation, or when handing off to a fresh session at a natural break. Holds the suite-wide model rule (Haiku, Sonnet or Opus, never Fable) and the fresh-session handoff recipe. Skip for work that needs no subagent and no handoff.
+description: Use when dispatching implementer or reviewer subagents, when choosing a model for a subagent, when a context-budget reminder appears in the conversation, or when handing off to a fresh session at a natural break. Holds the suite-wide model rule (Haiku, Sonnet or Opus, never Fable unless the project allows it) and the fresh-session handoff recipe. Skip for work that needs no subagent and no handoff.
 ---
 
 # Context Budget Skill
@@ -17,7 +17,7 @@ Hooks never fail a turn or stop work. On any error they exit silently.
 
 ## Model Choice
 
-Only Haiku, Sonnet and Opus are used for subagents. Never Fable.
+Only Haiku, Sonnet and Opus are used for subagents. Never Fable, unless the project's `.claude/context-budget.json` sets `allowFable` to `true`.
 
 - Implementers and reviewers default to Sonnet.
 - Opus is for a plan task marked `**Model:** opus`, a stuck-implementer retry (fix round 4 or later), and the final whole-branch review.
@@ -25,7 +25,7 @@ Only Haiku, Sonnet and Opus are used for subagents. Never Fable.
 
 This holds in every run, including plain `subagent-driven-development` and `executing-plans` runs, with or without a plan that names models. Where the upstream Model Selection guidance allows a cheap model for mechanical implementers, this rule wins: implementers never go below Sonnet.
 
-Always pass `model` explicitly on a dispatch. The dispatch hook denies any Fable `model` for every agent type. It denies a missing `model` only when `subagent_type` is absent, empty or `general-purpose`, and only while `enforceDispatchModel` is not `false`. `fork` and every other agent type pass.
+Always pass `model` explicitly on a dispatch. The dispatch hook denies any Fable `model` for every agent type while `allowFable` is not `true`. It denies a missing `model` only when `subagent_type` is absent, empty or `general-purpose`, and only while `enforceDispatchModel` is not `false`. `fork` and every other agent type pass.
 
 ## Fresh-Session Handoff
 
@@ -68,6 +68,7 @@ Optional file `.claude/context-budget.json` in the project:
 | --- | --- | --- |
 | `nudge` | `200000` | Context tokens at which the first reminder appears. |
 | `firm` | `400000` | Context tokens at which the reminder turns firm. Must exceed `nudge`. |
-| `enforceDispatchModel` | `true` | When `false`, a general-purpose dispatch without `model` is allowed. Fable is denied regardless. |
+| `enforceDispatchModel` | `true` | When `false`, a general-purpose dispatch without `model` is allowed. Fable stays denied unless `allowFable` is `true`. |
+| `allowFable` | `false` | When `true`, a Fable `model` is allowed on any dispatch. A general-purpose dispatch still needs a `model` while `enforceDispatchModel` is on. |
 
 A missing or invalid file means the defaults. After a reminder, the next one appears only once the context has grown by a further 50000 tokens, and the count resets only when the size drops by at least 50000 tokens, for example after a compaction. A smaller dip keeps the count.
