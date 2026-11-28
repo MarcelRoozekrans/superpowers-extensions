@@ -62,7 +62,7 @@ The script prints `{ "state", "findings", "reviewBody" }`. Each finding has `thr
 
 CodeRabbit's hourly allowance belongs to the PR's author, and on the OSS tier it is counted per repository as well. Each review it runs takes one. Whether it reviews a push by itself depends on `reviews.auto_review.auto_incremental_review` in the effective configuration, which can come from a central configuration repo instead of the repo's own `.coderabbit.yaml`. So go by what CodeRabbit does, not by the file:
 
-Push all fixes of a round at once. Then apply these rules after the push and again each time the wait wakes, and act on the first that matches. "Since" means since the latest review request, or since the push when no request was posted after it. A PR that opened without a push by this skill counts its opening as the push.
+Push all fixes of a round at once. Then apply these rules after the push and again each time the wait wakes, and act on the first that matches. "The push" is the latest push to the PR's head, by anyone; a PR with no push since it opened counts its opening. "Since" means since the latest review request, or since the push when no request was posted after it.
 
 1. CodeRabbit has reviewed the head: request nothing.
 2. The `CodeRabbit` check is running: request nothing and keep waiting.
@@ -75,7 +75,7 @@ Push all fixes of a round at once. Then apply these rules after the push and aga
 
 Use `ci-watch`'s limit: 60 minutes, or the `**CI timeout:** <minutes>` value from `docs/planning/CONVENTIONS.md` read the same way, in total for the PR from the first wait. A new round never restarts it. When it passes, stop and report "CodeRabbit has not reviewed `<sha>`" with the state.
 
-`gh pr checks --watch` ends when CI ends, which can be before CodeRabbit reviews, so it is not enough here. In cloud sessions `subscribe_pr_activity` delivers CodeRabbit's review as an event. Locally, watch with `Monitor` on an `until` loop over the review list that ends when a CodeRabbit review for the head commit exists and the `CodeRabbit` check is no longer running, or when the limit passes. A review on the head does not end the wait while the check is still running. The loop also ends when the `CodeRabbit` check finishes without a review of the head, or when CodeRabbit posts a comment since the push; then apply Requesting a review again. A review CodeRabbit never posts (paused auto-review, draft PR, skipped files) ends at the limit, not in a loop. Time spent waiting out a rate-limit reply does not count toward the limit.
+`gh pr checks --watch` ends when CI ends, which can be before CodeRabbit reviews, so it is not enough here. In cloud sessions `subscribe_pr_activity` delivers CodeRabbit's review as an event. Locally, watch with `Monitor` on an `until` loop over the review list that ends when a CodeRabbit review for the head commit exists and the `CodeRabbit` check is no longer running, or when the limit passes. A review on the head does not end the wait while the check is still running. The loop also wakes on a change since its last look: the `CodeRabbit` check finishing without a review of the head, a new CodeRabbit comment, or the push turning 5 minutes old. Then apply Requesting a review again. A state that has not changed does not wake it. A review CodeRabbit never posts (paused auto-review, draft PR, skipped files) ends at the limit, not in a loop. Time spent waiting out a rate-limit reply does not count toward the limit.
 
 ## Fix loop
 
