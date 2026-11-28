@@ -50,13 +50,23 @@ The script prints `{ "state", "findings", "reviewBody" }`. Each finding has `thr
 | State | Meaning | Do |
 |-------|---------|----|
 | `reviewing` | The CodeRabbit check is still running | Wait, then gather again. |
-| `no-review` | CodeRabbit has not reviewed | Wait for the review. After the limit, report it and check that CodeRabbit is installed on the repo and the PR is not a draft or paused. |
+| `no-review` | CodeRabbit has not reviewed | Wait for the review. If CodeRabbit answered with a rate-limit comment, follow Requesting a review. After the limit, report it and check that CodeRabbit is installed on the repo and the PR is not a draft or paused. |
 | `not-approved` | CodeRabbit only commented and nothing is open | Report that CodeRabbit never approves unless `.coderabbit.yaml` sets `reviews.request_changes_workflow: true`. Do not merge. |
-| `stale` | The last review is for an older commit | Wait for the review of the new head. |
+| `stale` | The last review is for an older commit | If no review was requested since the last push, request one (see Requesting a review). Then wait for the review of the new head. |
 | `changes-requested` | CodeRabbit asked for changes, or unresolved findings are open, even beside an approval | Run the Fix loop. |
 | `approved` | CodeRabbit approved the current head and nothing is open | First read `reviewBody`: validate any outside-diff or duplicate comment in it and fix the genuine ones, as in the Fix loop. Then, with CI green and a merge asked for this PR, go to Merge. Otherwise report "approved and green" and stop. |
 
 "No findings" is never approval. Only `approved` on the current head leads to a merge.
+
+## Requesting a review
+
+CodeRabbit's hourly allowance is per developer and every review it runs takes one, so a PR is reviewed automatically only when it opens. With `reviews.auto_review.auto_incremental_review: false` in `.coderabbit.yaml`, a push is reviewed only on request:
+
+1. Push all fixes of a round at once, then post one PR comment that reads `@coderabbitai review`.
+2. If CodeRabbit replies that the review limit is reached, the request was dropped, not queued. Wait the minutes it names, then post one new request.
+3. Post no other requests while one is pending.
+
+When `.coderabbit.yaml` leaves incremental reviews on, CodeRabbit reviews each push by itself: do not request one.
 
 ## Waiting
 
@@ -75,7 +85,7 @@ For each finding:
 3. Genuine but in code this PR does not touch: group such findings into one issue, after checking for an existing one.
 4. Needs a design choice: stop and put the choice to the operator.
 
-Then run the repo's own checks, commit following the repo's commit rules, push, and gather again after waiting. Three rounds on one PR end the loop: report the findings still open. Each round also costs a round of `ci-watch`'s Circle guard, and a finding that comes back after a fix pushed for it ends the loop at once.
+Then run the repo's own checks, commit following the repo's commit rules, push once for the whole round, request a review as in Requesting a review, and gather again after waiting. Three rounds on one PR end the loop: report the findings still open. Each round also costs a round of `ci-watch`'s Circle guard, and a finding that comes back after a fix pushed for it ends the loop at once.
 
 ## Merge
 
@@ -89,3 +99,4 @@ Only when a merge was asked for this PR, the state is `approved` and CI is green
 - Dismiss findings unread.
 - Bypass any rule here, or merge a release PR.
 - Re-run checks or push empty commits to prompt a new review.
+- Post more than one review request per push, except after a rate-limit reply.
