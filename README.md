@@ -1756,4 +1756,4 @@ if the index and the directory listing disagree.
 
 ## License
 
-MIT
+MIT. See [LICENSE](LICENSE).
