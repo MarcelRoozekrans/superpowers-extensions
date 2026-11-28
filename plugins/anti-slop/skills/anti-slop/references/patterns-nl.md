@@ -1,6 +1,6 @@
 # Nederlandse proza-patronen
 
-Deze catalogus somt de gewoonten op waardoor Nederlandse tekst klinkt alsof een machine hem schreef. Elke vermelding geeft het kenmerk, een slecht voorbeeld, een herschrijving die de vorm van de zin verandert, en de reden waarom het patroon de tekst verraadt. De catalogus beschrijft Nederlandse gewoonten. Het is geen vertaling van de Engelse lijst: een patroon staat hier alleen als het in Nederlandse tekst echt voorkomt.
+Deze catalogus somt de gewoonten op waardoor Nederlandse tekst klinkt alsof een machine hem schreef. Elke vermelding geeft het kenmerk, een slecht voorbeeld, een herschrijving die de vorm van de zin verandert en de reden waarom het patroon de tekst verraadt. De catalogus beschrijft Nederlandse gewoonten. Het is geen vertaling van de Engelse lijst: een patroon staat hier alleen als het in Nederlandse tekst echt voorkomt.
 
 **Bad:** regels citeren een patroon met opzet, dus de scanner slaat ze over. Vermeldingen met een vaste formulering hebben een of meer **Match:** regels met een regex tussen backticks. Vermeldingen die oordeel vragen hebben er geen. `scripts/scan.mjs` compileert die regexes met de vlaggen `giu`, haalt omheinde code, inline codefragmenten en de **Bad:** en **Match:** regels uit de te controleren tekst, en meldt elke treffer met patroonnaam en regelnummer. Buiten die regels noemt dit bestand verboden woorden alleen binnen inline codefragmenten, zodat het zijn eigen controle doorstaat. De labels Bad, Match, Tell, Rewrite en Why blijven Engels, omdat de scanner erop leest en de bestanden zo gelijk lopen.
 
@@ -200,6 +200,32 @@ Een treffer is een aanleiding om de zin te controleren, geen automatische correc
 
 **Why:** Eén streepje kan stijl zijn. Een streepje in elke zin is een tic van gegenereerde tekst en breekt het ritme van de alinea.
 
+### Een komma voor `en`
+
+**Tell:** Twee hoofdzinnen die steeds met `, en` aan elkaar hangen. Ook een opsomming als `A, B, C, en D` hoort hierbij. Het Engels zet daar een komma, het Nederlands meestal niet. Een komma voor `maar`, `want` of `dus` is gewoon Nederlands en valt hier buiten.
+
+**Match:** `,\s+en\b`
+
+**Bad:** De cache was verlopen, en het rapport duurde daardoor vier seconden. De sleutel is nu per klant, en het rapport komt weer uit de cache.
+
+**Rewrite:** De cache was verlopen. Daardoor duurde het rapport vier seconden. Nu heeft elke klant een eigen sleutel en komt het rapport weer uit de cache.
+
+**Why:** Modellen rijgen hoofdzinnen aan elkaar met een komma en `en`, naar Engels voorbeeld. In gemeten gegenereerde Nederlandse tekst is dit de tic die het vaakst voorkomt. Zet een punt, of laat de komma weg.
+
+### Tegenstelling als frame
+
+**Tell:** Een zin die eerst zegt wat iets niet is en dan wat het wel is: `niet X maar Y`, `geen X maar Y`, `niet alleen X maar ook Y`. Het frame zet een idee neer dat de lezer nooit had.
+
+**Match:** `(?<![\p{L}\p{N}])(?:niet|geen)\s+[^,.;:!?\n]{1,60}?\s+maar\s`
+
+**Match:** `(?<![\p{L}\p{N}])niet alleen\s[^.!?\n]{1,80}?\smaar ook(?![\p{L}\p{N}])`
+
+**Bad:** Dit is geen kleine opschoning maar een herziening van de cache. De fix lost niet alleen de crash op, maar ook de trage start.
+
+**Rewrite:** De wijziging herziet de cache. Ze lost de crash op en maakt de start sneller.
+
+**Why:** De lezer dacht niet dat het een kleine opschoning was. Een frame dat eerst een verkeerd idee neerzet om het daarna te weerleggen, klinkt als een pitch. Zeg wat het is.
+
 ### Gelijke zinsopeningen
 
 **Tell:** Drie of meer opeenvolgende zinnen die met hetzelfde woord of dezelfde constructie beginnen, zoals `Dit`, `Het` of `We`.
@@ -226,7 +252,7 @@ Een treffer is een aanleiding om de zin te controleren, geen automatische correc
 
 **Rewrite:** De opzoeking mislukt als de naam een spatie aan het eind heeft.
 
-**Why:** Gestapelde voorbehouden ontlopen het risico op ongelijk. Schrijf wat vaststaat, en zeg open wat niet vaststaat. Een enkel `waarschijnlijk` bij een nog niet bewezen oorzaak is eerlijk en geen tic.
+**Why:** Gestapelde voorbehouden ontlopen het risico op ongelijk. Schrijf wat vaststaat. Zeg open wat niet vaststaat. Een enkel `waarschijnlijk` bij een nog niet bewezen oorzaak is eerlijk en geen tic.
 
 ### Lege enthousiaste opening
 
@@ -302,7 +328,7 @@ Een treffer is een aanleiding om de zin te controleren, geen automatische correc
 
 **Rewrite:** Het trimmen van de naam voorkomt de crash die spaties in de splitsing veroorzaakten.
 
-**Why:** Elke vulfrase kost de lezer een tel. Test: schrap hem, en als de betekenis blijft staan was het vulling.
+**Why:** Elke vulfrase kost de lezer een tel. Test: schrap hem. Blijft de betekenis staan, dan was het vulling.
 
 ### Vage versterkers
 

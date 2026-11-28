@@ -16,7 +16,7 @@ Extension skills for the [superpowers](https://github.com/obra/superpowers) suit
 - **ui-design-system** -- Generates a complete design system before frontend implementation. Three modes: **curated** (pick from 84 vendored real-world references — Stripe, Linear, Vercel, Notion, Apple, Figma, Supabase, Cursor, Claude, …), **guided** (7 questions), or **quick** (inline one-liner). Includes 5 hand-tuned OKLch design directions and an anti-slop checklist. Auto-detects Blazor, React, Vue, Astro stacks. Outputs `docs/design/MASTER.md`.
 - **logo-design** -- Generates brand marks as hand-authored SVG and audits existing ones. Two sub-skills: `logo-concept` draws a mark (or derives the variant set for one that already exists) and `logo-review` audits one across three layers — reproduction hazards, a ten-pattern anti-slop scan, and a five-dimension critique. Ships four mark types (geometric, monogram, wordmark, abstract) and **refuses pictorial, mascot, and illustrative-emblem marks** by design. Reads `docs/design/MASTER.md` for palette and typography when present. Outputs `docs/design/LOGO.md`, seven SVG variants through to a redrawn favicon, a contact sheet, and an eight-file raster icon set exported from those SVGs — recorded `UNRUN` rather than failed when no SVG rasteriser is installed.
 - **context-budget** -- Keeps long sessions cheap. A `UserPromptSubmit` hook measures the session's context size and hands off to a fresh session at a natural break; a `PreToolUse` hook requires an explicit `model` on general-purpose subagent dispatches and denies Fable unless the project allows it. The skill states the suite-wide model rule (Sonnet by default, Opus for marked tasks, retries and the final review, Haiku for lookups) and the fresh-session handoff recipe.
-- **anti-slop** -- Rewrites AI prose tics out of text Claude is about to publish, in English and Dutch: commit messages, PR and issue text, comments, READMEs, docs and release notes. Each language has a pattern catalogue in four families (vocabulary, structure, tone, substance), and every entry pairs a bad example with a plain rewrite. Claude publishes the clean version with no report; on demand it edits a file in place and leaves a diff.
+- **anti-slop** -- Rewrites AI prose tics out of text Claude is about to publish, in English and Dutch: commit messages, PR and issue text, comments, READMEs, docs and release notes. Each language has a pattern catalogue in four families (vocabulary, structure, tone, substance), and every entry pairs a bad example with a plain rewrite. Claude publishes the clean version with no report; on demand it edits a file in place and leaves a diff. A `PreToolUse` hook scans commit, PR, issue and comment text before it goes out and denies the first call that hits an entry.
 - **demo-video** -- Records a finished web feature as a paced browser walkthrough video. Claude writes a storyboard from the plan and diff, explores it live with Playwright MCP, then generates a `record.mjs` that drives headless Chromium on the real app. ffmpeg turns the recording into chapter MP4s with captions and title cards, speeds up slow waits instead of cutting them, and builds a GIF in quick mode. Two modes: **quick** (no approval, for a PR or chat) and **polished** (storyboard approved first, for a talk or a fallback recording). Re-recording after a UI fix is one command.
 - **retro** -- Session retrospectives that improve the setup around the agent. A digest script turns a Claude Code transcript into sizes, counts and line numbers; one subagent finds setup improvements in six categories (information access, guardrails, reviewer rules, navigation, tool cost, steering files) and ranks them most severe first. Each finding is fixed on a `retro/<date>` branch, filed as a grouped issue or dropped, chosen per finding. Adapted from Matt Pocock's [skills](https://github.com/mattpocock/skills) (MIT).
 - **wizard** -- Writes an interactive bash script that walks a person through setup steps only they can do: dashboards, API keys, `.env` values, GitHub secrets and variables, one-off migrations. The script shows stage progress, asks before irreversible steps, reads secrets with hidden input and ends with a summary. `check.mjs` verifies a generated wizard in one command. Adapted from Matt Pocock's `wizard` skill (MIT).
@@ -447,7 +447,7 @@ Node.js, which Claude Code already requires. The hooks run on Linux, macOS and W
 
 ## Anti-Slop Skill
 
-The anti-slop skill rewrites AI prose tics out of text Claude is about to publish on your behalf. It has no hook; it fires from its description.
+The anti-slop skill rewrites AI prose tics out of text Claude is about to publish on your behalf. It fires from its description, and a publish hook checks the text of commits, PRs, issues and comments before they go out.
 
 ### What It Does
 
@@ -465,6 +465,14 @@ node plugins/anti-slop/skills/anti-slop/scripts/scan.mjs plugins/anti-slop/skill
 ```
 
 It exits 1 on hits, 0 when clean and 2 on an error. A hit is a prompt to check the sentence, not an automatic edit.
+
+### Publish Hook
+
+A rule in a skill or a `CLAUDE.md` is an instruction the model may skip; a hook runs every time. A `PreToolUse` hook scans the text that a `git commit`, a `gh pr`/`gh issue`/`gh release` call or a GitHub MCP PR or issue tool is about to publish, against both catalogues. Heredocs and the files named by `-F`, `--body-file` and `--notes-file` are read too.
+
+- **Deny once.** The first call with hits is denied with the hit list, and Claude rewrites the text. The same text retried unchanged in the same session passes, so a hit Claude judges intended never blocks publishing.
+- **Only fixed wordings.** The hook checks the entries with a **Match:** line. Entries that need judgement stay with the skill.
+- **Off switch and failure.** `ANTI_SLOP_HOOK=off` disables it. On any error the call goes through.
 
 ### Prerequisites
 
