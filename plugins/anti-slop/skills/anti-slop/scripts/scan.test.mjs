@@ -111,3 +111,38 @@ test('CLI exits 2 on missing catalogue and on bad catalogue', () => {
   assert.match(missing.stderr, /scan:/);
   assert.equal(spawnSync('node', [script, bad, file], { encoding: 'utf8' }).status, 2);
 });
+
+const references = join(here, '..', 'references');
+
+function entries(markdown) {
+  const out = [];
+  let current = null;
+  for (const line of markdown.split('\n')) {
+    const heading = /^###\s+(.+?)\s*$/.exec(line);
+    if (heading) { current = { name: heading[1], bad: [], rewrite: [] }; out.push(current); continue; }
+    if (!current) continue;
+    const bad = /^\*\*Bad:\*\*\s*(.+)$/.exec(line);
+    if (bad) current.bad.push(bad[1]);
+    const rewrite = /^\*\*Rewrite:\*\*\s*(.+)$/.exec(line);
+    if (rewrite) current.rewrite.push(rewrite[1]);
+  }
+  return out;
+}
+
+for (const file of ['patterns-en.md', 'patterns-nl.md']) {
+  const markdown = readFileSync(join(references, file), 'utf8');
+  const catalogue = parseCatalogue(markdown);
+
+  test(`${file} passes its own scan`, () => {
+    assert.deepEqual(scanText(markdown, catalogue), []);
+  });
+
+  for (const entry of entries(markdown)) {
+    const own = catalogue.filter((p) => p.name === entry.name);
+    if (own.length === 0) continue;
+    test(`${file}: "${entry.name}" fires on its Bad line and not on its Rewrite`, () => {
+      assert.ok(entry.bad.some((text) => scanText(text, own).length > 0), 'no hit on Bad');
+      for (const text of entry.rewrite) assert.deepEqual(scanText(text, own), []);
+    });
+  }
+}

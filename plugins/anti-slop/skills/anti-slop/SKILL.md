@@ -62,8 +62,18 @@ node <this skill's directory>/scripts/scan.mjs <this skill's directory>/referenc
 
 The scanner exits 1 on hits, 0 when clean and 2 on an error, which is a failed run and not a hit list. It skips fenced code, inline code and the **Bad:** and **Match:** lines. A hit is a prompt to check the sentence, not an automatic edit, and a clean scan proves nothing about the entries that have no **Match:** line.
 
+## Publish Hook
+
+A `PreToolUse` hook checks the text a call is about to publish: the message of a `git commit`, the title, body or notes of a `gh pr`, `gh issue` or `gh release` call, including heredocs and the files named by `-F`, `--body-file` and `--notes-file`, and the title and body of the GitHub MCP tools that open or comment on PRs and issues. It runs `scan.mjs` against both catalogues.
+
+- **On a hit it denies the call once,** with each hit and its line. Rewrite those sentences following the [Procedure](#procedure), then make the call again.
+- **A hit you judge intended:** retry the same call unchanged. The same text passes the second time in the same session, so the hook never loops.
+- The hook sees only the entries with a **Match:** line. Passing it is not the check this skill asks for; the procedure above still applies to every draft.
+- `ANTI_SLOP_HOOK=off` turns it off. On any error it lets the call through.
+
 ## Reference Index
 
 - [references/patterns-en.md](references/patterns-en.md): the English catalogue
 - [references/patterns-nl.md](references/patterns-nl.md): the Dutch catalogue
 - [scripts/scan.mjs](scripts/scan.mjs): the scanner
+- [scripts/publish.mjs](scripts/publish.mjs): what the publish hook extracts and when it denies
