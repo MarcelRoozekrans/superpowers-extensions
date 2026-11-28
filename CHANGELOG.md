@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.33.0](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.32.0...superpowers-extensions-v1.33.0) (2026-11-28)
+
+
+### Features
+
+* **anti-slop:** deny-once publish hook and comma/contrast entries ([6f6a27c](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/6f6a27c176cbcabbb7ebc61fc7ea6b59db2d5558))
+
 ## [1.32.0](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.31.0...superpowers-extensions-v1.32.0) (2026-11-28)
 
 
