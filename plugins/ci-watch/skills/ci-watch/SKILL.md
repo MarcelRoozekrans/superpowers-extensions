@@ -9,7 +9,7 @@ description: Use when asked to "merge when green", "merge this once CI passes", 
 
 Let CI results drive the work. Three stages: **Wait**, **Merge**, **Release**. The hook starts Wait when a PR is opened. It never merges; a merge happens only when the operator asked for it for this PR, or for the run's own item PR in an unattended run.
 
-In an unattended run `ci-watch` never parks anything and never sets an item status. It returns an outcome (merged, red after three fix rounds, timed out, no checks, rules not met, release PR, rules unreadable) and a reason to the `unattended` skill, whose queue step 8 decides what happens to the item.
+In an unattended run `ci-watch` never parks anything and never sets an item status. It returns an outcome (merged, red after three fix rounds, circling, timed out, no checks, rules not met, release PR, rules unreadable) and a reason to the `unattended` skill, whose queue step 8 decides what happens to the item.
 
 Credit: the merge flow is adapted from `merge-when-green` in [Devleaps/tempa-config-template](https://github.com/Devleaps/tempa-config-template) (MIT), without its Tempa MCP calls. See [NOTICE.md](NOTICE.md).
 
@@ -28,12 +28,12 @@ In a repo that CodeRabbit reviews, an attended run uses the `coderabbit-merge` s
 
 Never use a `sleep` loop. In a cloud session follow the rules in the `subscription.created` event for handling PR events; do not restate or override them here.
 
-Limit: wait at most 60 minutes from the first watch. A repo can set its own in `docs/planning/CONVENTIONS.md` as `**CI timeout:** <minutes>`. The value is a positive integer; a bare number and `60 (defaulted)`, as `init-conventions` records it, both mean 60. When the limit passes, stop waiting and report which checks are still pending. When unattended, return "timed out" with those checks as the reason. For the subscription mechanism, also schedule one fallback wakeup at the limit, with `ScheduleWakeup` or `send_later`, whichever the session has, so a check that never reports cannot hang the session. It fires once.
+Limit: wait at most 60 minutes in total for one PR, counted from its first watch. The limit covers every later wait on the same PR and never restarts: a fix push, a branch update or a resolved conflict does not give the PR a new 60 minutes. A repo can set its own in `docs/planning/CONVENTIONS.md` as `**CI timeout:** <minutes>`. The value is a positive integer: a bare number such as `120` means that many minutes, and `60 (defaulted)`, as `init-conventions` records it, means 60. A configured value is a total for the PR too. Give each watch a timeout of 10 minutes or the time left of the PR's limit, whichever is shorter, so no watch runs past the limit. When the limit passes, stop waiting, check the [Circle guard](#circle-guard) once more and return "circling" when it fires. Otherwise report which checks are still pending. When unattended, return "timed out" with those checks as the reason. For the subscription mechanism, also schedule one fallback wakeup at the limit, with `ScheduleWakeup` or `send_later`, whichever the session has, so a check that never reports cannot hang the session. It fires once.
 
 Outcomes:
 
 - **All green:** go to Merge when a merge was asked for or the run may merge. Otherwise report green and stop.
-- **Pending is not green.** Keep waiting.
+- **Pending is not green.** Keep waiting. Between watches, check every check that has already failed against the [Circle guard](#circle-guard), and stop waiting when it fires.
 - **No checks at all:** report it and ask when attended; return "no checks" when unattended. No CI is not green.
 - **Red:** run the Red CI loop.
 - **Blocked by missing required checks on a bot PR:** report it, with the reason that only `pull_request` event checks count. Never trigger checks another way.
@@ -45,13 +45,24 @@ Outcomes:
 3. Fix the cause, with `superpowers:systematic-debugging`. Show the same command passing, then commit and push.
 4. Wait again.
 
-Three failed fix rounds on the same PR end the loop: report with the failure attached. When unattended, return "red after three fix rounds" with the failure; the `unattended` skill parks the item. A failure clearly not caused by the branch, such as an outage or a flaky external service, is reported. Never re-run a check until it turns green.
+Three failed fix rounds on the same PR end the loop, and the [Circle guard](#circle-guard) can end it sooner: report with the failure attached. When unattended, return "red after three fix rounds" with the failure; the `unattended` skill parks the item. A failure clearly not caused by the branch, such as an outage or a flaky external service, is reported. Never re-run a check until it turns green.
+
+## Circle guard
+
+Every way back to Wait costs the PR a round: a fix pushed for red CI, a branch brought up to date with the base, a resolved conflict, and a `coderabbit-merge` fix round. A PR gets four rounds in total, whatever their cause. The three fix rounds of Red CI and of `coderabbit-merge` count toward the four; they are not on top of them.
+
+Stop instead of starting a fifth round. Stop at once, with rounds left, when a round made no progress:
+
+- the same check fails again after a fix, with the same first relevant log lines;
+- a review finding comes back after a fix pushed for it.
+
+When it stops, report each round with its cause and what is still failing or open. Unattended: return "circling", with the rounds and anything still red as the reason. Never start another round to try once more.
 
 ## Merge
 
 Runs only on an explicit request for this PR, or for the run's own item PR in an unattended run. Never for any other PR.
 
-1. Stop and say why when the PR is closed, merged, a draft or conflicting. Resolve conflicts on the branch, then Wait again. A PR that is only behind the base with no conflicts (`mergeStateStatus` `BEHIND`) is brought up to date with `gh pr update-branch <n>`, or `update_pull_request_branch` through MCP, then Wait again.
+1. Stop and say why when the PR is closed, merged, a draft or conflicting. Resolve conflicts on the branch, then Wait again; that costs a round of the Circle guard. A PR that is only behind the base with no conflicts (`mergeStateStatus` `BEHIND`) is brought up to date with `gh pr update-branch <n>`, or `update_pull_request_branch` through MCP, then Wait again; that costs a round too.
 2. Never merge a release PR. It is one when its head branch starts with `release-please--` or the tool named in `Released by` in `docs/planning/CONVENTIONS.md` opened it. Ask when attended; return "release PR" when unattended.
 3. Read the reviews and rules. Every merge runs this whole step first, including when `reviewDecision` is `APPROVED`. Never merge on a rule set that was not read.
    - PR state: `gh pr view <n> --json reviewDecision,mergeable,mergeStateStatus,statusCheckRollup,headRefName`. In cloud sessions `pull_request_read` returns the PR, its reviews, its mergeable state and its check runs or statuses.
