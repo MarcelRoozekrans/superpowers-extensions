@@ -1,6 +1,6 @@
 ---
 name: context-budget
-description: Use when dispatching implementer or reviewer subagents, when choosing a model for a subagent, when a context-budget reminder appears in the conversation, or when handing off to a fresh session at a natural break. Holds the suite-wide model rule (Haiku, Sonnet or Opus, never Fable) and the fresh-session handoff recipe. Skip for work that needs no subagent and no handoff.
+description: Use when dispatching implementer or reviewer subagents, when choosing a model for a subagent, when a context-budget reminder appears in the conversation, or when handing off to a fresh session at a natural break. Holds the suite-wide model rule (Haiku, Sonnet or Opus, never Fable unless the project allows it) and the fresh-session handoff recipe. Skip for work that needs no subagent and no handoff.
 ---
 
 # Context Budget Skill

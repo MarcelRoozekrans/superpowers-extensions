@@ -135,7 +135,7 @@
     },
     {
       "name": "context-budget",
-      "description": "Keeps long sessions cheap. Hands off to a fresh session at a natural break once the context grows large, and requires an explicit non-Fable model on general-purpose subagent dispatches. States the suite-wide model rule: Sonnet by default, Opus for marked tasks, retries and the final review, Haiku for lookups.",
+      "description": "Keeps long sessions cheap. Hands off to a fresh session at a natural break once the context grows large, and requires an explicit model on general-purpose subagent dispatches and denies Fable unless the project allows it. States the suite-wide model rule: Sonnet by default, Opus for marked tasks, retries and the final review, Haiku for lookups.",
       "version": "1.31.0",
       "author": {
         "name": "Marcel Roozekrans"
