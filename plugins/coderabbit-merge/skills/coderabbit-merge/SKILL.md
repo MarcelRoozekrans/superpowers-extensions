@@ -50,9 +50,9 @@ The script prints `{ "state", "findings", "reviewBody" }`. Each finding has `thr
 | State | Meaning | Do |
 |-------|---------|----|
 | `reviewing` | The CodeRabbit check is still running | Wait, then gather again. |
-| `no-review` | CodeRabbit has not reviewed | Wait for the review. If CodeRabbit answered with a rate-limit comment, follow Requesting a review. After the limit, report it and check that CodeRabbit is installed on the repo and the PR is not a draft or paused. |
+| `no-review` | CodeRabbit has not reviewed | Apply Requesting a review, then wait. After the limit, report it and check that CodeRabbit is installed on the repo and the PR is not a draft or paused. |
 | `not-approved` | CodeRabbit only commented and nothing is open | Report that CodeRabbit never approves unless `.coderabbit.yaml` sets `reviews.request_changes_workflow: true`. Do not merge. |
-| `stale` | The last review is for an older commit | Follow Requesting a review, which says whether to request a review now. Then wait for the review of the new head. |
+| `stale` | The last review is for an older commit | Apply Requesting a review, then wait for the review of the new head. |
 | `changes-requested` | CodeRabbit asked for changes, or unresolved findings are open, even beside an approval | Run the Fix loop. |
 | `approved` | CodeRabbit approved the current head and nothing is open | First read `reviewBody`: validate any outside-diff or duplicate comment in it and fix the genuine ones, as in the Fix loop. Then, with CI green and a merge asked for this PR, go to Merge. Otherwise report "approved and green" and stop. |
 
@@ -62,16 +62,20 @@ The script prints `{ "state", "findings", "reviewBody" }`. Each finding has `thr
 
 CodeRabbit's hourly allowance belongs to the PR's author, and on the OSS tier it is counted per repository as well. Each review it runs takes one. Whether it reviews a push by itself depends on `reviews.auto_review.auto_incremental_review` in the effective configuration, which can come from a central configuration repo instead of the repo's own `.coderabbit.yaml`. So go by what CodeRabbit does, not by the file:
 
-1. Push all fixes of a round at once.
-2. Five minutes after the push, when CodeRabbit has not reviewed the new head and the `CodeRabbit` check is not running, post one PR comment that reads `@coderabbitai review`. A check that never started counts as not running, and so does one that finished as skipped.
-3. When CodeRabbit says the review limit is reached after the latest review request, or after the push when no request was posted, the review was dropped, not queued. This holds when that reply came before this skill started, too. Wait the minutes it names, then post one new request. A rate-limit reply from before the latest request was already handled.
-4. Post no other request while one is pending. A request is pending when it was posted after the push and CodeRabbit has not answered it with a rate-limit reply.
+Push all fixes of a round at once. Then apply these rules after the push and again each time the wait wakes, and act on the first that matches. "Since" means since the latest review request, or since the push when no request was posted after it. A PR that opened without a push by this skill counts its opening as the push.
+
+1. CodeRabbit has reviewed the head: request nothing.
+2. The `CodeRabbit` check is running: request nothing and keep waiting.
+3. CodeRabbit has replied since that the review limit is reached: the review was dropped, not queued. This holds when the reply came before this skill started, too. Wait the minutes it names, then post one PR comment that reads `@coderabbitai review`.
+4. A request was posted after the push and CodeRabbit has not answered it: keep waiting.
+5. The push is less than 5 minutes old: keep waiting.
+6. Otherwise, post one PR comment that reads `@coderabbitai review`. This covers a check that never started and one that finished as skipped.
 
 ## Waiting
 
 Use `ci-watch`'s limit: 60 minutes, or the `**CI timeout:** <minutes>` value from `docs/planning/CONVENTIONS.md` read the same way, in total for the PR from the first wait. A new round never restarts it. When it passes, stop and report "CodeRabbit has not reviewed `<sha>`" with the state.
 
-`gh pr checks --watch` ends when CI ends, which can be before CodeRabbit reviews, so it is not enough here. In cloud sessions `subscribe_pr_activity` delivers CodeRabbit's review as an event. Locally, watch with `Monitor` on an `until` loop over the review list that ends when a CodeRabbit review for the head commit exists and the `CodeRabbit` check is no longer running, or when the limit passes. A review on the head does not end the wait while the check is still running. A review CodeRabbit never posts (paused auto-review, draft PR, skipped files) ends at the limit, not in a loop. Watch the PR's comments during the wait as well: a CodeRabbit rate-limit reply posted after the latest review request ends the wait and goes to step 3 of Requesting a review.
+`gh pr checks --watch` ends when CI ends, which can be before CodeRabbit reviews, so it is not enough here. In cloud sessions `subscribe_pr_activity` delivers CodeRabbit's review as an event. Locally, watch with `Monitor` on an `until` loop over the review list that ends when a CodeRabbit review for the head commit exists and the `CodeRabbit` check is no longer running, or when the limit passes. A review on the head does not end the wait while the check is still running. The loop also ends when the `CodeRabbit` check finishes without a review of the head, or when CodeRabbit posts a comment since the push; then apply Requesting a review again. A review CodeRabbit never posts (paused auto-review, draft PR, skipped files) ends at the limit, not in a loop. Time spent waiting out a rate-limit reply does not count toward the limit.
 
 ## Fix loop
 
