@@ -112,6 +112,8 @@ test('loadConfig defaults and validation', () => {
   assert.deepEqual(loadConfig(cwdWith('{"nudge":"x"}')), DEFAULTS);
   assert.deepEqual(loadConfig(cwdWith('{broken')), DEFAULTS);
   assert.equal(loadConfig(cwdWith('{"enforceDispatchModel":false}')).enforceDispatchModel, false);
+  assert.equal(loadConfig(cwdWith('{"allowFable":true}')).allowFable, true);
+  assert.equal(loadConfig(cwdWith('{"allowFable":"yes"}')).allowFable, false);
 });
 
 test('decide', () => {

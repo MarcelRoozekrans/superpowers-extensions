@@ -1,7 +1,7 @@
 import { openSync, readSync, fstatSync, closeSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 
-export const DEFAULTS = { nudge: 200000, firm: 400000, step: 50000, enforceDispatchModel: true };
+export const DEFAULTS = { nudge: 200000, firm: 400000, step: 50000, enforceDispatchModel: true, allowFable: false };
 
 const TAIL_BYTES = 2 * 1024 * 1024;
 
@@ -48,6 +48,7 @@ export function loadConfig(cwd) {
       config.firm = raw.firm;
     }
     if (typeof raw.enforceDispatchModel === 'boolean') config.enforceDispatchModel = raw.enforceDispatchModel;
+    if (typeof raw.allowFable === 'boolean') config.allowFable = raw.allowFable;
   } catch { /* defaults */ }
   return config;
 }
