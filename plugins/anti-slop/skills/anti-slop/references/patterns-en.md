@@ -186,6 +186,22 @@ A hit is a prompt to check the sentence, not an automatic edit: some matches are
 
 **Why:** One dash can be style. A dash in every sentence is a verbal habit of generated text, and it breaks the rhythm of the paragraph.
 
+### Contrast frame
+
+**Tell:** A sentence that first says what something is not, then what it is: `not X, but Y`, `isn't just X, it's Y`, `not only X but also Y`. The frame sets up an idea the reader never had.
+
+**Match:** `\bnot\s+(?:just|only|merely|simply)\b[^.!?\n]{1,80}?\bbut\b`
+
+**Match:** `\b(?:isn|aren|wasn|weren)['’]t\s+(?:just|only|merely|simply)\b`
+
+**Match:** `\b(?:it|this|that)(?:['’]s not| is not| isn['’]t)\b[^.!?\n]{1,60}?[,;—]\s*(?:it|this|that)(?:['’]s| is)\b`
+
+**Bad:** This isn't just a cleanup, it's a rework of the cache. The fix not only removes the crash but also speeds up the start.
+
+**Rewrite:** The change reworks the cache. It removes the crash and speeds up the start.
+
+**Why:** Nobody thought it was a cleanup. A frame that sets up a wrong idea to knock it down reads like a pitch. Say what it is.
+
 ### Identical sentence openings
 
 **Tell:** Three or more consecutive sentences that start with the same word or construction, such as `This`, `It` or `We`.
