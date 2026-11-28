@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.32.0](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.31.0...superpowers-extensions-v1.32.0) (2026-11-28)
+
+
+### Features
+
+* **context-budget:** let a project allow Fable with allowFable ([1f40aaf](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/1f40aafa267f415df55564e5c55a352970db84e8)), closes [#193](https://github.com/MarcelRoozekrans/superpowers-extensions/issues/193)
+
+
+### Bug Fixes
+
+* **ci-watch:** stop a PR that keeps circling back to Wait ([3cc0fc3](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/3cc0fc34a5c494945f1f1527c32daa13235c9ef3))
+* **context-budget:** never hand off to a fresh session while a /goal is active ([#190](https://github.com/MarcelRoozekrans/superpowers-extensions/issues/190)) ([6be12e9](https://github.com/MarcelRoozekrans/superpowers-extensions/commit/6be12e97359332587b5b26a1562918c41acf8f84))
+
 ## [1.31.0](https://github.com/MarcelRoozekrans/superpowers-extensions/compare/superpowers-extensions-v1.30.0...superpowers-extensions-v1.31.0) (2026-11-11)
 
 
